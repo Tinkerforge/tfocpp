@@ -14,7 +14,7 @@ enum class OcppState {
     Rejected // boot notification received, rejected
 };
 
-#define DEFAULT_BOOT_NOTIFICATION_RESEND_INTERVAL_MS 10000
+#define DEFAULT_BOOT_NOTIFICATION_RESEND_INTERVAL_MS 60000
 
 class Ocpp {
 public:
@@ -68,7 +68,6 @@ private:
     void *platform_ctx;
 
     uint32_t last_bn_send_ms = 0;
-    uint32_t bn_resend_interval = DEFAULT_BOOT_NOTIFICATION_RESEND_INTERVAL_MS;
 
     uint32_t last_call_message_id = 0;
     CallAction last_call_action;

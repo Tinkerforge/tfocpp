@@ -125,7 +125,7 @@ OcppConfiguration config[] = {
     /*ConnectorPhaseRotationMaxLength*/   OcppConfiguration::integer(NUM_CONNECTORS + 1, true, false),
 
     /*GetConfigurationMaxKeys*/           OcppConfiguration::integer(1, true, false),
-    /*HeartbeatInterval*/                 OcppConfiguration::integer(60, false, false),
+    /*HeartbeatInterval*/                 OcppConfiguration::integer(DEFAULT_BOOT_NOTIFICATION_RESEND_INTERVAL_MS, false, false),
     /*LightIntensity*/                    //OcppConfiguration::integer(100, false, false),
     /*LocalAuthorizeOffline*/             OcppConfiguration::boolean(false, false, false),
     /*LocalPreAuthorize*/                 OcppConfiguration::boolean(false, false, false),
@@ -222,7 +222,7 @@ bool setBoolConfig(ConfigKey key, bool b) {
 }
 
 void Ocpp::tick_power_on() {
-    if ((last_bn_send_ms == 0 && !platform_ws_connected(platform_ctx)) || !deadline_elapsed(last_bn_send_ms + bn_resend_interval))
+    if ((last_bn_send_ms == 0 && !platform_ws_connected(platform_ctx)) || !deadline_elapsed(last_bn_send_ms + 1000 * getIntConfig(ConfigKey::HeartbeatInterval)))
         return;
 
     last_bn_send_ms = platform_now_ms();
@@ -238,6 +238,8 @@ void Ocpp::tick_power_on() {
 void Ocpp::tick() {
     switch (state) {
         case OcppState::PowerOn:
+        case OcppState::Pending:
+        case OcppState::Rejected:
             tick_power_on();
     }
 }
@@ -289,6 +291,12 @@ void Ocpp::handleMessage(char *message, size_t message_len)
 
         if (doc[3].isNull() || !doc[3].is<JsonObject>()) {
             platform_printfln("received call with payload being neither an object nor null.", doc.size());
+            return;
+        }
+
+        if (this->state == OcppState::Rejected) {
+            // "While Rejected, the Charge Point SHALL NOT respond to any Central System initiated message. the Central System SHOULD NOT initiate any."
+            platform_printfln("received call while being rejected. Ignoring call.");
             return;
         }
 
@@ -386,10 +394,16 @@ CallResponse Ocpp::handleBootNotificationResponse(BootNotificationResponseView c
         (state != OcppState::Rejected))
         return CallResponse{CallErrorCode::InternalError, "unexpected state"};
 
+    // We can set the heartbeat interval in any case, as it is only relevant (for heartbeats)
+    // when "Accepted" is received.
+    // In other cases this is the interval to retry sending boot notification requests with.
+    if (conf.interval() > 0)
+        setIntConfig(ConfigKey::HeartbeatInterval, conf.interval());
+    else
+        setIntConfig(ConfigKey::HeartbeatInterval, DEFAULT_BOOT_NOTIFICATION_RESEND_INTERVAL_MS);
+
     switch (conf.status()) {
         case BootNotificationResponseStatus::ACCEPTED: {
-            //TODO Adjust heart-beat configuration to conf.interval()
-
             platform_set_system_time(platform_ctx, conf.currentTime());
             state = OcppState::Idle;
             break;
