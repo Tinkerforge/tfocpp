@@ -235,12 +235,30 @@ void Ocpp::tick_power_on() {
     platform_ws_send(platform_ctx, send_buf, written);
 }
 
+void Ocpp::tick_idle() {
+    if (!deadline_elapsed(last_bn_send_ms + 1000 * getIntConfig(ConfigKey::HeartbeatInterval)))
+        return;
+
+    last_bn_send_ms = platform_now_ms();
+
+    DynamicJsonDocument doc{0};
+    Heartbeat(&doc);
+    last_call_action = CallAction::HEARTBEAT;
+    size_t written = serializeJson(doc, send_buf);
+
+    platform_ws_send(platform_ctx, send_buf, written);
+}
+
 void Ocpp::tick() {
     switch (state) {
         case OcppState::PowerOn:
         case OcppState::Pending:
         case OcppState::Rejected:
             tick_power_on();
+            break;
+        case OcppState::Idle:
+            tick_idle();
+            break;
     }
 }
 
@@ -575,7 +593,8 @@ CallResponse Ocpp::handleGetConfiguration(const char *uid, GetConfigurationView 
 
 CallResponse Ocpp::handleHeartbeatResponse(HeartbeatResponseView conf)
 {
-    return CallResponse{CallErrorCode::InternalError, "not implemented yet!"};
+    platform_set_system_time(platform_ctx, conf.currentTime());
+    return CallResponse{CallErrorCode::OK, ""};
 }
 
 CallResponse Ocpp::handleMeterValuesResponse(MeterValuesResponseView conf)

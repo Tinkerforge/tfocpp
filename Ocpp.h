@@ -34,6 +34,7 @@ public:
     }
 
     void tick_power_on();
+    void tick_idle();
 
     void tick();
 
