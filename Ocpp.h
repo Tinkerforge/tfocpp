@@ -14,7 +14,7 @@ enum class OcppState {
     Rejected // boot notification received, rejected
 };
 
-#define DEFAULT_BOOT_NOTIFICATION_RESEND_INTERVAL_MS 60000
+#define DEFAULT_BOOT_NOTIFICATION_RESEND_INTERVAL_S 60
 
 class Ocpp {
 public:

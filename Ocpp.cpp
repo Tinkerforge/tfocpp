@@ -42,7 +42,7 @@ const char *config_keys[] {
     "ClockAlignedDataInterval",
     "ConnectionTimeOut",
     "ConnectorPhaseRotation",
-    //"ConnectorPhaseRotationMaxLength",
+    "ConnectorPhaseRotationMaxLength",
     "GetConfigurationMaxKeys",
     "HeartbeatInterval",
     //"LightIntensity",
@@ -79,7 +79,7 @@ enum class ConfigKey {
     ClockAlignedDataInterval,
     ConnectionTimeOut,
     ConnectorPhaseRotation,
-    //ConnectorPhaseRotationMaxLength,
+    ConnectorPhaseRotationMaxLength,
     GetConfigurationMaxKeys,
     HeartbeatInterval,
     //LightIntensity,
@@ -125,7 +125,7 @@ OcppConfiguration config[] = {
     /*ConnectorPhaseRotationMaxLength*/   OcppConfiguration::integer(NUM_CONNECTORS + 1, true, false),
 
     /*GetConfigurationMaxKeys*/           OcppConfiguration::integer(1, true, false),
-    /*HeartbeatInterval*/                 OcppConfiguration::integer(DEFAULT_BOOT_NOTIFICATION_RESEND_INTERVAL_MS, false, false),
+    /*HeartbeatInterval*/                 OcppConfiguration::integer(DEFAULT_BOOT_NOTIFICATION_RESEND_INTERVAL_S, false, false),
     /*LightIntensity*/                    //OcppConfiguration::integer(100, false, false),
     /*LocalAuthorizeOffline*/             OcppConfiguration::boolean(false, false, false),
     /*LocalPreAuthorize*/                 OcppConfiguration::boolean(false, false, false),
@@ -400,7 +400,7 @@ CallResponse Ocpp::handleBootNotificationResponse(BootNotificationResponseView c
     if (conf.interval() > 0)
         setIntConfig(ConfigKey::HeartbeatInterval, conf.interval());
     else
-        setIntConfig(ConfigKey::HeartbeatInterval, DEFAULT_BOOT_NOTIFICATION_RESEND_INTERVAL_MS);
+        setIntConfig(ConfigKey::HeartbeatInterval, DEFAULT_BOOT_NOTIFICATION_RESEND_INTERVAL_S);
 
     switch (conf.status()) {
         case BootNotificationResponseStatus::ACCEPTED: {
