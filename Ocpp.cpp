@@ -469,7 +469,18 @@ CallResponse Ocpp::handleClearCache(const char *uid, ClearCacheView req)
 
 CallResponse Ocpp::handleDataTransfer(const char *uid, DataTransferView req)
 {
-    return CallResponse{CallErrorCode::InternalError, "not implemented yet!"};
+    /*
+    If the recipient of the request has no implementation for the specific vendorId it SHALL return a status
+    ‘UnknownVendor’ and the data element SHALL not be present.
+    */
+    DynamicJsonDocument doc{0};
+    DataTransferResponse(&doc, uid, DataTransferResponseStatus::UNKNOWN_VENDOR_ID);
+
+    size_t written = serializeJson(doc, send_buf);
+
+    platform_ws_send(platform_ctx, send_buf, written);
+
+    return CallResponse{CallErrorCode::OK, ""};
 }
 
 CallResponse Ocpp::handleDataTransferResponse(DataTransferResponseView conf)
