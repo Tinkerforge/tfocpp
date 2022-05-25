@@ -1,0 +1,32 @@
+#!/bin/bash
+
+function docker_supported() {
+    for f in $TRAVIS_STACK_FEATURES; do
+        [ "$f" == "docker" ] && return 0
+    done
+
+    return 1
+}
+
+function docker_start() {
+    docker_supported || return 0
+    docker create --name=$TRAVIS_JOB_ID -tv `pwd`:/bld -w /bld $DISTRO /bin/cat
+    docker start $TRAVIS_JOB_ID
+}
+
+function docker_exec() {
+    if docker_supported; then
+        (env | sed -rn 's|^(.+)$|-e\n\1|p'; echo $TRAVIS_JOB_ID; echo $1) \
+	    | xargs -d '\n' docker exec
+    else
+        $1
+    fi
+
+    return $?
+}
+
+function docker_stop() {
+    docker_supported || return 0
+    docker kill $TRAVIS_JOB_ID
+    docker rm $TRAVIS_JOB_ID
+}
