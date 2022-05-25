@@ -450,7 +450,21 @@ CallResponse Ocpp::handleChangeConfiguration(const char *uid, ChangeConfiguratio
 
 CallResponse Ocpp::handleClearCache(const char *uid, ClearCacheView req)
 {
-    return CallResponse{CallErrorCode::InternalError, "not implemented yet!"};
+    /* Errata 4.0 3.23:
+    In OCPP 1.6, the Cache is not required, but the message: ClearCache.req is required to be implemented. OCPP
+    does not define what the expected behaviour is.
+    Additional text
+    When the Authorization Cache is not implemented and the Charge Point receives a ClearCache.req message. The Charge Point
+    SHALL response with ClearCache.conf with the status: Rejected.
+    */
+    DynamicJsonDocument doc{0};
+    ClearCacheResponse(&doc, uid, ClearCacheResponseStatus::REJECTED);
+
+    size_t written = serializeJson(doc, send_buf);
+
+    platform_ws_send(platform_ctx, send_buf, written);
+
+    return CallResponse{CallErrorCode::OK, ""};
 }
 
 CallResponse Ocpp::handleDataTransfer(const char *uid, DataTransferView req)
