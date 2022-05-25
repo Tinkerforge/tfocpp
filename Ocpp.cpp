@@ -71,6 +71,43 @@ const char *config_keys[] {
     "WebSocketPingInterval",
 };
 
+enum class ConfigKey {
+    //AllowOfflineTxForUnknownId,
+    //AuthorizationCacheEnabled,
+    AuthorizeRemoteTxRequests,
+    //BlinkRepeat,
+    ClockAlignedDataInterval,
+    ConnectionTimeOut,
+    ConnectorPhaseRotation,
+    //ConnectorPhaseRotationMaxLength,
+    GetConfigurationMaxKeys,
+    HeartbeatInterval,
+    //LightIntensity,
+    LocalAuthorizeOffline,
+    LocalPreAuthorize,
+    //MaxEnergyOnInvalidId,
+    MeterValuesAlignedData,
+    //MeterValuesAlignedDataMaxLength,
+    MeterValuesSampledData,
+    //MeterValuesSampledDataMaxLength,
+    MeterValueSampleInterval,
+    //MinimumStatusDuration,
+    NumberOfConnectors,
+    ResetRetries,
+    StopTransactionOnEVSideDisconnect,
+    StopTransactionOnInvalidId,
+    StopTxnAlignedData,
+    //StopTxnAlignedDataMaxLength,
+    StopTxnSampledData,
+    //StopTxnSampledDataMaxLength,
+    SupportedFeatureProfiles,
+    //SupportedFeatureProfilesMaxLength,
+    TransactionMessageAttempts,
+    TransactionMessageRetryInterval,
+    UnlockConnectorOnEVSideDisconnect,
+    WebSocketPingInterval,
+};
+
 OcppConfiguration config[] = {
     /*AllowOfflineTxForUnknownId*/        //OcppConfiguration::boolean(false, false, false),
     /*AuthorizationCacheEnabled*/         //OcppConfiguration::boolean(false, false, false),
@@ -126,6 +163,63 @@ OcppConfiguration config[] = {
     /*UnlockConnectorOnEVSideDisconnect*/ OcppConfiguration::boolean(false, false, false),
     /*WebSocketPingInterval*/             OcppConfiguration::integer(10, false, false),
 };
+
+int32_t getIntConfig(ConfigKey key) {
+    OcppConfiguration &cfg = config[(size_t)key];
+    if (cfg.type != OcppConfigurationValueType::Integer) {
+        platform_printfln("Tried to read config %s (%d) as int, but it is of type %s", config_keys[(size_t) key], (int)key, cfg.type == OcppConfigurationValueType::CSL ? "CSL" : "boolean");
+        return -1;
+    }
+    return cfg.value.integer.i;
+}
+
+bool getBoolConfig(ConfigKey key) {
+    OcppConfiguration &cfg = config[(size_t)key];
+    if (cfg.type != OcppConfigurationValueType::Boolean) {
+        platform_printfln("Tried to read config %s (%d) as bool, but it is of type %s", config_keys[(size_t) key], (int)key, cfg.type == OcppConfigurationValueType::CSL ? "CSL" : "integer");
+        return false;
+    }
+    return cfg.value.boolean.b;
+}
+
+size_t getCSLConfigLen(ConfigKey key) {
+    OcppConfiguration &cfg = config[(size_t)key];
+    if (cfg.type != OcppConfigurationValueType::CSL) {
+        platform_printfln("Tried to read config %s (%d) as csl, but it is of type %s", config_keys[(size_t) key], (int)key, cfg.type == OcppConfigurationValueType::Integer ? "integer" : "boolean");
+        return 0;
+    }
+    return cfg.value.csl.parsed_len;
+}
+
+size_t *getCSLConfig(ConfigKey key) {
+    OcppConfiguration &cfg = config[(size_t)key];
+    if (cfg.type != OcppConfigurationValueType::CSL) {
+        platform_printfln("Tried to read config %s (%d) as csl, but it is of type %s", config_keys[(size_t) key], (int)key, cfg.type == OcppConfigurationValueType::Integer ? "integer" : "boolean");
+        return nullptr;
+    }
+    return cfg.value.csl.parsed;
+}
+
+bool setIntConfig(ConfigKey key, int32_t i) {
+    OcppConfiguration &cfg = config[(size_t)key];
+    if (cfg.type != OcppConfigurationValueType::Integer) {
+        platform_printfln("Tried to write config %s (%d) as int, but it is of type %s", config_keys[(size_t) key], (int)key, cfg.type == OcppConfigurationValueType::CSL ? "CSL" : "boolean");
+        return false;
+    }
+
+    cfg.value.integer.i = i;
+    return true;
+}
+
+bool setBoolConfig(ConfigKey key, bool b) {
+    OcppConfiguration &cfg = config[(size_t)key];
+    if (cfg.type != OcppConfigurationValueType::Boolean) {
+        platform_printfln("Tried to write config %s (%d) as bool, but it is of type %s", config_keys[(size_t) key], (int)key, cfg.type == OcppConfigurationValueType::CSL ? "CSL" : "integer");
+        return false;
+    }
+    cfg.value.boolean.b = b;
+    return true;
+}
 
 void Ocpp::tick_power_on() {
     if ((last_bn_send_ms == 0 && !platform_ws_connected(platform_ctx)) || !deadline_elapsed(last_bn_send_ms + bn_resend_interval))
