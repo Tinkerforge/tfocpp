@@ -70,3 +70,65 @@ struct OcppConfiguration {
 
     ChangeConfigurationResponseStatus setValue(const char *newValue);
 };
+
+#define CONFIG_COUNT 23
+#define MAX_CONFIG_LENGTH 501 // the spec does not specify a maximum length. however the payload of a change configuration message has a max length of 500
+
+extern const char *config_keys[CONFIG_COUNT];
+
+enum class ConnectorPhaseRotation {
+    NotApplicable,
+    Unknown,
+    RST,
+    RTS,
+    SRT,
+    STR,
+    TRS,
+    TSR,
+};
+
+enum class ConfigKey {
+    //AllowOfflineTxForUnknownId,
+    //AuthorizationCacheEnabled,
+    AuthorizeRemoteTxRequests,
+    //BlinkRepeat,
+    ClockAlignedDataInterval,
+    ConnectionTimeOut,
+    ConnectorPhaseRotation,
+    ConnectorPhaseRotationMaxLength,
+    GetConfigurationMaxKeys,
+    HeartbeatInterval,
+    //LightIntensity,
+    LocalAuthorizeOffline,
+    LocalPreAuthorize,
+    //MaxEnergyOnInvalidId,
+    MeterValuesAlignedData,
+    //MeterValuesAlignedDataMaxLength,
+    MeterValuesSampledData,
+    //MeterValuesSampledDataMaxLength,
+    MeterValueSampleInterval,
+    //MinimumStatusDuration,
+    NumberOfConnectors,
+    ResetRetries,
+    StopTransactionOnEVSideDisconnect,
+    StopTransactionOnInvalidId,
+    StopTxnAlignedData,
+    //StopTxnAlignedDataMaxLength,
+    StopTxnSampledData,
+    //StopTxnSampledDataMaxLength,
+    SupportedFeatureProfiles,
+    //SupportedFeatureProfilesMaxLength,
+    TransactionMessageAttempts,
+    TransactionMessageRetryInterval,
+    UnlockConnectorOnEVSideDisconnect,
+    WebSocketPingInterval
+};
+
+OcppConfiguration& getConfig(size_t key);
+OcppConfiguration& getConfig(ConfigKey key);
+int32_t getIntConfig(ConfigKey key);
+bool getBoolConfig(ConfigKey key);
+size_t getCSLConfigLen(ConfigKey key);
+size_t *getCSLConfig(ConfigKey key);
+bool setIntConfig(ConfigKey key, int32_t i);
+bool setBoolConfig(ConfigKey key, bool b);

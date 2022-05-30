@@ -1,9 +1,7 @@
 #include "Ocpp.h"
 
+#include "OcppDefines.h"
 #include "OcppTypes.h"
-
-#define NUM_CONNECTORS 1
-#define MAX_CONFIG_LENGTH 501 // the spec does not specify a maximum length. however the payload of a change configuration message has a max length of 500
 
 extern "C" {
     #include "libiso8601/iso8601.h"
@@ -11,219 +9,11 @@ extern "C" {
 
 char send_buf[4096];
 
-const char *connectorPhaseRotationStrings[] = {
-    "NotApplicable",
-    "Unknown",
-    "RST",
-    "RTS",
-    "SRT",
-    "STR",
-    "TRS",
-    "TSR",
-};
-
-enum class ConnectorPhaseRotation {
-    NotApplicable,
-    Unknown,
-    RST,
-    RTS,
-    SRT,
-    STR,
-    TRS,
-    TSR,
-};
-
-
-const char *config_keys[] {
-    //"AllowOfflineTxForUnknownId",
-    //"AuthorizationCacheEnabled",
-    "AuthorizeRemoteTxRequests",
-    //"BlinkRepeat",
-    "ClockAlignedDataInterval",
-    "ConnectionTimeOut",
-    "ConnectorPhaseRotation",
-    "ConnectorPhaseRotationMaxLength",
-    "GetConfigurationMaxKeys",
-    "HeartbeatInterval",
-    //"LightIntensity",
-    "LocalAuthorizeOffline",
-    "LocalPreAuthorize",
-    //"MaxEnergyOnInvalidId",
-    "MeterValuesAlignedData",
-    //"MeterValuesAlignedDataMaxLength",
-    "MeterValuesSampledData",
-    //"MeterValuesSampledDataMaxLength",
-    "MeterValueSampleInterval",
-    //"MinimumStatusDuration",
-    "NumberOfConnectors",
-    "ResetRetries",
-    "StopTransactionOnEVSideDisconnect",
-    "StopTransactionOnInvalidId",
-    "StopTxnAlignedData",
-    //"StopTxnAlignedDataMaxLength",
-    "StopTxnSampledData",
-    //"StopTxnSampledDataMaxLength",
-    "SupportedFeatureProfiles",
-    //"SupportedFeatureProfilesMaxLength",
-    "TransactionMessageAttempts",
-    "TransactionMessageRetryInterval",
-    "UnlockConnectorOnEVSideDisconnect",
-    "WebSocketPingInterval",
-};
-
-enum class ConfigKey {
-    //AllowOfflineTxForUnknownId,
-    //AuthorizationCacheEnabled,
-    AuthorizeRemoteTxRequests,
-    //BlinkRepeat,
-    ClockAlignedDataInterval,
-    ConnectionTimeOut,
-    ConnectorPhaseRotation,
-    ConnectorPhaseRotationMaxLength,
-    GetConfigurationMaxKeys,
-    HeartbeatInterval,
-    //LightIntensity,
-    LocalAuthorizeOffline,
-    LocalPreAuthorize,
-    //MaxEnergyOnInvalidId,
-    MeterValuesAlignedData,
-    //MeterValuesAlignedDataMaxLength,
-    MeterValuesSampledData,
-    //MeterValuesSampledDataMaxLength,
-    MeterValueSampleInterval,
-    //MinimumStatusDuration,
-    NumberOfConnectors,
-    ResetRetries,
-    StopTransactionOnEVSideDisconnect,
-    StopTransactionOnInvalidId,
-    StopTxnAlignedData,
-    //StopTxnAlignedDataMaxLength,
-    StopTxnSampledData,
-    //StopTxnSampledDataMaxLength,
-    SupportedFeatureProfiles,
-    //SupportedFeatureProfilesMaxLength,
-    TransactionMessageAttempts,
-    TransactionMessageRetryInterval,
-    UnlockConnectorOnEVSideDisconnect,
-    WebSocketPingInterval,
-};
-
-OcppConfiguration config[] = {
-    /*AllowOfflineTxForUnknownId*/        //OcppConfiguration::boolean(false, false, false),
-    /*AuthorizationCacheEnabled*/         //OcppConfiguration::boolean(false, false, false),
-    /*AuthorizeRemoteTxRequests*/         OcppConfiguration::boolean(false, false, false),
-    /*BlinkRepeat*/                       //OcppConfiguration::integer(3, false, false),
-    /*ClockAlignedDataInterval*/          OcppConfiguration::integer(0, false, false),
-    /*ConnectionTimeOut*/                 OcppConfiguration::integer(60, false, false),
-
-                                          // +1 for index 0: "the phase rotation between
-                                          //    the grid connection and the main energymeter"
-                                          // +5 for two digits, the dot, comma and space
-                                          // +1 for null-terminator
-                                          // Format is "0.RST, 1.RST, 2.RTS"
-    /*ConnectorPhaseRotation*/            OcppConfiguration::csl("", (NUM_CONNECTORS + 1) * (strlen("NotApplicable") + 5) + 1, NUM_CONNECTORS + 1, false, false, connectorPhaseRotationStrings, ARRAY_SIZE(connectorPhaseRotationStrings), true),
-    /*ConnectorPhaseRotationMaxLength*/   OcppConfiguration::integer(NUM_CONNECTORS + 1, true, false),
-
-    /*GetConfigurationMaxKeys*/           OcppConfiguration::integer(1, true, false),
-    /*HeartbeatInterval*/                 OcppConfiguration::integer(DEFAULT_BOOT_NOTIFICATION_RESEND_INTERVAL_S, false, false),
-    /*LightIntensity*/                    //OcppConfiguration::integer(100, false, false),
-    /*LocalAuthorizeOffline*/             OcppConfiguration::boolean(false, false, false),
-    /*LocalPreAuthorize*/                 OcppConfiguration::boolean(false, false, false),
-    /*MaxEnergyOnInvalidId*/              //OcppConfiguration::integer(0, false, false),
-
-    // Its save to use the number of possible measureants as limit in elements,
-    // because the complete list has a length of 465.
-    // This also means that we don't have to implemeht the MeterValuesAlignedDataMaxLength key.
-    /*MeterValuesAlignedData*/            OcppConfiguration::csl("", MAX_CONFIG_LENGTH, (size_t)MeterValuesMeterValueSampledValueMeasurand::NONE, false, false, MeterValuesMeterValueSampledValueMeasurandStrings, (size_t)MeterValuesMeterValueSampledValueMeasurand::NONE),
-    /*MeterValuesAlignedDataMaxLength*/   //OcppConfiguration::integer(MAX_CONFIG_LENGTH / strlen("Energy.Reactive.Import.Register,"), true, false),
-
-    // Same reasoning as with MeterValuesAlignedData.
-    /*MeterValuesSampledData*/            OcppConfiguration::csl("", MAX_CONFIG_LENGTH, (size_t)MeterValuesMeterValueSampledValueMeasurand::NONE, false, false, MeterValuesMeterValueSampledValueMeasurandStrings, (size_t)MeterValuesMeterValueSampledValueMeasurand::NONE),
-    /*MeterValuesSampledDataMaxLength*/   //OcppConfiguration::integer(0, true, false),
-
-    /*MeterValueSampleInterval*/          OcppConfiguration::integer(0, false, false),
-    /*MinimumStatusDuration*/             //OcppConfiguration::integer(1, false, false),
-    /*NumberOfConnectors*/                OcppConfiguration::integer(1, true, false),
-    /*ResetRetries*/                      OcppConfiguration::integer(1, false, false),
-    /*StopTransactionOnEVSideDisconnect*/ OcppConfiguration::boolean(false, false, false),
-    /*StopTransactionOnInvalidId*/        OcppConfiguration::boolean(false, false, false),
-
-    // Same reasoning as with MeterValuesAlignedData.
-    /*StopTxnAlignedData*/                OcppConfiguration::csl("", MAX_CONFIG_LENGTH, (size_t)MeterValuesMeterValueSampledValueMeasurand::NONE, false, false, MeterValuesMeterValueSampledValueMeasurandStrings, (size_t)MeterValuesMeterValueSampledValueMeasurand::NONE),
-    /*StopTxnAlignedDataMaxLength*/       //OcppConfiguration::integer(0, true, false),
-
-    // Same reasoning as with MeterValuesAlignedData.
-    /*StopTxnSampledData*/                OcppConfiguration::csl("", MAX_CONFIG_LENGTH, (size_t)MeterValuesMeterValueSampledValueMeasurand::NONE, false, false, MeterValuesMeterValueSampledValueMeasurandStrings, (size_t)MeterValuesMeterValueSampledValueMeasurand::NONE),
-    /*StopTxnSampledDataMaxLength*/       //OcppConfiguration::integer(0, true, false),
-
-    /*SupportedFeatureProfiles*/          OcppConfiguration::csl("Core", strlen("Core") + 1, 1, true, false, nullptr, 0, false),
-    /*SupportedFeatureProfilesMaxLength*/ //OcppConfiguration::integer(1, true), //errata 4.0: "This configuration key does not have to be implemented. It should not have been part of OCPP 1.6, "SupportedFeatureProfiles" is a readonly configuration key, false."
-    /*TransactionMessageAttempts*/        OcppConfiguration::integer(3, false, false),
-    /*TransactionMessageRetryInterval*/   OcppConfiguration::integer(10, false, false),
-    /*UnlockConnectorOnEVSideDisconnect*/ OcppConfiguration::boolean(false, false, false),
-    /*WebSocketPingInterval*/             OcppConfiguration::integer(10, false, false),
-};
-
-int32_t getIntConfig(ConfigKey key) {
-    OcppConfiguration &cfg = config[(size_t)key];
-    if (cfg.type != OcppConfigurationValueType::Integer) {
-        platform_printfln("Tried to read config %s (%d) as int, but it is of type %s", config_keys[(size_t) key], (int)key, cfg.type == OcppConfigurationValueType::CSL ? "CSL" : "boolean");
-        return -1;
-    }
-    return cfg.value.integer.i;
-}
-
-bool getBoolConfig(ConfigKey key) {
-    OcppConfiguration &cfg = config[(size_t)key];
-    if (cfg.type != OcppConfigurationValueType::Boolean) {
-        platform_printfln("Tried to read config %s (%d) as bool, but it is of type %s", config_keys[(size_t) key], (int)key, cfg.type == OcppConfigurationValueType::CSL ? "CSL" : "integer");
-        return false;
-    }
-    return cfg.value.boolean.b;
-}
-
-size_t getCSLConfigLen(ConfigKey key) {
-    OcppConfiguration &cfg = config[(size_t)key];
-    if (cfg.type != OcppConfigurationValueType::CSL) {
-        platform_printfln("Tried to read config %s (%d) as csl, but it is of type %s", config_keys[(size_t) key], (int)key, cfg.type == OcppConfigurationValueType::Integer ? "integer" : "boolean");
-        return 0;
-    }
-    return cfg.value.csl.parsed_len;
-}
-
-size_t *getCSLConfig(ConfigKey key) {
-    OcppConfiguration &cfg = config[(size_t)key];
-    if (cfg.type != OcppConfigurationValueType::CSL) {
-        platform_printfln("Tried to read config %s (%d) as csl, but it is of type %s", config_keys[(size_t) key], (int)key, cfg.type == OcppConfigurationValueType::Integer ? "integer" : "boolean");
-        return nullptr;
-    }
-    return cfg.value.csl.parsed;
-}
-
-bool setIntConfig(ConfigKey key, int32_t i) {
-    OcppConfiguration &cfg = config[(size_t)key];
-    if (cfg.type != OcppConfigurationValueType::Integer) {
-        platform_printfln("Tried to write config %s (%d) as int, but it is of type %s", config_keys[(size_t) key], (int)key, cfg.type == OcppConfigurationValueType::CSL ? "CSL" : "boolean");
-        return false;
-    }
-
-    cfg.value.integer.i = i;
-    return true;
-}
-
-bool setBoolConfig(ConfigKey key, bool b) {
-    OcppConfiguration &cfg = config[(size_t)key];
-    if (cfg.type != OcppConfigurationValueType::Boolean) {
-        platform_printfln("Tried to write config %s (%d) as bool, but it is of type %s", config_keys[(size_t) key], (int)key, cfg.type == OcppConfigurationValueType::CSL ? "CSL" : "integer");
-        return false;
-    }
-    cfg.value.boolean.b = b;
-    return true;
-}
-
 void Ocpp::tick_power_on() {
     if ((last_bn_send_ms == 0 && !platform_ws_connected(platform_ctx)) || !deadline_elapsed(last_bn_send_ms + 1000 * getIntConfig(ConfigKey::HeartbeatInterval)))
         return;
+
+    platform_printfln("Sending boot notification. %u %u %u", last_bn_send_ms, last_bn_send_ms + 1000 * getIntConfig(ConfigKey::HeartbeatInterval), 1000 * getIntConfig(ConfigKey::HeartbeatInterval));
 
     last_bn_send_ms = platform_now_ms();
 
@@ -448,12 +238,12 @@ CallResponse Ocpp::handleChangeConfiguration(const char *uid, ChangeConfiguratio
 {
     size_t key_idx;
     ChangeConfigurationResponseStatus status = ChangeConfigurationResponseStatus::ACCEPTED;
-    if (!lookup_key(&key_idx, req.key(), config_keys, ARRAY_SIZE(config_keys))) {
+    if (!lookup_key(&key_idx, req.key(), config_keys, CONFIG_COUNT)) {
         status = ChangeConfigurationResponseStatus::NOT_SUPPORTED;
-    } else if (config[key_idx].readonly) {
+    } else if (getConfig(key_idx).readonly) {
         status = ChangeConfigurationResponseStatus::REJECTED;
     } else {
-        status = config[key_idx].setValue(req.value());
+        status = getConfig(key_idx).setValue(req.value());
     }
 
     DynamicJsonDocument doc{0};
@@ -514,15 +304,15 @@ CallResponse Ocpp::handleGetConfiguration(const char *uid, GetConfigurationView 
     bool dump_all = false;
 
     if (req.key_count() == 0) {
-        known_keys = ARRAY_SIZE(config);
+        known_keys = CONFIG_COUNT;
         scratch_buf_size = 20 * known_keys;
         dump_all = true;
     } else {
         for(size_t i = 0; i < req.key_count(); ++i) {
             size_t result;
-            if (lookup_key(&result, req.key(i).get(), config_keys, ARRAY_SIZE(config_keys))) {
+            if (lookup_key(&result, req.key(i).get(), config_keys, CONFIG_COUNT)) {
                 ++known_keys;
-                switch(config[result].type) {
+                switch(getConfig(result).type) {
                     case OcppConfigurationValueType::Boolean:
                         scratch_buf_size += 0;
                         break;
@@ -552,21 +342,22 @@ CallResponse Ocpp::handleGetConfiguration(const char *uid, GetConfigurationView 
         size_t result = i;
         if (dump_all || lookup_key(&result, req.key(i).get(), config_keys, ARRAY_SIZE(config_keys))) {
             const char *config_value;
-            switch(config[result].type) {
+            OcppConfiguration &config = getConfig(result);
+            switch(config.type) {
                 case OcppConfigurationValueType::Boolean:
-                    config_value = config[result].value.boolean.b ? "true" : "false";
+                    config_value = config.value.boolean.b ? "true" : "false";
                     break;
                 case OcppConfigurationValueType::Integer:
                     config_value = (const char *)scratch_buf + scratch_buf_idx;
-                    scratch_buf_idx += snprintf(scratch_buf + scratch_buf_idx, scratch_buf_size - scratch_buf_idx, "%d", config[result].value.integer.i);
+                    scratch_buf_idx += snprintf(scratch_buf + scratch_buf_idx, scratch_buf_size - scratch_buf_idx, "%d", config.value.integer.i);
                     ++scratch_buf_idx; // for null terminator
                     break;
                 case OcppConfigurationValueType::CSL:
-                    config_value = config[result].value.csl.c;
+                    config_value = config.value.csl.c;
                     break;
             }
             known[known_idx].key = config_keys[result];
-            known[known_idx].readonly = config[result].readonly;
+            known[known_idx].readonly = config.readonly;
             known[known_idx].value = config_value;
             ++known_idx;
         }
