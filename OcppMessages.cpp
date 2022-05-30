@@ -35,9 +35,9 @@ const char *ChangeAvailabilityResponseStatusStrings[] = {
 
 const char *ChangeConfigurationResponseStatusStrings[] = {
     "Accepted",
-    "NotSupported",
+    "Rejected",
     "RebootRequired",
-    "Rejected"
+    "NotSupported"
 };
 
 const char *ClearCacheResponseStatusStrings[] = {
@@ -77,31 +77,30 @@ const char *StatusNotificationErrorCodeStrings[] = {
     "NoError",
     "OtherError",
     "OverCurrentFailure",
-    "OverVoltage",
     "PowerMeterFailure",
     "PowerSwitchFailure",
     "ReaderFailure",
     "ResetFailure",
     "UnderVoltage",
+    "OverVoltage",
     "WeakSignal"
 };
 
 const char *StatusNotificationStatusStrings[] = {
     "Available",
-    "Charging",
-    "Faulted",
-    "Finishing",
     "Preparing",
-    "Reserved",
-    "SuspendedEV",
+    "Charging",
     "SuspendedEVSE",
-    "Unavailable"
+    "SuspendedEV",
+    "Finishing",
+    "Reserved",
+    "Unavailable",
+    "Faulted"
 };
 
 const char *StopTransactionReasonStrings[] = {
-    "DeAuthorized",
-    "EVDisconnected",
     "EmergencyStop",
+    "EVDisconnected",
     "HardReset",
     "Local",
     "Other",
@@ -109,21 +108,22 @@ const char *StopTransactionReasonStrings[] = {
     "Reboot",
     "Remote",
     "SoftReset",
-    "UnlockCommand"
+    "UnlockCommand",
+    "DeAuthorized"
 };
 
 const char *UnlockConnectorResponseStatusStrings[] = {
-    "NotSupported",
+    "Unlocked",
     "UnlockFailed",
-    "Unlocked"
+    "NotSupported"
 };
 
 const char *AuthorizeResponseIdTagInfoEntriesStatusStrings[] = {
     "Accepted",
     "Blocked",
-    "ConcurrentTx",
     "Expired",
-    "Invalid"
+    "Invalid",
+    "ConcurrentTx"
 };
 
 const char *BootNotificationResponseStatusStrings[] = {
@@ -167,28 +167,28 @@ const char *ResetTypeStrings[] = {
 const char *StartTransactionResponseIdTagInfoEntriesStatusStrings[] = {
     "Accepted",
     "Blocked",
-    "ConcurrentTx",
     "Expired",
-    "Invalid"
+    "Invalid",
+    "ConcurrentTx"
 };
 
 const char *StopTransactionResponseIdTagInfoEntriesStatusStrings[] = {
     "Accepted",
     "Blocked",
-    "ConcurrentTx",
     "Expired",
-    "Invalid"
+    "Invalid",
+    "ConcurrentTx"
 };
 
 const char *MeterValuesMeterValueSampledValueContextStrings[] = {
     "Interruption.Begin",
     "Interruption.End",
-    "Other",
     "Sample.Clock",
     "Sample.Periodic",
     "Transaction.Begin",
     "Transaction.End",
-    "Trigger"
+    "Trigger",
+    "Other"
 };
 
 const char *MeterValuesMeterValueSampledValueFormatStrings[] = {
@@ -197,80 +197,80 @@ const char *MeterValuesMeterValueSampledValueFormatStrings[] = {
 };
 
 const char *MeterValuesMeterValueSampledValueMeasurandStrings[] = {
-    "Current.Export",
-    "Current.Import",
-    "Current.Offered",
-    "Energy.Active.Export.Interval",
     "Energy.Active.Export.Register",
-    "Energy.Active.Import.Interval",
     "Energy.Active.Import.Register",
-    "Energy.Reactive.Export.Interval",
     "Energy.Reactive.Export.Register",
-    "Energy.Reactive.Import.Interval",
     "Energy.Reactive.Import.Register",
-    "Frequency",
+    "Energy.Active.Export.Interval",
+    "Energy.Active.Import.Interval",
+    "Energy.Reactive.Export.Interval",
+    "Energy.Reactive.Import.Interval",
     "Power.Active.Export",
     "Power.Active.Import",
-    "Power.Factor",
     "Power.Offered",
     "Power.Reactive.Export",
     "Power.Reactive.Import",
-    "RPM",
-    "SoC",
+    "Power.Factor",
+    "Current.Import",
+    "Current.Export",
+    "Current.Offered",
+    "Voltage",
+    "Frequency",
     "Temperature",
-    "Voltage"
+    "SoC",
+    "RPM"
 };
 
 const char *MeterValuesMeterValueSampledValuePhaseStrings[] = {
     "L1",
-    "L1-L2",
-    "L1-N",
     "L2",
-    "L2-L3",
-    "L2-N",
     "L3",
-    "L3-L1",
+    "N",
+    "L1-N",
+    "L2-N",
     "L3-N",
-    "N"
+    "L1-L2",
+    "L2-L3",
+    "L3-L1"
 };
 
 const char *MeterValuesMeterValueSampledValueLocationStrings[] = {
-    "Body",
     "Cable",
     "EV",
     "Inlet",
-    "Outlet"
+    "Outlet",
+    "Body"
 };
 
 const char *MeterValuesMeterValueSampledValueUnitStrings[] = {
+    "Wh",
+    "kWh",
+    "varh",
+    "kvarh",
+    "W",
+    "kW",
+    "VA",
+    "kVA",
+    "var",
+    "kvar",
     "A",
+    "V",
+    "K",
     "Celcius",
     "Celsius",
     "Fahrenheit",
-    "K",
-    "Percent",
-    "V",
-    "VA",
-    "W",
-    "Wh",
-    "kVA",
-    "kW",
-    "kWh",
-    "kvar",
-    "kvarh",
-    "var",
-    "varh"
+    "Percent"
 };
 
 const char *StopTransactionTransactionDataSampledValueContextStrings[] = {
     "Interruption.Begin",
     "Interruption.End",
-    "Other",
     "Sample.Clock",
     "Sample.Periodic",
     "Transaction.Begin",
     "Transaction.End",
-    "Trigger"
+    "Trigger",
+    "Other"
 };
 
 const char *StopTransactionTransactionDataSampledValueFormatStrings[] = {
@@ -279,68 +279,68 @@ const char *StopTransactionTransactionDataSampledValueFormatStrings[] = {
 };
 
 const char *StopTransactionTransactionDataSampledValueMeasurandStrings[] = {
-    "Current.Export",
-    "Current.Import",
-    "Current.Offered",
-    "Energy.Active.Export.Interval",
     "Energy.Active.Export.Register",
-    "Energy.Active.Import.Interval",
     "Energy.Active.Import.Register",
-    "Energy.Reactive.Export.Interval",
     "Energy.Reactive.Export.Register",
-    "Energy.Reactive.Import.Interval",
     "Energy.Reactive.Import.Register",
-    "Frequency",
+    "Energy.Active.Export.Interval",
+    "Energy.Active.Import.Interval",
+    "Energy.Reactive.Export.Interval",
+    "Energy.Reactive.Import.Interval",
     "Power.Active.Export",
     "Power.Active.Import",
-    "Power.Factor",
     "Power.Offered",
     "Power.Reactive.Export",
     "Power.Reactive.Import",
-    "RPM",
-    "SoC",
+    "Power.Factor",
+    "Current.Import",
+    "Current.Export",
+    "Current.Offered",
+    "Voltage",
+    "Frequency",
     "Temperature",
-    "Voltage"
+    "SoC",
+    "RPM"
 };
 
 const char *StopTransactionTransactionDataSampledValuePhaseStrings[] = {
     "L1",
-    "L1-L2",
-    "L1-N",
     "L2",
-    "L2-L3",
-    "L2-N",
     "L3",
-    "L3-L1",
+    "N",
+    "L1-N",
+    "L2-N",
     "L3-N",
-    "N"
+    "L1-L2",
+    "L2-L3",
+    "L3-L1"
 };
 
 const char *StopTransactionTransactionDataSampledValueLocationStrings[] = {
-    "Body",
     "Cable",
     "EV",
     "Inlet",
-    "Outlet"
+    "Outlet",
+    "Body"
 };
 
 const char *StopTransactionTransactionDataSampledValueUnitStrings[] = {
+    "Wh",
+    "kWh",
+    "varh",
+    "kvarh",
+    "W",
+    "kW",
+    "VA",
+    "kVA",
+    "var",
+    "kvar",
     "A",
+    "V",
+    "K",
     "Celcius",
     "Fahrenheit",
-    "K",
-    "Percent",
-    "V",
-    "VA",
-    "W",
-    "Wh",
-    "kVA",
-    "kW",
-    "kWh",
-    "kvar",
-    "kvarh",
-    "var",
-    "varh"
+    "Percent"
 };
 
 
@@ -451,7 +451,7 @@ bool ChangeAvailabilityResponse(DynamicJsonDocument *result, const char *call_id
 
     (*result).add((int32_t)OcppRpcMessageType::CALLRESULT);
     (*result).add(call_id);
-    
+
     JsonObject payload = (*result).createNestedObject();
 
     if (status != ChangeAvailabilityResponseStatus::NONE) payload["status"] = ChangeAvailabilityResponseStatusStrings[(size_t)status];
@@ -471,7 +471,7 @@ bool ChangeConfigurationResponse(DynamicJsonDocument *result, const char *call_i
 
     (*result).add((int32_t)OcppRpcMessageType::CALLRESULT);
     (*result).add(call_id);
-    
+
     JsonObject payload = (*result).createNestedObject();
 
     if (status != ChangeConfigurationResponseStatus::NONE) payload["status"] = ChangeConfigurationResponseStatusStrings[(size_t)status];
@@ -491,7 +491,7 @@ bool ClearCacheResponse(DynamicJsonDocument *result, const char *call_id,
 
     (*result).add((int32_t)OcppRpcMessageType::CALLRESULT);
     (*result).add(call_id);
-    
+
     JsonObject payload = (*result).createNestedObject();
 
     if (status != ClearCacheResponseStatus::NONE) payload["status"] = ClearCacheResponseStatusStrings[(size_t)status];
@@ -536,7 +536,7 @@ bool DataTransferResponse(DynamicJsonDocument *result, const char *call_id,
 
     (*result).add((int32_t)OcppRpcMessageType::CALLRESULT);
     (*result).add(call_id);
-    
+
     JsonObject payload = (*result).createNestedObject();
 
     if (status != DataTransferResponseStatus::NONE) payload["status"] = DataTransferResponseStatusStrings[(size_t)status];
@@ -557,7 +557,7 @@ bool GetConfigurationResponse(DynamicJsonDocument *result, const char *call_id,
 
     (*result).add((int32_t)OcppRpcMessageType::CALLRESULT);
     (*result).add(call_id);
-    
+
     JsonObject payload = (*result).createNestedObject();
 
     if (configurationKey != nullptr) { JsonArray arr = payload.createNestedArray("configurationKey"); for(size_t i = 0; i < configurationKey_length; ++i) { JsonObject obj = arr.createNestedObject(); configurationKey[i].serializeInto(obj); } }
@@ -619,7 +619,7 @@ bool RemoteStartTransactionResponse(DynamicJsonDocument *result, const char *cal
 
     (*result).add((int32_t)OcppRpcMessageType::CALLRESULT);
     (*result).add(call_id);
-    
+
     JsonObject payload = (*result).createNestedObject();
 
     if (status != RemoteStartTransactionResponseStatus::NONE) payload["status"] = RemoteStartTransactionResponseStatusStrings[(size_t)status];
@@ -639,7 +639,7 @@ bool RemoteStopTransactionResponse(DynamicJsonDocument *result, const char *call
 
     (*result).add((int32_t)OcppRpcMessageType::CALLRESULT);
     (*result).add(call_id);
-    
+
     JsonObject payload = (*result).createNestedObject();
 
     if (status != RemoteStopTransactionResponseStatus::NONE) payload["status"] = RemoteStopTransactionResponseStatusStrings[(size_t)status];
@@ -659,7 +659,7 @@ bool ResetResponse(DynamicJsonDocument *result, const char *call_id,
 
     (*result).add((int32_t)OcppRpcMessageType::CALLRESULT);
     (*result).add(call_id);
-    
+
     JsonObject payload = (*result).createNestedObject();
 
     if (status != ResetResponseStatus::NONE) payload["status"] = ResetResponseStatusStrings[(size_t)status];
@@ -776,7 +776,7 @@ bool UnlockConnectorResponse(DynamicJsonDocument *result, const char *call_id,
 
     (*result).add((int32_t)OcppRpcMessageType::CALLRESULT);
     (*result).add(call_id);
-    
+
     JsonObject payload = (*result).createNestedObject();
 
     if (status != UnlockConnectorResponseStatus::NONE) payload["status"] = UnlockConnectorResponseStatusStrings[(size_t)status];
@@ -785,7 +785,7 @@ bool UnlockConnectorResponse(DynamicJsonDocument *result, const char *call_id,
 }
 
 static CallResponse parseAuthorizeResponseIdTagInfoEntriesExpiryDate(JsonVariant var) {
-    
+
     if (!var.is<const char *>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "expiryDate: wrong type"};
 
@@ -801,7 +801,7 @@ static CallResponse parseAuthorizeResponseIdTagInfoEntriesExpiryDate(JsonVariant
 }
 
 static CallResponse parseAuthorizeResponseIdTagInfoEntriesParentIdTag(JsonVariant var) {
-    
+
     if (!var.is<const char *>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "parentIdTag: wrong type"};
 
@@ -812,7 +812,7 @@ static CallResponse parseAuthorizeResponseIdTagInfoEntriesParentIdTag(JsonVarian
 }
 
 static CallResponse parseAuthorizeResponseIdTagInfoEntriesStatus(JsonVariant var) {
-    
+
     if (!var.is<const char *>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "status: wrong type"};
 
@@ -852,7 +852,7 @@ static CallResponse parseAuthorizeResponseIdTagInfoEntries(JsonObject obj) {
     }
     ++keys_handled;
     }
-    
+
     if (!obj.containsKey("status"))
         return CallResponse{CallErrorCode::OccurenceConstraintViolation, "status: required, but missing"};
 
@@ -870,7 +870,7 @@ static CallResponse parseAuthorizeResponseIdTagInfoEntries(JsonObject obj) {
     return CallResponse{CallErrorCode::OK, nullptr};
 }
 static CallResponse parseAuthorizeResponseIdTagInfo(JsonVariant var) {
-    
+
     if (!var.is<JsonObject>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "idTagInfo: wrong type"};
 
@@ -903,7 +903,7 @@ CallResponse parseAuthorizeResponse(JsonObject obj) {
 }
 
 static CallResponse parseBootNotificationResponseStatus(JsonVariant var) {
-    
+
     if (!var.is<const char *>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "status: wrong type"};
 
@@ -926,7 +926,7 @@ static CallResponse parseBootNotificationResponseStatus(JsonVariant var) {
 }
 
 static CallResponse parseBootNotificationResponseCurrentTime(JsonVariant var) {
-    
+
     if (!var.is<const char *>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "currentTime: wrong type"};
 
@@ -942,7 +942,7 @@ static CallResponse parseBootNotificationResponseCurrentTime(JsonVariant var) {
 }
 
 static CallResponse parseBootNotificationResponseInterval(JsonVariant var) {
-    
+
     if (!var.is<int32_t>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "interval: wrong type"};
 
@@ -960,7 +960,7 @@ CallResponse parseBootNotificationResponse(JsonObject obj) {
             return inner_result;
     }
     ++keys_handled;
-    
+
     if (!obj.containsKey("currentTime"))
         return CallResponse{CallErrorCode::OccurenceConstraintViolation, "currentTime: required, but missing"};
 
@@ -970,7 +970,7 @@ CallResponse parseBootNotificationResponse(JsonObject obj) {
             return inner_result;
     }
     ++keys_handled;
-    
+
     if (!obj.containsKey("interval"))
         return CallResponse{CallErrorCode::OccurenceConstraintViolation, "interval: required, but missing"};
 
@@ -989,7 +989,7 @@ CallResponse parseBootNotificationResponse(JsonObject obj) {
 }
 
 static CallResponse parseChangeAvailabilityConnectorId(JsonVariant var) {
-    
+
     if (!var.is<int32_t>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "connectorId: wrong type"};
 
@@ -997,7 +997,7 @@ static CallResponse parseChangeAvailabilityConnectorId(JsonVariant var) {
 }
 
 static CallResponse parseChangeAvailabilityType(JsonVariant var) {
-    
+
     if (!var.is<const char *>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "type: wrong type"};
 
@@ -1030,7 +1030,7 @@ CallResponse parseChangeAvailability(JsonObject obj) {
             return inner_result;
     }
     ++keys_handled;
-    
+
     if (!obj.containsKey("type"))
         return CallResponse{CallErrorCode::OccurenceConstraintViolation, "type: required, but missing"};
 
@@ -1049,7 +1049,7 @@ CallResponse parseChangeAvailability(JsonObject obj) {
 }
 
 static CallResponse parseChangeConfigurationKey(JsonVariant var) {
-    
+
     if (!var.is<const char *>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "key: wrong type"};
 
@@ -1060,7 +1060,7 @@ static CallResponse parseChangeConfigurationKey(JsonVariant var) {
 }
 
 static CallResponse parseChangeConfigurationValue(JsonVariant var) {
-    
+
     if (!var.is<const char *>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "value: wrong type"};
 
@@ -1081,7 +1081,7 @@ CallResponse parseChangeConfiguration(JsonObject obj) {
             return inner_result;
     }
     ++keys_handled;
-    
+
     if (!obj.containsKey("value"))
         return CallResponse{CallErrorCode::OccurenceConstraintViolation, "value: required, but missing"};
 
@@ -1110,7 +1110,7 @@ CallResponse parseClearCache(JsonObject obj) {
 }
 
 static CallResponse parseDataTransferVendorId(JsonVariant var) {
-    
+
     if (!var.is<const char *>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "vendorId: wrong type"};
 
@@ -1121,7 +1121,7 @@ static CallResponse parseDataTransferVendorId(JsonVariant var) {
 }
 
 static CallResponse parseDataTransferMessageId(JsonVariant var) {
-    
+
     if (!var.is<const char *>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "messageId: wrong type"};
 
@@ -1132,7 +1132,7 @@ static CallResponse parseDataTransferMessageId(JsonVariant var) {
 }
 
 static CallResponse parseDataTransferData(JsonVariant var) {
-    
+
     if (!var.is<const char *>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "data: wrong type"};
 
@@ -1175,7 +1175,7 @@ CallResponse parseDataTransfer(JsonObject obj) {
 }
 
 static CallResponse parseDataTransferResponseStatus(JsonVariant var) {
-    
+
     if (!var.is<const char *>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "status: wrong type"};
 
@@ -1198,7 +1198,7 @@ static CallResponse parseDataTransferResponseStatus(JsonVariant var) {
 }
 
 static CallResponse parseDataTransferResponseData(JsonVariant var) {
-    
+
     if (!var.is<const char *>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "data: wrong type"};
 
@@ -1233,7 +1233,7 @@ CallResponse parseDataTransferResponse(JsonObject obj) {
 }
 
 static CallResponse parseGetConfigurationKeyEntry(JsonVariant var) {
-    
+
     if (!var.is<const char *>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "keyEntry: wrong type"};
 
@@ -1243,7 +1243,7 @@ static CallResponse parseGetConfigurationKeyEntry(JsonVariant var) {
     return CallResponse{CallErrorCode::OK, nullptr};
 }
 static CallResponse parseGetConfigurationKey(JsonVariant var) {
-    
+
     if (!var.is<JsonArray>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "key: wrong type"};
 
@@ -1277,7 +1277,7 @@ CallResponse parseGetConfiguration(JsonObject obj) {
 }
 
 static CallResponse parseHeartbeatResponseCurrentTime(JsonVariant var) {
-    
+
     if (!var.is<const char *>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "currentTime: wrong type"};
 
@@ -1322,7 +1322,7 @@ CallResponse parseMeterValuesResponse(JsonObject obj) {
 }
 
 static CallResponse parseRemoteStartTransactionConnectorId(JsonVariant var) {
-    
+
     if (!var.is<int32_t>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "connectorId: wrong type"};
 
@@ -1330,7 +1330,7 @@ static CallResponse parseRemoteStartTransactionConnectorId(JsonVariant var) {
 }
 
 static CallResponse parseRemoteStartTransactionIdTag(JsonVariant var) {
-    
+
     if (!var.is<const char *>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "idTag: wrong type"};
 
@@ -1341,7 +1341,7 @@ static CallResponse parseRemoteStartTransactionIdTag(JsonVariant var) {
 }
 
 static CallResponse parseRemoteStartTransactionChargingProfileEntriesChargingProfileId(JsonVariant var) {
-    
+
     if (!var.is<int32_t>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "chargingProfileId: wrong type"};
 
@@ -1349,7 +1349,7 @@ static CallResponse parseRemoteStartTransactionChargingProfileEntriesChargingPro
 }
 
 static CallResponse parseRemoteStartTransactionChargingProfileEntriesTransactionId(JsonVariant var) {
-    
+
     if (!var.is<int32_t>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "transactionId: wrong type"};
 
@@ -1357,7 +1357,7 @@ static CallResponse parseRemoteStartTransactionChargingProfileEntriesTransaction
 }
 
 static CallResponse parseRemoteStartTransactionChargingProfileEntriesStackLevel(JsonVariant var) {
-    
+
     if (!var.is<int32_t>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "stackLevel: wrong type"};
 
@@ -1365,7 +1365,7 @@ static CallResponse parseRemoteStartTransactionChargingProfileEntriesStackLevel(
 }
 
 static CallResponse parseRemoteStartTransactionChargingProfileEntriesChargingProfilePurpose(JsonVariant var) {
-    
+
     if (!var.is<const char *>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "chargingProfilePurpose: wrong type"};
 
@@ -1388,7 +1388,7 @@ static CallResponse parseRemoteStartTransactionChargingProfileEntriesChargingPro
 }
 
 static CallResponse parseRemoteStartTransactionChargingProfileEntriesChargingProfileKind(JsonVariant var) {
-    
+
     if (!var.is<const char *>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "chargingProfileKind: wrong type"};
 
@@ -1411,7 +1411,7 @@ static CallResponse parseRemoteStartTransactionChargingProfileEntriesChargingPro
 }
 
 static CallResponse parseRemoteStartTransactionChargingProfileEntriesRecurrencyKind(JsonVariant var) {
-    
+
     if (!var.is<const char *>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "recurrencyKind: wrong type"};
 
@@ -1434,7 +1434,7 @@ static CallResponse parseRemoteStartTransactionChargingProfileEntriesRecurrencyK
 }
 
 static CallResponse parseRemoteStartTransactionChargingProfileEntriesValidFrom(JsonVariant var) {
-    
+
     if (!var.is<const char *>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "validFrom: wrong type"};
 
@@ -1450,7 +1450,7 @@ static CallResponse parseRemoteStartTransactionChargingProfileEntriesValidFrom(J
 }
 
 static CallResponse parseRemoteStartTransactionChargingProfileEntriesValidTo(JsonVariant var) {
-    
+
     if (!var.is<const char *>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "validTo: wrong type"};
 
@@ -1466,7 +1466,7 @@ static CallResponse parseRemoteStartTransactionChargingProfileEntriesValidTo(Jso
 }
 
 static CallResponse parseRemoteStartTransactionChargingProfileEntriesChargingScheduleEntriesDuration(JsonVariant var) {
-    
+
     if (!var.is<int32_t>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "duration: wrong type"};
 
@@ -1474,7 +1474,7 @@ static CallResponse parseRemoteStartTransactionChargingProfileEntriesChargingSch
 }
 
 static CallResponse parseRemoteStartTransactionChargingProfileEntriesChargingScheduleEntriesStartSchedule(JsonVariant var) {
-    
+
     if (!var.is<const char *>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "startSchedule: wrong type"};
 
@@ -1490,7 +1490,7 @@ static CallResponse parseRemoteStartTransactionChargingProfileEntriesChargingSch
 }
 
 static CallResponse parseRemoteStartTransactionChargingProfileEntriesChargingScheduleEntriesChargingRateUnit(JsonVariant var) {
-    
+
     if (!var.is<const char *>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "chargingRateUnit: wrong type"};
 
@@ -1513,7 +1513,7 @@ static CallResponse parseRemoteStartTransactionChargingProfileEntriesChargingSch
 }
 
 static CallResponse parseRemoteStartTransactionChargingProfileEntriesChargingScheduleEntriesChargingSchedulePeriodEntryEntriesStartPeriod(JsonVariant var) {
-    
+
     if (!var.is<int32_t>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "startPeriod: wrong type"};
 
@@ -1521,7 +1521,7 @@ static CallResponse parseRemoteStartTransactionChargingProfileEntriesChargingSch
 }
 
 static CallResponse parseRemoteStartTransactionChargingProfileEntriesChargingScheduleEntriesChargingSchedulePeriodEntryEntriesLimit(JsonVariant var) {
-    
+
     if (!var.is<float>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "limit: wrong type"};
 
@@ -1529,7 +1529,7 @@ static CallResponse parseRemoteStartTransactionChargingProfileEntriesChargingSch
 }
 
 static CallResponse parseRemoteStartTransactionChargingProfileEntriesChargingScheduleEntriesChargingSchedulePeriodEntryEntriesNumberPhases(JsonVariant var) {
-    
+
     if (!var.is<int32_t>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "numberPhases: wrong type"};
 
@@ -1547,7 +1547,7 @@ static CallResponse parseRemoteStartTransactionChargingProfileEntriesChargingSch
             return inner_result;
     }
     ++keys_handled;
-    
+
     if (!obj.containsKey("limit"))
         return CallResponse{CallErrorCode::OccurenceConstraintViolation, "limit: required, but missing"};
 
@@ -1573,7 +1573,7 @@ static CallResponse parseRemoteStartTransactionChargingProfileEntriesChargingSch
     return CallResponse{CallErrorCode::OK, nullptr};
 }
 static CallResponse parseRemoteStartTransactionChargingProfileEntriesChargingScheduleEntriesChargingSchedulePeriodEntry(JsonVariant var) {
-    
+
     if (!var.is<JsonObject>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "chargingSchedulePeriodEntry: wrong type"};
 
@@ -1586,7 +1586,7 @@ static CallResponse parseRemoteStartTransactionChargingProfileEntriesChargingSch
     return CallResponse{CallErrorCode::OK, nullptr};
 }
 static CallResponse parseRemoteStartTransactionChargingProfileEntriesChargingScheduleEntriesChargingSchedulePeriod(JsonVariant var) {
-    
+
     if (!var.is<JsonArray>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "chargingSchedulePeriod: wrong type"};
 
@@ -1602,7 +1602,7 @@ static CallResponse parseRemoteStartTransactionChargingProfileEntriesChargingSch
 }
 
 static CallResponse parseRemoteStartTransactionChargingProfileEntriesChargingScheduleEntriesMinChargingRate(JsonVariant var) {
-    
+
     if (!var.is<float>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "minChargingRate: wrong type"};
 
@@ -1627,7 +1627,7 @@ static CallResponse parseRemoteStartTransactionChargingProfileEntriesChargingSch
     }
     ++keys_handled;
     }
-    
+
     if (!obj.containsKey("chargingRateUnit"))
         return CallResponse{CallErrorCode::OccurenceConstraintViolation, "chargingRateUnit: required, but missing"};
 
@@ -1637,7 +1637,7 @@ static CallResponse parseRemoteStartTransactionChargingProfileEntriesChargingSch
             return inner_result;
     }
     ++keys_handled;
-    
+
     if (!obj.containsKey("chargingSchedulePeriod"))
         return CallResponse{CallErrorCode::OccurenceConstraintViolation, "chargingSchedulePeriod: required, but missing"};
 
@@ -1663,7 +1663,7 @@ static CallResponse parseRemoteStartTransactionChargingProfileEntriesChargingSch
     return CallResponse{CallErrorCode::OK, nullptr};
 }
 static CallResponse parseRemoteStartTransactionChargingProfileEntriesChargingSchedule(JsonVariant var) {
-    
+
     if (!var.is<JsonObject>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "chargingSchedule: wrong type"};
 
@@ -1695,7 +1695,7 @@ static CallResponse parseRemoteStartTransactionChargingProfileEntries(JsonObject
     }
     ++keys_handled;
     }
-    
+
     if (!obj.containsKey("stackLevel"))
         return CallResponse{CallErrorCode::OccurenceConstraintViolation, "stackLevel: required, but missing"};
 
@@ -1705,7 +1705,7 @@ static CallResponse parseRemoteStartTransactionChargingProfileEntries(JsonObject
             return inner_result;
     }
     ++keys_handled;
-    
+
     if (!obj.containsKey("chargingProfilePurpose"))
         return CallResponse{CallErrorCode::OccurenceConstraintViolation, "chargingProfilePurpose: required, but missing"};
 
@@ -1715,7 +1715,7 @@ static CallResponse parseRemoteStartTransactionChargingProfileEntries(JsonObject
             return inner_result;
     }
     ++keys_handled;
-    
+
     if (!obj.containsKey("chargingProfileKind"))
         return CallResponse{CallErrorCode::OccurenceConstraintViolation, "chargingProfileKind: required, but missing"};
 
@@ -1749,7 +1749,7 @@ static CallResponse parseRemoteStartTransactionChargingProfileEntries(JsonObject
     }
     ++keys_handled;
     }
-    
+
     if (!obj.containsKey("chargingSchedule"))
         return CallResponse{CallErrorCode::OccurenceConstraintViolation, "chargingSchedule: required, but missing"};
 
@@ -1767,7 +1767,7 @@ static CallResponse parseRemoteStartTransactionChargingProfileEntries(JsonObject
     return CallResponse{CallErrorCode::OK, nullptr};
 }
 static CallResponse parseRemoteStartTransactionChargingProfile(JsonVariant var) {
-    
+
     if (!var.is<JsonObject>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "chargingProfile: wrong type"};
 
@@ -1790,7 +1790,7 @@ CallResponse parseRemoteStartTransaction(JsonObject obj) {
     }
     ++keys_handled;
     }
-    
+
     if (!obj.containsKey("idTag"))
         return CallResponse{CallErrorCode::OccurenceConstraintViolation, "idTag: required, but missing"};
 
@@ -1817,7 +1817,7 @@ CallResponse parseRemoteStartTransaction(JsonObject obj) {
 }
 
 static CallResponse parseRemoteStopTransactionTransactionId(JsonVariant var) {
-    
+
     if (!var.is<int32_t>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "transactionId: wrong type"};
 
@@ -1844,7 +1844,7 @@ CallResponse parseRemoteStopTransaction(JsonObject obj) {
 }
 
 static CallResponse parseResetType(JsonVariant var) {
-    
+
     if (!var.is<const char *>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "type: wrong type"};
 
@@ -1886,7 +1886,7 @@ CallResponse parseReset(JsonObject obj) {
 }
 
 static CallResponse parseStartTransactionResponseIdTagInfoEntriesExpiryDate(JsonVariant var) {
-    
+
     if (!var.is<const char *>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "expiryDate: wrong type"};
 
@@ -1902,7 +1902,7 @@ static CallResponse parseStartTransactionResponseIdTagInfoEntriesExpiryDate(Json
 }
 
 static CallResponse parseStartTransactionResponseIdTagInfoEntriesParentIdTag(JsonVariant var) {
-    
+
     if (!var.is<const char *>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "parentIdTag: wrong type"};
 
@@ -1913,7 +1913,7 @@ static CallResponse parseStartTransactionResponseIdTagInfoEntriesParentIdTag(Jso
 }
 
 static CallResponse parseStartTransactionResponseIdTagInfoEntriesStatus(JsonVariant var) {
-    
+
     if (!var.is<const char *>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "status: wrong type"};
 
@@ -1953,7 +1953,7 @@ static CallResponse parseStartTransactionResponseIdTagInfoEntries(JsonObject obj
     }
     ++keys_handled;
     }
-    
+
     if (!obj.containsKey("status"))
         return CallResponse{CallErrorCode::OccurenceConstraintViolation, "status: required, but missing"};
 
@@ -1971,7 +1971,7 @@ static CallResponse parseStartTransactionResponseIdTagInfoEntries(JsonObject obj
     return CallResponse{CallErrorCode::OK, nullptr};
 }
 static CallResponse parseStartTransactionResponseIdTagInfo(JsonVariant var) {
-    
+
     if (!var.is<JsonObject>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "idTagInfo: wrong type"};
 
@@ -1985,7 +1985,7 @@ static CallResponse parseStartTransactionResponseIdTagInfo(JsonVariant var) {
 }
 
 static CallResponse parseStartTransactionResponseTransactionId(JsonVariant var) {
-    
+
     if (!var.is<int32_t>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "transactionId: wrong type"};
 
@@ -2003,7 +2003,7 @@ CallResponse parseStartTransactionResponse(JsonObject obj) {
             return inner_result;
     }
     ++keys_handled;
-    
+
     if (!obj.containsKey("transactionId"))
         return CallResponse{CallErrorCode::OccurenceConstraintViolation, "transactionId: required, but missing"};
 
@@ -2032,7 +2032,7 @@ CallResponse parseStatusNotificationResponse(JsonObject obj) {
 }
 
 static CallResponse parseStopTransactionResponseIdTagInfoEntriesExpiryDate(JsonVariant var) {
-    
+
     if (!var.is<const char *>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "expiryDate: wrong type"};
 
@@ -2048,7 +2048,7 @@ static CallResponse parseStopTransactionResponseIdTagInfoEntriesExpiryDate(JsonV
 }
 
 static CallResponse parseStopTransactionResponseIdTagInfoEntriesParentIdTag(JsonVariant var) {
-    
+
     if (!var.is<const char *>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "parentIdTag: wrong type"};
 
@@ -2059,7 +2059,7 @@ static CallResponse parseStopTransactionResponseIdTagInfoEntriesParentIdTag(Json
 }
 
 static CallResponse parseStopTransactionResponseIdTagInfoEntriesStatus(JsonVariant var) {
-    
+
     if (!var.is<const char *>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "status: wrong type"};
 
@@ -2099,7 +2099,7 @@ static CallResponse parseStopTransactionResponseIdTagInfoEntries(JsonObject obj)
     }
     ++keys_handled;
     }
-    
+
     if (!obj.containsKey("status"))
         return CallResponse{CallErrorCode::OccurenceConstraintViolation, "status: required, but missing"};
 
@@ -2117,7 +2117,7 @@ static CallResponse parseStopTransactionResponseIdTagInfoEntries(JsonObject obj)
     return CallResponse{CallErrorCode::OK, nullptr};
 }
 static CallResponse parseStopTransactionResponseIdTagInfo(JsonVariant var) {
-    
+
     if (!var.is<JsonObject>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "idTagInfo: wrong type"};
 
@@ -2149,7 +2149,7 @@ CallResponse parseStopTransactionResponse(JsonObject obj) {
 }
 
 static CallResponse parseUnlockConnectorConnectorId(JsonVariant var) {
-    
+
     if (!var.is<int32_t>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "connectorId: wrong type"};
 
@@ -2177,61 +2177,61 @@ CallResponse parseUnlockConnector(JsonObject obj) {
 
 const char *CallActionStrings[] = {
     "Authorize",
-    "AuthorizeResponse",
     "BootNotification",
-    "BootNotificationResponse",
-    "CancelReservation",
-    "CancelReservationResponse",
-    "ChangeAvailability",
     "ChangeAvailabilityResponse",
-    "ChangeConfiguration",
     "ChangeConfigurationResponse",
-    "ClearCache",
     "ClearCacheResponse",
-    "ClearChargingProfile",
-    "ClearChargingProfileResponse",
     "DataTransfer",
     "DataTransferResponse",
-    "DiagnosticsStatusNotification",
-    "DiagnosticsStatusNotificationResponse",
-    "FirmwareStatusNotification",
-    "FirmwareStatusNotificationResponse",
-    "GetCompositeSchedule",
-    "GetCompositeScheduleResponse",
-    "GetConfiguration",
     "GetConfigurationResponse",
-    "GetDiagnostics",
-    "GetDiagnosticsResponse",
-    "GetLocalListVersion",
-    "GetLocalListVersionResponse",
     "Heartbeat",
-    "HeartbeatResponse",
     "MeterValues",
+    "RemoteStartTransactionResponse",
+    "RemoteStopTransactionResponse",
+    "ResetResponse",
+    "StartTransaction",
+    "StatusNotification",
+    "StopTransaction",
+    "UnlockConnectorResponse",
+    "AuthorizeResponse",
+    "BootNotificationResponse",
+    "ChangeAvailability",
+    "ChangeConfiguration",
+    "ClearCache",
+    "GetConfiguration",
+    "HeartbeatResponse",
     "MeterValuesResponse",
     "RemoteStartTransaction",
-    "RemoteStartTransactionResponse",
     "RemoteStopTransaction",
-    "RemoteStopTransactionResponse",
-    "ReserveNow",
-    "ReserveNowResponse",
     "Reset",
-    "ResetResponse",
-    "SendLocalList",
-    "SendLocalListResponse",
-    "SetChargingProfile",
-    "SetChargingProfileResponse",
-    "StartTransaction",
     "StartTransactionResponse",
-    "StatusNotification",
     "StatusNotificationResponse",
-    "StopTransaction",
     "StopTransactionResponse",
-    "TriggerMessage",
-    "TriggerMessageResponse",
     "UnlockConnector",
-    "UnlockConnectorResponse",
+    "GetDiagnosticsResponse",
+    "DiagnosticsStatusNotification",
+    "FirmwareStatusNotification",
+    "UpdateFirmwareResponse",
+    "GetDiagnostics",
+    "DiagnosticsStatusNotificationResponse",
+    "FirmwareStatusNotificationResponse",
     "UpdateFirmware",
-    "UpdateFirmwareResponse"
+    "GetLocalListVersionResponse",
+    "SendLocalListResponse",
+    "GetLocalListVersion",
+    "SendLocalList",
+    "CancelReservationResponse",
+    "ReserveNowResponse",
+    "CancelReservation",
+    "ReserveNow",
+    "ClearChargingProfileResponse",
+    "GetCompositeScheduleResponse",
+    "SetChargingProfileResponse",
+    "ClearChargingProfile",
+    "GetCompositeSchedule",
+    "SetChargingProfile",
+    "TriggerMessageResponse",
+    "TriggerMessage"
 };
 CallResponse callHandler(const char *uid, const char *action_string, JsonObject obj, Ocpp *ocpp) {
     CallAction action;

@@ -20,9 +20,9 @@ extern const char *ChangeConfigurationResponseStatusStrings[];
 
 enum class ChangeConfigurationResponseStatus {
     ACCEPTED,
-    NOT_SUPPORTED,
-    REBOOT_REQUIRED,
     REJECTED,
+    REBOOT_REQUIRED,
+    NOT_SUPPORTED,
     NONE
 };
 
@@ -80,12 +80,12 @@ enum class StatusNotificationErrorCode {
     NO_ERROR,
     OTHER_ERROR,
     OVER_CURRENT_FAILURE,
-    OVER_VOLTAGE,
     POWER_METER_FAILURE,
     POWER_SWITCH_FAILURE,
     READER_FAILURE,
     RESET_FAILURE,
     UNDER_VOLTAGE,
+    OVER_VOLTAGE,
     WEAK_SIGNAL,
     NONE
 };
@@ -94,23 +94,22 @@ extern const char *StatusNotificationStatusStrings[];
 
 enum class StatusNotificationStatus {
     AVAILABLE,
-    CHARGING,
-    FAULTED,
-    FINISHING,
     PREPARING,
-    RESERVED,
-    SUSPENDED_EV,
+    CHARGING,
     SUSPENDED_EVSE,
+    SUSPENDED_EV,
+    FINISHING,
+    RESERVED,
     UNAVAILABLE,
+    FAULTED,
     NONE
 };
 
 extern const char *StopTransactionReasonStrings[];
 
 enum class StopTransactionReason {
-    DE_AUTHORIZED,
-    EV_DISCONNECTED,
     EMERGENCY_STOP,
+    EV_DISCONNECTED,
     HARD_RESET,
     LOCAL,
     OTHER,
@@ -119,15 +118,16 @@ enum class StopTransactionReason {
     REMOTE,
     SOFT_RESET,
     UNLOCK_COMMAND,
+    DE_AUTHORIZED,
     NONE
 };
 
 extern const char *UnlockConnectorResponseStatusStrings[];
 
 enum class UnlockConnectorResponseStatus {
-    NOT_SUPPORTED,
-    UNLOCK_FAILED,
     UNLOCKED,
+    UNLOCK_FAILED,
+    NOT_SUPPORTED,
     NONE
 };
 
@@ -136,9 +136,9 @@ extern const char *AuthorizeResponseIdTagInfoEntriesStatusStrings[];
 enum class AuthorizeResponseIdTagInfoEntriesStatus {
     ACCEPTED,
     BLOCKED,
-    CONCURRENT_TX,
     EXPIRED,
-    INVALID
+    INVALID,
+    CONCURRENT_TX
 };
 
 extern const char *BootNotificationResponseStatusStrings[];
@@ -198,9 +198,9 @@ extern const char *StartTransactionResponseIdTagInfoEntriesStatusStrings[];
 enum class StartTransactionResponseIdTagInfoEntriesStatus {
     ACCEPTED,
     BLOCKED,
-    CONCURRENT_TX,
     EXPIRED,
-    INVALID
+    INVALID,
+    CONCURRENT_TX
 };
 
 extern const char *StopTransactionResponseIdTagInfoEntriesStatusStrings[];
@@ -208,9 +208,9 @@ extern const char *StopTransactionResponseIdTagInfoEntriesStatusStrings[];
 enum class StopTransactionResponseIdTagInfoEntriesStatus {
     ACCEPTED,
     BLOCKED,
-    CONCURRENT_TX,
     EXPIRED,
-    INVALID
+    INVALID,
+    CONCURRENT_TX
 };
 
 extern const char *MeterValuesMeterValueSampledValueContextStrings[];
@@ -218,12 +218,12 @@ extern const char *MeterValuesMeterValueSampledValueContextStrings[];
 enum class MeterValuesMeterValueSampledValueContext {
     INTERRUPTION_BEGIN,
     INTERRUPTION_END,
-    OTHER,
     SAMPLE_CLOCK,
     SAMPLE_PERIODIC,
     TRANSACTION_BEGIN,
     TRANSACTION_END,
     TRIGGER,
+    OTHER,
     NONE
 };
 
@@ -238,28 +238,28 @@ enum class MeterValuesMeterValueSampledValueFormat {
 extern const char *MeterValuesMeterValueSampledValueMeasurandStrings[];
 
 enum class MeterValuesMeterValueSampledValueMeasurand {
-    CURRENT_EXPORT,
-    CURRENT_IMPORT,
-    CURRENT_OFFERED,
-    ENERGY_ACTIVE_EXPORT_INTERVAL,
     ENERGY_ACTIVE_EXPORT_REGISTER,
-    ENERGY_ACTIVE_IMPORT_INTERVAL,
     ENERGY_ACTIVE_IMPORT_REGISTER,
-    ENERGY_REACTIVE_EXPORT_INTERVAL,
     ENERGY_REACTIVE_EXPORT_REGISTER,
-    ENERGY_REACTIVE_IMPORT_INTERVAL,
     ENERGY_REACTIVE_IMPORT_REGISTER,
-    FREQUENCY,
+    ENERGY_ACTIVE_EXPORT_INTERVAL,
+    ENERGY_ACTIVE_IMPORT_INTERVAL,
+    ENERGY_REACTIVE_EXPORT_INTERVAL,
+    ENERGY_REACTIVE_IMPORT_INTERVAL,
     POWER_ACTIVE_EXPORT,
     POWER_ACTIVE_IMPORT,
-    POWER_FACTOR,
     POWER_OFFERED,
     POWER_REACTIVE_EXPORT,
     POWER_REACTIVE_IMPORT,
-    RPM,
-    SO_C,
-    TEMPERATURE,
+    POWER_FACTOR,
+    CURRENT_IMPORT,
+    CURRENT_EXPORT,
+    CURRENT_OFFERED,
     VOLTAGE,
+    FREQUENCY,
+    TEMPERATURE,
+    SO_C,
+    RPM,
     NONE
 };
 
@@ -267,49 +267,49 @@ extern const char *MeterValuesMeterValueSampledValuePhaseStrings[];
 
 enum class MeterValuesMeterValueSampledValuePhase {
     L1,
-    L1_L2,
-    L1_N,
     L2,
-    L2_L3,
-    L2_N,
     L3,
-    L3_L1,
-    L3_N,
     N,
+    L1_N,
+    L2_N,
+    L3_N,
+    L1_L2,
+    L2_L3,
+    L3_L1,
     NONE
 };
 
 extern const char *MeterValuesMeterValueSampledValueLocationStrings[];
 
 enum class MeterValuesMeterValueSampledValueLocation {
-    BODY,
     CABLE,
     EV,
     INLET,
     OUTLET,
+    BODY,
     NONE
 };
 
 extern const char *MeterValuesMeterValueSampledValueUnitStrings[];
 
 enum class MeterValuesMeterValueSampledValueUnit {
+    WH,
+    K_WH,
+    VARH,
+    KVARH,
+    W,
+    K_W,
+    VA,
+    K_VA,
+    VAR,
+    KVAR,
     A,
+    V,
+    K,
     CELCIUS,
     CELSIUS,
     FAHRENHEIT,
-    K,
     PERCENT,
-    V,
-    VA,
-    W,
-    WH,
-    K_VA,
-    K_W,
-    K_WH,
-    KVAR,
-    KVARH,
-    VAR,
-    VARH,
     NONE
 };
 
@@ -318,12 +318,12 @@ extern const char *StopTransactionTransactionDataSampledValueContextStrings[];
 enum class StopTransactionTransactionDataSampledValueContext {
     INTERRUPTION_BEGIN,
     INTERRUPTION_END,
-    OTHER,
     SAMPLE_CLOCK,
     SAMPLE_PERIODIC,
     TRANSACTION_BEGIN,
     TRANSACTION_END,
     TRIGGER,
+    OTHER,
     NONE
 };
 
@@ -338,28 +338,28 @@ enum class StopTransactionTransactionDataSampledValueFormat {
 extern const char *StopTransactionTransactionDataSampledValueMeasurandStrings[];
 
 enum class StopTransactionTransactionDataSampledValueMeasurand {
-    CURRENT_EXPORT,
-    CURRENT_IMPORT,
-    CURRENT_OFFERED,
-    ENERGY_ACTIVE_EXPORT_INTERVAL,
     ENERGY_ACTIVE_EXPORT_REGISTER,
-    ENERGY_ACTIVE_IMPORT_INTERVAL,
     ENERGY_ACTIVE_IMPORT_REGISTER,
-    ENERGY_REACTIVE_EXPORT_INTERVAL,
     ENERGY_REACTIVE_EXPORT_REGISTER,
-    ENERGY_REACTIVE_IMPORT_INTERVAL,
     ENERGY_REACTIVE_IMPORT_REGISTER,
-    FREQUENCY,
+    ENERGY_ACTIVE_EXPORT_INTERVAL,
+    ENERGY_ACTIVE_IMPORT_INTERVAL,
+    ENERGY_REACTIVE_EXPORT_INTERVAL,
+    ENERGY_REACTIVE_IMPORT_INTERVAL,
     POWER_ACTIVE_EXPORT,
     POWER_ACTIVE_IMPORT,
-    POWER_FACTOR,
     POWER_OFFERED,
     POWER_REACTIVE_EXPORT,
     POWER_REACTIVE_IMPORT,
-    RPM,
-    SO_C,
-    TEMPERATURE,
+    POWER_FACTOR,
+    CURRENT_IMPORT,
+    CURRENT_EXPORT,
+    CURRENT_OFFERED,
     VOLTAGE,
+    FREQUENCY,
+    TEMPERATURE,
+    SO_C,
+    RPM,
     NONE
 };
 
@@ -367,48 +367,48 @@ extern const char *StopTransactionTransactionDataSampledValuePhaseStrings[];
 
 enum class StopTransactionTransactionDataSampledValuePhase {
     L1,
-    L1_L2,
-    L1_N,
     L2,
-    L2_L3,
-    L2_N,
     L3,
-    L3_L1,
-    L3_N,
     N,
+    L1_N,
+    L2_N,
+    L3_N,
+    L1_L2,
+    L2_L3,
+    L3_L1,
     NONE
 };
 
 extern const char *StopTransactionTransactionDataSampledValueLocationStrings[];
 
 enum class StopTransactionTransactionDataSampledValueLocation {
-    BODY,
     CABLE,
     EV,
     INLET,
     OUTLET,
+    BODY,
     NONE
 };
 
 extern const char *StopTransactionTransactionDataSampledValueUnitStrings[];
 
 enum class StopTransactionTransactionDataSampledValueUnit {
+    WH,
+    K_WH,
+    VARH,
+    KVARH,
+    W,
+    K_W,
+    VA,
+    K_VA,
+    VAR,
+    KVAR,
     A,
+    V,
+    K,
     CELCIUS,
     FAHRENHEIT,
-    K,
     PERCENT,
-    V,
-    VA,
-    W,
-    WH,
-    K_VA,
-    K_W,
-    K_WH,
-    KVAR,
-    KVARH,
-    VAR,
-    VARH,
     NONE
 };
 
@@ -417,7 +417,7 @@ struct UnlockConnectorView {
     JsonObject _obj;
 
     int32_t connectorId() {
-        
+
         return _obj["connectorId"].as<int32_t>();
     }
 
@@ -429,19 +429,19 @@ struct StopTransactionResponseIdTagInfoEntriesView {
     Opt<time_t> expiryDate() {
         if (!_obj.containsKey("expiryDate"))
                 return {false};
-            
+
         return _obj["expiryDate"].as<time_t>();
     }
 
     Opt<const char *> parentIdTag() {
         if (!_obj.containsKey("parentIdTag"))
                 return {false};
-            
+
         return _obj["parentIdTag"].as<const char *>();
     }
 
     StopTransactionResponseIdTagInfoEntriesStatus status() {
-        
+
         return (StopTransactionResponseIdTagInfoEntriesStatus)_obj["status"].as<size_t>();
     }
 
@@ -453,7 +453,7 @@ struct StopTransactionResponseView {
     Opt<StopTransactionResponseIdTagInfoEntriesView> idTagInfo() {
         if (!_obj.containsKey("idTagInfo"))
                 return {false};
-            
+
         return Opt<StopTransactionResponseIdTagInfoEntriesView>{_obj["idTagInfo"].as<JsonObject>()};
     }
 
@@ -470,19 +470,19 @@ struct StartTransactionResponseIdTagInfoEntriesView {
     Opt<time_t> expiryDate() {
         if (!_obj.containsKey("expiryDate"))
                 return {false};
-            
+
         return _obj["expiryDate"].as<time_t>();
     }
 
     Opt<const char *> parentIdTag() {
         if (!_obj.containsKey("parentIdTag"))
                 return {false};
-            
+
         return _obj["parentIdTag"].as<const char *>();
     }
 
     StartTransactionResponseIdTagInfoEntriesStatus status() {
-        
+
         return (StartTransactionResponseIdTagInfoEntriesStatus)_obj["status"].as<size_t>();
     }
 
@@ -492,12 +492,12 @@ struct StartTransactionResponseView {
     JsonObject _obj;
 
     StartTransactionResponseIdTagInfoEntriesView idTagInfo() {
-        
+
         return StartTransactionResponseIdTagInfoEntriesView{_obj["idTagInfo"].as<JsonObject>()};
     }
 
     int32_t transactionId() {
-        
+
         return _obj["transactionId"].as<int32_t>();
     }
 
@@ -507,7 +507,7 @@ struct ResetView {
     JsonObject _obj;
 
     ResetType type() {
-        
+
         return (ResetType)_obj["type"].as<size_t>();
     }
 
@@ -517,7 +517,7 @@ struct RemoteStopTransactionView {
     JsonObject _obj;
 
     int32_t transactionId() {
-        
+
         return _obj["transactionId"].as<int32_t>();
     }
 
@@ -527,19 +527,19 @@ struct RemoteStartTransactionChargingProfileEntriesChargingScheduleEntriesChargi
     JsonObject _obj;
 
     int32_t startPeriod() {
-        
+
         return _obj["startPeriod"].as<int32_t>();
     }
 
     float limit() {
-        
+
         return _obj["limit"].as<float>();
     }
 
     Opt<int32_t> numberPhases() {
         if (!_obj.containsKey("numberPhases"))
                 return {false};
-            
+
         return _obj["numberPhases"].as<int32_t>();
     }
 
@@ -551,36 +551,36 @@ struct RemoteStartTransactionChargingProfileEntriesChargingScheduleEntriesView {
     Opt<int32_t> duration() {
         if (!_obj.containsKey("duration"))
                 return {false};
-            
+
         return _obj["duration"].as<int32_t>();
     }
 
     Opt<time_t> startSchedule() {
         if (!_obj.containsKey("startSchedule"))
                 return {false};
-            
+
         return _obj["startSchedule"].as<time_t>();
     }
 
     RemoteStartTransactionChargingProfileEntriesChargingScheduleEntriesChargingRateUnit chargingRateUnit() {
-        
+
         return (RemoteStartTransactionChargingProfileEntriesChargingScheduleEntriesChargingRateUnit)_obj["chargingRateUnit"].as<size_t>();
     }
 
     size_t chargingSchedulePeriod_count() {
-        
+
         return _obj["chargingSchedulePeriod"].size();
     }
 
     RemoteStartTransactionChargingProfileEntriesChargingScheduleEntriesChargingSchedulePeriodEntryEntriesView chargingSchedulePeriod(size_t i) {
-        
+
         return RemoteStartTransactionChargingProfileEntriesChargingScheduleEntriesChargingSchedulePeriodEntryEntriesView{_obj["chargingSchedulePeriod"][i]};
     }
 
     Opt<float> minChargingRate() {
         if (!_obj.containsKey("minChargingRate"))
                 return {false};
-            
+
         return _obj["minChargingRate"].as<float>();
     }
 
@@ -590,55 +590,55 @@ struct RemoteStartTransactionChargingProfileEntriesView {
     JsonObject _obj;
 
     int32_t chargingProfileId() {
-        
+
         return _obj["chargingProfileId"].as<int32_t>();
     }
 
     Opt<int32_t> transactionId() {
         if (!_obj.containsKey("transactionId"))
                 return {false};
-            
+
         return _obj["transactionId"].as<int32_t>();
     }
 
     int32_t stackLevel() {
-        
+
         return _obj["stackLevel"].as<int32_t>();
     }
 
     RemoteStartTransactionChargingProfileEntriesChargingProfilePurpose chargingProfilePurpose() {
-        
+
         return (RemoteStartTransactionChargingProfileEntriesChargingProfilePurpose)_obj["chargingProfilePurpose"].as<size_t>();
     }
 
     RemoteStartTransactionChargingProfileEntriesChargingProfileKind chargingProfileKind() {
-        
+
         return (RemoteStartTransactionChargingProfileEntriesChargingProfileKind)_obj["chargingProfileKind"].as<size_t>();
     }
 
     Opt<RemoteStartTransactionChargingProfileEntriesRecurrencyKind> recurrencyKind() {
         if (!_obj.containsKey("recurrencyKind"))
                 return {false};
-            
+
         return (Opt<RemoteStartTransactionChargingProfileEntriesRecurrencyKind>)_obj["recurrencyKind"].as<size_t>();
     }
 
     Opt<time_t> validFrom() {
         if (!_obj.containsKey("validFrom"))
                 return {false};
-            
+
         return _obj["validFrom"].as<time_t>();
     }
 
     Opt<time_t> validTo() {
         if (!_obj.containsKey("validTo"))
                 return {false};
-            
+
         return _obj["validTo"].as<time_t>();
     }
 
     RemoteStartTransactionChargingProfileEntriesChargingScheduleEntriesView chargingSchedule() {
-        
+
         return RemoteStartTransactionChargingProfileEntriesChargingScheduleEntriesView{_obj["chargingSchedule"].as<JsonObject>()};
     }
 
@@ -650,19 +650,19 @@ struct RemoteStartTransactionView {
     Opt<int32_t> connectorId() {
         if (!_obj.containsKey("connectorId"))
                 return {false};
-            
+
         return _obj["connectorId"].as<int32_t>();
     }
 
     const char * idTag() {
-        
+
         return _obj["idTag"].as<const char *>();
     }
 
     Opt<RemoteStartTransactionChargingProfileEntriesView> chargingProfile() {
         if (!_obj.containsKey("chargingProfile"))
                 return {false};
-            
+
         return Opt<RemoteStartTransactionChargingProfileEntriesView>{_obj["chargingProfile"].as<JsonObject>()};
     }
 
@@ -677,7 +677,7 @@ struct HeartbeatResponseView {
     JsonObject _obj;
 
     time_t currentTime() {
-        
+
         return _obj["currentTime"].as<time_t>();
     }
 
@@ -687,14 +687,14 @@ struct GetConfigurationView {
     JsonObject _obj;
 
     size_t key_count() {
-        
+
         return _obj["key"].size();
     }
 
     Opt<const char *> key(size_t i) {
         if (!_obj.containsKey("key"))
                 return {false};
-            
+
         return _obj["key"][i].as<const char *>();
     }
 
@@ -704,14 +704,14 @@ struct DataTransferResponseView {
     JsonObject _obj;
 
     DataTransferResponseStatus status() {
-        
+
         return (DataTransferResponseStatus)_obj["status"].as<size_t>();
     }
 
     Opt<const char *> data() {
         if (!_obj.containsKey("data"))
                 return {false};
-            
+
         return _obj["data"].as<const char *>();
     }
 
@@ -721,21 +721,21 @@ struct DataTransferView {
     JsonObject _obj;
 
     const char * vendorId() {
-        
+
         return _obj["vendorId"].as<const char *>();
     }
 
     Opt<const char *> messageId() {
         if (!_obj.containsKey("messageId"))
                 return {false};
-            
+
         return _obj["messageId"].as<const char *>();
     }
 
     Opt<const char *> data() {
         if (!_obj.containsKey("data"))
                 return {false};
-            
+
         return _obj["data"].as<const char *>();
     }
 
@@ -750,12 +750,12 @@ struct ChangeConfigurationView {
     JsonObject _obj;
 
     const char * key() {
-        
+
         return _obj["key"].as<const char *>();
     }
 
     const char * value() {
-        
+
         return _obj["value"].as<const char *>();
     }
 
@@ -765,12 +765,12 @@ struct ChangeAvailabilityView {
     JsonObject _obj;
 
     int32_t connectorId() {
-        
+
         return _obj["connectorId"].as<int32_t>();
     }
 
     ChangeAvailabilityType type() {
-        
+
         return (ChangeAvailabilityType)_obj["type"].as<size_t>();
     }
 
@@ -780,17 +780,17 @@ struct BootNotificationResponseView {
     JsonObject _obj;
 
     BootNotificationResponseStatus status() {
-        
+
         return (BootNotificationResponseStatus)_obj["status"].as<size_t>();
     }
 
     time_t currentTime() {
-        
+
         return _obj["currentTime"].as<time_t>();
     }
 
     int32_t interval() {
-        
+
         return _obj["interval"].as<int32_t>();
     }
 
@@ -802,19 +802,19 @@ struct AuthorizeResponseIdTagInfoEntriesView {
     Opt<time_t> expiryDate() {
         if (!_obj.containsKey("expiryDate"))
                 return {false};
-            
+
         return _obj["expiryDate"].as<time_t>();
     }
 
     Opt<const char *> parentIdTag() {
         if (!_obj.containsKey("parentIdTag"))
                 return {false};
-            
+
         return _obj["parentIdTag"].as<const char *>();
     }
 
     AuthorizeResponseIdTagInfoEntriesStatus status() {
-        
+
         return (AuthorizeResponseIdTagInfoEntriesStatus)_obj["status"].as<size_t>();
     }
 
@@ -824,7 +824,7 @@ struct AuthorizeResponseView {
     JsonObject _obj;
 
     AuthorizeResponseIdTagInfoEntriesView idTagInfo() {
-        
+
         return AuthorizeResponseIdTagInfoEntriesView{_obj["idTagInfo"].as<JsonObject>()};
     }
 
@@ -995,61 +995,61 @@ extern const char *CallActionStrings[];
 
 enum class CallAction {
     AUTHORIZE,
-    AUTHORIZE_RESPONSE,
     BOOT_NOTIFICATION,
-    BOOT_NOTIFICATION_RESPONSE,
-    CANCEL_RESERVATION,
-    CANCEL_RESERVATION_RESPONSE,
-    CHANGE_AVAILABILITY,
     CHANGE_AVAILABILITY_RESPONSE,
-    CHANGE_CONFIGURATION,
     CHANGE_CONFIGURATION_RESPONSE,
-    CLEAR_CACHE,
     CLEAR_CACHE_RESPONSE,
-    CLEAR_CHARGING_PROFILE,
-    CLEAR_CHARGING_PROFILE_RESPONSE,
     DATA_TRANSFER,
     DATA_TRANSFER_RESPONSE,
-    DIAGNOSTICS_STATUS_NOTIFICATION,
-    DIAGNOSTICS_STATUS_NOTIFICATION_RESPONSE,
-    FIRMWARE_STATUS_NOTIFICATION,
-    FIRMWARE_STATUS_NOTIFICATION_RESPONSE,
-    GET_COMPOSITE_SCHEDULE,
-    GET_COMPOSITE_SCHEDULE_RESPONSE,
-    GET_CONFIGURATION,
     GET_CONFIGURATION_RESPONSE,
-    GET_DIAGNOSTICS,
-    GET_DIAGNOSTICS_RESPONSE,
-    GET_LOCAL_LIST_VERSION,
-    GET_LOCAL_LIST_VERSION_RESPONSE,
     HEARTBEAT,
-    HEARTBEAT_RESPONSE,
     METER_VALUES,
+    REMOTE_START_TRANSACTION_RESPONSE,
+    REMOTE_STOP_TRANSACTION_RESPONSE,
+    RESET_RESPONSE,
+    START_TRANSACTION,
+    STATUS_NOTIFICATION,
+    STOP_TRANSACTION,
+    UNLOCK_CONNECTOR_RESPONSE,
+    AUTHORIZE_RESPONSE,
+    BOOT_NOTIFICATION_RESPONSE,
+    CHANGE_AVAILABILITY,
+    CHANGE_CONFIGURATION,
+    CLEAR_CACHE,
+    GET_CONFIGURATION,
+    HEARTBEAT_RESPONSE,
     METER_VALUES_RESPONSE,
     REMOTE_START_TRANSACTION,
-    REMOTE_START_TRANSACTION_RESPONSE,
     REMOTE_STOP_TRANSACTION,
-    REMOTE_STOP_TRANSACTION_RESPONSE,
-    RESERVE_NOW,
-    RESERVE_NOW_RESPONSE,
     RESET,
-    RESET_RESPONSE,
-    SEND_LOCAL_LIST,
-    SEND_LOCAL_LIST_RESPONSE,
-    SET_CHARGING_PROFILE,
-    SET_CHARGING_PROFILE_RESPONSE,
-    START_TRANSACTION,
     START_TRANSACTION_RESPONSE,
-    STATUS_NOTIFICATION,
     STATUS_NOTIFICATION_RESPONSE,
-    STOP_TRANSACTION,
     STOP_TRANSACTION_RESPONSE,
-    TRIGGER_MESSAGE,
-    TRIGGER_MESSAGE_RESPONSE,
     UNLOCK_CONNECTOR,
-    UNLOCK_CONNECTOR_RESPONSE,
+    GET_DIAGNOSTICS_RESPONSE,
+    DIAGNOSTICS_STATUS_NOTIFICATION,
+    FIRMWARE_STATUS_NOTIFICATION,
+    UPDATE_FIRMWARE_RESPONSE,
+    GET_DIAGNOSTICS,
+    DIAGNOSTICS_STATUS_NOTIFICATION_RESPONSE,
+    FIRMWARE_STATUS_NOTIFICATION_RESPONSE,
     UPDATE_FIRMWARE,
-    UPDATE_FIRMWARE_RESPONSE
+    GET_LOCAL_LIST_VERSION_RESPONSE,
+    SEND_LOCAL_LIST_RESPONSE,
+    GET_LOCAL_LIST_VERSION,
+    SEND_LOCAL_LIST,
+    CANCEL_RESERVATION_RESPONSE,
+    RESERVE_NOW_RESPONSE,
+    CANCEL_RESERVATION,
+    RESERVE_NOW,
+    CLEAR_CHARGING_PROFILE_RESPONSE,
+    GET_COMPOSITE_SCHEDULE_RESPONSE,
+    SET_CHARGING_PROFILE_RESPONSE,
+    CLEAR_CHARGING_PROFILE,
+    GET_COMPOSITE_SCHEDULE,
+    SET_CHARGING_PROFILE,
+    TRIGGER_MESSAGE_RESPONSE,
+    TRIGGER_MESSAGE
 };
 
 CallResponse callResultHandler(CallAction resultTo, JsonObject obj, Ocpp *ocpp);
