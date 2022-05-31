@@ -26,9 +26,9 @@ enum class ChangeConfigurationResponseStatus {
     NONE
 };
 
-extern const char *ClearCacheResponseStatusStrings[];
+extern const char *ResponseStatusStrings[];
 
-enum class ClearCacheResponseStatus {
+enum class ResponseStatus {
     ACCEPTED,
     REJECTED,
     NONE
@@ -41,30 +41,6 @@ enum class DataTransferResponseStatus {
     REJECTED,
     UNKNOWN_MESSAGE_ID,
     UNKNOWN_VENDOR_ID,
-    NONE
-};
-
-extern const char *RemoteStartTransactionResponseStatusStrings[];
-
-enum class RemoteStartTransactionResponseStatus {
-    ACCEPTED,
-    REJECTED,
-    NONE
-};
-
-extern const char *RemoteStopTransactionResponseStatusStrings[];
-
-enum class RemoteStopTransactionResponseStatus {
-    ACCEPTED,
-    REJECTED,
-    NONE
-};
-
-extern const char *ResetResponseStatusStrings[];
-
-enum class ResetResponseStatus {
-    ACCEPTED,
-    REJECTED,
     NONE
 };
 
@@ -131,9 +107,9 @@ enum class UnlockConnectorResponseStatus {
     NONE
 };
 
-extern const char *AuthorizeResponseIdTagInfoEntriesStatusStrings[];
+extern const char *ResponseIdTagInfoEntriesStatusStrings[];
 
-enum class AuthorizeResponseIdTagInfoEntriesStatus {
+enum class ResponseIdTagInfoEntriesStatus {
     ACCEPTED,
     BLOCKED,
     EXPIRED,
@@ -193,29 +169,9 @@ enum class ResetType {
     SOFT
 };
 
-extern const char *StartTransactionResponseIdTagInfoEntriesStatusStrings[];
+extern const char *SampledValueContextStrings[];
 
-enum class StartTransactionResponseIdTagInfoEntriesStatus {
-    ACCEPTED,
-    BLOCKED,
-    EXPIRED,
-    INVALID,
-    CONCURRENT_TX
-};
-
-extern const char *StopTransactionResponseIdTagInfoEntriesStatusStrings[];
-
-enum class StopTransactionResponseIdTagInfoEntriesStatus {
-    ACCEPTED,
-    BLOCKED,
-    EXPIRED,
-    INVALID,
-    CONCURRENT_TX
-};
-
-extern const char *MeterValuesMeterValueSampledValueContextStrings[];
-
-enum class MeterValuesMeterValueSampledValueContext {
+enum class SampledValueContext {
     INTERRUPTION_BEGIN,
     INTERRUPTION_END,
     SAMPLE_CLOCK,
@@ -227,17 +183,17 @@ enum class MeterValuesMeterValueSampledValueContext {
     NONE
 };
 
-extern const char *MeterValuesMeterValueSampledValueFormatStrings[];
+extern const char *SampledValueFormatStrings[];
 
-enum class MeterValuesMeterValueSampledValueFormat {
+enum class SampledValueFormat {
     RAW,
     SIGNED_DATA,
     NONE
 };
 
-extern const char *MeterValuesMeterValueSampledValueMeasurandStrings[];
+extern const char *SampledValueMeasurandStrings[];
 
-enum class MeterValuesMeterValueSampledValueMeasurand {
+enum class SampledValueMeasurand {
     ENERGY_ACTIVE_EXPORT_REGISTER,
     ENERGY_ACTIVE_IMPORT_REGISTER,
     ENERGY_REACTIVE_EXPORT_REGISTER,
@@ -263,9 +219,9 @@ enum class MeterValuesMeterValueSampledValueMeasurand {
     NONE
 };
 
-extern const char *MeterValuesMeterValueSampledValuePhaseStrings[];
+extern const char *SampledValuePhaseStrings[];
 
-enum class MeterValuesMeterValueSampledValuePhase {
+enum class SampledValuePhase {
     L1,
     L2,
     L3,
@@ -279,9 +235,9 @@ enum class MeterValuesMeterValueSampledValuePhase {
     NONE
 };
 
-extern const char *MeterValuesMeterValueSampledValueLocationStrings[];
+extern const char *SampledValueLocationStrings[];
 
-enum class MeterValuesMeterValueSampledValueLocation {
+enum class SampledValueLocation {
     CABLE,
     EV,
     INLET,
@@ -310,83 +266,6 @@ enum class MeterValuesMeterValueSampledValueUnit {
     CELSIUS,
     FAHRENHEIT,
     PERCENT,
-    NONE
-};
-
-extern const char *StopTransactionTransactionDataSampledValueContextStrings[];
-
-enum class StopTransactionTransactionDataSampledValueContext {
-    INTERRUPTION_BEGIN,
-    INTERRUPTION_END,
-    SAMPLE_CLOCK,
-    SAMPLE_PERIODIC,
-    TRANSACTION_BEGIN,
-    TRANSACTION_END,
-    TRIGGER,
-    OTHER,
-    NONE
-};
-
-extern const char *StopTransactionTransactionDataSampledValueFormatStrings[];
-
-enum class StopTransactionTransactionDataSampledValueFormat {
-    RAW,
-    SIGNED_DATA,
-    NONE
-};
-
-extern const char *StopTransactionTransactionDataSampledValueMeasurandStrings[];
-
-enum class StopTransactionTransactionDataSampledValueMeasurand {
-    ENERGY_ACTIVE_EXPORT_REGISTER,
-    ENERGY_ACTIVE_IMPORT_REGISTER,
-    ENERGY_REACTIVE_EXPORT_REGISTER,
-    ENERGY_REACTIVE_IMPORT_REGISTER,
-    ENERGY_ACTIVE_EXPORT_INTERVAL,
-    ENERGY_ACTIVE_IMPORT_INTERVAL,
-    ENERGY_REACTIVE_EXPORT_INTERVAL,
-    ENERGY_REACTIVE_IMPORT_INTERVAL,
-    POWER_ACTIVE_EXPORT,
-    POWER_ACTIVE_IMPORT,
-    POWER_OFFERED,
-    POWER_REACTIVE_EXPORT,
-    POWER_REACTIVE_IMPORT,
-    POWER_FACTOR,
-    CURRENT_IMPORT,
-    CURRENT_EXPORT,
-    CURRENT_OFFERED,
-    VOLTAGE,
-    FREQUENCY,
-    TEMPERATURE,
-    SO_C,
-    RPM,
-    NONE
-};
-
-extern const char *StopTransactionTransactionDataSampledValuePhaseStrings[];
-
-enum class StopTransactionTransactionDataSampledValuePhase {
-    L1,
-    L2,
-    L3,
-    N,
-    L1_N,
-    L2_N,
-    L3_N,
-    L1_L2,
-    L2_L3,
-    L3_L1,
-    NONE
-};
-
-extern const char *StopTransactionTransactionDataSampledValueLocationStrings[];
-
-enum class StopTransactionTransactionDataSampledValueLocation {
-    CABLE,
-    EV,
-    INLET,
-    OUTLET,
-    BODY,
     NONE
 };
 
@@ -440,9 +319,9 @@ struct StopTransactionResponseIdTagInfoEntriesView {
         return _obj["parentIdTag"].as<const char *>();
     }
 
-    StopTransactionResponseIdTagInfoEntriesStatus status() {
+    ResponseIdTagInfoEntriesStatus status() {
 
-        return (StopTransactionResponseIdTagInfoEntriesStatus)_obj["status"].as<size_t>();
+        return (ResponseIdTagInfoEntriesStatus)_obj["status"].as<size_t>();
     }
 
 };
@@ -481,9 +360,9 @@ struct StartTransactionResponseIdTagInfoEntriesView {
         return _obj["parentIdTag"].as<const char *>();
     }
 
-    StartTransactionResponseIdTagInfoEntriesStatus status() {
+    ResponseIdTagInfoEntriesStatus status() {
 
-        return (StartTransactionResponseIdTagInfoEntriesStatus)_obj["status"].as<size_t>();
+        return (ResponseIdTagInfoEntriesStatus)_obj["status"].as<size_t>();
     }
 
 };
@@ -813,9 +692,9 @@ struct AuthorizeResponseIdTagInfoEntriesView {
         return _obj["parentIdTag"].as<const char *>();
     }
 
-    AuthorizeResponseIdTagInfoEntriesStatus status() {
+    ResponseIdTagInfoEntriesStatus status() {
 
-        return (AuthorizeResponseIdTagInfoEntriesStatus)_obj["status"].as<size_t>();
+        return (ResponseIdTagInfoEntriesStatus)_obj["status"].as<size_t>();
     }
 
 };
@@ -832,11 +711,11 @@ struct AuthorizeResponseView {
 
 struct StopTransactionTransactionDataSampledValue {
     const char *value;
-    StopTransactionTransactionDataSampledValueContext context = StopTransactionTransactionDataSampledValueContext::NONE;
-    StopTransactionTransactionDataSampledValueFormat format = StopTransactionTransactionDataSampledValueFormat::NONE;
-    StopTransactionTransactionDataSampledValueMeasurand measurand = StopTransactionTransactionDataSampledValueMeasurand::NONE;
-    StopTransactionTransactionDataSampledValuePhase phase = StopTransactionTransactionDataSampledValuePhase::NONE;
-    StopTransactionTransactionDataSampledValueLocation location = StopTransactionTransactionDataSampledValueLocation::NONE;
+    SampledValueContext context = SampledValueContext::NONE;
+    SampledValueFormat format = SampledValueFormat::NONE;
+    SampledValueMeasurand measurand = SampledValueMeasurand::NONE;
+    SampledValuePhase phase = SampledValuePhase::NONE;
+    SampledValueLocation location = SampledValueLocation::NONE;
     StopTransactionTransactionDataSampledValueUnit unit = StopTransactionTransactionDataSampledValueUnit::NONE;
 
     void serializeInto(JsonObject payload);
@@ -844,11 +723,11 @@ struct StopTransactionTransactionDataSampledValue {
 
 struct MeterValuesMeterValueSampledValue {
     const char *value;
-    MeterValuesMeterValueSampledValueContext context = MeterValuesMeterValueSampledValueContext::NONE;
-    MeterValuesMeterValueSampledValueFormat format = MeterValuesMeterValueSampledValueFormat::NONE;
-    MeterValuesMeterValueSampledValueMeasurand measurand = MeterValuesMeterValueSampledValueMeasurand::NONE;
-    MeterValuesMeterValueSampledValuePhase phase = MeterValuesMeterValueSampledValuePhase::NONE;
-    MeterValuesMeterValueSampledValueLocation location = MeterValuesMeterValueSampledValueLocation::NONE;
+    SampledValueContext context = SampledValueContext::NONE;
+    SampledValueFormat format = SampledValueFormat::NONE;
+    SampledValueMeasurand measurand = SampledValueMeasurand::NONE;
+    SampledValuePhase phase = SampledValuePhase::NONE;
+    SampledValueLocation location = SampledValueLocation::NONE;
     MeterValuesMeterValueSampledValueUnit unit = MeterValuesMeterValueSampledValueUnit::NONE;
 
     void serializeInto(JsonObject payload);
@@ -898,7 +777,7 @@ bool ChangeConfigurationResponse(DynamicJsonDocument *result, const char *call_i
         ChangeConfigurationResponseStatus status);
 
 bool ClearCacheResponse(DynamicJsonDocument *result, const char *call_id,
-        ClearCacheResponseStatus status);
+        ResponseStatus status);
 
 bool DataTransfer(DynamicJsonDocument *result,
         const char vendorId[256],
@@ -921,13 +800,13 @@ bool MeterValues(DynamicJsonDocument *result,
         int32_t transactionId = OCPP_INTEGER_NOT_PASSED);
 
 bool RemoteStartTransactionResponse(DynamicJsonDocument *result, const char *call_id,
-        RemoteStartTransactionResponseStatus status);
+        ResponseStatus status);
 
 bool RemoteStopTransactionResponse(DynamicJsonDocument *result, const char *call_id,
-        RemoteStopTransactionResponseStatus status);
+        ResponseStatus status);
 
 bool ResetResponse(DynamicJsonDocument *result, const char *call_id,
-        ResetResponseStatus status);
+        ResponseStatus status);
 
 bool StartTransaction(DynamicJsonDocument *result,
         int32_t connectorId,

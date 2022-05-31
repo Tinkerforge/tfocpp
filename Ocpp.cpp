@@ -266,7 +266,7 @@ CallResponse Ocpp::handleClearCache(const char *uid, ClearCacheView req)
     SHALL response with ClearCache.conf with the status: Rejected.
     */
     DynamicJsonDocument doc{0};
-    ClearCacheResponse(&doc, uid, ClearCacheResponseStatus::REJECTED);
+    ClearCacheResponse(&doc, uid, ResponseStatus::REJECTED);
 
     size_t written = serializeJson(doc, send_buf);
 

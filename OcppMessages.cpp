@@ -40,7 +40,7 @@ const char *ChangeConfigurationResponseStatusStrings[] = {
     "NotSupported"
 };
 
-const char *ClearCacheResponseStatusStrings[] = {
+const char *ResponseStatusStrings[] = {
     "Accepted",
     "Rejected"
 };
@@ -50,21 +50,6 @@ const char *DataTransferResponseStatusStrings[] = {
     "Rejected",
     "UnknownMessageId",
     "UnknownVendorId"
-};
-
-const char *RemoteStartTransactionResponseStatusStrings[] = {
-    "Accepted",
-    "Rejected"
-};
-
-const char *RemoteStopTransactionResponseStatusStrings[] = {
-    "Accepted",
-    "Rejected"
-};
-
-const char *ResetResponseStatusStrings[] = {
-    "Accepted",
-    "Rejected"
 };
 
 const char *StatusNotificationErrorCodeStrings[] = {
@@ -118,7 +103,7 @@ const char *UnlockConnectorResponseStatusStrings[] = {
     "NotSupported"
 };
 
-const char *AuthorizeResponseIdTagInfoEntriesStatusStrings[] = {
+const char *ResponseIdTagInfoEntriesStatusStrings[] = {
     "Accepted",
     "Blocked",
     "Expired",
@@ -164,23 +149,7 @@ const char *ResetTypeStrings[] = {
     "Soft"
 };
 
-const char *StartTransactionResponseIdTagInfoEntriesStatusStrings[] = {
-    "Accepted",
-    "Blocked",
-    "Expired",
-    "Invalid",
-    "ConcurrentTx"
-};
-
-const char *StopTransactionResponseIdTagInfoEntriesStatusStrings[] = {
-    "Accepted",
-    "Blocked",
-    "Expired",
-    "Invalid",
-    "ConcurrentTx"
-};
-
-const char *MeterValuesMeterValueSampledValueContextStrings[] = {
+const char *SampledValueContextStrings[] = {
     "Interruption.Begin",
     "Interruption.End",
     "Sample.Clock",
@@ -191,12 +160,12 @@ const char *MeterValuesMeterValueSampledValueContextStrings[] = {
     "Other"
 };
 
-const char *MeterValuesMeterValueSampledValueFormatStrings[] = {
+const char *SampledValueFormatStrings[] = {
     "Raw",
     "SignedData"
 };
 
-const char *MeterValuesMeterValueSampledValueMeasurandStrings[] = {
+const char *SampledValueMeasurandStrings[] = {
     "Energy.Active.Export.Register",
     "Energy.Active.Import.Register",
     "Energy.Reactive.Export.Register",
@@ -221,7 +190,7 @@ const char *MeterValuesMeterValueSampledValueMeasurandStrings[] = {
     "RPM"
 };
 
-const char *MeterValuesMeterValueSampledValuePhaseStrings[] = {
+const char *SampledValuePhaseStrings[] = {
     "L1",
     "L2",
     "L3",
@@ -234,7 +203,7 @@ const char *MeterValuesMeterValueSampledValuePhaseStrings[] = {
     "L3-L1"
 };
 
-const char *MeterValuesMeterValueSampledValueLocationStrings[] = {
+const char *SampledValueLocationStrings[] = {
     "Cable",
     "EV",
     "Inlet",
@@ -260,68 +229,6 @@ const char *MeterValuesMeterValueSampledValueUnitStrings[] = {
     "Celsius",
     "Fahrenheit",
     "Percent"
-};
-
-const char *StopTransactionTransactionDataSampledValueContextStrings[] = {
-    "Interruption.Begin",
-    "Interruption.End",
-    "Sample.Clock",
-    "Sample.Periodic",
-    "Transaction.Begin",
-    "Transaction.End",
-    "Trigger",
-    "Other"
-};
-
-const char *StopTransactionTransactionDataSampledValueFormatStrings[] = {
-    "Raw",
-    "SignedData"
-};
-
-const char *StopTransactionTransactionDataSampledValueMeasurandStrings[] = {
-    "Energy.Active.Export.Register",
-    "Energy.Active.Import.Register",
-    "Energy.Reactive.Export.Register",
-    "Energy.Reactive.Import.Register",
-    "Energy.Active.Export.Interval",
-    "Energy.Active.Import.Interval",
-    "Energy.Reactive.Export.Interval",
-    "Energy.Reactive.Import.Interval",
-    "Power.Active.Export",
-    "Power.Active.Import",
-    "Power.Offered",
-    "Power.Reactive.Export",
-    "Power.Reactive.Import",
-    "Power.Factor",
-    "Current.Import",
-    "Current.Export",
-    "Current.Offered",
-    "Voltage",
-    "Frequency",
-    "Temperature",
-    "SoC",
-    "RPM"
-};
-
-const char *StopTransactionTransactionDataSampledValuePhaseStrings[] = {
-    "L1",
-    "L2",
-    "L3",
-    "N",
-    "L1-N",
-    "L2-N",
-    "L3-N",
-    "L1-L2",
-    "L2-L3",
-    "L3-L1"
-};
-
-const char *StopTransactionTransactionDataSampledValueLocationStrings[] = {
-    "Cable",
-    "EV",
-    "Inlet",
-    "Outlet",
-    "Body"
 };
 
 const char *StopTransactionTransactionDataSampledValueUnitStrings[] = {
@@ -362,21 +269,21 @@ void StopTransactionTransactionData::serializeInto(JsonObject payload) {
 
 void MeterValuesMeterValueSampledValue::serializeInto(JsonObject payload) {
         if (value != nullptr) payload["value"] = value;
-        if (context != MeterValuesMeterValueSampledValueContext::NONE) payload["context"] = MeterValuesMeterValueSampledValueContextStrings[(size_t)context];
-        if (format != MeterValuesMeterValueSampledValueFormat::NONE) payload["format"] = MeterValuesMeterValueSampledValueFormatStrings[(size_t)format];
-        if (measurand != MeterValuesMeterValueSampledValueMeasurand::NONE) payload["measurand"] = MeterValuesMeterValueSampledValueMeasurandStrings[(size_t)measurand];
-        if (phase != MeterValuesMeterValueSampledValuePhase::NONE) payload["phase"] = MeterValuesMeterValueSampledValuePhaseStrings[(size_t)phase];
-        if (location != MeterValuesMeterValueSampledValueLocation::NONE) payload["location"] = MeterValuesMeterValueSampledValueLocationStrings[(size_t)location];
+        if (context != SampledValueContext::NONE) payload["context"] = SampledValueContextStrings[(size_t)context];
+        if (format != SampledValueFormat::NONE) payload["format"] = SampledValueFormatStrings[(size_t)format];
+        if (measurand != SampledValueMeasurand::NONE) payload["measurand"] = SampledValueMeasurandStrings[(size_t)measurand];
+        if (phase != SampledValuePhase::NONE) payload["phase"] = SampledValuePhaseStrings[(size_t)phase];
+        if (location != SampledValueLocation::NONE) payload["location"] = SampledValueLocationStrings[(size_t)location];
         if (unit != MeterValuesMeterValueSampledValueUnit::NONE) payload["unit"] = MeterValuesMeterValueSampledValueUnitStrings[(size_t)unit];
     }
 
 void StopTransactionTransactionDataSampledValue::serializeInto(JsonObject payload) {
         if (value != nullptr) payload["value"] = value;
-        if (context != StopTransactionTransactionDataSampledValueContext::NONE) payload["context"] = StopTransactionTransactionDataSampledValueContextStrings[(size_t)context];
-        if (format != StopTransactionTransactionDataSampledValueFormat::NONE) payload["format"] = StopTransactionTransactionDataSampledValueFormatStrings[(size_t)format];
-        if (measurand != StopTransactionTransactionDataSampledValueMeasurand::NONE) payload["measurand"] = StopTransactionTransactionDataSampledValueMeasurandStrings[(size_t)measurand];
-        if (phase != StopTransactionTransactionDataSampledValuePhase::NONE) payload["phase"] = StopTransactionTransactionDataSampledValuePhaseStrings[(size_t)phase];
-        if (location != StopTransactionTransactionDataSampledValueLocation::NONE) payload["location"] = StopTransactionTransactionDataSampledValueLocationStrings[(size_t)location];
+        if (context != SampledValueContext::NONE) payload["context"] = SampledValueContextStrings[(size_t)context];
+        if (format != SampledValueFormat::NONE) payload["format"] = SampledValueFormatStrings[(size_t)format];
+        if (measurand != SampledValueMeasurand::NONE) payload["measurand"] = SampledValueMeasurandStrings[(size_t)measurand];
+        if (phase != SampledValuePhase::NONE) payload["phase"] = SampledValuePhaseStrings[(size_t)phase];
+        if (location != SampledValueLocation::NONE) payload["location"] = SampledValueLocationStrings[(size_t)location];
         if (unit != StopTransactionTransactionDataSampledValueUnit::NONE) payload["unit"] = StopTransactionTransactionDataSampledValueUnitStrings[(size_t)unit];
     }
 
@@ -480,8 +387,8 @@ bool ChangeConfigurationResponse(DynamicJsonDocument *result, const char *call_i
 }
 
 bool ClearCacheResponse(DynamicJsonDocument *result, const char *call_id,
-        ClearCacheResponseStatus status) {
-    if (status == ClearCacheResponseStatus::NONE) { platform_printfln("Required status missing."); return false; }
+        ResponseStatus status) {
+    if (status == ResponseStatus::NONE) { platform_printfln("Required status missing."); return false; }
 
     *result = DynamicJsonDocument{
         OCPP_CALLRESULT_JSON_SIZE("ClearCacheResponse")
@@ -494,7 +401,7 @@ bool ClearCacheResponse(DynamicJsonDocument *result, const char *call_id,
 
     JsonObject payload = (*result).createNestedObject();
 
-    if (status != ClearCacheResponseStatus::NONE) payload["status"] = ClearCacheResponseStatusStrings[(size_t)status];
+    if (status != ResponseStatus::NONE) payload["status"] = ResponseStatusStrings[(size_t)status];
 
     return true;
 }
@@ -608,8 +515,8 @@ bool MeterValues(DynamicJsonDocument *result,
 }
 
 bool RemoteStartTransactionResponse(DynamicJsonDocument *result, const char *call_id,
-        RemoteStartTransactionResponseStatus status) {
-    if (status == RemoteStartTransactionResponseStatus::NONE) { platform_printfln("Required status missing."); return false; }
+        ResponseStatus status) {
+    if (status == ResponseStatus::NONE) { platform_printfln("Required status missing."); return false; }
 
     *result = DynamicJsonDocument{
         OCPP_CALLRESULT_JSON_SIZE("RemoteStartTransactionResponse")
@@ -622,14 +529,14 @@ bool RemoteStartTransactionResponse(DynamicJsonDocument *result, const char *cal
 
     JsonObject payload = (*result).createNestedObject();
 
-    if (status != RemoteStartTransactionResponseStatus::NONE) payload["status"] = RemoteStartTransactionResponseStatusStrings[(size_t)status];
+    if (status != ResponseStatus::NONE) payload["status"] = ResponseStatusStrings[(size_t)status];
 
     return true;
 }
 
 bool RemoteStopTransactionResponse(DynamicJsonDocument *result, const char *call_id,
-        RemoteStopTransactionResponseStatus status) {
-    if (status == RemoteStopTransactionResponseStatus::NONE) { platform_printfln("Required status missing."); return false; }
+        ResponseStatus status) {
+    if (status == ResponseStatus::NONE) { platform_printfln("Required status missing."); return false; }
 
     *result = DynamicJsonDocument{
         OCPP_CALLRESULT_JSON_SIZE("RemoteStopTransactionResponse")
@@ -642,14 +549,14 @@ bool RemoteStopTransactionResponse(DynamicJsonDocument *result, const char *call
 
     JsonObject payload = (*result).createNestedObject();
 
-    if (status != RemoteStopTransactionResponseStatus::NONE) payload["status"] = RemoteStopTransactionResponseStatusStrings[(size_t)status];
+    if (status != ResponseStatus::NONE) payload["status"] = ResponseStatusStrings[(size_t)status];
 
     return true;
 }
 
 bool ResetResponse(DynamicJsonDocument *result, const char *call_id,
-        ResetResponseStatus status) {
-    if (status == ResetResponseStatus::NONE) { platform_printfln("Required status missing."); return false; }
+        ResponseStatus status) {
+    if (status == ResponseStatus::NONE) { platform_printfln("Required status missing."); return false; }
 
     *result = DynamicJsonDocument{
         OCPP_CALLRESULT_JSON_SIZE("ResetResponse")
@@ -662,7 +569,7 @@ bool ResetResponse(DynamicJsonDocument *result, const char *call_id,
 
     JsonObject payload = (*result).createNestedObject();
 
-    if (status != ResetResponseStatus::NONE) payload["status"] = ResetResponseStatusStrings[(size_t)status];
+    if (status != ResponseStatus::NONE) payload["status"] = ResponseStatusStrings[(size_t)status];
 
     return true;
 }
@@ -818,8 +725,8 @@ static CallResponse parseAuthorizeResponseIdTagInfoEntriesStatus(JsonVariant var
 
     {
         bool found = false;
-        for(size_t i = 0; i < ARRAY_SIZE(AuthorizeResponseIdTagInfoEntriesStatusStrings); ++i) {
-            if (strcmp(var.as<const char *>(), AuthorizeResponseIdTagInfoEntriesStatusStrings[i]) != 0)
+        for(size_t i = 0; i < ARRAY_SIZE(ResponseIdTagInfoEntriesStatusStrings); ++i) {
+            if (strcmp(var.as<const char *>(), ResponseIdTagInfoEntriesStatusStrings[i]) != 0)
                 continue;
 
             var.set(i);
@@ -1919,8 +1826,8 @@ static CallResponse parseStartTransactionResponseIdTagInfoEntriesStatus(JsonVari
 
     {
         bool found = false;
-        for(size_t i = 0; i < ARRAY_SIZE(StartTransactionResponseIdTagInfoEntriesStatusStrings); ++i) {
-            if (strcmp(var.as<const char *>(), StartTransactionResponseIdTagInfoEntriesStatusStrings[i]) != 0)
+        for(size_t i = 0; i < ARRAY_SIZE(ResponseIdTagInfoEntriesStatusStrings); ++i) {
+            if (strcmp(var.as<const char *>(), ResponseIdTagInfoEntriesStatusStrings[i]) != 0)
                 continue;
 
             var.set(i);
@@ -2065,8 +1972,8 @@ static CallResponse parseStopTransactionResponseIdTagInfoEntriesStatus(JsonVaria
 
     {
         bool found = false;
-        for(size_t i = 0; i < ARRAY_SIZE(StopTransactionResponseIdTagInfoEntriesStatusStrings); ++i) {
-            if (strcmp(var.as<const char *>(), StopTransactionResponseIdTagInfoEntriesStatusStrings[i]) != 0)
+        for(size_t i = 0; i < ARRAY_SIZE(ResponseIdTagInfoEntriesStatusStrings); ++i) {
+            if (strcmp(var.as<const char *>(), ResponseIdTagInfoEntriesStatusStrings[i]) != 0)
                 continue;
 
             var.set(i);

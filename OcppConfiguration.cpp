@@ -204,14 +204,14 @@ OcppConfiguration config[CONFIG_COUNT] = {
     /*LocalPreAuthorize*/                 OcppConfiguration::boolean(false, false, false),
     /*MaxEnergyOnInvalidId*/              //OcppConfiguration::integer(0, false, false),
 
-    // Its save to use the number of possible measureants as limit in elements,
+    // Its save to use the number of possible measurands as limit in elements,
     // because the complete list has a length of 465.
     // This also means that we don't have to implemeht the MeterValuesAlignedDataMaxLength key.
-    /*MeterValuesAlignedData*/            OcppConfiguration::csl("", MAX_CONFIG_LENGTH, (size_t)MeterValuesMeterValueSampledValueMeasurand::NONE, false, false, MeterValuesMeterValueSampledValueMeasurandStrings, (size_t)MeterValuesMeterValueSampledValueMeasurand::NONE),
+    /*MeterValuesAlignedData*/            OcppConfiguration::csl("", MAX_CONFIG_LENGTH, (size_t)SampledValueMeasurand::NONE, false, false, SampledValueMeasurandStrings, (size_t)SampledValueMeasurand::NONE),
     /*MeterValuesAlignedDataMaxLength*/   //OcppConfiguration::integer(MAX_CONFIG_LENGTH / strlen("Energy.Reactive.Import.Register,"), true, false),
 
     // Same reasoning as with MeterValuesAlignedData.
-    /*MeterValuesSampledData*/            OcppConfiguration::csl("", MAX_CONFIG_LENGTH, (size_t)MeterValuesMeterValueSampledValueMeasurand::NONE, false, false, MeterValuesMeterValueSampledValueMeasurandStrings, (size_t)MeterValuesMeterValueSampledValueMeasurand::NONE),
+    /*MeterValuesSampledData*/            OcppConfiguration::csl("", MAX_CONFIG_LENGTH, (size_t)SampledValueMeasurand::NONE, false, false, SampledValueMeasurandStrings, (size_t)SampledValueMeasurand::NONE),
     /*MeterValuesSampledDataMaxLength*/   //OcppConfiguration::integer(0, true, false),
 
     /*MeterValueSampleInterval*/          OcppConfiguration::integer(0, false, false),
@@ -222,11 +222,11 @@ OcppConfiguration config[CONFIG_COUNT] = {
     /*StopTransactionOnInvalidId*/        OcppConfiguration::boolean(false, false, false),
 
     // Same reasoning as with MeterValuesAlignedData.
-    /*StopTxnAlignedData*/                OcppConfiguration::csl("", MAX_CONFIG_LENGTH, (size_t)MeterValuesMeterValueSampledValueMeasurand::NONE, false, false, MeterValuesMeterValueSampledValueMeasurandStrings, (size_t)MeterValuesMeterValueSampledValueMeasurand::NONE),
+    /*StopTxnAlignedData*/                OcppConfiguration::csl("", MAX_CONFIG_LENGTH, (size_t)SampledValueMeasurand::NONE, false, false, SampledValueMeasurandStrings, (size_t)SampledValueMeasurand::NONE),
     /*StopTxnAlignedDataMaxLength*/       //OcppConfiguration::integer(0, true, false),
 
     // Same reasoning as with MeterValuesAlignedData.
-    /*StopTxnSampledData*/                OcppConfiguration::csl("", MAX_CONFIG_LENGTH, (size_t)MeterValuesMeterValueSampledValueMeasurand::NONE, false, false, MeterValuesMeterValueSampledValueMeasurandStrings, (size_t)MeterValuesMeterValueSampledValueMeasurand::NONE),
+    /*StopTxnSampledData*/                OcppConfiguration::csl("", MAX_CONFIG_LENGTH, (size_t)SampledValueMeasurand::NONE, false, false, SampledValueMeasurandStrings, (size_t)SampledValueMeasurand::NONE),
     /*StopTxnSampledDataMaxLength*/       //OcppConfiguration::integer(0, true, false),
 
     /*SupportedFeatureProfiles*/          OcppConfiguration::csl("Core", strlen("Core") + 1, 1, true, false, nullptr, 0, false),
