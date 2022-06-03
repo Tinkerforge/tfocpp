@@ -11,7 +11,8 @@ class ClientCallback : public WsClientCallback {
 public:
     WsRaccoonClient wsClient;
     bool connected = false;
-    std::function<void(char *, size_t)> cb;
+    void(*cb)(char *, size_t, void *);
+    void *cb_userdata;
 
     ClientCallback(std::string *websocket_host, uint16_t websocket_port, std::string *websocket_path) : wsClient(websocket_host, websocket_port, websocket_path, this)  {
         wsClient.start();
@@ -90,7 +91,7 @@ public:
         char *useless_copy = (char *) malloc(message->length());
         memcpy(useless_copy, message->c_str(), message->length());
 
-        cb(useless_copy, message->length());
+        cb(useless_copy, message->length(), cb_userdata);
 
         free(useless_copy);
     };
@@ -140,10 +141,11 @@ void platform_ws_send(void *ctx, const char *buf, size_t buf_len)
     cc->wsClient.sendMessage(&useless_copy);
 }
 
-void platform_ws_register_receive_callback(void *ctx, std::function<void(char *, size_t)> cb)
+void platform_ws_register_receive_callback(void *ctx, void(*cb)(char *, size_t, void *), void *user_data)
 {
     ClientCallback *cc = (ClientCallback *)ctx;
     cc->cb = cb;
+    cc->cb_userdata = user_data;
 }
 
 void platform_printfln(const char *fmt, ...)

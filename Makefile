@@ -6,7 +6,7 @@ TARGET := ocpp
 #CC = clang
 #CXX = clang++
 
-COMPILE_FLAGS = -g
+COMPILE_FLAGS = -g -fPIC
 CFLAGS += -std=c99 ${COMPILE_FLAGS}
 CXXFLAGS += -std=c++11 ${COMPILE_FLAGS}
 LDFLAGS += -pthread
@@ -19,7 +19,8 @@ ifeq ($(WITH_DEBUG),yes)
 endif
 
 SOURCES :=	$(wildcard *.cpp) \
-		RaccoonWSClient/WsRaccoonClient.cpp
+		mongoose/mongoose.cpp
+		#RaccoonWSClient/WsRaccoonClient.cpp
 
 SOURCES += ${SOURCES_LIB}
 
@@ -27,7 +28,7 @@ OBJECTS := ${SOURCES:.cpp=.o}
 DEPENDS := ${SOURCES:.cpp=.p}
 
 $(TARGET): $(OBJECTS)
-	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $(OBJECTS) $(LIBS)
+	$(CXX) $(OBJECTS) $(LIBS) $(LDFLAGS) -shared -o lib$@.so
 
 .PHONY: all clean
 
