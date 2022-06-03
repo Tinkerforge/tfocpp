@@ -9,6 +9,160 @@ extern "C" {
 
 char send_buf[4096];
 
+#define VALID_STATUS_STRIDE 9
+bool valid_status_transitions[VALID_STATUS_STRIDE * VALID_STATUS_STRIDE] = {
+/*From           To Avail  Prep   Charge SuspEV SuEVSE Finish Reserv Unavai Fault */
+/*Available    */   false, true , true , true , true , false, true , true , true ,
+/*Preparing    */   true , false, true , true , true , true , false, false, false,
+/*Charging     */   true , false, false, true , true , true , false, true , true ,
+/*SuspendedEV  */   true , false, true , false, true , true , false, true , true ,
+/*SuspendedEVSE*/   true , false, true , true , false, true , false, true , true ,
+/*Finishing    */   true , true , false, false, false, false, false, true , true ,
+/*Reserved     */   true , true , false, false, false, false, false, true , true ,
+/*Unavailable  */   true , true , true , true , true , false, false, false, true ,
+/*Faulted      */   true , true , true , true , true , true , true , true , false,
+};
+
+struct Connector {
+    /*For ConnectorId 0, only a limited set is applicable, namely: Available, Unavailable and Faulted.
+    The status of ConnectorId 0 has no direct connection to the status of the individual Connectors (>0).*/
+    int32_t connectorId;
+    StatusNotificationStatus status = StatusNotificationStatus::AVAILABLE;
+    IdTagInfo authorized_for;
+
+    bool setStatus(StatusNotificationStatus newStatus) {
+        if (!valid_status_transitions[(size_t)status * VALID_STATUS_STRIDE + (size_t)newStatus]) {
+            platform_printfln("Invalid status transition from %s to %s (%c%c)!", StatusNotificationStatusStrings[(size_t)status], StatusNotificationStatusStrings[(size_t)newStatus], 'A'+(char)status, '1'+(char)newStatus);
+            return false;
+        }
+
+        // TODO: send status notification here?
+        status = newStatus;
+        return true;
+    }
+
+    bool isAuthorized() {
+        return authorized_for.status == ResponseIdTagInfoEntriesStatus::ACCEPTED;
+    }
+
+    void tick() {
+        StatusNotificationStatus newStatus = status;
+
+        switch(platform_get_connector_state(connectorId)) {
+            case ConnectorState::NotConnected:
+                switch(status) {
+                    case StatusNotificationStatus::RESERVED:
+                        // Stay in reserved until the central says otherwise or we see the expected idTag
+                        break;
+                    case StatusNotificationStatus::UNAVAILABLE:
+                        // Stay unavailable until the central says otherwise
+                        break;
+                    default:
+                        // B1 - I1
+                        newStatus = StatusNotificationStatus::AVAILABLE;
+                        break;
+                }
+                break;
+            case ConnectorState::Connected:
+                switch(status) {
+                    case StatusNotificationStatus::AVAILABLE:
+                        // A2
+                        newStatus = StatusNotificationStatus::PREPARING;
+                        break;
+                    case StatusNotificationStatus::PREPARING:
+                        // We are not ready to charge, stay in preparing
+                        break;
+                    case StatusNotificationStatus::CHARGING:
+                        // C5
+                        newStatus = StatusNotificationStatus::SUSPENDED_EVSE;
+                        break;
+                    case StatusNotificationStatus::SUSPENDED_EV:
+                        // D5
+                        newStatus = StatusNotificationStatus::SUSPENDED_EVSE;
+                        break;
+                    case StatusNotificationStatus::SUSPENDED_EVSE:
+                        // We were suspended already, stay here.
+                        break;
+                    case StatusNotificationStatus::FINISHING:
+                        // User still has to pull cable, stay here
+                        break;
+                    case StatusNotificationStatus::RESERVED:
+                        // Stay in reserved, we don't know if the user will present the correct idTag
+                        break;
+                    case StatusNotificationStatus::UNAVAILABLE:
+                        // Stay unavailable until the central says otherwise
+                        break;
+                    case StatusNotificationStatus::FAULTED:
+                        // I2
+                        newStatus = StatusNotificationStatus::PREPARING;
+                        break;
+                }
+                break;
+            case ConnectorState::ReadyToCharge:
+                switch(status) {
+                    case StatusNotificationStatus::SUSPENDED_EV:
+                        // Still waiting for the EV...
+                        break;
+                    case StatusNotificationStatus::FINISHING:
+                        // This should not be possible: The connector allows charging but we should have blocked it to get into the finishing state.
+                        platform_printfln("Unexpected connector state \"Ready to charge\": We are finishing a transaction?!?");
+                        break;
+                    case StatusNotificationStatus::RESERVED:
+                        // This should not be possible: The connector is reserved (and thus blocked!), we are still waiting for the idTag.
+                        platform_printfln("Unexpected connector state \"Ready to charge\": Connector is reserved but idTag was not seen yet?!?");
+                        break;
+                    case StatusNotificationStatus::UNAVAILABLE:
+                        // Stay unavailable until the central says otherwise
+                        platform_printfln("Unexpected connector state \"Ready to charge\": Connector is unavailable?!?");
+                        break;
+                    default:
+                        // A4-I4
+                        newStatus = StatusNotificationStatus::SUSPENDED_EV;
+                        break;
+                }
+                break;
+            case ConnectorState::Charging:
+                switch(status) {
+                    case StatusNotificationStatus::FINISHING:
+                        // This should not be possible: The connector allows charging but we should have blocked it to get into the finishing state.
+                        platform_printfln("Unexpected connector state \"Charging\": We are finishing a transaction?!?");
+                        break;
+                    case StatusNotificationStatus::RESERVED:
+                        // This should not be possible: The connector is reserved (and thus blocked!), we are still waiting for the idTag.
+                        platform_printfln("Unexpected connector state \"Charging\": Connector is reserved but idTag was not seen yet?!?");
+                        break;
+                    case StatusNotificationStatus::UNAVAILABLE:
+                        platform_printfln("Unexpected connector state \"Charging\": Connector is unavailable?!?");
+                        break;
+                    default:
+                        // A3-I3
+                        newStatus = StatusNotificationStatus::CHARGING;
+                        break;
+                }
+                break;
+            case ConnectorState::Faulted:
+                newStatus = StatusNotificationStatus::FAULTED;
+                break;
+        }
+
+        if (newStatus != status)
+            setStatus(newStatus);
+    }
+};
+
+/*
+Connectors numbering (ConnectorIds) MUST be as follows:
+• ID of the first connector MUST be 1
+• Additional connectors MUST be sequentially numbered (no numbers may be skipped)
+• ConnectorIds MUST never be higher than the total number of connectors of a Charge Point
+• For operations intiated by the Central System, ConnectorId 0 is reserved for addressing the entire Charge
+Point.
+• For operations initiated by the Charge Point (when reporting), ConnectorId 0 is reserved for the Charge
+Point main controller.
+*/
+Connector connectors[NUM_CONNECTORS + 1];
+
+
 void Ocpp::tick_power_on() {
     if ((last_bn_send_ms == 0 && !platform_ws_connected(platform_ctx)) || !deadline_elapsed(last_bn_send_ms + 1000 * getIntConfig(ConfigKey::HeartbeatInterval)))
         return;
@@ -50,6 +204,9 @@ void Ocpp::tick() {
             tick_idle();
             break;
     }
+
+    for(size_t i = 1; i < ARRAY_SIZE(connectors); ++i)
+        connectors[i].tick();
 }
 
 void Ocpp::handleMessage(char *message, size_t message_len)
@@ -193,7 +350,29 @@ void Ocpp::sendCallError(const char *uid, CallErrorCode code, const char *desc, 
 
 CallResponse Ocpp::handleAuthorizeResponse(AuthorizeResponseView conf)
 {
-    return CallResponse{CallErrorCode::InternalError, "not implemented yet!"};
+    idle_info.lastSeenTag.updateFromIdTagInfo(conf.idTagInfo());
+
+    switch (idle_info.lastSeenTag.status) {
+        case ResponseIdTagInfoEntriesStatus::ACCEPTED:
+            state = OcppState::WaitingForConnectorSelection;
+            platform_select_connector();
+        break;
+
+        case ResponseIdTagInfoEntriesStatus::BLOCKED:
+            platform_tag_rejected(idle_info.lastSeenTag.tagId, TagRejectionType::Blocked);
+            break;
+        case ResponseIdTagInfoEntriesStatus::CONCURRENT_TX:
+            platform_tag_rejected(idle_info.lastSeenTag.tagId, TagRejectionType::ConcurrentTx);
+            break;
+        case ResponseIdTagInfoEntriesStatus::EXPIRED:
+            platform_tag_rejected(idle_info.lastSeenTag.tagId, TagRejectionType::Expired);
+            break;
+        case ResponseIdTagInfoEntriesStatus::INVALID:
+            platform_tag_rejected(idle_info.lastSeenTag.tagId, TagRejectionType::Invalid);
+            break;
+    }
+
+    return CallResponse{CallErrorCode::OK, ""};
 }
 
 CallResponse Ocpp::handleBootNotificationResponse(BootNotificationResponseView conf) {
@@ -410,6 +589,16 @@ CallResponse Ocpp::handleReset(const char *uid, ResetView req)
 
 CallResponse Ocpp::handleStartTransactionResponse(StartTransactionResponseView conf)
 {
+    if (conf.idTagInfo().status() != ResponseIdTagInfoEntriesStatus::ACCEPTED) {
+        // TODO: Do we have to handle this case if we don't support offline authorization?
+        return CallResponse{CallErrorCode::OK, ""};
+    }
+
+    connectors[wstc_info.connectorId].authorized_for.updateTagId(wstc_info.lastSeenTag.tagId);
+    connectors[wstc_info.connectorId].authorized_for.updateFromIdTagInfo(conf.idTagInfo());
+
+
+
     return CallResponse{CallErrorCode::InternalError, "not implemented yet!"};
 }
 
@@ -432,5 +621,47 @@ void Ocpp::handleCallError(CallErrorCode code, const char *desc, JsonObject deta
 {
     std::string details_string;
     serializeJsonPretty(details, details_string);
-    platform_printfln("Received call error %s (%d): %s %s", CallErrorCodeStrings[(size_t)code], desc, details_string.c_str());
+    platform_printfln("Received call error %s (%d): %s", CallErrorCodeStrings[(size_t)code], desc, details_string.c_str());
+}
+
+void Ocpp::handleTagSeen(const char *tagId)
+{
+    /*
+    To handle here:
+    - Second time a tag is seen while not charging for the tag (i.e. user does not want to start charging anymore)
+    - Tag used to stop charging
+    */
+
+    if (this->state != OcppState::Idle)
+        return;
+
+    idle_info.lastSeenTag.updateTagId(tagId);
+
+    DynamicJsonDocument doc{0};
+    Authorize(&doc, tagId);
+    last_call_action = CallAction::AUTHORIZE;
+    size_t written = serializeJson(doc, send_buf);
+
+    platform_ws_send(platform_ctx, send_buf, written);
+}
+
+void Ocpp::handleConnectorSelection(int32_t connectorId) {
+    if (this->state != OcppState::WaitingForConnectorSelection)
+        return;
+
+    if (connectorId > NUM_CONNECTORS || connectorId < 1) {
+        platform_printfln("Selected invalid connector id %u", connectorId);
+        return;
+    }
+
+    wstc_info.lastSeenTag = idle_info.lastSeenTag;
+    wstc_info.connectorId = connectorId;
+    this->state = OcppState::WaitingForStartTransactionConf;
+
+    DynamicJsonDocument doc{0};
+    StartTransaction(&doc, connectorId, this->idle_info.lastSeenTag.tagId, platform_get_energy(connectorId), platform_get_system_time(platform_ctx));
+    last_call_action = CallAction::START_TRANSACTION;
+    size_t written = serializeJson(doc, send_buf);
+
+    platform_ws_send(platform_ctx, send_buf, written);
 }

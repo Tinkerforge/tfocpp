@@ -11,7 +11,58 @@ enum class OcppState {
     PowerOn, // send boot notification, wait for boot notification conf, don't do anything else
     Idle, // boot notification received, accepted
     Pending, // boot notification received, pending
-    Rejected // boot notification received, rejected
+    Rejected, // boot notification received, rejected
+    WaitingForConnectorSelection, // autorization accepted, will start transaction when connector is selected
+    WaitingForStartTransactionConf // connector selected, start transaction sent. will start charging when starttransaction.conf is received
+};
+
+
+struct IdTagInfo {
+    char tagId[21] = {0};
+    char parentTagId[21] = {0};
+    ResponseIdTagInfoEntriesStatus status = ResponseIdTagInfoEntriesStatus::INVALID;
+    time_t expiryDate = 0;
+
+    void updateTagId(const char *newTagId) {
+        memset(tagId, 0, ARRAY_SIZE(tagId));
+        strncpy(tagId, newTagId, ARRAY_SIZE(tagId) - 1);
+    }
+
+    void updateFromIdTagInfo(StopTransactionResponseIdTagInfoEntriesView view) {
+        memset(parentTagId, 0, ARRAY_SIZE(parentTagId));
+        if (view.parentIdTag().is_set())
+            strncpy(parentTagId, view.parentIdTag().get(), ARRAY_SIZE(parentTagId) - 1);
+
+        expiryDate = view.expiryDate().is_set() ? view.expiryDate().get() : 0;
+        status = view.status();
+    }
+
+    void updateFromIdTagInfo(StartTransactionResponseIdTagInfoEntriesView view) {
+        memset(parentTagId, 0, ARRAY_SIZE(parentTagId));
+        if (view.parentIdTag().is_set())
+            strncpy(parentTagId, view.parentIdTag().get(), ARRAY_SIZE(parentTagId) - 1);
+
+        expiryDate = view.expiryDate().is_set() ? view.expiryDate().get() : 0;
+        status = view.status();
+    }
+
+    void updateFromIdTagInfo(AuthorizeResponseIdTagInfoEntriesView view) {
+        memset(parentTagId, 0, ARRAY_SIZE(parentTagId));
+        if (view.parentIdTag().is_set())
+            strncpy(parentTagId, view.parentIdTag().get(), ARRAY_SIZE(parentTagId) - 1);
+
+        expiryDate = view.expiryDate().is_set() ? view.expiryDate().get() : 0;
+        status = view.status();
+    }
+};
+
+struct IdleInfo {
+    IdTagInfo lastSeenTag;
+};
+
+struct WaitStartTransConfInfo {
+    IdTagInfo lastSeenTag;
+    int32_t connectorId;
 };
 
 class Ocpp {
@@ -28,8 +79,17 @@ public:
         ws_url += charge_point_name_percent_encoded;
 
         platform_ctx = platform_init(ws_url.c_str());
-        platform_ws_register_receive_callback(platform_ctx, [this](char *c, size_t s){handleMessage(c, s);});
+        platform_ws_register_receive_callback(platform_ctx, [](char *c, size_t s, void *user_data){((Ocpp*)user_data)->handleMessage(c, s);}, this);
+        platform_register_tag_seen_callback(platform_ctx, [](const char *tagId, void *user_data){((Ocpp*)user_data)->handleTagSeen(tagId);}, this);
+        platform_register_select_connector_callback(platform_ctx, [](int32_t connectorId, void *user_data){((Ocpp*)user_data)->handleConnectorSelection(connectorId);}, this);
     }
+
+    void stop() {
+        platform_disconnect(platform_ctx);
+    }
+
+    void handleTagSeen(const char *tagId);
+    void handleConnectorSelection(int32_t connectorId);
 
     void tick_power_on();
     void tick_idle();
@@ -62,6 +122,9 @@ public:
 
 
     OcppState state = OcppState::PowerOn;
+
+    IdleInfo idle_info;
+    WaitStartTransConfInfo wstc_info;
 
 private:
     void *platform_ctx;
