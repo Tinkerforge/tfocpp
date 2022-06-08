@@ -6,6 +6,7 @@ import time
 from ocpp.routing import on, after
 from ocpp.v16.enums import Action, RegistrationStatus
 from ocpp.v16 import call_result, call
+import ocpp.exceptions
 
 import default_platform
 import default_central
@@ -79,6 +80,16 @@ class TestBootNotification(unittest.TestCase):
         self.assertLessEqual(c.received_calls[Action.BootNotification], 10, "Expected one boot notification resend per interval")
         assert_no_other_packets(self, c)
 
+    """
+     If the Central System returns something other than Accepted[...] A Charge Point SHOULD NOT send a
+    BootNotification.req earlier, unless requested to do so with a TriggerMessage.req.
+    """
+    @unittest.skip("Not implemented yet")
+    def test_respond_to_trigger_message(self):
+        # configure interval longer than test time
+        # send trigger message after short interval
+        # check if two notifications were received (one on boot up, one on trigger)
+        pass
 
     # While Rejected, the Charge Point SHALL NOT respond to any Central System initiated message.
     def test_dont_respond_while_rejected(self):
@@ -133,6 +144,15 @@ class TestBootNotification(unittest.TestCase):
         self.assertEqual(len(c.received_errors), 0, "Expected no received errors")
 
     """
+    The Charge
+    Point SHALL NOT send request messages to the Central System unless it has been instructed by the Central
+    System to do so with a TriggerMessage.req request.
+    """
+    @unittest.skip("TriggerMessage not implemented yet")
+    def test_handle_trigger_message_while_pending(self):
+        pass
+
+    """
     The Charge Point SHALL send a BootNotification.req PDU each time it boots or reboots. Between the physical
     power-on/reboot and the successful completion of a BootNotification, where Central System returns Accepted or
     Pending, the Charge Point SHALL NOT send any other request to the Central System. This includes cached
@@ -140,7 +160,7 @@ class TestBootNotification(unittest.TestCase):
     """
     @unittest.skip("Not implemented yet")
     def test_boot_notification_after_reboot(self):
-        self.fail("Not implemented yet")
+        pass
 
 
     """
@@ -198,6 +218,33 @@ class TestBootNotification(unittest.TestCase):
         _, c = run_test(TestCP, 10, speedup=100)
         self.assertGreaterEqual(default_platform.last_time_set_at, start)
         self.assertEqual(default_platform.last_time_set, c.sent_time)
+
+    """
+    While in pending state, the following Central System initiated messages are not allowed:
+    RemoteStartTransaction.req and RemoteStopTransaction.req
+
+    [
+        It is unclear what to do if we still receive one from the central. We handle thas as if we've received any message while rejected: Just throw it away and don't answer at all.
+    ]
+    """
+    @unittest.skip("RemoteStartTransaction not implemented yet")
+    def test_remote_start_stop_while_pending(self):
+        class TestCP(default_central.DefaultChargePoint):
+            remote_start_task = None
+            first = True
+
+            @after(Action.BootNotification)
+            def after_boot_notification(self, *args, **kwargs):
+                if self.first:
+                    self.remote_start_task = asyncio.create_task(self.call(call.RemoteStartTransactionPayload("00:11:22:33")))
+                self.first = False
+
+        _, c = run_test(TestCP, 10, speedup=100)
+
+        result = c.remote_start_task.result()
+        self.assertEqual(result, None)
+        assert_no_other_packets(self, c)
+
 
 if __name__ == '__main__':
     unittest.main()
