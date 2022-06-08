@@ -13,9 +13,11 @@ import default_central
 
 from test_runner import run_test
 
-# Between the physical power-on/reboot and the successful completion of a BootNotification,
-# where Central System returns Accepted or Pending,
-# the Charge Point SHALL NOT send any other request to the Central System.
+"""
+Between the physical power-on/reboot and the successful completion of a BootNotification,
+where Central System returns Accepted or Pending,
+the Charge Point SHALL NOT send any other request to the Central System.
+"""
 def assert_no_other_packets(test_case, c):
     test_case.assertEqual(len(c.received_calls), 1, "Expected no other received calls")
     test_case.assertEqual(len(c.received_results), 0, "Expected no received results")
@@ -81,7 +83,7 @@ class TestBootNotification(unittest.TestCase):
         assert_no_other_packets(self, c)
 
     """
-     If the Central System returns something other than Accepted[...] A Charge Point SHOULD NOT send a
+    If the Central System returns something other than Accepted[...] A Charge Point SHOULD NOT send a
     BootNotification.req earlier, unless requested to do so with a TriggerMessage.req.
     """
     @unittest.skip("Not implemented yet")
@@ -91,7 +93,9 @@ class TestBootNotification(unittest.TestCase):
         # check if two notifications were received (one on boot up, one on trigger)
         pass
 
-    # While Rejected, the Charge Point SHALL NOT respond to any Central System initiated message.
+    """
+    While Rejected, the Charge Point SHALL NOT respond to any Central System initiated message.
+    """
     def test_dont_respond_while_rejected(self):
         class TestCP(default_central.DefaultChargePoint):
             get_conf_task = None
@@ -113,7 +117,9 @@ class TestBootNotification(unittest.TestCase):
         self.assertTrue(c.get_conf_task.done())
         assert_no_other_packets(self, c)
 
-    #[...]Pending[...] The Central System MAY send request messages to retrieve information from the Charge Point or change its configuration. The Charge Point SHOULD respond to these messages.
+    """
+    [...]Pending[...] The Central System MAY send request messages to retrieve information from the Charge Point or change its configuration. The Charge Point SHOULD respond to these messages.
+    """
     def test_respond_while_pending(self):
         class TestCP(default_central.DefaultChargePoint):
             get_conf_task = None
@@ -222,13 +228,11 @@ class TestBootNotification(unittest.TestCase):
     """
     While in pending state, the following Central System initiated messages are not allowed:
     RemoteStartTransaction.req and RemoteStopTransaction.req
-
-    [
-        It is unclear what to do if we still receive one from the central. We handle thas as if we've received any message while rejected: Just throw it away and don't answer at all.
-    ]
     """
     @unittest.skip("RemoteStartTransaction not implemented yet")
     def test_remote_start_stop_while_pending(self):
+        # It is unclear what to do if we receive a remotestart/stop from the central. For now we handle those as if we've received any message while rejected: Just throw it away and don't answer at all.
+
         class TestCP(default_central.DefaultChargePoint):
             remote_start_task = None
             first = True
