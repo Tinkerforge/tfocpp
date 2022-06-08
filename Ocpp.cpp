@@ -164,10 +164,12 @@ Connector connectors[NUM_CONNECTORS + 1];
 
 
 void Ocpp::tick_power_on() {
-    if ((last_bn_send_ms == 0 && !platform_ws_connected(platform_ctx)) || !deadline_elapsed(last_bn_send_ms + 1000 * getIntConfig(ConfigKey::HeartbeatInterval)))
+    if (last_bn_send_ms == 0 && !platform_ws_connected(platform_ctx))
+        return;
+    if (last_bn_send_ms != 0 && !deadline_elapsed(last_bn_send_ms + 1000 * getIntConfig(ConfigKey::HeartbeatInterval)))
         return;
 
-    platform_printfln("Sending boot notification. %u %u %u", last_bn_send_ms, last_bn_send_ms + 1000 * getIntConfig(ConfigKey::HeartbeatInterval), 1000 * getIntConfig(ConfigKey::HeartbeatInterval));
+    platform_printfln("Sending boot notification. %u %u %u %u", platform_now_ms(), last_bn_send_ms, last_bn_send_ms + 1000 * getIntConfig(ConfigKey::HeartbeatInterval), 1000 * getIntConfig(ConfigKey::HeartbeatInterval));
 
     last_bn_send_ms = platform_now_ms();
 
