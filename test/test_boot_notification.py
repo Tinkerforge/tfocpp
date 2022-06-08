@@ -153,7 +153,7 @@ class TestBootNotification(unittest.TestCase):
     When the Central System responds with a BootNotification.conf with a status Accepted, [...] it is RECOMMENDED to
     synchronize its internal clock with the supplied Central System’s current time.
     """
-    def test_heartbeat_adjusted(self):
+    def test_clock_adjusted(self):
         class TestCP(default_central.DefaultChargePoint):
             sent_time = 0
 
@@ -164,7 +164,9 @@ class TestBootNotification(unittest.TestCase):
 
                 return call_result.BootNotificationPayload(
                     current_time=t.isoformat(),
-                    interval=1,
+                    # We have to set a high interval here or else the charge point will send heartbeats.
+                    # The responses to those contain the ystem time that overrides the one sent here.
+                    interval=100,
                     status=RegistrationStatus.accepted
                 )
 
