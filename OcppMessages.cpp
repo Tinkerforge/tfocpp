@@ -75,8 +75,8 @@ const char *StatusNotificationStatusStrings[] = {
     "Available",
     "Preparing",
     "Charging",
-    "SuspendedEVSE",
     "SuspendedEV",
+    "SuspendedEVSE",
     "Finishing",
     "Reserved",
     "Unavailable",
@@ -296,7 +296,7 @@ bool Authorize(DynamicJsonDocument *result,
     *result = DynamicJsonDocument{
         OCPP_CALL_JSON_SIZE("Authorize")
         + JSON_OBJECT_SIZE(1)
-        + 1000
+        + 2000
     };
 
     (*result).add((int32_t)OcppRpcMessageType::CALL);
@@ -325,7 +325,7 @@ bool BootNotification(DynamicJsonDocument *result,
     *result = DynamicJsonDocument{
         OCPP_CALL_JSON_SIZE("BootNotification")
         + JSON_OBJECT_SIZE(9)
-        + 9000
+        + 18000
     };
 
     (*result).add((int32_t)OcppRpcMessageType::CALL);
@@ -353,7 +353,7 @@ bool ChangeAvailabilityResponse(DynamicJsonDocument *result, const char *call_id
     *result = DynamicJsonDocument{
         OCPP_CALLRESULT_JSON_SIZE("ChangeAvailabilityResponse")
         + JSON_OBJECT_SIZE(1)
-        + 1000
+        + 2000
     };
 
     (*result).add((int32_t)OcppRpcMessageType::CALLRESULT);
@@ -373,7 +373,7 @@ bool ChangeConfigurationResponse(DynamicJsonDocument *result, const char *call_i
     *result = DynamicJsonDocument{
         OCPP_CALLRESULT_JSON_SIZE("ChangeConfigurationResponse")
         + JSON_OBJECT_SIZE(1)
-        + 1000
+        + 2000
     };
 
     (*result).add((int32_t)OcppRpcMessageType::CALLRESULT);
@@ -393,7 +393,7 @@ bool ClearCacheResponse(DynamicJsonDocument *result, const char *call_id,
     *result = DynamicJsonDocument{
         OCPP_CALLRESULT_JSON_SIZE("ClearCacheResponse")
         + JSON_OBJECT_SIZE(1)
-        + 1000
+        + 2000
     };
 
     (*result).add((int32_t)OcppRpcMessageType::CALLRESULT);
@@ -415,7 +415,7 @@ bool DataTransfer(DynamicJsonDocument *result,
     *result = DynamicJsonDocument{
         OCPP_CALL_JSON_SIZE("DataTransfer")
         + JSON_OBJECT_SIZE(3)
-        + 3000
+        + 6000
     };
 
     (*result).add((int32_t)OcppRpcMessageType::CALL);
@@ -438,7 +438,7 @@ bool DataTransferResponse(DynamicJsonDocument *result, const char *call_id,
     *result = DynamicJsonDocument{
         OCPP_CALLRESULT_JSON_SIZE("DataTransferResponse")
         + JSON_OBJECT_SIZE(2)
-        + 2000
+        + 4000
     };
 
     (*result).add((int32_t)OcppRpcMessageType::CALLRESULT);
@@ -459,7 +459,7 @@ bool GetConfigurationResponse(DynamicJsonDocument *result, const char *call_id,
     *result = DynamicJsonDocument{
         OCPP_CALLRESULT_JSON_SIZE("GetConfigurationResponse")
         + JSON_OBJECT_SIZE(2)
-        + 2000
+        + 4000
     };
 
     (*result).add((int32_t)OcppRpcMessageType::CALLRESULT);
@@ -499,7 +499,7 @@ bool MeterValues(DynamicJsonDocument *result,
     *result = DynamicJsonDocument{
         OCPP_CALL_JSON_SIZE("MeterValues")
         + JSON_OBJECT_SIZE(3)
-        + 3000
+        + 6000
     };
 
     (*result).add((int32_t)OcppRpcMessageType::CALL);
@@ -521,7 +521,7 @@ bool RemoteStartTransactionResponse(DynamicJsonDocument *result, const char *cal
     *result = DynamicJsonDocument{
         OCPP_CALLRESULT_JSON_SIZE("RemoteStartTransactionResponse")
         + JSON_OBJECT_SIZE(1)
-        + 1000
+        + 2000
     };
 
     (*result).add((int32_t)OcppRpcMessageType::CALLRESULT);
@@ -541,7 +541,7 @@ bool RemoteStopTransactionResponse(DynamicJsonDocument *result, const char *call
     *result = DynamicJsonDocument{
         OCPP_CALLRESULT_JSON_SIZE("RemoteStopTransactionResponse")
         + JSON_OBJECT_SIZE(1)
-        + 1000
+        + 2000
     };
 
     (*result).add((int32_t)OcppRpcMessageType::CALLRESULT);
@@ -561,7 +561,7 @@ bool ResetResponse(DynamicJsonDocument *result, const char *call_id,
     *result = DynamicJsonDocument{
         OCPP_CALLRESULT_JSON_SIZE("ResetResponse")
         + JSON_OBJECT_SIZE(1)
-        + 1000
+        + 2000
     };
 
     (*result).add((int32_t)OcppRpcMessageType::CALLRESULT);
@@ -588,7 +588,7 @@ bool StartTransaction(DynamicJsonDocument *result,
     *result = DynamicJsonDocument{
         OCPP_CALL_JSON_SIZE("StartTransaction")
         + JSON_OBJECT_SIZE(5)
-        + 5000
+        + 10000
     };
 
     (*result).add((int32_t)OcppRpcMessageType::CALL);
@@ -620,7 +620,7 @@ bool StatusNotification(DynamicJsonDocument *result,
     *result = DynamicJsonDocument{
         OCPP_CALL_JSON_SIZE("StatusNotification")
         + JSON_OBJECT_SIZE(7)
-        + 7000
+        + 14000
     };
 
     (*result).add((int32_t)OcppRpcMessageType::CALL);
@@ -653,7 +653,7 @@ bool StopTransaction(DynamicJsonDocument *result,
     *result = DynamicJsonDocument{
         OCPP_CALL_JSON_SIZE("StopTransaction")
         + JSON_OBJECT_SIZE(6)
-        + 6000
+        + 12000
     };
 
     (*result).add((int32_t)OcppRpcMessageType::CALL);
@@ -678,7 +678,7 @@ bool UnlockConnectorResponse(DynamicJsonDocument *result, const char *call_id,
     *result = DynamicJsonDocument{
         OCPP_CALLRESULT_JSON_SIZE("UnlockConnectorResponse")
         + JSON_OBJECT_SIZE(1)
-        + 1000
+        + 2000
     };
 
     (*result).add((int32_t)OcppRpcMessageType::CALLRESULT);
