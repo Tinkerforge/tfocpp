@@ -27,7 +27,11 @@ class TestBootNotification(unittest.TestCase):
         self.assertEqual(c.received_calls[Action.BootNotification], 1, "Expected exactly one boot notification if it is accepted")
         assert_no_other_packets(self, c)
 
-
+    """
+    If the Central System returns
+    something other than Accepted, the value of the interval field indicates the minimum wait time before sending a
+    next BootNotification request.
+    """
     def test_retry_on_pending(self):
         class TestCP(default_central.DefaultChargePoint):
             @on(Action.BootNotification)
@@ -56,7 +60,27 @@ class TestBootNotification(unittest.TestCase):
         self.assertEqual(c.received_calls[Action.BootNotification], 10, "Expected one boot notification resend per interval")
         assert_no_other_packets(self, c)
 
-    #While Rejected, the Charge Point SHALL NOT respond to any Central System initiated message.
+    """
+    If that interval value is zero, the Charge Point chooses a waiting interval on its
+    own, in a way that avoids flooding the Central System with requests.
+    """
+    def test_interval_zero(self):
+        class TestCP(default_central.DefaultChargePoint):
+            @on(Action.BootNotification)
+            def on_boot_notification(self, charge_point_vendor: str, charge_point_model: str, **kwargs):
+                return call_result.BootNotificationPayload(
+                    current_time=self.get_datetime().isoformat(),
+                    interval=0,
+                    status=RegistrationStatus.pending
+                )
+
+        _, c = run_test(TestCP, 100, speedup=100)
+        # don't flood := at most one notification every 10 seconds
+        self.assertLessEqual(c.received_calls[Action.BootNotification], 10, "Expected one boot notification resend per interval")
+        assert_no_other_packets(self, c)
+
+
+    # While Rejected, the Charge Point SHALL NOT respond to any Central System initiated message.
     def test_dont_respond_while_rejected(self):
         class TestCP(default_central.DefaultChargePoint):
             get_conf_task = None
@@ -123,7 +147,7 @@ class TestBootNotification(unittest.TestCase):
     When the Central System responds with a BootNotification.conf with a status Accepted, the Charge Point will
     adjust the heartbeat interval in accordance with the interval from the response PDU
     """
-    def test_heartbeat_adjusted(self):
+    def test_heartbeat_interval_adjusted(self):
         class TestCP(default_central.DefaultChargePoint):
             get_conf_task = None
             first = True
