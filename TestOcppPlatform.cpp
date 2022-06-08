@@ -19,6 +19,7 @@ bool done = false;        // Event handler flips it to true
 static void fn(struct mg_connection *c, int ev, void *ev_data, void *fn_data) {
   if (ev == MG_EV_OPEN) {
     //c->is_hexdumping = 1;
+
   } else if (ev == MG_EV_ERROR) {
     // On error, log error message
     MG_ERROR(("%p %s", c->fd, (char *) ev_data));
@@ -143,7 +144,7 @@ void ocpp_start(const char *ws_url, const char *charge_point_name)
 
 void ocpp_tick()
 {
-    mg_mgr_poll(&mgr, 100);
+    mg_mgr_poll(&mgr, 1);
     ocpp->tick();
 }
 
