@@ -510,20 +510,21 @@ CallResponse Ocpp::handleGetConfiguration(const char *uid, GetConfigurationView 
         }
     }
 
-    auto *known = (GetConfigurationResponseConfigurationKey *)malloc(sizeof(GetConfigurationResponseConfigurationKey) * known_keys);
+    //auto *known = (GetConfigurationResponseConfigurationKey *)malloc(sizeof(GetConfigurationResponseConfigurationKey) * known_keys);
+    auto *known = new GetConfigurationResponseConfigurationKey[known_keys]();
     size_t known_idx = 0;
 
     auto *unknown = (const char **)malloc(sizeof(const char *) * unknown_keys);
     size_t unknown_idx = 0;
 
+    // Scratch buffer used for strings created from int config values.
     auto *scratch_buf = (char *)malloc(sizeof(char) * scratch_buf_size);
     size_t scratch_buf_idx = 0;
 
-    for(size_t i = 0; i < known_keys; ++i) {
-        size_t result = i;
-        if (dump_all || lookup_key(&result, req.key(i).get(), config_keys, ARRAY_SIZE(config_keys))) {
+    if (dump_all) {
+        for(size_t i = 0; i < known_keys; ++i) {
             const char *config_value;
-            OcppConfiguration &config = getConfig(result);
+            OcppConfiguration &config = getConfig(i);
             switch(config.type) {
                 case OcppConfigurationValueType::Boolean:
                     config_value = config.value.boolean.b ? "true" : "false";
@@ -537,17 +538,41 @@ CallResponse Ocpp::handleGetConfiguration(const char *uid, GetConfigurationView 
                     config_value = config.value.csl.c;
                     break;
             }
-            known[known_idx].key = config_keys[result];
+            known[known_idx].key = config_keys[i];
             known[known_idx].readonly = config.readonly;
             known[known_idx].value = config_value;
             ++known_idx;
         }
-        else {
-            unknown[unknown_idx] = req.key(i).get();
-            ++unknown_idx;
+    } else {
+        for(size_t i = 0; i < req.key_count(); ++i) {
+            size_t result = i;
+            if (lookup_key(&result, req.key(i).get(), config_keys, ARRAY_SIZE(config_keys))) {
+                const char *config_value;
+                OcppConfiguration &config = getConfig(result);
+                switch(config.type) {
+                    case OcppConfigurationValueType::Boolean:
+                        config_value = config.value.boolean.b ? "true" : "false";
+                        break;
+                    case OcppConfigurationValueType::Integer:
+                        config_value = (const char *)scratch_buf + scratch_buf_idx;
+                        scratch_buf_idx += snprintf(scratch_buf + scratch_buf_idx, scratch_buf_size - scratch_buf_idx, "%d", config.value.integer.i);
+                        ++scratch_buf_idx; // for null terminator
+                        break;
+                    case OcppConfigurationValueType::CSL:
+                        config_value = config.value.csl.c;
+                        break;
+                }
+                known[known_idx].key = config_keys[result];
+                known[known_idx].readonly = config.readonly;
+                known[known_idx].value = config_value;
+                ++known_idx;
+            }
+            else {
+                unknown[unknown_idx] = req.key(i).get();
+                ++unknown_idx;
+            }
         }
     }
-
 
     DynamicJsonDocument doc{0};
     GetConfigurationResponse(&doc, uid, known, known_keys, unknown, unknown_keys);
@@ -556,7 +581,7 @@ CallResponse Ocpp::handleGetConfiguration(const char *uid, GetConfigurationView 
 
     platform_ws_send(platform_ctx, send_buf, written);
 
-    free(known);
+    delete[] known;
     free(unknown);
     free(scratch_buf);
 
