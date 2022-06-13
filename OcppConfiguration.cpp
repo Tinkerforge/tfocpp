@@ -17,7 +17,7 @@ OcppConfiguration OcppConfiguration::integer(int32_t value,
 OcppConfiguration OcppConfiguration::boolean(bool value,
                           bool readonly,
                           bool requires_reboot) {
-    return OcppConfiguration{OcppConfigurationValueType::Integer, {.boolean = {value}}, readonly, requires_reboot};
+    return OcppConfiguration{OcppConfigurationValueType::Boolean, {.boolean = {value}}, readonly, requires_reboot};
 }
 
 OcppConfiguration OcppConfiguration::csl(const char *value,
