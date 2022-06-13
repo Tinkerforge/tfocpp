@@ -186,55 +186,55 @@ OcppConfiguration config[CONFIG_COUNT] = {
     /*AuthorizationCacheEnabled*/         //OcppConfiguration::boolean(false, false, false),
     /*AuthorizeRemoteTxRequests*/         OcppConfiguration::boolean(false, false, false),
     /*BlinkRepeat*/                       //OcppConfiguration::integer(3, false, false),
-    /*ClockAlignedDataInterval*/          OcppConfiguration::integer(0, false, false),
-    /*ConnectionTimeOut*/                 OcppConfiguration::integer(60, false, false),
+    /*ClockAlignedDataInterval*/          OcppConfiguration::integer(0, false, false, 0),
+    /*ConnectionTimeOut*/                 OcppConfiguration::integer(60, false, false, 0),
 
                                           // +1 for index 0: "the phase rotation between
                                           //    the grid connection and the main energymeter"
                                           // +5 for two digits, the dot, comma and space
                                           // +1 for null-terminator
                                           // Format is "0.RST, 1.RST, 2.RTS"
-    /*ConnectorPhaseRotation*/            OcppConfiguration::csl("", (NUM_CONNECTORS + 1) * (strlen("NotApplicable") + 5) + 1, NUM_CONNECTORS + 1, false, false, connectorPhaseRotationStrings, ARRAY_SIZE(connectorPhaseRotationStrings), true),
-    /*ConnectorPhaseRotationMaxLength*/   OcppConfiguration::integer(NUM_CONNECTORS + 1, true, false),
+    /*ConnectorPhaseRotation*/            OcppConfiguration::csl("1.Unknown", (NUM_CONNECTORS + 1) * (strlen("NotApplicable") + 5) + 1, NUM_CONNECTORS + 1, false, false, connectorPhaseRotationStrings, ARRAY_SIZE(connectorPhaseRotationStrings), true),
+    /*ConnectorPhaseRotationMaxLength*/   OcppConfiguration::integer(NUM_CONNECTORS + 1, true, false, 0),
 
-    /*GetConfigurationMaxKeys*/           OcppConfiguration::integer(1, true, false),
-    /*HeartbeatInterval*/                 OcppConfiguration::integer(DEFAULT_BOOT_NOTIFICATION_RESEND_INTERVAL_S, false, false),
-    /*LightIntensity*/                    //OcppConfiguration::integer(100, false, false),
+    /*GetConfigurationMaxKeys*/           OcppConfiguration::integer(1, true, false, 0),
+    /*HeartbeatInterval*/                 OcppConfiguration::integer(DEFAULT_BOOT_NOTIFICATION_RESEND_INTERVAL_S, false, false, 0),
+    /*LightIntensity*/                    //OcppConfiguration::integer(100, false, false, 0),
     /*LocalAuthorizeOffline*/             OcppConfiguration::boolean(false, false, false),
     /*LocalPreAuthorize*/                 OcppConfiguration::boolean(false, false, false),
-    /*MaxEnergyOnInvalidId*/              //OcppConfiguration::integer(0, false, false),
+    /*MaxEnergyOnInvalidId*/              //OcppConfiguration::integer(0, false, false, 0),
 
     // Its save to use the number of possible measurands as limit in elements,
     // because the complete list has a length of 465.
     // This also means that we don't have to implemeht the MeterValuesAlignedDataMaxLength key.
     /*MeterValuesAlignedData*/            OcppConfiguration::csl("", MAX_CONFIG_LENGTH, (size_t)SampledValueMeasurand::NONE, false, false, SampledValueMeasurandStrings, (size_t)SampledValueMeasurand::NONE),
-    /*MeterValuesAlignedDataMaxLength*/   //OcppConfiguration::integer(MAX_CONFIG_LENGTH / strlen("Energy.Reactive.Import.Register,"), true, false),
+    /*MeterValuesAlignedDataMaxLength*/   //OcppConfiguration::integer(MAX_CONFIG_LENGTH / strlen("Energy.Reactive.Import.Register,"), true, false, 0),
 
     // Same reasoning as with MeterValuesAlignedData.
     /*MeterValuesSampledData*/            OcppConfiguration::csl("", MAX_CONFIG_LENGTH, (size_t)SampledValueMeasurand::NONE, false, false, SampledValueMeasurandStrings, (size_t)SampledValueMeasurand::NONE),
-    /*MeterValuesSampledDataMaxLength*/   //OcppConfiguration::integer(0, true, false),
+    /*MeterValuesSampledDataMaxLength*/   //OcppConfiguration::integer(0, true, false, 0),
 
-    /*MeterValueSampleInterval*/          OcppConfiguration::integer(0, false, false),
-    /*MinimumStatusDuration*/             //OcppConfiguration::integer(1, false, false),
-    /*NumberOfConnectors*/                OcppConfiguration::integer(1, true, false),
-    /*ResetRetries*/                      OcppConfiguration::integer(1, false, false),
+    /*MeterValueSampleInterval*/          OcppConfiguration::integer(0, false, false, 0),
+    /*MinimumStatusDuration*/             //OcppConfiguration::integer(1, false, false, 0),
+    /*NumberOfConnectors*/                OcppConfiguration::integer(1, true, false, 0),
+    /*ResetRetries*/                      OcppConfiguration::integer(1, false, false, 0),
     /*StopTransactionOnEVSideDisconnect*/ OcppConfiguration::boolean(false, false, false),
     /*StopTransactionOnInvalidId*/        OcppConfiguration::boolean(false, false, false),
 
     // Same reasoning as with MeterValuesAlignedData.
     /*StopTxnAlignedData*/                OcppConfiguration::csl("", MAX_CONFIG_LENGTH, (size_t)SampledValueMeasurand::NONE, false, false, SampledValueMeasurandStrings, (size_t)SampledValueMeasurand::NONE),
-    /*StopTxnAlignedDataMaxLength*/       //OcppConfiguration::integer(0, true, false),
+    /*StopTxnAlignedDataMaxLength*/       //OcppConfiguration::integer(0, true, false, 0),
 
     // Same reasoning as with MeterValuesAlignedData.
     /*StopTxnSampledData*/                OcppConfiguration::csl("", MAX_CONFIG_LENGTH, (size_t)SampledValueMeasurand::NONE, false, false, SampledValueMeasurandStrings, (size_t)SampledValueMeasurand::NONE),
-    /*StopTxnSampledDataMaxLength*/       //OcppConfiguration::integer(0, true, false),
+    /*StopTxnSampledDataMaxLength*/       //OcppConfiguration::integer(0, true, false, 0),
 
     /*SupportedFeatureProfiles*/          OcppConfiguration::csl("Core", strlen("Core") + 1, 1, true, false, nullptr, 0, false),
-    /*SupportedFeatureProfilesMaxLength*/ //OcppConfiguration::integer(1, true), //errata 4.0: "This configuration key does not have to be implemented. It should not have been part of OCPP 1.6, "SupportedFeatureProfiles" is a readonly configuration key, false."
-    /*TransactionMessageAttempts*/        OcppConfiguration::integer(3, false, false),
-    /*TransactionMessageRetryInterval*/   OcppConfiguration::integer(10, false, false),
+    /*SupportedFeatureProfilesMaxLength*/ //OcppConfiguration::integer(1, true), //errata 4.0: "This configuration key does not have to be implemented. It should not have been part of OCPP 1.6, "SupportedFeatureProfiles" is a readonly configuration key, false, 0."
+    /*TransactionMessageAttempts*/        OcppConfiguration::integer(3, false, false, 0),
+    /*TransactionMessageRetryInterval*/   OcppConfiguration::integer(10, false, false, 0),
     /*UnlockConnectorOnEVSideDisconnect*/ OcppConfiguration::boolean(false, false, false),
-    /*WebSocketPingInterval*/             OcppConfiguration::integer(10, false, false),
+    /*WebSocketPingInterval*/             OcppConfiguration::integer(10, false, false, 0),
 };
 
 OcppConfiguration& getConfig(ConfigKey key) {
