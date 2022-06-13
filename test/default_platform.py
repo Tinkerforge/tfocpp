@@ -90,7 +90,8 @@ def start_client(tscale):
     timescale = tscale
     global time_start
     time_start = time.time()
-    libocpp = ctypes.cdll.LoadLibrary("../libocpp.so")
+    libocpp_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "libocpp.so")
+    libocpp = ctypes.cdll.LoadLibrary(libocpp_path)
     register_default_functions(libocpp)
 
     url = "ws://localhost:9000".encode("utf-8")
