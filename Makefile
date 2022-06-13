@@ -1,12 +1,10 @@
 #.SILENT:
 
-# Executable name
-TARGET := ocpp
 
 #CC = clang
 #CXX = clang++
 
-COMPILE_FLAGS = -g -fPIC
+COMPILE_FLAGS = -g -fPIC -O0
 CFLAGS += -std=c99 ${COMPILE_FLAGS}
 CXXFLAGS += -std=c++11 ${COMPILE_FLAGS}
 LDFLAGS += -pthread
@@ -19,19 +17,26 @@ ifeq ($(WITH_DEBUG),yes)
 endif
 
 SOURCES :=	$(wildcard *.cpp) \
-		mongoose/mongoose.cpp
-		#RaccoonWSClient/WsRaccoonClient.cpp
+		    mongoose/mongoose.cpp
 
-SOURCES += ${SOURCES_LIB}
+SOURCES_LIB := $(filter-out OcppPlatform.cpp, $(SOURCES))
 
-OBJECTS := ${SOURCES:.cpp=.o}
-DEPENDS := ${SOURCES:.cpp=.p}
+SOURCES_EXEC := $(filter-out TestOcppPlatform.cpp, $(SOURCES))
 
-$(TARGET): $(OBJECTS)
-	$(CXX) $(OBJECTS) $(LIBS) $(LDFLAGS) -shared -o lib$@.so
+OBJECTS_LIB := ${SOURCES_LIB:.cpp=.o}
+OBJECTS_EXEC := ${SOURCES_EXEC:.cpp=.o}
+
+all: libocpp.so ocpp
+
+libocpp.so: $(OBJECTS_LIB)
+	$(CXX) $(OBJECTS_LIB) $(LIBS) $(LDFLAGS) -shared -o $@
+
+ocpp: $(OBJECTS_EXEC)
+	$(CXX) $(OBJECTS_EXEC) $(LIBS) $(LDFLAGS) -o $@
 
 .PHONY: all clean
 
 clean: Makefile
-	$(E)$(RM) $(OBJECTS) $(TARGET) $(DEPENDS)
+	$(E)$(RM) $(OBJECTS_LIB) $(OBJECTS_EXEC) libocpp.so
 
+#SOURCES := $(filter-out TestOcppPlatform.cpp OcppPlatform.cpp, $(SOURCES))
