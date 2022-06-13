@@ -197,7 +197,7 @@ OcppConfiguration config[CONFIG_COUNT] = {
     /*ConnectorPhaseRotation*/            OcppConfiguration::csl("1.Unknown", (NUM_CONNECTORS + 1) * (strlen("NotApplicable") + 5) + 1, NUM_CONNECTORS + 1, false, false, connectorPhaseRotationStrings, ARRAY_SIZE(connectorPhaseRotationStrings), true),
     /*ConnectorPhaseRotationMaxLength*/   OcppConfiguration::integer(NUM_CONNECTORS + 1, true, false, 0),
 
-    /*GetConfigurationMaxKeys*/           OcppConfiguration::integer(1, true, false, 0),
+    /*GetConfigurationMaxKeys*/           OcppConfiguration::integer(40, true, false, 0),
     /*HeartbeatInterval*/                 OcppConfiguration::integer(DEFAULT_BOOT_NOTIFICATION_RESEND_INTERVAL_S, false, false, 0),
     /*LightIntensity*/                    //OcppConfiguration::integer(100, false, false, 0),
     /*LocalAuthorizeOffline*/             OcppConfiguration::boolean(false, false, false),
