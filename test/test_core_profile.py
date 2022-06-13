@@ -104,6 +104,25 @@ expected_config = [
 ]
 
 class TestCoreProfile(unittest.TestCase):
+    def test_core_profile_supported(self):
+        class TestCP(default_central.DefaultChargePoint):
+            task = None
+
+            @after(Action.BootNotification)
+            def after_boot_notification(self, *args, **kwargs):
+                self.task = asyncio.create_task(self.call(call.GetConfigurationPayload([])))
+
+        _, c = run_test(TestCP, sim_len_secs=2, speedup=100)
+
+        ck =  c.task.result().configuration_key
+        val = None
+        for conf in ck:
+            if conf["key"] != "SupportedFeatureProfiles":
+                continue
+            val = conf["value"]
+
+        self.assertIn("Core", val)
+
     def test_get_all_config_values(self):
         class TestCP(default_central.DefaultChargePoint):
             task = None
