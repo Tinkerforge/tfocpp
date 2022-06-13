@@ -177,30 +177,22 @@ class TestGetConfiguration(unittest.TestCase):
         self.assertIsInstance(ck[2]["value"], str, "All values must be passed as string")
 
     """
-    The response
-    PDU SHALL contain the current time of the Central System, which is RECOMMENDED to be used by the Charge
-    Point to synchronize its internal clock.
+    The number of configuration keys requested in a single PDU MAY be limited by the Charge Point. This maximum
+    can be retrieved by reading the configuration key GetConfigurationMaxKeys.
     """
-    def test_clock_adjusted(self):
+    def test_max_keys(self):
         class TestCP(default_central.DefaultChargePoint):
-            sent_time = 0
+            all_keys = None
+            max_keys = None
 
-            @on(Action.BootNotification)
-            def on_boot_notification(self, charge_point_vendor: str, charge_point_model: str, **kwargs):
-                return call_result.BootNotificationPayload(
-                    current_time=self.get_datetime().isoformat(),
-                    interval=1,
-                    status=RegistrationStatus.accepted
-                )
+            @after(Action.BootNotification)
+            async def after_boot_notification(inner_self, *args, **kwargs):
+                conf = (await inner_self.call(call.GetConfigurationPayload(["GetConfigurationMaxKeys"]))).configuration_key[0]
+                self.assertEqual(conf["key"], "GetConfigurationMaxKeys")
+                inner_self.max_keys = int(conf["value"])
+                inner_self.all_keys = await inner_self.call(call.GetConfigurationPayload([]))
+                inner_self.done = True
 
-            @on(Action.Heartbeat)
-            def on_heartbeat(self, *args, **kwargs):
-                t = self.get_datetime()
-                self.sent_time = int(t.timestamp())
+        _, c = run_test(TestCP, sim_len_secs=2, speedup=100)
 
-                return call_result.HeartbeatPayload(t.isoformat())
-
-        start = time.time()
-        _, c = run_test(TestCP, 10, speedup=100)
-        self.assertGreaterEqual(default_platform.last_time_set_at, start)
-        self.assertEqual(default_platform.last_time_set, c.sent_time)
+        self.assertLessEqual(len(c.all_keys.configuration_key), c.max_keys)
