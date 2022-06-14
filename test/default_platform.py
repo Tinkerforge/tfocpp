@@ -85,7 +85,7 @@ def register_default_functions(libocpp):
     libocpp.set_platform_get_energy_cb(platform_get_energy)
 
 
-def start_client(tscale):
+def start_client(port, tscale):
     global timescale
     timescale = tscale
     global time_start
@@ -94,7 +94,7 @@ def start_client(tscale):
     libocpp = ctypes.cdll.LoadLibrary(libocpp_path)
     register_default_functions(libocpp)
 
-    url = "ws://localhost:9000".encode("utf-8")
+    url = "ws://localhost:{}".format(port).encode("utf-8")
     name = "CP_1".encode("utf-8")
 
     libocpp.ocpp_start(url, name)

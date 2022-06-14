@@ -136,7 +136,7 @@ async def on_connect(websocket, path, charge_point_type, timescale):
 server = None
 done = False
 event_loop = None
-async def main(charge_point_type, timescale):
+async def main(port, charge_point_type, timescale):
     global server
     global done
     global event_loop
@@ -145,7 +145,7 @@ async def main(charge_point_type, timescale):
     server = await websockets.serve(
         lambda a, b: on_connect(a, b, charge_point_type, timescale),
         '0.0.0.0',
-        9000,
+        port,
         subprotocols=['ocpp1.6']
     )
 
@@ -157,7 +157,7 @@ async def main(charge_point_type, timescale):
 def fire_and_forget(coro):
     threading.Thread(target=lambda: asyncio.run(coro), daemon=True).start()
 
-def run_server(charge_point_type, timescale):
+def run_server(port, charge_point_type, timescale):
     global server
     global done
     global active_client
@@ -166,4 +166,4 @@ def run_server(charge_point_type, timescale):
     active_client = None
     server = None
     event_loop = None
-    fire_and_forget(main(charge_point_type, timescale))
+    fire_and_forget(main(port, charge_point_type, timescale))
