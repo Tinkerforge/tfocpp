@@ -72,6 +72,12 @@ ChangeConfigurationResponseStatus OcppConfiguration::setValue(const char *newVal
                 if (len >= value.csl.len) // >= because we always want to null-terminate the buffer.
                     return ChangeConfigurationResponseStatus::REJECTED;
 
+                if (len > 0 && newValue[0] == ',') // Don't allow ",SoC"
+                    return ChangeConfigurationResponseStatus::REJECTED;
+
+                if (len > 0 && newValue[len - 1] == ',') // Don't allow "SoC,"
+                    return ChangeConfigurationResponseStatus::REJECTED;
+
                 std::unique_ptr<char[]> buf{new char[value.csl.len]};
                 std::unique_ptr<size_t[]> parsed_buf{new size_t[value.csl.allowed_values_len]};
 
@@ -85,11 +91,15 @@ ChangeConfigurationResponseStatus OcppConfiguration::setValue(const char *newVal
                 char *token = strtok_r(buf.get(), ",", &context);
                 if (token != nullptr) {
                     do {
+                        size_t token_len = strlen(token);
+                        if ((token_len + 1) < value.csl.len && buf.get()[strlen(token) + 1] == ',') // Don't allow "abc,,def".
+                            return ChangeConfigurationResponseStatus::REJECTED;
+
                         while(isspace(*token))
                             ++token;
 
                         if (value.csl.prefix_index) {
-                            char *num = strtok(token, "."); // This insers a null terminator. undo later
+                            char *num = strtok(token, "."); // This inserts a null terminator. undo later
                             Opt<int32_t> opt = parse_int(num);
                             if (!opt.is_set())
                                 return ChangeConfigurationResponseStatus::REJECTED;
