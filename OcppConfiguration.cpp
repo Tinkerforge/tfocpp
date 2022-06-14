@@ -69,7 +69,7 @@ ChangeConfigurationResponseStatus OcppConfiguration::setValue(const char *newVal
         case OcppConfigurationValueType::CSL: {
                 size_t len = strlen(newValue);
 
-                if (len > value.csl.len)
+                if (len >= value.csl.len) // >= because we always want to null-terminate the buffer.
                     return ChangeConfigurationResponseStatus::REJECTED;
 
                 std::unique_ptr<char[]> buf{new char[value.csl.len]};
@@ -120,7 +120,9 @@ ChangeConfigurationResponseStatus OcppConfiguration::setValue(const char *newVal
                     if (buf[i] == '\0')
                         buf[i] = ',';
 
-                memcpy(value.csl.c, buf.get(), len);
+                buf[len] = '\0';
+
+                memcpy(value.csl.c, buf.get(), len + 1);
 
                 memcpy(value.csl.parsed, parsed_buf.get(), sizeof(size_t) * new_parsed_len);
                 value.csl.parsed_len = new_parsed_len;
