@@ -59,7 +59,7 @@ ChangeConfigurationResponseStatus OcppConfiguration::setValue(const char *newVal
             break;
         case OcppConfigurationValueType::Boolean: {
                 StaticJsonDocument<10> doc;
-                if (deserializeJson(doc, newValue) != DeserializationError::Ok)
+                if (deserializeJson(doc, newValue) != DeserializationError::Ok || !doc.is<bool>())
                     return ChangeConfigurationResponseStatus::REJECTED;
 
                 value.boolean.b = doc.as<bool>();
