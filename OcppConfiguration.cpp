@@ -83,35 +83,34 @@ ChangeConfigurationResponseStatus OcppConfiguration::setValue(const char *newVal
 
                 char *context;
                 char *token = strtok_r(buf.get(), ",", &context);
-                if (token == nullptr)
-                    return ChangeConfigurationResponseStatus::REJECTED;
+                if (token != nullptr) {
+                    do {
+                        while(isspace(*token))
+                            ++token;
 
-                do {
-                    while(isspace(*token))
-                        ++token;
+                        if (value.csl.prefix_index) {
+                            char *num = strtok(token, "."); // This insers a null terminator. undo later
+                            Opt<int32_t> opt = parse_int(num);
+                            if (!opt.is_set())
+                                return ChangeConfigurationResponseStatus::REJECTED;
 
-                    if (value.csl.prefix_index) {
-                        char *num = strtok(token, "."); // This insers a null terminator. undo later
-                        Opt<int32_t> opt = parse_int(num);
-                        if (!opt.is_set())
+                            if (opt.get() < 0 || opt.get() >= value.csl.allowed_values_len)
+                                return ChangeConfigurationResponseStatus::REJECTED;
+
+                            next_parsed_buf_insert = opt.get();
+                            token += strlen(num) + 1; // Skip over number and .
+                            num[strlen(num)] = '.'; // Reinsert . so that the next strtok_r call does not trip over the null terminator.
+                        }
+
+                        size_t idx;
+                        if (!lookup_key(&idx, token, value.csl.allowed_values, value.csl.allowed_values_len))
                             return ChangeConfigurationResponseStatus::REJECTED;
 
-                        if (opt.get() < 0 || opt.get() >= value.csl.allowed_values_len)
-                            return ChangeConfigurationResponseStatus::REJECTED;
-
-                        next_parsed_buf_insert = opt.get();
-                        token += strlen(num) + 1; // Skip over number and .
-                        num[strlen(num)] = '.'; // Reinsert . so that the next strtok_r call does not trip over the null terminator.
-                    }
-
-                    size_t idx;
-                    if (!lookup_key(&idx, token, value.csl.allowed_values, value.csl.allowed_values_len))
-                        return ChangeConfigurationResponseStatus::REJECTED;
-
-                    parsed_buf[next_parsed_buf_insert] = idx;
-                    ++next_parsed_buf_insert; //if prefix_index is set this will be overwritten anyway.
-                    ++new_parsed_len;
-                } while ((token = strtok_r(nullptr, ",", &context)) != nullptr);
+                        parsed_buf[next_parsed_buf_insert] = idx;
+                        ++next_parsed_buf_insert; //if prefix_index is set this will be overwritten anyway.
+                        ++new_parsed_len;
+                    } while ((token = strtok_r(nullptr, ",", &context)) != nullptr);
+                }
 
                 if (new_parsed_len > value.csl.max_num_allowed_values)
                     return ChangeConfigurationResponseStatus::REJECTED;
@@ -122,7 +121,6 @@ ChangeConfigurationResponseStatus OcppConfiguration::setValue(const char *newVal
                         buf[i] = ',';
 
                 memcpy(value.csl.c, buf.get(), len);
-                value.csl.len = len;
 
                 memcpy(value.csl.parsed, parsed_buf.get(), sizeof(size_t) * new_parsed_len);
                 value.csl.parsed_len = new_parsed_len;
