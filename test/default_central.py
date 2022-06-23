@@ -3,6 +3,7 @@ import logging
 from datetime import datetime
 import sys
 import threading
+import time
 
 try:
     import websockets
@@ -28,10 +29,15 @@ class DefaultChargePoint(cp):
         self.received_results = {}
         self.received_errors = {}
         self.timescale = 1
-        self.time_start = datetime.utcnow()
+        self.datetime_start = datetime.utcnow()
+        self.time_start = time.time()
+        self.libocpp = None
 
     def get_datetime(self):
-        return (self.time_start + (datetime.utcnow() - self.time_start) * self.timescale)
+        return (self.datetime_start + (datetime.utcnow() - self.datetime_start) * self.timescale)
+
+    def get_time(self):
+        return (self.time_start + (time.time() - self.time_start) * self.timescale)
 
     async def route_message(self, raw_msg):
         await super().route_message(raw_msg)

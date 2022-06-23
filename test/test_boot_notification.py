@@ -28,7 +28,7 @@ class TestBootNotification(unittest.TestCase):
         _, c = run_test(default_central.DefaultChargePoint, sim_len_secs=10, speedup=100)
 
         self.assertEqual(c.received_calls[Action.BootNotification], 1, "Expected exactly one boot notification if it is accepted")
-        assert_no_other_packets(self, c)
+        # dont assert no other packets here: status notifications will be sent
 
     """
     If the Central System returns

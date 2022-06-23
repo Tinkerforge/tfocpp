@@ -2,153 +2,12 @@
 
 #include "OcppDefines.h"
 #include "OcppTypes.h"
+#include "OcppConfiguration.h"
+#include "OcppConnector.h"
 
 extern "C" {
     #include "libiso8601/iso8601.h"
 }
-
-char send_buf[4096];
-
-#define VALID_STATUS_STRIDE 9
-bool valid_status_transitions[VALID_STATUS_STRIDE * VALID_STATUS_STRIDE] = {
-/*From           To Avail  Prep   Charge SuspEV SuEVSE Finish Reserv Unavai Fault */
-/*Available    */   false, true , true , true , true , false, true , true , true ,
-/*Preparing    */   true , false, true , true , true , true , false, false, false,
-/*Charging     */   true , false, false, true , true , true , false, true , true ,
-/*SuspendedEV  */   true , false, true , false, true , true , false, true , true ,
-/*SuspendedEVSE*/   true , false, true , true , false, true , false, true , true ,
-/*Finishing    */   true , true , false, false, false, false, false, true , true ,
-/*Reserved     */   true , true , false, false, false, false, false, true , true ,
-/*Unavailable  */   true , true , true , true , true , false, false, false, true ,
-/*Faulted      */   true , true , true , true , true , true , true , true , false,
-};
-
-struct Connector {
-    /*For ConnectorId 0, only a limited set is applicable, namely: Available, Unavailable and Faulted.
-    The status of ConnectorId 0 has no direct connection to the status of the individual Connectors (>0).*/
-    int32_t connectorId;
-    StatusNotificationStatus status = StatusNotificationStatus::AVAILABLE;
-    IdTagInfo authorized_for;
-
-    bool setStatus(StatusNotificationStatus newStatus) {
-        if (!valid_status_transitions[(size_t)status * VALID_STATUS_STRIDE + (size_t)newStatus]) {
-            platform_printfln("Invalid status transition from %s to %s (%c%c)!", StatusNotificationStatusStrings[(size_t)status], StatusNotificationStatusStrings[(size_t)newStatus], 'A'+(char)status, '1'+(char)newStatus);
-            return false;
-        }
-
-        // TODO: send status notification here?
-        status = newStatus;
-        return true;
-    }
-
-    bool isAuthorized() {
-        return authorized_for.status == ResponseIdTagInfoEntriesStatus::ACCEPTED;
-    }
-
-    void tick() {
-        StatusNotificationStatus newStatus = status;
-
-        switch(platform_get_connector_state(connectorId)) {
-            case ConnectorState::NotConnected:
-                switch(status) {
-                    case StatusNotificationStatus::RESERVED:
-                        // Stay in reserved until the central says otherwise or we see the expected idTag
-                        break;
-                    case StatusNotificationStatus::UNAVAILABLE:
-                        // Stay unavailable until the central says otherwise
-                        break;
-                    default:
-                        // B1 - I1
-                        newStatus = StatusNotificationStatus::AVAILABLE;
-                        break;
-                }
-                break;
-            case ConnectorState::Connected:
-                switch(status) {
-                    case StatusNotificationStatus::AVAILABLE:
-                        // A2
-                        newStatus = StatusNotificationStatus::PREPARING;
-                        break;
-                    case StatusNotificationStatus::PREPARING:
-                        // We are not ready to charge, stay in preparing
-                        break;
-                    case StatusNotificationStatus::CHARGING:
-                        // C5
-                        newStatus = StatusNotificationStatus::SUSPENDED_EVSE;
-                        break;
-                    case StatusNotificationStatus::SUSPENDED_EV:
-                        // D5
-                        newStatus = StatusNotificationStatus::SUSPENDED_EVSE;
-                        break;
-                    case StatusNotificationStatus::SUSPENDED_EVSE:
-                        // We were suspended already, stay here.
-                        break;
-                    case StatusNotificationStatus::FINISHING:
-                        // User still has to pull cable, stay here
-                        break;
-                    case StatusNotificationStatus::RESERVED:
-                        // Stay in reserved, we don't know if the user will present the correct idTag
-                        break;
-                    case StatusNotificationStatus::UNAVAILABLE:
-                        // Stay unavailable until the central says otherwise
-                        break;
-                    case StatusNotificationStatus::FAULTED:
-                        // I2
-                        newStatus = StatusNotificationStatus::PREPARING;
-                        break;
-                }
-                break;
-            case ConnectorState::ReadyToCharge:
-                switch(status) {
-                    case StatusNotificationStatus::SUSPENDED_EV:
-                        // Still waiting for the EV...
-                        break;
-                    case StatusNotificationStatus::FINISHING:
-                        // This should not be possible: The connector allows charging but we should have blocked it to get into the finishing state.
-                        platform_printfln("Unexpected connector state \"Ready to charge\": We are finishing a transaction?!?");
-                        break;
-                    case StatusNotificationStatus::RESERVED:
-                        // This should not be possible: The connector is reserved (and thus blocked!), we are still waiting for the idTag.
-                        platform_printfln("Unexpected connector state \"Ready to charge\": Connector is reserved but idTag was not seen yet?!?");
-                        break;
-                    case StatusNotificationStatus::UNAVAILABLE:
-                        // Stay unavailable until the central says otherwise
-                        platform_printfln("Unexpected connector state \"Ready to charge\": Connector is unavailable?!?");
-                        break;
-                    default:
-                        // A4-I4
-                        newStatus = StatusNotificationStatus::SUSPENDED_EV;
-                        break;
-                }
-                break;
-            case ConnectorState::Charging:
-                switch(status) {
-                    case StatusNotificationStatus::FINISHING:
-                        // This should not be possible: The connector allows charging but we should have blocked it to get into the finishing state.
-                        platform_printfln("Unexpected connector state \"Charging\": We are finishing a transaction?!?");
-                        break;
-                    case StatusNotificationStatus::RESERVED:
-                        // This should not be possible: The connector is reserved (and thus blocked!), we are still waiting for the idTag.
-                        platform_printfln("Unexpected connector state \"Charging\": Connector is reserved but idTag was not seen yet?!?");
-                        break;
-                    case StatusNotificationStatus::UNAVAILABLE:
-                        platform_printfln("Unexpected connector state \"Charging\": Connector is unavailable?!?");
-                        break;
-                    default:
-                        // A3-I3
-                        newStatus = StatusNotificationStatus::CHARGING;
-                        break;
-                }
-                break;
-            case ConnectorState::Faulted:
-                newStatus = StatusNotificationStatus::FAULTED;
-                break;
-        }
-
-        if (newStatus != status)
-            setStatus(newStatus);
-    }
-};
 
 /*
 Connectors numbering (ConnectorIds) MUST be as follows:
@@ -160,8 +19,8 @@ Point.
 • For operations initiated by the Charge Point (when reporting), ConnectorId 0 is reserved for the Charge
 Point main controller.
 */
-Connector connectors[NUM_CONNECTORS + 1];
-
+Connector connectors[NUM_CONNECTORS];
+StatusNotificationStatus last_connector_status[NUM_CONNECTORS];
 
 void Ocpp::tick_power_on() {
     if (last_bn_send_ms == 0 && !platform_ws_connected(platform_ctx))
@@ -175,10 +34,7 @@ void Ocpp::tick_power_on() {
 
     DynamicJsonDocument doc{0};
     BootNotification(&doc, "Warp 2 Charger Pro", "Tinkerforge GmbH", "warp2-X8A");
-    last_call_action = CallAction::BOOT_NOTIFICATION;
-    size_t written = serializeJson(doc, send_buf);
-
-    platform_ws_send(platform_ctx, send_buf, written);
+    connection.sendCallAction(CallAction::BOOT_NOTIFICATION, &doc);
 }
 
 void Ocpp::tick_idle() {
@@ -187,12 +43,11 @@ void Ocpp::tick_idle() {
 
     last_bn_send_ms = platform_now_ms();
 
+    platform_printfln("Sending heartbeat. %u %u %u %u", platform_now_ms(), last_bn_send_ms, last_bn_send_ms + 1000 * getIntConfig(ConfigKey::HeartbeatInterval), 1000 * getIntConfig(ConfigKey::HeartbeatInterval));
+
     DynamicJsonDocument doc{0};
     Heartbeat(&doc);
-    last_call_action = CallAction::HEARTBEAT;
-    size_t written = serializeJson(doc, send_buf);
-
-    platform_ws_send(platform_ctx, send_buf, written);
+    connection.sendCallAction(CallAction::HEARTBEAT, &doc);
 }
 
 void Ocpp::tick() {
@@ -207,170 +62,57 @@ void Ocpp::tick() {
             break;
     }
 
-    for(size_t i = 1; i < ARRAY_SIZE(connectors); ++i)
+    for(size_t i = 0; i < ARRAY_SIZE(connectors); ++i) {
         connectors[i].tick();
+/*        auto conn_status = connectors[i].getStatus();
+        if (last_connector_status[i] != conn_status) {
+            DynamicJsonDocument doc{0};
+            StatusNotification(&doc, i + 1, StatusNotificationErrorCode::NO_ERROR, conn_status);
+            connection.sendCallAction(CallAction::STATUS_NOTIFICATION, &doc);
+        }*/
+    }
+    connection.tick();
 }
 
-void Ocpp::handleMessage(char *message, size_t message_len)
+void Ocpp::onConnect()
 {
-    platform_printfln("Received message %.*s", message_len > 40 ? 40 : message_len, message);
-    StaticJsonDocument<4096> doc;
-    // TODO: we should use
-    // https://arduinojson.org/v6/how-to/deserialize-a-very-large-document/#deserialization-in-chunks
-    // to parse each member in the top level array by its own.
-    // This would allow us to send CallErrors back to the central if
-    // we receive a message that for example can not be completely
-    // parsed as JSON.
-    DeserializationError error = deserializeJson(doc, message);
-    if (error) {
-        platform_printfln("deserializeJson() failed: %s", error.c_str());
+    if (state != OcppState::Idle)
         return;
-    }
 
-    if (!doc.is<JsonArray>()) {
-        platform_printfln("deserialized JSON is not an array at top level");
-        return;
-    }
-
-    if (!doc[0].is<int32_t>()) {
-        platform_printfln("deserialized JSON array does not start with message type ID");
-        return;
-    }
-
-    if (!doc[1].is<const char *>()) {
-        platform_printfln("deserialized JSON array does not contain unique ID as second member ");
-        return;
-    }
-
-    int32_t messageType = doc[0];
-    const char *uniqueID = doc[1];
-
-    if (messageType == (int32_t)OcppRpcMessageType::CALL) {
-        if (doc.size() != 4) {
-            platform_printfln("received call with %d members, but expected 4.", doc.size());
-            return;
-        }
-
-        if (!doc[2].is<const char *>()) {
-            platform_printfln("received call with action not being a string.", doc.size());
-            return;
-        }
-
-        if (doc[3].isNull() || !doc[3].is<JsonObject>()) {
-            platform_printfln("received call with payload being neither an object nor null.", doc.size());
-            return;
-        }
-
-        if (this->state == OcppState::Rejected) {
-            // "While Rejected, the Charge Point SHALL NOT respond to any Central System initiated message. the Central System SHOULD NOT initiate any."
-            platform_printfln("received call while being rejected. Ignoring call.");
-            return;
-        }
-
-        CallResponse res = callHandler(uniqueID, doc[2].as<const char *>(), doc[3].as<JsonObject>(), this);
-        if (res.result != CallErrorCode::OK)
-            sendCallError(uniqueID, res.result, res.error_description, JsonObject());
-        // TODO handle responses here?
-        return;
-    }
-
-    if (messageType != 3 && messageType != 4) {
-        platform_printfln("received unknown message type %d", messageType);
-        return;
-    }
-
-    long uid = atol(uniqueID);
-    if (uid != last_call_message_id) {
-        platform_printfln("received %s with message ID %d. expected was %u ", messageType == 3 ? "call result" : "call error", uid, last_call_message_id);
-        return;
-    }
-
-    if (messageType == (int32_t)OcppRpcMessageType::CALLRESULT) {
-        if (doc.size() != 3) {
-            platform_printfln("received call result with %d members, but expected 3.", doc.size());
-            return;
-        }
-        // TODO: check call_id!
-
-        if (doc[2].isNull() || !doc[2].is<JsonObject>()) {
-            platform_printfln("received call result with payload being neither an object nor null.", doc.size());
-            return;
-        }
-
-        CallResponse res = callResultHandler(last_call_action, doc[2].as<JsonObject>(), this);
-        /*if (res.result != CallErrorCode::OK)
-            sendCallError(uniqueID, res.result, res.error_description, JsonObject());*/
-        return;
-    }
-
-    if (messageType == (int32_t)OcppRpcMessageType::CALLERROR) {
-        if (doc.size() != 5) {
-            platform_printfln("received call error with %d members, but expected 5.", doc.size());
-            return;
-        }
-
-        // TODO: check call_id!
-
-        if (!doc[2].is<const char *>()) {
-            platform_printfln("received call error with error code not being a string!.", doc.size());
-            return;
-        }
-
-        if (!doc[3].is<const char *>()) {
-            platform_printfln("received call error with error description not being a string!.", doc.size());
-            return;
-        }
-
-        if (!doc[4].is<JsonObject>()) {
-            platform_printfln("received call error with error details not being an object!.", doc.size());
-            return;
-        }
-
-        handleCallError(doc[2], doc[3], doc[4]);
-        return;
-    }
+    for(size_t i = 0; i < ARRAY_SIZE(connectors); ++i)
+        connectors[i].sendStatus(connectors[i].getStatus());
 }
 
-void Ocpp::sendCallError(const char *uid, CallErrorCode code, const char *desc, JsonObject details)
+void Ocpp::onDisconnect()
 {
-    DynamicJsonDocument doc{
-        JSON_ARRAY_SIZE(5)
-        + details.memoryUsage()
-    };
 
-    doc.add((int32_t)OcppRpcMessageType::CALLERROR);
-    doc.add(uid);
-    doc.add(CallErrorCodeStrings[(size_t)code]);
-    doc.add(desc);
-    // TODO: use JsonVariant::link when ArduinoJson 6.20 is released.
-    doc.add(details);
-
-    size_t written = serializeJson(doc, send_buf);
-
-    platform_ws_send(platform_ctx, send_buf, written);
 }
 
 CallResponse Ocpp::handleAuthorizeResponse(AuthorizeResponseView conf)
 {
-    idle_info.lastSeenTag.updateFromIdTagInfo(conf.idTagInfo());
+    auto connectorId = idle_info.lastTagForConnector;
+    if (connectorId <= 0 || connectorId > NUM_CONNECTORS)
+        return CallResponse{CallErrorCode::OK, ""};
 
-    switch (idle_info.lastSeenTag.status) {
-        case ResponseIdTagInfoEntriesStatus::ACCEPTED:
-            state = OcppState::WaitingForConnectorSelection;
-            platform_select_connector();
-        break;
+    IdTagInfo info;
+    info.updateFromIdTagInfo(conf.idTagInfo());
 
-        case ResponseIdTagInfoEntriesStatus::BLOCKED:
-            platform_tag_rejected(idle_info.lastSeenTag.tagId, TagRejectionType::Blocked);
+    switch (connectors[connectorId - 1].onAuthorizeConf(info)) {
+        case Connector::OTARResult::StartTransaction: {
+            DynamicJsonDocument doc{0};
+            StartTransaction(&doc, connectorId, info.tagId, platform_get_energy(connectorId), platform_get_system_time(platform_ctx));
+            connection.sendCallAction(CallAction::START_TRANSACTION, &doc);
+
             break;
-        case ResponseIdTagInfoEntriesStatus::CONCURRENT_TX:
-            platform_tag_rejected(idle_info.lastSeenTag.tagId, TagRejectionType::ConcurrentTx);
+        }
+        case Connector::OTARResult::StopTransaction: {
+            DynamicJsonDocument doc{0};
+            StopTransaction(&doc, platform_get_energy(connectorId), platform_get_system_time(platform_ctx), connectors[connectorId - 1].transaction_id, info.tagId, StopTransactionReason::LOCAL);
+            connection.sendCallAction(CallAction::STOP_TRANSACTION, &doc);
+
             break;
-        case ResponseIdTagInfoEntriesStatus::EXPIRED:
-            platform_tag_rejected(idle_info.lastSeenTag.tagId, TagRejectionType::Expired);
-            break;
-        case ResponseIdTagInfoEntriesStatus::INVALID:
-            platform_tag_rejected(idle_info.lastSeenTag.tagId, TagRejectionType::Invalid);
+        }
+        case Connector::OTARResult::NOP:
             break;
     }
 
@@ -395,6 +137,13 @@ CallResponse Ocpp::handleBootNotificationResponse(BootNotificationResponseView c
         case BootNotificationResponseStatus::ACCEPTED: {
             platform_set_system_time(platform_ctx, conf.currentTime());
             state = OcppState::Idle;
+
+            DynamicJsonDocument doc{0};
+            StatusNotification(&doc, 0, StatusNotificationErrorCode::NO_ERROR, StatusNotificationStatus::AVAILABLE, nullptr, platform_get_system_time(platform_ctx));
+            connection.sendCallAction(CallAction::STATUS_NOTIFICATION, &doc);
+
+            for(size_t i = 0; i < ARRAY_SIZE(connectors); ++i)
+                connectors[i].sendStatus(connectors[i].getStatus());
             break;
         }
         case BootNotificationResponseStatus::PENDING: {
@@ -429,10 +178,7 @@ CallResponse Ocpp::handleChangeConfiguration(const char *uid, ChangeConfiguratio
 
     DynamicJsonDocument doc{0};
     ChangeConfigurationResponse(&doc, uid, status);
-
-    size_t written = serializeJson(doc, send_buf);
-
-    platform_ws_send(platform_ctx, send_buf, written);
+    connection.sendCallResponse(&doc);
 
     return CallResponse{CallErrorCode::OK, ""};
 }
@@ -448,10 +194,7 @@ CallResponse Ocpp::handleClearCache(const char *uid, ClearCacheView req)
     */
     DynamicJsonDocument doc{0};
     ClearCacheResponse(&doc, uid, ResponseStatus::REJECTED);
-
-    size_t written = serializeJson(doc, send_buf);
-
-    platform_ws_send(platform_ctx, send_buf, written);
+    connection.sendCallResponse(&doc);
 
     return CallResponse{CallErrorCode::OK, ""};
 }
@@ -464,10 +207,7 @@ CallResponse Ocpp::handleDataTransfer(const char *uid, DataTransferView req)
     */
     DynamicJsonDocument doc{0};
     DataTransferResponse(&doc, uid, DataTransferResponseStatus::UNKNOWN_VENDOR_ID);
-
-    size_t written = serializeJson(doc, send_buf);
-
-    platform_ws_send(platform_ctx, send_buf, written);
+    connection.sendCallResponse(&doc);
 
     return CallResponse{CallErrorCode::OK, ""};
 }
@@ -576,10 +316,7 @@ CallResponse Ocpp::handleGetConfiguration(const char *uid, GetConfigurationView 
 
     DynamicJsonDocument doc{0};
     GetConfigurationResponse(&doc, uid, known, known_keys, unknown, unknown_keys);
-
-    size_t written = serializeJson(doc, send_buf);
-
-    platform_ws_send(platform_ctx, send_buf, written);
+    connection.sendCallResponse(&doc);
 
     delete[] known;
     free(unknown);
@@ -616,17 +353,20 @@ CallResponse Ocpp::handleReset(const char *uid, ResetView req)
 
 CallResponse Ocpp::handleStartTransactionResponse(StartTransactionResponseView conf)
 {
-    if (conf.idTagInfo().status() != ResponseIdTagInfoEntriesStatus::ACCEPTED) {
-        // TODO: Do we have to handle this case if we don't support offline authorization?
+    auto connectorId = idle_info.lastTagForConnector;
+    if (connectorId <= 0 || connectorId > NUM_CONNECTORS)
         return CallResponse{CallErrorCode::OK, ""};
+
+    IdTagInfo info;
+    info.updateFromIdTagInfo(conf.idTagInfo());
+
+    if (connectors[idle_info.lastTagForConnector - 1].onStartTransactionConf(info, conf.transactionId()) == Connector::OSTCResult::SendStopTxnDeauthed) {
+        DynamicJsonDocument doc{0};
+        StopTransaction(&doc, platform_get_energy(connectorId), platform_get_system_time(platform_ctx), conf.transactionId(), info.tagId, StopTransactionReason::DE_AUTHORIZED);
+        connection.sendCallAction(CallAction::STOP_TRANSACTION, &doc);
     }
 
-    connectors[wstc_info.connectorId].authorized_for.updateTagId(wstc_info.lastSeenTag.tagId);
-    connectors[wstc_info.connectorId].authorized_for.updateFromIdTagInfo(conf.idTagInfo());
-
-
-
-    return CallResponse{CallErrorCode::InternalError, "not implemented yet!"};
+    return CallResponse{CallErrorCode::OK, ""};
 }
 
 CallResponse Ocpp::handleStatusNotificationResponse(StatusNotificationResponseView conf)
@@ -644,51 +384,33 @@ CallResponse Ocpp::handleUnlockConnector(const char *uid, UnlockConnectorView re
     return CallResponse{CallErrorCode::InternalError, "not implemented yet!"};
 }
 
-void Ocpp::handleCallError(CallErrorCode code, const char *desc, JsonObject details)
+void Ocpp::handleTagSeen(int32_t connectorId, const char *tagId)
 {
-    std::string details_string;
-    serializeJsonPretty(details, details_string);
-    platform_printfln("Received call error %s (%d): %s", CallErrorCodeStrings[(size_t)code], desc, details_string.c_str());
-}
+    platform_printfln("Seen tag %s at connector %d. State is %d", tagId, connectorId, (int)this->state);
 
-void Ocpp::handleTagSeen(const char *tagId)
-{
-    /*
-    To handle here:
-    - Second time a tag is seen while not charging for the tag (i.e. user does not want to start charging anymore)
-    - Tag used to stop charging
-    */
-
-    if (this->state != OcppState::Idle)
+    if (connectorId > ARRAY_SIZE(connectors))
         return;
 
-    idle_info.lastSeenTag.updateTagId(tagId);
-
-    DynamicJsonDocument doc{0};
-    Authorize(&doc, tagId);
-    last_call_action = CallAction::AUTHORIZE;
-    size_t written = serializeJson(doc, send_buf);
-
-    platform_ws_send(platform_ctx, send_buf, written);
-}
-
-void Ocpp::handleConnectorSelection(int32_t connectorId) {
-    if (this->state != OcppState::WaitingForConnectorSelection)
+    // Don't allow tags at connector 0 (i.e. the charge point itself)
+    if (connectorId <= 0)
         return;
 
-    if (connectorId > NUM_CONNECTORS || connectorId < 1) {
-        platform_printfln("Selected invalid connector id %u", connectorId);
-        return;
+    auto &conn = connectors[connectorId - 1];
+    if (conn.onTagSeen(tagId) == Connector::OTSResult::RequestAuthentication) {
+        DynamicJsonDocument doc{0};
+        Authorize(&doc, tagId);
+        connection.sendCallAction(CallAction::AUTHORIZE, &doc);
     }
 
-    wstc_info.lastSeenTag = idle_info.lastSeenTag;
-    wstc_info.connectorId = connectorId;
-    this->state = OcppState::WaitingForStartTransactionConf;
+    idle_info.lastTagForConnector = connectorId;
+}
 
-    DynamicJsonDocument doc{0};
-    StartTransaction(&doc, connectorId, this->idle_info.lastSeenTag.tagId, platform_get_energy(connectorId), platform_get_system_time(platform_ctx));
-    last_call_action = CallAction::START_TRANSACTION;
-    size_t written = serializeJson(doc, send_buf);
+void Ocpp::start(const char *websocket_endpoint_url, const char *charge_point_name_percent_encoded) {
+    platform_ctx = connection.start(websocket_endpoint_url, charge_point_name_percent_encoded, this);
+    for(size_t i = 0; i < ARRAY_SIZE(connectors); ++i) {
+        connectors[i].connection = &connection;
+        connectors[i].connectorId = i + 1;
+    }
 
-    platform_ws_send(platform_ctx, send_buf, written);
+    platform_register_tag_seen_callback(platform_ctx, [](int32_t connectorId, const char *tagId, void *user_data){((Ocpp*)user_data)->handleTagSeen(connectorId, tagId);}, this);
 }

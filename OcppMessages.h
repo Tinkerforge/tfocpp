@@ -933,3 +933,50 @@ enum class CallAction {
 
 CallResponse callResultHandler(CallAction resultTo, JsonObject obj, Ocpp *ocpp);
 
+struct IdTagInfo {
+    char tagId[21] = {0};
+    char parentTagId[21] = {0};
+    ResponseIdTagInfoEntriesStatus status = ResponseIdTagInfoEntriesStatus::INVALID;
+    time_t expiryDate = 0;
+
+    void updateTagId(const char *newTagId) {
+        memset(tagId, 0, ARRAY_SIZE(tagId));
+        strncpy(tagId, newTagId, ARRAY_SIZE(tagId) - 1);
+    }
+
+    void updateFromIdTagInfo(StopTransactionResponseIdTagInfoEntriesView view) {
+        memset(parentTagId, 0, ARRAY_SIZE(parentTagId));
+        if (view.parentIdTag().is_set())
+            strncpy(parentTagId, view.parentIdTag().get(), ARRAY_SIZE(parentTagId) - 1);
+
+        expiryDate = view.expiryDate().is_set() ? view.expiryDate().get() : 0;
+        status = view.status();
+    }
+
+    void updateFromIdTagInfo(StartTransactionResponseIdTagInfoEntriesView view) {
+        memset(parentTagId, 0, ARRAY_SIZE(parentTagId));
+        if (view.parentIdTag().is_set())
+            strncpy(parentTagId, view.parentIdTag().get(), ARRAY_SIZE(parentTagId) - 1);
+
+        expiryDate = view.expiryDate().is_set() ? view.expiryDate().get() : 0;
+        status = view.status();
+    }
+
+    void updateFromIdTagInfo(AuthorizeResponseIdTagInfoEntriesView view) {
+        memset(parentTagId, 0, ARRAY_SIZE(parentTagId));
+        if (view.parentIdTag().is_set())
+            strncpy(parentTagId, view.parentIdTag().get(), ARRAY_SIZE(parentTagId) - 1);
+
+        expiryDate = view.expiryDate().is_set() ? view.expiryDate().get() : 0;
+        status = view.status();
+    }
+
+    bool is_same_group(IdTagInfo *other) {
+        return (strncmp(this->tagId, other->tagId, ARRAY_SIZE(this->tagId)) == 0)
+            || (strncmp(this->parentTagId, other->parentTagId, ARRAY_SIZE(this->parentTagId)) == 0);
+    }
+
+    bool is_same_tag(const char *other_id) {
+        return (strncmp(this->tagId, other_id, ARRAY_SIZE(this->tagId)) == 0);
+    }
+};

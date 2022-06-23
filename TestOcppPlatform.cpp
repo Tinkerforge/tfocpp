@@ -99,7 +99,7 @@ void platform_printfln(const char *fmt, ...) {
     return platform_printfln_cb(buf);
 }
 
-void platform_register_tag_seen_callback(void *ctx, void(*cb)(const char *, void *), void *user_data) {
+void platform_register_tag_seen_callback(void *ctx, void(*cb)(int32_t, const char *, void *), void *user_data) {
     return platform_register_tag_seen_callback_cb(ctx, cb, user_data);
 }
 
@@ -107,15 +107,28 @@ void platform_tag_rejected(const char *tag, TagRejectionType trt) {
     return platform_tag_rejected_cb(tag, trt);
 }
 
-void platform_select_connector() {
-    return platform_select_connector_cb();
-}
-void platform_register_select_connector_callback(void *ctx, void(*cb)(int32_t, void *), void *user_data) {
-    return platform_register_select_connector_callback_cb(ctx, cb, user_data);
+void platform_tag_timed_out(int32_t connectorId) {
+    return platform_tag_timed_out_cb(connectorId);
 }
 
-ConnectorState platform_get_connector_state(int32_t connectorId) {
-    return platform_get_connector_state_cb(connectorId);
+void platform_cable_timed_out(int32_t connectorId) {
+    return platform_cable_timed_out_cb(connectorId);
+}
+
+void platform_lock_cable(int32_t connectorId) {
+    return platform_lock_cable_cb(connectorId);
+}
+
+void platform_unlock_cable(int32_t connectorId) {
+    return platform_unlock_cable_cb(connectorId);
+}
+
+void platform_set_charging_current(int32_t connectorId, uint32_t milliAmps) {
+    return platform_set_charging_current_cb(connectorId, milliAmps);
+}
+
+EVSEState platform_get_evse_state(int32_t connectorId) {
+    return platform_get_evse_state_cb(connectorId);
 }
 
 /*
@@ -157,3 +170,4 @@ void ocpp_destroy() {
     delete ocpp;
     ocpp = nullptr;
 }
+

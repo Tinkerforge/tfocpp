@@ -2,6 +2,7 @@
 
 #include <limits>
 
+#include "OcppConnection.h"
 #include "OcppConfiguration.h"
 #include "OcppMessages.h"
 #include "OcppPlatform.h"
@@ -12,52 +13,11 @@ enum class OcppState {
     Idle, // boot notification received, accepted
     Pending, // boot notification received, pending
     Rejected, // boot notification received, rejected
-    WaitingForConnectorSelection, // autorization accepted, will start transaction when connector is selected
-    WaitingForStartTransactionConf // connector selected, start transaction sent. will start charging when starttransaction.conf is received
-};
-
-
-struct IdTagInfo {
-    char tagId[21] = {0};
-    char parentTagId[21] = {0};
-    ResponseIdTagInfoEntriesStatus status = ResponseIdTagInfoEntriesStatus::INVALID;
-    time_t expiryDate = 0;
-
-    void updateTagId(const char *newTagId) {
-        memset(tagId, 0, ARRAY_SIZE(tagId));
-        strncpy(tagId, newTagId, ARRAY_SIZE(tagId) - 1);
-    }
-
-    void updateFromIdTagInfo(StopTransactionResponseIdTagInfoEntriesView view) {
-        memset(parentTagId, 0, ARRAY_SIZE(parentTagId));
-        if (view.parentIdTag().is_set())
-            strncpy(parentTagId, view.parentIdTag().get(), ARRAY_SIZE(parentTagId) - 1);
-
-        expiryDate = view.expiryDate().is_set() ? view.expiryDate().get() : 0;
-        status = view.status();
-    }
-
-    void updateFromIdTagInfo(StartTransactionResponseIdTagInfoEntriesView view) {
-        memset(parentTagId, 0, ARRAY_SIZE(parentTagId));
-        if (view.parentIdTag().is_set())
-            strncpy(parentTagId, view.parentIdTag().get(), ARRAY_SIZE(parentTagId) - 1);
-
-        expiryDate = view.expiryDate().is_set() ? view.expiryDate().get() : 0;
-        status = view.status();
-    }
-
-    void updateFromIdTagInfo(AuthorizeResponseIdTagInfoEntriesView view) {
-        memset(parentTagId, 0, ARRAY_SIZE(parentTagId));
-        if (view.parentIdTag().is_set())
-            strncpy(parentTagId, view.parentIdTag().get(), ARRAY_SIZE(parentTagId) - 1);
-
-        expiryDate = view.expiryDate().is_set() ? view.expiryDate().get() : 0;
-        status = view.status();
-    }
 };
 
 struct IdleInfo {
     IdTagInfo lastSeenTag;
+    int32_t lastTagForConnector;
 };
 
 struct WaitStartTransConfInfo {
@@ -71,34 +31,23 @@ public:
 
     }
 
-    void start(const char *websocket_endpoint_url, const char *charge_point_name_percent_encoded) {
-        std::string ws_url;
-        ws_url.reserve(strlen(websocket_endpoint_url) + 1 + strlen(charge_point_name_percent_encoded));
-        ws_url += websocket_endpoint_url;
-        ws_url += '/';
-        ws_url += charge_point_name_percent_encoded;
+    Ocpp (const Ocpp&) = delete;
 
-        platform_ctx = platform_init(ws_url.c_str());
-        platform_ws_register_receive_callback(platform_ctx, [](char *c, size_t s, void *user_data){((Ocpp*)user_data)->handleMessage(c, s);}, this);
-        platform_register_tag_seen_callback(platform_ctx, [](const char *tagId, void *user_data){((Ocpp*)user_data)->handleTagSeen(tagId);}, this);
-        platform_register_select_connector_callback(platform_ctx, [](int32_t connectorId, void *user_data){((Ocpp*)user_data)->handleConnectorSelection(connectorId);}, this);
-    }
+    void start(const char *websocket_endpoint_url, const char *charge_point_name_percent_encoded);
 
     void stop() {
         platform_disconnect(platform_ctx);
     }
 
-    void handleTagSeen(const char *tagId);
-    void handleConnectorSelection(int32_t connectorId);
+    void handleTagSeen(int32_t connectorId, const char *tagId);
 
     void tick_power_on();
     void tick_idle();
 
     void tick();
 
-    void handleMessage(char *message, size_t message_len);
-
-    void sendCallError(const char *uid, CallErrorCode code, const char *desc, JsonObject details);
+    void onConnect();
+    void onDisconnect();
 
     CallResponse handleAuthorizeResponse(AuthorizeResponseView conf);
     CallResponse handleBootNotificationResponse(BootNotificationResponseView conf);
@@ -118,19 +67,15 @@ public:
     CallResponse handleStopTransactionResponse(StopTransactionResponseView conf);
     CallResponse handleUnlockConnector(const char *uid, UnlockConnectorView req);
 
-    void handleCallError(CallErrorCode code, const char *desc, JsonObject details);
-
-
-    OcppState state = OcppState::PowerOn;
-
     IdleInfo idle_info;
     WaitStartTransConfInfo wstc_info;
+
+    OcppState state = OcppState::PowerOn;
 
 private:
     void *platform_ctx;
 
     uint32_t last_bn_send_ms = 0;
 
-    uint32_t last_call_message_id = 0;
-    CallAction last_call_action;
+    OcppConnection connection;
 };
