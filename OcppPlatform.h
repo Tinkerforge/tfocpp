@@ -8,6 +8,20 @@
 
 #include "OcppMessages.h"
 
+struct PlatformResponse {
+    uint8_t seq_num;
+    char tag_id_seen[22];
+    uint8_t evse_state[8];
+    uint32_t energy[8];
+}  __attribute__((__packed__));
+
+struct PlatformMessage {
+    uint8_t seq_num = 0;
+    char message[63] = "";
+    uint32_t charge_current[8] = {0};
+    uint8_t connector_locked = 0;
+}  __attribute__((__packed__));
+
 void *platform_init(const char *websocket_url);
 void platform_disconnect(void *ctx);
 void platform_destroy(void *ctx);

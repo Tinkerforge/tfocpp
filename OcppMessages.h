@@ -756,11 +756,9 @@ struct GetConfigurationResponseConfigurationKey {
 };
 
 
-bool Authorize(DynamicJsonDocument *result,
-        const char idTag[21]);
+DynamicJsonDocument Authorize(const char idTag[21]);
 
-bool BootNotification(DynamicJsonDocument *result,
-        const char chargePointVendor[21],
+DynamicJsonDocument BootNotification(const char chargePointVendor[21],
         const char chargePointModel[21],
         const char chargePointSerialNumber[26] = nullptr,
         const char chargeBoxSerialNumber[26] = nullptr,
@@ -770,53 +768,49 @@ bool BootNotification(DynamicJsonDocument *result,
         const char meterType[26] = nullptr,
         const char meterSerialNumber[26] = nullptr);
 
-bool ChangeAvailabilityResponse(DynamicJsonDocument *result, const char *call_id,
+DynamicJsonDocument ChangeAvailabilityResponse(const char *call_id,
         ChangeAvailabilityResponseStatus status);
 
-bool ChangeConfigurationResponse(DynamicJsonDocument *result, const char *call_id,
+DynamicJsonDocument ChangeConfigurationResponse(const char *call_id,
         ChangeConfigurationResponseStatus status);
 
-bool ClearCacheResponse(DynamicJsonDocument *result, const char *call_id,
+DynamicJsonDocument ClearCacheResponse(const char *call_id,
         ResponseStatus status);
 
-bool DataTransfer(DynamicJsonDocument *result,
-        const char vendorId[256],
+DynamicJsonDocument DataTransfer(const char vendorId[256],
         const char messageId[51] = nullptr,
         const char *data = nullptr);
 
-bool DataTransferResponse(DynamicJsonDocument *result, const char *call_id,
+DynamicJsonDocument DataTransferResponse(const char *call_id,
         DataTransferResponseStatus status,
         const char *data = nullptr);
 
-bool GetConfigurationResponse(DynamicJsonDocument *result, const char *call_id,
+DynamicJsonDocument GetConfigurationResponse(const char *call_id,
         GetConfigurationResponseConfigurationKey *configurationKey = nullptr, size_t configurationKey_length = 0,
         const char **unknownKey = nullptr, size_t unknownKey_length = 0);
 
-bool Heartbeat(DynamicJsonDocument *result);
+DynamicJsonDocument Heartbeat();
 
-bool MeterValues(DynamicJsonDocument *result,
-        int32_t connectorId,
+DynamicJsonDocument MeterValues(int32_t connectorId,
         MeterValuesMeterValue *meterValue, size_t meterValue_length,
         int32_t transactionId = OCPP_INTEGER_NOT_PASSED);
 
-bool RemoteStartTransactionResponse(DynamicJsonDocument *result, const char *call_id,
+DynamicJsonDocument RemoteStartTransactionResponse(const char *call_id,
         ResponseStatus status);
 
-bool RemoteStopTransactionResponse(DynamicJsonDocument *result, const char *call_id,
+DynamicJsonDocument RemoteStopTransactionResponse(const char *call_id,
         ResponseStatus status);
 
-bool ResetResponse(DynamicJsonDocument *result, const char *call_id,
+DynamicJsonDocument ResetResponse(const char *call_id,
         ResponseStatus status);
 
-bool StartTransaction(DynamicJsonDocument *result,
-        int32_t connectorId,
+DynamicJsonDocument StartTransaction(int32_t connectorId,
         const char idTag[21],
         int32_t meterStart,
         time_t timestamp,
         int32_t reservationId = OCPP_INTEGER_NOT_PASSED);
 
-bool StatusNotification(DynamicJsonDocument *result,
-        int32_t connectorId,
+DynamicJsonDocument StatusNotification(int32_t connectorId,
         StatusNotificationErrorCode errorCode,
         StatusNotificationStatus status,
         const char info[51] = nullptr,
@@ -824,15 +818,14 @@ bool StatusNotification(DynamicJsonDocument *result,
         const char vendorId[256] = nullptr,
         const char vendorErrorCode[51] = nullptr);
 
-bool StopTransaction(DynamicJsonDocument *result,
-        int32_t meterStop,
+DynamicJsonDocument StopTransaction(int32_t meterStop,
         time_t timestamp,
         int32_t transactionId,
         const char idTag[21] = nullptr,
         StopTransactionReason reason = StopTransactionReason::NONE,
         StopTransactionTransactionData *transactionData = nullptr, size_t transactionData_length = 0);
 
-bool UnlockConnectorResponse(DynamicJsonDocument *result, const char *call_id,
+DynamicJsonDocument UnlockConnectorResponse(const char *call_id,
         UnlockConnectorResponseStatus status);
 
 CallResponse parseAuthorizeResponse(JsonObject obj);
@@ -931,7 +924,8 @@ enum class CallAction {
     TRIGGER_MESSAGE
 };
 
-CallResponse callResultHandler(CallAction resultTo, JsonObject obj, Ocpp *ocpp);
+CallResponse callResultHandler(uint32_t message_id, CallAction resultTo, JsonObject obj, Ocpp *ocpp);
+
 
 struct IdTagInfo {
     char tagId[21] = {0};
@@ -942,6 +936,14 @@ struct IdTagInfo {
     void updateTagId(const char *newTagId) {
         memset(tagId, 0, ARRAY_SIZE(tagId));
         strncpy(tagId, newTagId, ARRAY_SIZE(tagId) - 1);
+    }
+
+     void updateFromIdTagInfo(IdTagInfo view) {
+        memset(parentTagId, 0, ARRAY_SIZE(parentTagId));
+        strncpy(parentTagId, view.parentTagId, ARRAY_SIZE(parentTagId) - 1);
+
+        expiryDate = view.expiryDate;
+        status = view.status;
     }
 
     void updateFromIdTagInfo(StopTransactionResponseIdTagInfoEntriesView view) {

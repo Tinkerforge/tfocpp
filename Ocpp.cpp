@@ -32,9 +32,7 @@ void Ocpp::tick_power_on() {
 
     last_bn_send_ms = platform_now_ms();
 
-    DynamicJsonDocument doc{0};
-    BootNotification(&doc, "Warp 2 Charger Pro", "Tinkerforge GmbH", "warp2-X8A");
-    connection.sendCallAction(CallAction::BOOT_NOTIFICATION, &doc);
+    this->sendCallAction(CallAction::BOOT_NOTIFICATION, BootNotification("Warp 2 Charger Pro", "Tinkerforge GmbH", "warp2-X8A"));
 }
 
 void Ocpp::tick_idle() {
@@ -45,9 +43,7 @@ void Ocpp::tick_idle() {
 
     platform_printfln("Sending heartbeat. %u %u %u %u", platform_now_ms(), last_bn_send_ms, last_bn_send_ms + 1000 * getIntConfig(ConfigKey::HeartbeatInterval), 1000 * getIntConfig(ConfigKey::HeartbeatInterval));
 
-    DynamicJsonDocument doc{0};
-    Heartbeat(&doc);
-    connection.sendCallAction(CallAction::HEARTBEAT, &doc);
+    this->sendCallAction(CallAction::HEARTBEAT, Heartbeat());
 }
 
 void Ocpp::tick() {
@@ -64,12 +60,6 @@ void Ocpp::tick() {
 
     for(size_t i = 0; i < ARRAY_SIZE(connectors); ++i) {
         connectors[i].tick();
-/*        auto conn_status = connectors[i].getStatus();
-        if (last_connector_status[i] != conn_status) {
-            DynamicJsonDocument doc{0};
-            StatusNotification(&doc, i + 1, StatusNotificationErrorCode::NO_ERROR, conn_status);
-            connection.sendCallAction(CallAction::STATUS_NOTIFICATION, &doc);
-        }*/
     }
     connection.tick();
 }
@@ -88,38 +78,30 @@ void Ocpp::onDisconnect()
 
 }
 
-CallResponse Ocpp::handleAuthorizeResponse(AuthorizeResponseView conf)
+bool Ocpp::sendCallAction(CallAction action, const DynamicJsonDocument &doc)
 {
-    auto connectorId = idle_info.lastTagForConnector;
-    if (connectorId <= 0 || connectorId > NUM_CONNECTORS)
-        return CallResponse{CallErrorCode::OK, ""};
+    // Filter messages here
+    connection.sendCallAction(action, doc);
+    return true;
+}
 
+CallResponse Ocpp::handleAuthorizeResponse(uint32_t messageId, AuthorizeResponseView conf)
+{
     IdTagInfo info;
     info.updateFromIdTagInfo(conf.idTagInfo());
 
-    switch (connectors[connectorId - 1].onAuthorizeConf(info)) {
-        case Connector::OTARResult::StartTransaction: {
-            DynamicJsonDocument doc{0};
-            StartTransaction(&doc, connectorId, info.tagId, platform_get_energy(connectorId), platform_get_system_time(platform_ctx));
-            connection.sendCallAction(CallAction::START_TRANSACTION, &doc);
-
-            break;
-        }
-        case Connector::OTARResult::StopTransaction: {
-            DynamicJsonDocument doc{0};
-            StopTransaction(&doc, platform_get_energy(connectorId), platform_get_system_time(platform_ctx), connectors[connectorId - 1].transaction_id, info.tagId, StopTransactionReason::LOCAL);
-            connection.sendCallAction(CallAction::STOP_TRANSACTION, &doc);
-
-            break;
-        }
-        case Connector::OTARResult::NOP:
-            break;
+    for(size_t i = 0; i < NUM_CONNECTORS; ++i) {
+        if (connectors[i].waiting_for_message_id != messageId)
+            continue;
+        connectors[i].waiting_for_message_id = 0;
+        connectors[i].onAuthorizeConf(info);
+        break;
     }
 
     return CallResponse{CallErrorCode::OK, ""};
 }
 
-CallResponse Ocpp::handleBootNotificationResponse(BootNotificationResponseView conf) {
+CallResponse Ocpp::handleBootNotificationResponse(uint32_t messageId, BootNotificationResponseView conf) {
     if ((state != OcppState::PowerOn) &&
         (state != OcppState::Pending) &&
         (state != OcppState::Rejected))
@@ -138,9 +120,7 @@ CallResponse Ocpp::handleBootNotificationResponse(BootNotificationResponseView c
             platform_set_system_time(platform_ctx, conf.currentTime());
             state = OcppState::Idle;
 
-            DynamicJsonDocument doc{0};
-            StatusNotification(&doc, 0, StatusNotificationErrorCode::NO_ERROR, StatusNotificationStatus::AVAILABLE, nullptr, platform_get_system_time(platform_ctx));
-            connection.sendCallAction(CallAction::STATUS_NOTIFICATION, &doc);
+            this->sendCallAction(CallAction::STATUS_NOTIFICATION, StatusNotification(0, StatusNotificationErrorCode::NO_ERROR, StatusNotificationStatus::AVAILABLE, nullptr, platform_get_system_time(platform_ctx)));
 
             for(size_t i = 0; i < ARRAY_SIZE(connectors); ++i)
                 connectors[i].sendStatus(connectors[i].getStatus());
@@ -176,9 +156,7 @@ CallResponse Ocpp::handleChangeConfiguration(const char *uid, ChangeConfiguratio
         status = getConfig(key_idx).setValue(req.value());
     }
 
-    DynamicJsonDocument doc{0};
-    ChangeConfigurationResponse(&doc, uid, status);
-    connection.sendCallResponse(&doc);
+    connection.sendCallResponse(ChangeConfigurationResponse(uid, status));
 
     return CallResponse{CallErrorCode::OK, ""};
 }
@@ -192,9 +170,7 @@ CallResponse Ocpp::handleClearCache(const char *uid, ClearCacheView req)
     When the Authorization Cache is not implemented and the Charge Point receives a ClearCache.req message. The Charge Point
     SHALL response with ClearCache.conf with the status: Rejected.
     */
-    DynamicJsonDocument doc{0};
-    ClearCacheResponse(&doc, uid, ResponseStatus::REJECTED);
-    connection.sendCallResponse(&doc);
+    connection.sendCallResponse(ClearCacheResponse(uid, ResponseStatus::REJECTED));
 
     return CallResponse{CallErrorCode::OK, ""};
 }
@@ -205,14 +181,12 @@ CallResponse Ocpp::handleDataTransfer(const char *uid, DataTransferView req)
     If the recipient of the request has no implementation for the specific vendorId it SHALL return a status
     ‘UnknownVendor’ and the data element SHALL not be present.
     */
-    DynamicJsonDocument doc{0};
-    DataTransferResponse(&doc, uid, DataTransferResponseStatus::UNKNOWN_VENDOR_ID);
-    connection.sendCallResponse(&doc);
+    connection.sendCallResponse(DataTransferResponse(uid, DataTransferResponseStatus::UNKNOWN_VENDOR_ID));
 
     return CallResponse{CallErrorCode::OK, ""};
 }
 
-CallResponse Ocpp::handleDataTransferResponse(DataTransferResponseView conf)
+CallResponse Ocpp::handleDataTransferResponse(uint32_t messageId, DataTransferResponseView conf)
 {
     return CallResponse{CallErrorCode::InternalError, "not implemented yet!"};
 }
@@ -314,9 +288,7 @@ CallResponse Ocpp::handleGetConfiguration(const char *uid, GetConfigurationView 
         }
     }
 
-    DynamicJsonDocument doc{0};
-    GetConfigurationResponse(&doc, uid, known, known_keys, unknown, unknown_keys);
-    connection.sendCallResponse(&doc);
+    connection.sendCallResponse(GetConfigurationResponse(uid, known, known_keys, unknown, unknown_keys));
 
     delete[] known;
     free(unknown);
@@ -325,13 +297,13 @@ CallResponse Ocpp::handleGetConfiguration(const char *uid, GetConfigurationView 
     return CallResponse{CallErrorCode::OK, ""};
 }
 
-CallResponse Ocpp::handleHeartbeatResponse(HeartbeatResponseView conf)
+CallResponse Ocpp::handleHeartbeatResponse(uint32_t messageId, HeartbeatResponseView conf)
 {
     platform_set_system_time(platform_ctx, conf.currentTime());
     return CallResponse{CallErrorCode::OK, ""};
 }
 
-CallResponse Ocpp::handleMeterValuesResponse(MeterValuesResponseView conf)
+CallResponse Ocpp::handleMeterValuesResponse(uint32_t messageId, MeterValuesResponseView conf)
 {
     return CallResponse{CallErrorCode::InternalError, "not implemented yet!"};
 }
@@ -351,30 +323,28 @@ CallResponse Ocpp::handleReset(const char *uid, ResetView req)
     return CallResponse{CallErrorCode::InternalError, "not implemented yet!"};
 }
 
-CallResponse Ocpp::handleStartTransactionResponse(StartTransactionResponseView conf)
+CallResponse Ocpp::handleStartTransactionResponse(uint32_t messageId, StartTransactionResponseView conf)
 {
-    auto connectorId = idle_info.lastTagForConnector;
-    if (connectorId <= 0 || connectorId > NUM_CONNECTORS)
-        return CallResponse{CallErrorCode::OK, ""};
-
     IdTagInfo info;
     info.updateFromIdTagInfo(conf.idTagInfo());
 
-    if (connectors[idle_info.lastTagForConnector - 1].onStartTransactionConf(info, conf.transactionId()) == Connector::OSTCResult::SendStopTxnDeauthed) {
-        DynamicJsonDocument doc{0};
-        StopTransaction(&doc, platform_get_energy(connectorId), platform_get_system_time(platform_ctx), conf.transactionId(), info.tagId, StopTransactionReason::DE_AUTHORIZED);
-        connection.sendCallAction(CallAction::STOP_TRANSACTION, &doc);
+    for(size_t i = 0; i < NUM_CONNECTORS; ++i) {
+        if (connectors[i].waiting_for_message_id != messageId)
+            continue;
+        connectors[i].waiting_for_message_id = 0;
+        connectors[i].onStartTransactionConf(info, conf.transactionId());
+        break;
     }
 
     return CallResponse{CallErrorCode::OK, ""};
 }
 
-CallResponse Ocpp::handleStatusNotificationResponse(StatusNotificationResponseView conf)
+CallResponse Ocpp::handleStatusNotificationResponse(uint32_t messageId, StatusNotificationResponseView conf)
 {
     return CallResponse{CallErrorCode::InternalError, "not implemented yet!"};
 }
 
-CallResponse Ocpp::handleStopTransactionResponse(StopTransactionResponseView conf)
+CallResponse Ocpp::handleStopTransactionResponse(uint32_t messageId, StopTransactionResponseView conf)
 {
     return CallResponse{CallErrorCode::InternalError, "not implemented yet!"};
 }
@@ -396,19 +366,13 @@ void Ocpp::handleTagSeen(int32_t connectorId, const char *tagId)
         return;
 
     auto &conn = connectors[connectorId - 1];
-    if (conn.onTagSeen(tagId) == Connector::OTSResult::RequestAuthentication) {
-        DynamicJsonDocument doc{0};
-        Authorize(&doc, tagId);
-        connection.sendCallAction(CallAction::AUTHORIZE, &doc);
-    }
-
-    idle_info.lastTagForConnector = connectorId;
+    conn.onTagSeen(tagId);
 }
 
 void Ocpp::start(const char *websocket_endpoint_url, const char *charge_point_name_percent_encoded) {
     platform_ctx = connection.start(websocket_endpoint_url, charge_point_name_percent_encoded, this);
     for(size_t i = 0; i < ARRAY_SIZE(connectors); ++i) {
-        connectors[i].connection = &connection;
+        connectors[i].ocpp = this;
         connectors[i].connectorId = i + 1;
     }
 

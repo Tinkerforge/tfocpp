@@ -91,14 +91,13 @@ void OcppConnection::handleMessage(char *message, size_t message_len)
             platform_printfln("received call result with %d members, but expected 3.", doc.size());
             return;
         }
-        // TODO: check call_id!
 
         if (doc[2].isNull() || !doc[2].is<JsonObject>()) {
             platform_printfln("received call result with payload being neither an object nor null.", doc.size());
             return;
         }
 
-        CallResponse res = callResultHandler(message_in_flight.action, doc[2].as<JsonObject>(), ocpp);
+        CallResponse res = callResultHandler(uid, message_in_flight.action, doc[2].as<JsonObject>(), ocpp);
         message_in_flight = QueueEntry{};
         /*if (res.result != CallErrorCode::OK)
             sendCallError(uniqueID, res.result, res.error_description, JsonObject());*/
@@ -110,8 +109,6 @@ void OcppConnection::handleMessage(char *message, size_t message_len)
             platform_printfln("received call error with %d members, but expected 5.", doc.size());
             return;
         }
-
-        // TODO: check call_id!
 
         if (!doc[2].is<const char *>()) {
             platform_printfln("received call error with error code not being a string!.", doc.size());
@@ -165,9 +162,9 @@ void OcppConnection::sendCallError(const char *uid, CallErrorCode code, const ch
     platform_ws_send(platform_ctx, send_buf, written);
 }
 
-bool OcppConnection::sendCallResponse(DynamicJsonDocument *doc)
+bool OcppConnection::sendCallResponse(const DynamicJsonDocument &doc)
 {
-    size_t written = serializeJson(*doc, send_buf);
+    size_t written = serializeJson(doc, send_buf);
 
     platform_ws_send(platform_ctx, send_buf, written);
     return true;
@@ -184,7 +181,7 @@ bool is_transaction_related(QueueEntry entry) {
     return is_transaction_related(entry.action);
 }
 */
-bool OcppConnection::sendCallAction(CallAction action, DynamicJsonDocument *doc)
+bool OcppConnection::sendCallAction(CallAction action, const DynamicJsonDocument &doc)
 {
     // TODO: handle full queues
     if (is_transaction_related(action)) {

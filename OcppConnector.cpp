@@ -1,6 +1,7 @@
 #include "OcppConnector.h"
 
 #include "OcppTools.h"
+#include "Ocpp.h"
 
 void Connector::deauth() {
     authorized_for = IdTagInfo{};
@@ -21,7 +22,7 @@ const char * ConnectorState_Strings[] = {
 };
 
 void Connector::setState(ConnectorState newState) {
-    switch (state) {
+    switch (newState) {
         case ConnectorState::IDLE:
             platform_unlock_cable(connectorId);
             deauth();
@@ -36,7 +37,7 @@ void Connector::setState(ConnectorState newState) {
             tag_deadline = platform_now_ms() + getIntConfig(ConfigKey::ConnectionTimeOut) * 1000;
             break;
         case ConnectorState::AUTHORIZING_FOR_START_C:
-            tag_deadline = 0;
+            //tag_deadline = 0;
             cable_deadline = 0;
             break;
         case ConnectorState::AUTHORIZING_FOR_START_NC:
@@ -54,16 +55,22 @@ void Connector::setState(ConnectorState newState) {
             // StartTransaction is the notification that we have started to charge, not the request for permission.
             platform_lock_cable(connectorId);
             platform_set_charging_current(connectorId, OCPP_PLATFORM_MAX_CHARGING_CURRENT);
+            this->sendCallAction(CallAction::START_TRANSACTION, StartTransaction(connectorId, authorized_for.tagId, platform_get_energy(connectorId), platform_get_system_time(ocpp->platform_ctx)));
             break;
         case ConnectorState::TRANSACTION:
             break;
         case ConnectorState::AUTHORIZING_FOR_STOP:
             break;
         case ConnectorState::STOPPING:
+            // TODO: this is guestimated without reading the spec. Figure out stoptransactionreason etc.
+            this->sendCallAction(CallAction::STOP_TRANSACTION, StopTransaction(platform_get_energy(connectorId), platform_get_system_time(ocpp->platform_ctx), transaction_id, authorized_for.tagId));
             deauth();
             transaction_id = -1;
             break;
         case ConnectorState::STOPPING_NT:
+            this->sendCallAction(CallAction::STOP_TRANSACTION, StopTransaction(platform_get_energy(connectorId), platform_get_system_time(ocpp->platform_ctx), transaction_id, authorized_for.tagId, StopTransactionReason::DE_AUTHORIZED));
+            deauth();
+            transaction_id = -1;
             break;
         case ConnectorState::FINISHING:
             platform_unlock_cable(connectorId);
@@ -80,20 +87,29 @@ void Connector::sendStatus(StatusNotificationStatus newStatus, StatusNotificatio
     if (last_sent_status == newStatus)
         return;
 
-    DynamicJsonDocument doc{0};
-    StatusNotification(&doc, connectorId, StatusNotificationErrorCode::NO_ERROR, newStatus, info, platform_get_system_time(connection->platform_ctx));
-    connection->sendCallAction(CallAction::STATUS_NOTIFICATION, &doc);
+    this->sendCallAction(CallAction::STATUS_NOTIFICATION, StatusNotification(connectorId, StatusNotificationErrorCode::NO_ERROR, newStatus, info, platform_get_system_time(ocpp->platform_ctx)));
     last_sent_status = newStatus;
 }
 
-Connector::OTSResult Connector::onTagSeen(const char *tag_id) {
+void Connector::sendCallAction(CallAction action, const DynamicJsonDocument &doc)
+{
+    long id = std::atol(doc[1]);
+    this->waiting_for_message_id = id;
+    ocpp->sendCallAction(action, doc);
+}
+
+void Connector::onTagSeen(const char *tag_id) {
     switch (state) {
         case ConnectorState::WAITING_FOR_TAG:
             setState(ConnectorState::AUTHORIZING_FOR_START_C);
-            return OTSResult::RequestAuthentication;
+            authorized_for.updateTagId(tag_id);
+            this->sendCallAction(CallAction::AUTHORIZE, Authorize(tag_id));
+            break;
         case ConnectorState::IDLE:
             setState(ConnectorState::AUTHORIZING_FOR_START_NC);
-            return OTSResult::RequestAuthentication;
+            authorized_for.updateTagId(tag_id);
+            this->sendCallAction(CallAction::AUTHORIZE, Authorize(tag_id));
+            break;
 
         case ConnectorState::TRANSACTION:
             /*
@@ -103,90 +119,95 @@ Connector::OTSResult Connector::onTagSeen(const char *tag_id) {
             */
             if (authorized_for.is_same_tag(tag_id)) {
                 setState(ConnectorState::STOPPING);
-                return OTSResult::NOP;
+                break;
             }
 
             setState(ConnectorState::AUTHORIZING_FOR_STOP);
-            return OTSResult::RequestAuthentication;
+            authorized_for.updateTagId(tag_id);
+            this->sendCallAction(CallAction::AUTHORIZE, Authorize(tag_id));
+            break;
         case ConnectorState::STOPPING_NT:
             if (authorized_for.is_same_tag(tag_id)) {
                 setState(ConnectorState::FINISHING);
-                return OTSResult::NOP;
+                break;
             }
 
             // This is interesting: If we started a transaction (offline),
             // the starttransaction.conf is received later and does not accept the tag,
             // only _the same tag_ (or one with the same parentId) may unlock the cable.
-            return OTSResult::NOP;
+            break;
         case ConnectorState::WAITING_FOR_CABLE:
             if (authorized_for.is_same_tag(tag_id)) {
                 setState(ConnectorState::IDLE);
-                return OTSResult::NOP;
+                break;
             }
 
             // Also only accept the same tag here: This is aborting a transaction before
             // it has even started.
-            return OTSResult::NOP;
+            break;
 
         default:
-            return OTSResult::NOP;
+            break;
     }
 }
 
-Connector::OTARResult Connector::onAuthorizeConf(IdTagInfo info) {
+void Connector::onAuthorizeConf(IdTagInfo info) {
+    authorized_for.updateFromIdTagInfo(info);
     switch (state) {
         case ConnectorState::AUTHORIZING_FOR_START_C:
             if (info.status == ResponseIdTagInfoEntriesStatus::ACCEPTED) {
-                authorized_for = info;
                 setState(ConnectorState::STARTING);
-                return OTARResult::StartTransaction;
+                return;
             }
 
             setState(ConnectorState::WAITING_FOR_TAG);
-            return OTARResult::NOP;
+            return;
         case ConnectorState::AUTHORIZING_FOR_START_NC:
             if (info.status == ResponseIdTagInfoEntriesStatus::ACCEPTED) {
-                authorized_for = info;
                 setState(ConnectorState::WAITING_FOR_CABLE);
-                return OTARResult::NOP;
+                return;
             }
 
             setState(ConnectorState::IDLE);
-            return OTARResult::NOP;
+            return;
         case ConnectorState::AUTHORIZING_FOR_STOP:
             if (info.status == ResponseIdTagInfoEntriesStatus::ACCEPTED) {
-                deauth();
                 setState(ConnectorState::STOPPING);
-                return OTARResult::StopTransaction;
+                return;
             }
 
             setState(ConnectorState::TRANSACTION);
-            return OTARResult::NOP;
+            return;
         default:
-            return OTARResult::NOP;
+            return;
     }
 }
 
-Connector::OSTCResult Connector::onStartTransactionConf(IdTagInfo info, int32_t transaction_id) {
+void Connector::onStartTransactionConf(IdTagInfo info, int32_t transaction_id) {
     if (state != ConnectorState::STARTING && state != ConnectorState::TRANSACTION)
-        return OSTCResult::NOP;
+        return;
+
+    authorized_for.updateFromIdTagInfo(info);
 
     if (info.status == ResponseIdTagInfoEntriesStatus::ACCEPTED) {
         this->transaction_id = transaction_id;
-        this->authorized_for = info;
         setState(ConnectorState::TRANSACTION);
-        return OSTCResult::NOP;
+        return;
     }
 
     if (getBoolConfig(ConfigKey::StopTransactionOnInvalidId)) {
         setState(ConnectorState::STOPPING_NT);
-        return OSTCResult::SendStopTxnDeauthed;
-    } else if (info.status == ResponseIdTagInfoEntriesStatus::INVALID) {
+        return;
+    }
+
+    if (info.status == ResponseIdTagInfoEntriesStatus::INVALID) {
         // TODO: implement MaxEnergyOnInvalidId here
         platform_set_charging_current(connectorId, 0);
     }
-    return OSTCResult::NOP;
+    return;
 }
+
+
 
 StatusNotificationStatus Connector::getStatus() {
     EVSEState evse_state = platform_get_evse_state(connectorId);
@@ -302,4 +323,6 @@ void Connector::tick() {
         setState(ConnectorState::IDLE);
         platform_cable_timed_out(connectorId);
     }
+
+    this->sendStatus(getStatus());
 }

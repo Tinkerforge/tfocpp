@@ -38,6 +38,8 @@ enum class ConnectorState {
     FINISHING
 };
 
+class Ocpp;
+
 struct Connector {
     /*For ConnectorId 0, only a limited set is applicable, namely: Available, Unavailable and Faulted.
     The status of ConnectorId 0 has no direct connection to the status of the individual Connectors (>0).*/
@@ -52,34 +54,21 @@ struct Connector {
     int32_t cable_deadline = 0;
     int32_t transaction_id = -1;
 
-    OcppConnection *connection = nullptr;
+    uint32_t waiting_for_message_id = 0;
+
+    Ocpp *ocpp = nullptr;
 
     void deauth();
 
     void setState(ConnectorState newState);
     void sendStatus(StatusNotificationStatus newStatus, StatusNotificationErrorCode error = StatusNotificationErrorCode::NO_ERROR, const char info[51] = nullptr);
+    void sendCallAction(CallAction action, const DynamicJsonDocument &doc);
 
-    enum class OTSResult {
-        RequestAuthentication,
-        NOP,
-    };
+    void onTagSeen(const char *tag_id);
 
-    OTSResult onTagSeen(const char *tag_id);
+    void onAuthorizeConf(IdTagInfo info);
 
-    enum class OTARResult {
-        StartTransaction,
-        StopTransaction,
-        NOP
-    };
-
-    OTARResult onAuthorizeConf(IdTagInfo info);
-
-    enum class OSTCResult {
-        SendStopTxnDeauthed,
-        NOP
-    };
-
-    OSTCResult onStartTransactionConf(IdTagInfo info, int32_t transaction_id);
+    void onStartTransactionConf(IdTagInfo info, int32_t transaction_id);
 
     StatusNotificationStatus getStatus();
 

@@ -19,11 +19,11 @@ public:
 
     QueueEntry() : action(CallAction::AUTHORIZE), buf(nullptr), message_id(0), len(0) {}
 
-    QueueEntry(CallAction action, DynamicJsonDocument *doc) :
+    QueueEntry(CallAction action, const DynamicJsonDocument &doc) :
         action(action),
         buf(new char[4096]),
         message_id(doc[1].as<uint32_t>()),
-        len(serializeJson(*doc, buf.get(), 4096))
+        len(serializeJson(doc, buf.get(), 4096))
     {
 
     }
@@ -57,8 +57,8 @@ public:
 
     void sendCallError(const char *uid, CallErrorCode code, const char *desc, JsonObject details);
 
-    bool sendCallAction(CallAction action, DynamicJsonDocument *doc);
-    bool sendCallResponse(DynamicJsonDocument *doc);
+    bool sendCallAction(CallAction action, const DynamicJsonDocument &doc);
+    bool sendCallResponse(const DynamicJsonDocument &doc);
 
     void *platform_ctx;
     Ocpp *ocpp;
