@@ -25,13 +25,13 @@ struct WaitStartTransConfInfo {
     int32_t connectorId;
 };
 
-class Ocpp {
+class OcppChargePoint {
 public:
-    Ocpp() {
+    OcppChargePoint() {
 
     }
 
-    Ocpp (const Ocpp&) = delete;
+    OcppChargePoint (const OcppChargePoint&) = delete;
 
     void start(const char *websocket_endpoint_url, const char *charge_point_name_percent_encoded);
 

@@ -1,6 +1,6 @@
 #include "OcppMessages.h"
 
-#include "Ocpp.h"
+#include "OcppChargePoint.h"
 #include "OcppPlatform.h"
 
 extern "C" {
@@ -2150,7 +2150,7 @@ const char *CallActionStrings[] = {
     "TriggerMessageResponse",
     "TriggerMessage"
 };
-CallResponse callHandler(const char *uid, const char *action_string, JsonObject obj, Ocpp *ocpp) {
+CallResponse callHandler(const char *uid, const char *action_string, JsonObject obj, OcppChargePoint *cp) {
     CallAction action;
     {
         bool found = false;
@@ -2173,7 +2173,7 @@ CallResponse callHandler(const char *uid, const char *action_string, JsonObject 
             if (res.result != CallErrorCode::OK)
                 return res;
 
-            return ocpp->handleChangeAvailability(uid, ChangeAvailabilityView{obj});
+            return cp->handleChangeAvailability(uid, ChangeAvailabilityView{obj});
         }
 
         case CallAction::CHANGE_CONFIGURATION: {
@@ -2181,7 +2181,7 @@ CallResponse callHandler(const char *uid, const char *action_string, JsonObject 
             if (res.result != CallErrorCode::OK)
                 return res;
 
-            return ocpp->handleChangeConfiguration(uid, ChangeConfigurationView{obj});
+            return cp->handleChangeConfiguration(uid, ChangeConfigurationView{obj});
         }
 
         case CallAction::CLEAR_CACHE: {
@@ -2189,7 +2189,7 @@ CallResponse callHandler(const char *uid, const char *action_string, JsonObject 
             if (res.result != CallErrorCode::OK)
                 return res;
 
-            return ocpp->handleClearCache(uid, ClearCacheView{obj});
+            return cp->handleClearCache(uid, ClearCacheView{obj});
         }
 
         case CallAction::DATA_TRANSFER: {
@@ -2197,7 +2197,7 @@ CallResponse callHandler(const char *uid, const char *action_string, JsonObject 
             if (res.result != CallErrorCode::OK)
                 return res;
 
-            return ocpp->handleDataTransfer(uid, DataTransferView{obj});
+            return cp->handleDataTransfer(uid, DataTransferView{obj});
         }
 
         case CallAction::GET_CONFIGURATION: {
@@ -2205,7 +2205,7 @@ CallResponse callHandler(const char *uid, const char *action_string, JsonObject 
             if (res.result != CallErrorCode::OK)
                 return res;
 
-            return ocpp->handleGetConfiguration(uid, GetConfigurationView{obj});
+            return cp->handleGetConfiguration(uid, GetConfigurationView{obj});
         }
 
         case CallAction::REMOTE_START_TRANSACTION: {
@@ -2213,7 +2213,7 @@ CallResponse callHandler(const char *uid, const char *action_string, JsonObject 
             if (res.result != CallErrorCode::OK)
                 return res;
 
-            return ocpp->handleRemoteStartTransaction(uid, RemoteStartTransactionView{obj});
+            return cp->handleRemoteStartTransaction(uid, RemoteStartTransactionView{obj});
         }
 
         case CallAction::REMOTE_STOP_TRANSACTION: {
@@ -2221,7 +2221,7 @@ CallResponse callHandler(const char *uid, const char *action_string, JsonObject 
             if (res.result != CallErrorCode::OK)
                 return res;
 
-            return ocpp->handleRemoteStopTransaction(uid, RemoteStopTransactionView{obj});
+            return cp->handleRemoteStopTransaction(uid, RemoteStopTransactionView{obj});
         }
 
         case CallAction::RESET: {
@@ -2229,7 +2229,7 @@ CallResponse callHandler(const char *uid, const char *action_string, JsonObject 
             if (res.result != CallErrorCode::OK)
                 return res;
 
-            return ocpp->handleReset(uid, ResetView{obj});
+            return cp->handleReset(uid, ResetView{obj});
         }
 
         case CallAction::UNLOCK_CONNECTOR: {
@@ -2237,7 +2237,7 @@ CallResponse callHandler(const char *uid, const char *action_string, JsonObject 
             if (res.result != CallErrorCode::OK)
                 return res;
 
-            return ocpp->handleUnlockConnector(uid, UnlockConnectorView{obj});
+            return cp->handleUnlockConnector(uid, UnlockConnectorView{obj});
         }
 
         default:
@@ -2245,7 +2245,7 @@ CallResponse callHandler(const char *uid, const char *action_string, JsonObject 
     }
 }
 
-CallResponse callResultHandler(uint32_t message_id, CallAction resultTo, JsonObject obj, Ocpp *ocpp) {
+CallResponse callResultHandler(uint32_t message_id, CallAction resultTo, JsonObject obj, OcppChargePoint *cp) {
 
     switch(resultTo) {
         case CallAction::AUTHORIZE: {
@@ -2253,7 +2253,7 @@ CallResponse callResultHandler(uint32_t message_id, CallAction resultTo, JsonObj
             if (res.result != CallErrorCode::OK)
                 return res;
 
-            return ocpp->handleAuthorizeResponse(message_id, AuthorizeResponseView{obj});
+            return cp->handleAuthorizeResponse(message_id, AuthorizeResponseView{obj});
         }
 
         case CallAction::BOOT_NOTIFICATION: {
@@ -2261,7 +2261,7 @@ CallResponse callResultHandler(uint32_t message_id, CallAction resultTo, JsonObj
             if (res.result != CallErrorCode::OK)
                 return res;
 
-            return ocpp->handleBootNotificationResponse(message_id, BootNotificationResponseView{obj});
+            return cp->handleBootNotificationResponse(message_id, BootNotificationResponseView{obj});
         }
 
         case CallAction::DATA_TRANSFER: {
@@ -2269,7 +2269,7 @@ CallResponse callResultHandler(uint32_t message_id, CallAction resultTo, JsonObj
             if (res.result != CallErrorCode::OK)
                 return res;
 
-            return ocpp->handleDataTransferResponse(message_id, DataTransferResponseView{obj});
+            return cp->handleDataTransferResponse(message_id, DataTransferResponseView{obj});
         }
 
         case CallAction::HEARTBEAT: {
@@ -2277,7 +2277,7 @@ CallResponse callResultHandler(uint32_t message_id, CallAction resultTo, JsonObj
             if (res.result != CallErrorCode::OK)
                 return res;
 
-            return ocpp->handleHeartbeatResponse(message_id, HeartbeatResponseView{obj});
+            return cp->handleHeartbeatResponse(message_id, HeartbeatResponseView{obj});
         }
 
         case CallAction::METER_VALUES: {
@@ -2285,7 +2285,7 @@ CallResponse callResultHandler(uint32_t message_id, CallAction resultTo, JsonObj
             if (res.result != CallErrorCode::OK)
                 return res;
 
-            return ocpp->handleMeterValuesResponse(message_id, MeterValuesResponseView{obj});
+            return cp->handleMeterValuesResponse(message_id, MeterValuesResponseView{obj});
         }
 
         case CallAction::START_TRANSACTION: {
@@ -2293,7 +2293,7 @@ CallResponse callResultHandler(uint32_t message_id, CallAction resultTo, JsonObj
             if (res.result != CallErrorCode::OK)
                 return res;
 
-            return ocpp->handleStartTransactionResponse(message_id, StartTransactionResponseView{obj});
+            return cp->handleStartTransactionResponse(message_id, StartTransactionResponseView{obj});
         }
 
         case CallAction::STATUS_NOTIFICATION: {
@@ -2301,7 +2301,7 @@ CallResponse callResultHandler(uint32_t message_id, CallAction resultTo, JsonObj
             if (res.result != CallErrorCode::OK)
                 return res;
 
-            return ocpp->handleStatusNotificationResponse(message_id, StatusNotificationResponseView{obj});
+            return cp->handleStatusNotificationResponse(message_id, StatusNotificationResponseView{obj});
         }
 
         case CallAction::STOP_TRANSACTION: {
@@ -2309,7 +2309,7 @@ CallResponse callResultHandler(uint32_t message_id, CallAction resultTo, JsonObj
             if (res.result != CallErrorCode::OK)
                 return res;
 
-            return ocpp->handleStopTransactionResponse(message_id, StopTransactionResponseView{obj});
+            return cp->handleStopTransactionResponse(message_id, StopTransactionResponseView{obj});
         }
 
         default:

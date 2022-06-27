@@ -1,6 +1,6 @@
 #include "OcppConnection.h"
 
-#include "Ocpp.h"
+#include "OcppChargePoint.h"
 
 
 char send_buf[4096];
@@ -55,13 +55,13 @@ void OcppConnection::handleMessage(char *message, size_t message_len)
             return;
         }
 
-        if (ocpp->state == OcppState::Rejected) {
+        if (cp->state == OcppState::Rejected) {
             // "While Rejected, the Charge Point SHALL NOT respond to any Central System initiated message. the Central System SHOULD NOT initiate any."
             platform_printfln("received call while being rejected. Ignoring call.");
             return;
         }
 
-        CallResponse res = callHandler(uniqueID, doc[2].as<const char *>(), doc[3].as<JsonObject>(), ocpp);
+        CallResponse res = callHandler(uniqueID, doc[2].as<const char *>(), doc[3].as<JsonObject>(), cp);
         if (res.result != CallErrorCode::OK)
             sendCallError(uniqueID, res.result, res.error_description, JsonObject());
         // TODO handle responses here?
@@ -97,7 +97,7 @@ void OcppConnection::handleMessage(char *message, size_t message_len)
             return;
         }
 
-        CallResponse res = callResultHandler(uid, message_in_flight.action, doc[2].as<JsonObject>(), ocpp);
+        CallResponse res = callResultHandler(uid, message_in_flight.action, doc[2].as<JsonObject>(), cp);
         message_in_flight = QueueEntry{};
         /*if (res.result != CallErrorCode::OK)
             sendCallError(uniqueID, res.result, res.error_description, JsonObject());*/
@@ -212,9 +212,9 @@ void OcppConnection::tick() {
     static bool was_connected = false;
     bool connected = platform_ws_connected(platform_ctx);
     if (!connected && was_connected)
-        ocpp->onDisconnect();
+        cp->onDisconnect();
     else if (connected && !was_connected)
-        ocpp->onConnect();
+        cp->onConnect();
 
     was_connected = connected;
 

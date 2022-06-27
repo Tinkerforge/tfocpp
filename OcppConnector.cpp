@@ -1,7 +1,7 @@
 #include "OcppConnector.h"
 
 #include "OcppTools.h"
-#include "Ocpp.h"
+#include "OcppChargePoint.h"
 
 void Connector::deauth() {
     authorized_for = IdTagInfo{};
@@ -60,7 +60,7 @@ void Connector::setState(ConnectorState newState) {
             // StartTransaction is the notification that we have started to charge, not the request for permission.
             platform_lock_cable(connectorId);
             platform_set_charging_current(connectorId, OCPP_PLATFORM_MAX_CHARGING_CURRENT);
-            this->sendCallAction(CallAction::START_TRANSACTION, StartTransaction(connectorId, authorized_for.tagId, platform_get_energy(connectorId), platform_get_system_time(ocpp->platform_ctx)));
+            this->sendCallAction(CallAction::START_TRANSACTION, StartTransaction(connectorId, authorized_for.tagId, platform_get_energy(connectorId), platform_get_system_time(cp->platform_ctx)));
             setState(ConnectorState::TRANSACTION);
             break;
         case ConnectorState::TRANSACTION:
@@ -69,19 +69,19 @@ void Connector::setState(ConnectorState newState) {
             break;
         case ConnectorState::NOTIFY_STOP:
             // TODO: this is guestimated without reading the spec. Figure out stoptransactionreason etc.
-            this->sendCallAction(CallAction::STOP_TRANSACTION, StopTransaction(platform_get_energy(connectorId), platform_get_system_time(ocpp->platform_ctx), transaction_id, authorized_for.tagId));
+            this->sendCallAction(CallAction::STOP_TRANSACTION, StopTransaction(platform_get_energy(connectorId), platform_get_system_time(cp->platform_ctx), transaction_id, authorized_for.tagId));
             deauth();
             transaction_id = -1;
             setState(ConnectorState::FINISHING);
             break;
         case ConnectorState::NOTIFY_STOP_NT:
-            this->sendCallAction(CallAction::STOP_TRANSACTION, StopTransaction(platform_get_energy(connectorId), platform_get_system_time(ocpp->platform_ctx), transaction_id, authorized_for.tagId, StopTransactionReason::DE_AUTHORIZED));
+            this->sendCallAction(CallAction::STOP_TRANSACTION, StopTransaction(platform_get_energy(connectorId), platform_get_system_time(cp->platform_ctx), transaction_id, authorized_for.tagId, StopTransactionReason::DE_AUTHORIZED));
             deauth();
             transaction_id = -1;
             // Don't go to finishing here: User has to present the tag to unlock the cable.
             break;
         case ConnectorState::NOTIFY_STOP_NC:
-            this->sendCallAction(CallAction::STOP_TRANSACTION, StopTransaction(platform_get_energy(connectorId), platform_get_system_time(ocpp->platform_ctx), transaction_id, authorized_for.tagId, StopTransactionReason::EV_DISCONNECTED));
+            this->sendCallAction(CallAction::STOP_TRANSACTION, StopTransaction(platform_get_energy(connectorId), platform_get_system_time(cp->platform_ctx), transaction_id, authorized_for.tagId, StopTransactionReason::EV_DISCONNECTED));
             deauth();
             transaction_id = -1;
             setState(ConnectorState::IDLE);
@@ -97,7 +97,7 @@ void Connector::sendStatus(StatusNotificationStatus newStatus, StatusNotificatio
     if (last_sent_status == newStatus)
         return;
 
-    this->sendCallAction(CallAction::STATUS_NOTIFICATION, StatusNotification(connectorId, StatusNotificationErrorCode::NO_ERROR, newStatus, info, platform_get_system_time(ocpp->platform_ctx)));
+    this->sendCallAction(CallAction::STATUS_NOTIFICATION, StatusNotification(connectorId, StatusNotificationErrorCode::NO_ERROR, newStatus, info, platform_get_system_time(cp->platform_ctx)));
     last_sent_status = newStatus;
 }
 
@@ -105,7 +105,7 @@ void Connector::sendCallAction(CallAction action, const DynamicJsonDocument &doc
 {
     long id = std::atol(doc[1]);
     this->waiting_for_message_id = id;
-    ocpp->sendCallAction(action, doc);
+    cp->sendCallAction(action, doc);
 }
 
 void Connector::onTagSeen(const char *tag_id) {

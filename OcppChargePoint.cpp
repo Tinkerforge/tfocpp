@@ -1,4 +1,4 @@
-#include "Ocpp.h"
+#include "OcppChargePoint.h"
 
 #include "OcppDefines.h"
 #include "OcppTypes.h"
@@ -22,7 +22,7 @@ Point main controller.
 Connector connectors[NUM_CONNECTORS];
 StatusNotificationStatus last_connector_status[NUM_CONNECTORS];
 
-void Ocpp::tick_power_on() {
+void OcppChargePoint::tick_power_on() {
     if (last_bn_send_ms == 0 && !platform_ws_connected(platform_ctx))
         return;
     if (last_bn_send_ms != 0 && !deadline_elapsed(last_bn_send_ms + 1000 * getIntConfig(ConfigKey::HeartbeatInterval)))
@@ -35,7 +35,7 @@ void Ocpp::tick_power_on() {
     this->sendCallAction(CallAction::BOOT_NOTIFICATION, BootNotification("Warp 2 Charger Pro", "Tinkerforge GmbH", "warp2-X8A"));
 }
 
-void Ocpp::tick_idle() {
+void OcppChargePoint::tick_idle() {
     if (!deadline_elapsed(last_bn_send_ms + 1000 * getIntConfig(ConfigKey::HeartbeatInterval)))
         return;
 
@@ -46,7 +46,7 @@ void Ocpp::tick_idle() {
     this->sendCallAction(CallAction::HEARTBEAT, Heartbeat());
 }
 
-void Ocpp::tick() {
+void OcppChargePoint::tick() {
     switch (state) {
         case OcppState::PowerOn:
         case OcppState::Pending:
@@ -64,7 +64,7 @@ void Ocpp::tick() {
     connection.tick();
 }
 
-void Ocpp::onConnect()
+void OcppChargePoint::onConnect()
 {
     if (state != OcppState::Idle)
         return;
@@ -73,19 +73,19 @@ void Ocpp::onConnect()
         connectors[i].sendStatus(connectors[i].getStatus());
 }
 
-void Ocpp::onDisconnect()
+void OcppChargePoint::onDisconnect()
 {
 
 }
 
-bool Ocpp::sendCallAction(CallAction action, const DynamicJsonDocument &doc)
+bool OcppChargePoint::sendCallAction(CallAction action, const DynamicJsonDocument &doc)
 {
     // Filter messages here
     connection.sendCallAction(action, doc);
     return true;
 }
 
-CallResponse Ocpp::handleAuthorizeResponse(uint32_t messageId, AuthorizeResponseView conf)
+CallResponse OcppChargePoint::handleAuthorizeResponse(uint32_t messageId, AuthorizeResponseView conf)
 {
     IdTagInfo info;
     info.updateFromIdTagInfo(conf.idTagInfo());
@@ -101,7 +101,7 @@ CallResponse Ocpp::handleAuthorizeResponse(uint32_t messageId, AuthorizeResponse
     return CallResponse{CallErrorCode::OK, ""};
 }
 
-CallResponse Ocpp::handleBootNotificationResponse(uint32_t messageId, BootNotificationResponseView conf) {
+CallResponse OcppChargePoint::handleBootNotificationResponse(uint32_t messageId, BootNotificationResponseView conf) {
     if ((state != OcppState::PowerOn) &&
         (state != OcppState::Pending) &&
         (state != OcppState::Rejected))
@@ -139,12 +139,12 @@ CallResponse Ocpp::handleBootNotificationResponse(uint32_t messageId, BootNotifi
     return CallResponse{CallErrorCode::OK, ""};
 }
 
-CallResponse Ocpp::handleChangeAvailability(const char *uid, ChangeAvailabilityView req)
+CallResponse OcppChargePoint::handleChangeAvailability(const char *uid, ChangeAvailabilityView req)
 {
     return CallResponse{CallErrorCode::InternalError, "not implemented yet!"};
 }
 
-CallResponse Ocpp::handleChangeConfiguration(const char *uid, ChangeConfigurationView req)
+CallResponse OcppChargePoint::handleChangeConfiguration(const char *uid, ChangeConfigurationView req)
 {
     size_t key_idx;
     ChangeConfigurationResponseStatus status = ChangeConfigurationResponseStatus::ACCEPTED;
@@ -161,7 +161,7 @@ CallResponse Ocpp::handleChangeConfiguration(const char *uid, ChangeConfiguratio
     return CallResponse{CallErrorCode::OK, ""};
 }
 
-CallResponse Ocpp::handleClearCache(const char *uid, ClearCacheView req)
+CallResponse OcppChargePoint::handleClearCache(const char *uid, ClearCacheView req)
 {
     /* Errata 4.0 3.23:
     In OCPP 1.6, the Cache is not required, but the message: ClearCache.req is required to be implemented. OCPP
@@ -175,7 +175,7 @@ CallResponse Ocpp::handleClearCache(const char *uid, ClearCacheView req)
     return CallResponse{CallErrorCode::OK, ""};
 }
 
-CallResponse Ocpp::handleDataTransfer(const char *uid, DataTransferView req)
+CallResponse OcppChargePoint::handleDataTransfer(const char *uid, DataTransferView req)
 {
     /*
     If the recipient of the request has no implementation for the specific vendorId it SHALL return a status
@@ -186,12 +186,12 @@ CallResponse Ocpp::handleDataTransfer(const char *uid, DataTransferView req)
     return CallResponse{CallErrorCode::OK, ""};
 }
 
-CallResponse Ocpp::handleDataTransferResponse(uint32_t messageId, DataTransferResponseView conf)
+CallResponse OcppChargePoint::handleDataTransferResponse(uint32_t messageId, DataTransferResponseView conf)
 {
     return CallResponse{CallErrorCode::InternalError, "not implemented yet!"};
 }
 
-CallResponse Ocpp::handleGetConfiguration(const char *uid, GetConfigurationView req)
+CallResponse OcppChargePoint::handleGetConfiguration(const char *uid, GetConfigurationView req)
 {
     size_t known_keys = 0;
     size_t scratch_buf_size = 0;
@@ -297,33 +297,33 @@ CallResponse Ocpp::handleGetConfiguration(const char *uid, GetConfigurationView 
     return CallResponse{CallErrorCode::OK, ""};
 }
 
-CallResponse Ocpp::handleHeartbeatResponse(uint32_t messageId, HeartbeatResponseView conf)
+CallResponse OcppChargePoint::handleHeartbeatResponse(uint32_t messageId, HeartbeatResponseView conf)
 {
     platform_set_system_time(platform_ctx, conf.currentTime());
     return CallResponse{CallErrorCode::OK, ""};
 }
 
-CallResponse Ocpp::handleMeterValuesResponse(uint32_t messageId, MeterValuesResponseView conf)
+CallResponse OcppChargePoint::handleMeterValuesResponse(uint32_t messageId, MeterValuesResponseView conf)
 {
     return CallResponse{CallErrorCode::InternalError, "not implemented yet!"};
 }
 
-CallResponse Ocpp::handleRemoteStartTransaction(const char *uid, RemoteStartTransactionView req)
+CallResponse OcppChargePoint::handleRemoteStartTransaction(const char *uid, RemoteStartTransactionView req)
 {
     return CallResponse{CallErrorCode::InternalError, "not implemented yet!"};
 }
 
-CallResponse Ocpp::handleRemoteStopTransaction(const char *uid, RemoteStopTransactionView req)
+CallResponse OcppChargePoint::handleRemoteStopTransaction(const char *uid, RemoteStopTransactionView req)
 {
     return CallResponse{CallErrorCode::InternalError, "not implemented yet!"};
 }
 
-CallResponse Ocpp::handleReset(const char *uid, ResetView req)
+CallResponse OcppChargePoint::handleReset(const char *uid, ResetView req)
 {
     return CallResponse{CallErrorCode::InternalError, "not implemented yet!"};
 }
 
-CallResponse Ocpp::handleStartTransactionResponse(uint32_t messageId, StartTransactionResponseView conf)
+CallResponse OcppChargePoint::handleStartTransactionResponse(uint32_t messageId, StartTransactionResponseView conf)
 {
     IdTagInfo info;
     info.updateFromIdTagInfo(conf.idTagInfo());
@@ -339,22 +339,22 @@ CallResponse Ocpp::handleStartTransactionResponse(uint32_t messageId, StartTrans
     return CallResponse{CallErrorCode::OK, ""};
 }
 
-CallResponse Ocpp::handleStatusNotificationResponse(uint32_t messageId, StatusNotificationResponseView conf)
+CallResponse OcppChargePoint::handleStatusNotificationResponse(uint32_t messageId, StatusNotificationResponseView conf)
 {
     return CallResponse{CallErrorCode::InternalError, "not implemented yet!"};
 }
 
-CallResponse Ocpp::handleStopTransactionResponse(uint32_t messageId, StopTransactionResponseView conf)
+CallResponse OcppChargePoint::handleStopTransactionResponse(uint32_t messageId, StopTransactionResponseView conf)
 {
     return CallResponse{CallErrorCode::InternalError, "not implemented yet!"};
 }
 
-CallResponse Ocpp::handleUnlockConnector(const char *uid, UnlockConnectorView req)
+CallResponse OcppChargePoint::handleUnlockConnector(const char *uid, UnlockConnectorView req)
 {
     return CallResponse{CallErrorCode::InternalError, "not implemented yet!"};
 }
 
-void Ocpp::handleTagSeen(int32_t connectorId, const char *tagId)
+void OcppChargePoint::handleTagSeen(int32_t connectorId, const char *tagId)
 {
     platform_printfln("Seen tag %s at connector %d. State is %d", tagId, connectorId, (int)this->state);
 
@@ -369,12 +369,12 @@ void Ocpp::handleTagSeen(int32_t connectorId, const char *tagId)
     conn.onTagSeen(tagId);
 }
 
-void Ocpp::start(const char *websocket_endpoint_url, const char *charge_point_name_percent_encoded) {
+void OcppChargePoint::start(const char *websocket_endpoint_url, const char *charge_point_name_percent_encoded) {
     platform_ctx = connection.start(websocket_endpoint_url, charge_point_name_percent_encoded, this);
     for(size_t i = 0; i < ARRAY_SIZE(connectors); ++i) {
-        connectors[i].ocpp = this;
+        connectors[i].cp = this;
         connectors[i].connectorId = i + 1;
     }
 
-    platform_register_tag_seen_callback(platform_ctx, [](int32_t connectorId, const char *tagId, void *user_data){((Ocpp*)user_data)->handleTagSeen(connectorId, tagId);}, this);
+    platform_register_tag_seen_callback(platform_ctx, [](int32_t connectorId, const char *tagId, void *user_data){((OcppChargePoint*)user_data)->handleTagSeen(connectorId, tagId);}, this);
 }

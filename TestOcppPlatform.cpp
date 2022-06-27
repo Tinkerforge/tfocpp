@@ -1,6 +1,6 @@
 #include "TestOcppPlatform.h"
 
-#include "Ocpp.h"
+#include "OcppChargePoint.h"
 #include "time.h"
 
 #define URL_PARSER_IMPLEMENTATION
@@ -147,27 +147,27 @@ int32_t platform_get_energy(int32_t connectorId) {
 }
 
 
-Ocpp *ocpp = nullptr;
+OcppChargePoint *cp = nullptr;
 
 void ocpp_start(const char *ws_url, const char *charge_point_name)
 {
-    ocpp = new Ocpp();
-    ocpp->start(ws_url, charge_point_name);
+    cp = new OcppChargePoint();
+    cp->start(ws_url, charge_point_name);
 }
 
 void ocpp_tick()
 {
     mg_mgr_poll(&mgr, 1);
-    ocpp->tick();
+    cp->tick();
 }
 
 void ocpp_stop() {
-    ocpp->stop();
+    cp->stop();
 }
 
 void ocpp_destroy() {
     platform_destroy(nullptr);
-    delete ocpp;
-    ocpp = nullptr;
+    delete cp;
+    cp = nullptr;
 }
 

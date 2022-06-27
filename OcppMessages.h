@@ -2,7 +2,7 @@
 
 #include "OcppTypes.h"
 
-class Ocpp;
+class OcppChargePoint;
 
 #define OCPP_INTEGER_NOT_PASSED INT32_MAX
 #define OCPP_DATETIME_NOT_PASSED 0
@@ -862,7 +862,7 @@ CallResponse parseStopTransactionResponse(JsonObject obj);
 
 CallResponse parseUnlockConnector(JsonObject obj);
 
-CallResponse callHandler(const char *uid, const char *action_string, JsonObject obj, Ocpp *ocpp);
+CallResponse callHandler(const char *uid, const char *action_string, JsonObject obj, OcppChargePoint *cp);
 extern const char *CallActionStrings[];
 
 enum class CallAction {
@@ -924,7 +924,7 @@ enum class CallAction {
     TRIGGER_MESSAGE
 };
 
-CallResponse callResultHandler(uint32_t message_id, CallAction resultTo, JsonObject obj, Ocpp *ocpp);
+CallResponse callResultHandler(uint32_t message_id, CallAction resultTo, JsonObject obj, OcppChargePoint *cp);
 
 
 struct IdTagInfo {

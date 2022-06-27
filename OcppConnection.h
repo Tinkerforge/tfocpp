@@ -8,7 +8,7 @@
 #include "OcppMessages.h"
 #include "OcppPlatform.h"
 
-class Ocpp;
+class OcppChargePoint;
 
 class QueueEntry {
 public:
@@ -35,8 +35,8 @@ public:
 
 class OcppConnection {
 public:
-    void* start(const char *websocket_endpoint_url, const char *charge_point_name_percent_encoded, Ocpp *ocpp_handle) {
-        this->ocpp = ocpp_handle;
+    void* start(const char *websocket_endpoint_url, const char *charge_point_name_percent_encoded, OcppChargePoint *ocpp_handle) {
+        this->cp = ocpp_handle;
         std::string ws_url;
         ws_url.reserve(strlen(websocket_endpoint_url) + 1 + strlen(charge_point_name_percent_encoded));
         ws_url += websocket_endpoint_url;
@@ -61,7 +61,7 @@ public:
     bool sendCallResponse(const DynamicJsonDocument &doc);
 
     void *platform_ctx;
-    Ocpp *ocpp;
+    OcppChargePoint *cp;
 
     uint32_t last_call_message_id = 0;
     CallAction last_call_action;

@@ -39,7 +39,7 @@ enum class ConnectorState {
     FINISHING
 };
 
-class Ocpp;
+class OcppChargePoint;
 
 struct Connector {
     /*For ConnectorId 0, only a limited set is applicable, namely: Available, Unavailable and Faulted.
@@ -57,7 +57,7 @@ struct Connector {
 
     uint32_t waiting_for_message_id = 0;
 
-    Ocpp *ocpp = nullptr;
+    OcppChargePoint *cp = nullptr;
 
     void deauth();
 

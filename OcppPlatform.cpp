@@ -1,6 +1,6 @@
 #include "TestOcppPlatform.h"
 
-#include "Ocpp.h"
+#include "OcppChargePoint.h"
 #include "time.h"
 
 #define URL_PARSER_IMPLEMENTATION
@@ -189,9 +189,9 @@ void platform_set_charging_current(int32_t connectorId, uint32_t milliAmps)
 
 
 int main(int argc, char **argv) {
-    Ocpp ocpp;
+    OcppChargePoint cp;
 
-    ocpp.start("ws://localhost:8180/steve/websocket/CentralSystemService", "CP_1");
+    cp.start("ws://localhost:8180/steve/websocket/CentralSystemService", "CP_1");
 
     addr.sin_family = AF_INET;
     addr.sin_addr.s_addr = inet_addr("127.0.0.1");
@@ -205,7 +205,7 @@ int main(int argc, char **argv) {
     char buf[sizeof(PlatformResponse)] = {0};
 
     while(true) {
-        ocpp.tick();
+        cp.tick();
         mg_mgr_poll(&mgr, 1);
         for(int i = 0; i < 10; ++i)
             usleep(100);
