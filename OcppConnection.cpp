@@ -8,7 +8,7 @@ char send_buf[4096];
 void OcppConnection::handleMessage(char *message, size_t message_len)
 {
     platform_printfln("Received message %.*s", message_len > 40 ? 40 : message_len, message);
-    StaticJsonDocument<4096> doc;
+    DynamicJsonDocument doc{4096};
     // TODO: we should use
     // https://arduinojson.org/v6/how-to/deserialize-a-very-large-document/#deserialization-in-chunks
     // to parse each member in the top level array by its own.
@@ -20,6 +20,7 @@ void OcppConnection::handleMessage(char *message, size_t message_len)
         platform_printfln("deserializeJson() failed: %s", error.c_str());
         return;
     }
+    doc.shrinkToFit();
 
     if (!doc.is<JsonArray>()) {
         platform_printfln("deserialized JSON is not an array at top level");
