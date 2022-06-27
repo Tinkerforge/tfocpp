@@ -126,7 +126,9 @@ void OcppConnection::handleMessage(char *message, size_t message_len)
             return;
         }
 
-        handleCallError(doc[2], doc[3], doc[4]);
+        size_t cec;
+        lookup_key(&cec, doc[2], CallErrorCodeStrings, (size_t)CallErrorCode::NONE);
+        handleCallError((CallErrorCode)cec, doc[3], doc[4]);
         return;
     }
 }

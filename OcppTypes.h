@@ -9,7 +9,7 @@
 
 extern const char *CallErrorCodeStrings[];
 
-enum CallErrorCode {
+enum class CallErrorCode {
     NotImplemented = 0, // handled when parsing the outer call
     NotSupported, // handled when parsing the outer call
     InternalError, // ?
@@ -20,7 +20,8 @@ enum CallErrorCode {
     OccurenceConstraintViolation, // member is there, but cardinality is wrong
     TypeConstraintViolation, // correct number of members, but wrong type
     GenericError,
-    OK
+    OK,
+    NONE
 };
 
 struct CallResponse {
