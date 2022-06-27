@@ -13,15 +13,20 @@ const char * ConnectorState_Strings[] = {
     "AUTHORIZING_FOR_START_C",
     "AUTHORIZING_FOR_START_NC",
     "WAITING_FOR_CABLE",
-    "STARTING",
+    "NOTIFY_START",
     "TRANSACTION",
     "AUTHORIZING_FOR_STOP",
-    "STOPPING",
-    "STOPPING_NT",
+    "NOTIFY_STOP",
+    "NOTIFY_STOP_NT",
+    "NOTIFY_STOP_NC",
     "FINISHING",
 };
 
 void Connector::setState(ConnectorState newState) {
+    platform_printfln("%s -> %s", ConnectorState_Strings[(int)state], ConnectorState_Strings[(int)newState]);
+    state = newState;
+    this->sendStatus(getStatus());
+
     switch (newState) {
         case ConnectorState::IDLE:
             platform_unlock_cable(connectorId);
@@ -48,7 +53,7 @@ void Connector::setState(ConnectorState newState) {
             break;
         case ConnectorState::WAITING_FOR_CABLE:
             break;
-        case ConnectorState::STARTING:
+        case ConnectorState::NOTIFY_START:
             tag_deadline = 0;
             cable_deadline = 0;
 
@@ -56,31 +61,36 @@ void Connector::setState(ConnectorState newState) {
             platform_lock_cable(connectorId);
             platform_set_charging_current(connectorId, OCPP_PLATFORM_MAX_CHARGING_CURRENT);
             this->sendCallAction(CallAction::START_TRANSACTION, StartTransaction(connectorId, authorized_for.tagId, platform_get_energy(connectorId), platform_get_system_time(ocpp->platform_ctx)));
+            setState(ConnectorState::TRANSACTION);
             break;
         case ConnectorState::TRANSACTION:
             break;
         case ConnectorState::AUTHORIZING_FOR_STOP:
             break;
-        case ConnectorState::STOPPING:
+        case ConnectorState::NOTIFY_STOP:
             // TODO: this is guestimated without reading the spec. Figure out stoptransactionreason etc.
             this->sendCallAction(CallAction::STOP_TRANSACTION, StopTransaction(platform_get_energy(connectorId), platform_get_system_time(ocpp->platform_ctx), transaction_id, authorized_for.tagId));
             deauth();
             transaction_id = -1;
+            setState(ConnectorState::FINISHING);
             break;
-        case ConnectorState::STOPPING_NT:
+        case ConnectorState::NOTIFY_STOP_NT:
             this->sendCallAction(CallAction::STOP_TRANSACTION, StopTransaction(platform_get_energy(connectorId), platform_get_system_time(ocpp->platform_ctx), transaction_id, authorized_for.tagId, StopTransactionReason::DE_AUTHORIZED));
             deauth();
             transaction_id = -1;
+            // Don't go to finishing here: User has to present the tag to unlock the cable.
+            break;
+        case ConnectorState::NOTIFY_STOP_NC:
+            this->sendCallAction(CallAction::STOP_TRANSACTION, StopTransaction(platform_get_energy(connectorId), platform_get_system_time(ocpp->platform_ctx), transaction_id, authorized_for.tagId, StopTransactionReason::EV_DISCONNECTED));
+            deauth();
+            transaction_id = -1;
+            setState(ConnectorState::IDLE);
             break;
         case ConnectorState::FINISHING:
+            tag_deadline = 0;
             platform_unlock_cable(connectorId);
             break;
     }
-    platform_printfln("%s -> %s", ConnectorState_Strings[(int)state], ConnectorState_Strings[(int)newState]);
-
-    state = newState;
-
-    this->sendStatus(getStatus());
 }
 
 void Connector::sendStatus(StatusNotificationStatus newStatus, StatusNotificationErrorCode error, const char info[51]) {
@@ -101,6 +111,7 @@ void Connector::sendCallAction(CallAction action, const DynamicJsonDocument &doc
 void Connector::onTagSeen(const char *tag_id) {
     switch (state) {
         case ConnectorState::WAITING_FOR_TAG:
+        case ConnectorState::FINISHING:
             setState(ConnectorState::AUTHORIZING_FOR_START_C);
             authorized_for.updateTagId(tag_id);
             this->sendCallAction(CallAction::AUTHORIZE, Authorize(tag_id));
@@ -118,7 +129,7 @@ void Connector::onTagSeen(const char *tag_id) {
             from the identifier that started the transaction.
             */
             if (authorized_for.is_same_tag(tag_id)) {
-                setState(ConnectorState::STOPPING);
+                setState(ConnectorState::NOTIFY_STOP);
                 break;
             }
 
@@ -126,7 +137,7 @@ void Connector::onTagSeen(const char *tag_id) {
             authorized_for.updateTagId(tag_id);
             this->sendCallAction(CallAction::AUTHORIZE, Authorize(tag_id));
             break;
-        case ConnectorState::STOPPING_NT:
+        case ConnectorState::NOTIFY_STOP_NT:
             if (authorized_for.is_same_tag(tag_id)) {
                 setState(ConnectorState::FINISHING);
                 break;
@@ -156,7 +167,7 @@ void Connector::onAuthorizeConf(IdTagInfo info) {
     switch (state) {
         case ConnectorState::AUTHORIZING_FOR_START_C:
             if (info.status == ResponseIdTagInfoEntriesStatus::ACCEPTED) {
-                setState(ConnectorState::STARTING);
+                setState(ConnectorState::NOTIFY_START);
                 return;
             }
 
@@ -172,7 +183,7 @@ void Connector::onAuthorizeConf(IdTagInfo info) {
             return;
         case ConnectorState::AUTHORIZING_FOR_STOP:
             if (info.status == ResponseIdTagInfoEntriesStatus::ACCEPTED) {
-                setState(ConnectorState::STOPPING);
+                setState(ConnectorState::NOTIFY_STOP);
                 return;
             }
 
@@ -184,19 +195,18 @@ void Connector::onAuthorizeConf(IdTagInfo info) {
 }
 
 void Connector::onStartTransactionConf(IdTagInfo info, int32_t transaction_id) {
-    if (state != ConnectorState::STARTING && state != ConnectorState::TRANSACTION)
+    if (state != ConnectorState::NOTIFY_START && state != ConnectorState::TRANSACTION)
         return;
 
     authorized_for.updateFromIdTagInfo(info);
 
     if (info.status == ResponseIdTagInfoEntriesStatus::ACCEPTED) {
         this->transaction_id = transaction_id;
-        setState(ConnectorState::TRANSACTION);
         return;
     }
 
     if (getBoolConfig(ConfigKey::StopTransactionOnInvalidId)) {
-        setState(ConnectorState::STOPPING_NT);
+        setState(ConnectorState::NOTIFY_STOP_NT);
         return;
     }
 
@@ -216,6 +226,7 @@ StatusNotificationStatus Connector::getStatus() {
 
     switch (state) {
         case ConnectorState::IDLE:
+        case ConnectorState::NOTIFY_STOP_NC:
             return StatusNotificationStatus::AVAILABLE;
 
         case ConnectorState::WAITING_FOR_TAG:
@@ -224,7 +235,7 @@ StatusNotificationStatus Connector::getStatus() {
         case ConnectorState::WAITING_FOR_CABLE:
             return StatusNotificationStatus::PREPARING;
 
-        case ConnectorState::STARTING:
+        case ConnectorState::NOTIFY_START:
         case ConnectorState::TRANSACTION:
         case ConnectorState::AUTHORIZING_FOR_STOP:
             switch (evse_state) {
@@ -240,8 +251,8 @@ StatusNotificationStatus Connector::getStatus() {
                     return StatusNotificationStatus::FAULTED;
             }
 
-        case ConnectorState::STOPPING:
-        case ConnectorState::STOPPING_NT:
+        case ConnectorState::NOTIFY_STOP:
+        case ConnectorState::NOTIFY_STOP_NT:
         case ConnectorState::FINISHING:
             return StatusNotificationStatus::FINISHING;
     }
@@ -295,7 +306,7 @@ void Connector::tick() {
                 case EVSEState::NotConnected:
                     break;
                 case EVSEState::Connected:
-                    setState(ConnectorState::STARTING);
+                    setState(ConnectorState::NOTIFY_START);
                     break;
                 default:
                     platform_printfln("Unexpected EVSEState %d while Connector is in state %d", (int)evse_state, (int)state);
@@ -303,11 +314,16 @@ void Connector::tick() {
             }
             break;
 
-        case ConnectorState::STARTING:
         case ConnectorState::TRANSACTION:
+            if (evse_state == EVSEState::NotConnected)
+                setState(ConnectorState::NOTIFY_STOP_NC);
+            break;
+
+        case ConnectorState::NOTIFY_START:
+
         case ConnectorState::AUTHORIZING_FOR_STOP:
-        case ConnectorState::STOPPING:
-        case ConnectorState::STOPPING_NT:
+        case ConnectorState::NOTIFY_STOP:
+        case ConnectorState::NOTIFY_STOP_NT:
         case ConnectorState::FINISHING:
             if (evse_state == EVSEState::NotConnected)
                 setState(ConnectorState::IDLE);

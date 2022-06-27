@@ -6,7 +6,10 @@ digraph {
     subgraph clusteridle {
         label="Available"
         IDLE;
-    }    
+    }
+
+    NOTIFY_STOP_NC;
+
     subgraph clusterpreparing{
         label="Preparing"
         WAITING_FOR_TAG;
@@ -14,7 +17,7 @@ digraph {
         AUTHORIZING_FOR_START_C;
         WAITING_FOR_CABLE;
     };
-    STARTING;
+    NOTIFY_START;
 
     subgraph clustertransaction {
         bgcolor=gray90;
@@ -40,29 +43,29 @@ digraph {
 
     subgraph clusterfinishing {
         label="Finishing"
-        STOPPING;
-        STOPPING_NT [color=gray70, fontcolor=gray70];
+        NOTIFY_STOP;
+        NOTIFY_STOP_NT [color=gray70, fontcolor=gray70];
         FINISHING;
     }
 
     IDLE -> AUTHORIZING_FOR_START_NC [label="tag seen (A2)"]
     AUTHORIZING_FOR_START_NC -> WAITING_FOR_CABLE [label="tag authorized", weight=100]
     AUTHORIZING_FOR_START_NC -> AUTHORIZING_FOR_START_C [label="cable plugged in"]
-    WAITING_FOR_CABLE -> STARTING [label="cable plugged in"]
+    WAITING_FOR_CABLE -> NOTIFY_START [label="cable plugged in"]
 
     IDLE -> WAITING_FOR_TAG [label="cable\nplugged\nin (A2)"]
     WAITING_FOR_TAG -> AUTHORIZING_FOR_START_C [label="tag seen"]
-    AUTHORIZING_FOR_START_C -> STARTING [label="tag authorized"]
+    AUTHORIZING_FOR_START_C -> NOTIFY_START [label="tag authorized"]
 
     WAITING_FOR_TAG -> FINISHING [label="Tag timeout (B6)", weight=0, color=gray70, fontcolor=gray70]
     WAITING_FOR_CABLE -> IDLE [label="Cable\ntimeout\n(B1)", weight=0, color=gray70, fontcolor=gray70]
     WAITING_FOR_CABLE -> IDLE [label="same tag seen (B1)", weight=0, color=gray70, fontcolor=gray70]
     WAITING_FOR_TAG -> IDLE [label="Cable\nunplugged\n(B1)", weight=0, color=gray70, fontcolor=gray70]
 
-    STARTING -> SUSPENDED_EV [label="starttransaction\ndone (B3,B4,B5)", lhead=clustertransaction, weight=100]
+    NOTIFY_START -> SUSPENDED_EV [label="(B3,B4,B5)", lhead=clustertransaction, weight=100]
 
-    CHARGING -> STOPPING_NT [label="starttransaction\nnot accepted\nStopTxnOnInvalidId true", ltail=clustertransaction, weight=0, color=gray70, fontcolor=gray70]
-    STOPPING_NT -> FINISHING [label="same tag seen", weight=0, color=gray70, fontcolor=gray70]
+    CHARGING -> NOTIFY_STOP_NT [label="starttransaction\nnot accepted\nStopTxnOnInvalidId true", ltail=clustertransaction, weight=0, color=gray70, fontcolor=gray70]
+    NOTIFY_STOP_NT -> FINISHING [label="same tag seen", weight=0, color=gray70, fontcolor=gray70]
 
     //CHARGING -> SUSPENDED_EVSE
     //CHARGING -> SUSPENDED_EV
@@ -72,14 +75,15 @@ digraph {
     //SUSPENDED_EVSE -> CHARGING
 
     SUSPENDED_EV -> AUTHORIZING_FOR_STOP [label="other tag seen", ltail=clustertransaction, weight=100]
-    SUSPENDED_EVSE -> STOPPING [label="same tag seen", ltail=clustertransaction]
-    AUTHORIZING_FOR_STOP -> STOPPING [label="other tag\nauthorized"]
-    STOPPING -> FINISHING [label="stoptransaction\ndone (C6,D6,E6)", weight=100]
+    SUSPENDED_EVSE -> NOTIFY_STOP [label="same tag seen", ltail=clustertransaction]
+    AUTHORIZING_FOR_STOP -> NOTIFY_STOP [label="other tag\nauthorized"]
+    NOTIFY_STOP -> FINISHING [label="(C6,D6,E6)", weight=100]
 
     FINISHING -> IDLE [label="cable\nunplugged (F1)"]
     FINISHING -> AUTHORIZING_FOR_START_C [label="tag seen (F2)", weight=0]
 
-    CHARGING -> IDLE [label="cable\nunplugged (C1)", ltail=clustertransaction, weight=0]
+    CHARGING -> NOTIFY_STOP_NC [label="cable\nunplugged (C1)", ltail=clustertransaction]
+    NOTIFY_STOP_NC -> IDLE [weight=0]
 }
 
 // A3, A4, A5 are not used as we expect the charge point to have some kind of auth means.

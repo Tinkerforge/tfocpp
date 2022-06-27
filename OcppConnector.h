@@ -30,11 +30,12 @@ enum class ConnectorState {
     AUTHORIZING_FOR_START_C,
     AUTHORIZING_FOR_START_NC,
     WAITING_FOR_CABLE,
-    STARTING,
+    NOTIFY_START,
     TRANSACTION, //This represents charging, suspended EVSE and suspended EV, as those are not controlled by us
     AUTHORIZING_FOR_STOP,
-    STOPPING,
-    STOPPING_NT,
+    NOTIFY_STOP,
+    NOTIFY_STOP_NT,
+    NOTIFY_STOP_NC,
     FINISHING
 };
 
