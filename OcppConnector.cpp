@@ -29,6 +29,7 @@ void Connector::setState(ConnectorState newState) {
 
     switch (newState) {
         case ConnectorState::IDLE:
+            platform_set_charging_current(connectorId, 0);
             platform_unlock_cable(connectorId);
             deauth();
             tag_deadline = 0;
@@ -88,6 +89,7 @@ void Connector::setState(ConnectorState newState) {
             break;
         case ConnectorState::FINISHING:
             tag_deadline = 0;
+            platform_set_charging_current(connectorId, 0);
             platform_unlock_cable(connectorId);
             break;
     }
