@@ -1,3 +1,5 @@
+#pragma clang diagnostic ignored "-Weverything"
+
 /*
  Simple, STB-style, parser for URL:s as specified by RFC1738 ( http://www.ietf.org/rfc/rfc1738.txt )
 
@@ -271,7 +273,7 @@ static char* parse_url_unescape_percent_encoding( char* str )
 			++read;
 			if(!parse_url_is_hex_char(*read))
 				return 0x0;
-			char v1 = parse_url_hex_char_value(*read); 
+			char v1 = parse_url_hex_char_value(*read);
 
 			++read;
 			if(!parse_url_is_hex_char(*read))
