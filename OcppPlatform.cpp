@@ -1,4 +1,4 @@
-#include "TestOcppPlatform.h"
+#include "OcppPlatform.h"
 
 #include "OcppChargePoint.h"
 #include "time.h"
