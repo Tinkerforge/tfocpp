@@ -38,11 +38,11 @@ struct OcppConfiguration {
             const char **allowed_values;
             size_t allowed_values_len;
 
-            // is every value prefixed with the index? See ConnectorPhaseRotation
-            bool prefix_index;
-
             // maximum number of allowed values. this is what gets reported as for example ConnectorPhaseRotationMaxLength
             size_t max_num_allowed_values;
+
+            // is every value prefixed with the index? See ConnectorPhaseRotation
+            bool prefix_index;
         } csl;
     } value;
 

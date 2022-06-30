@@ -30,6 +30,8 @@ struct CallResponse {
     //JsonObject details;
 };
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wpadded"
 template<typename T>
 struct Opt {
 public:
@@ -52,6 +54,8 @@ private:
     T val;
     bool have_val;
 };
+
+#pragma clang diagnostic pop
 
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
 

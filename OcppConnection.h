@@ -63,9 +63,6 @@ public:
     void *platform_ctx;
     OcppChargePoint *cp;
 
-    uint32_t last_call_message_id = 0;
-    CallAction last_call_action;
-
     QueueEntry message_in_flight;
 
     std::deque<QueueEntry> messages;

@@ -7,7 +7,7 @@ extern "C" {
 #include "libiso8601/iso8601.h"
 }
 
-bool iso_string_to_unix_timestamp(const char *iso_string, time_t *t) {
+static bool iso_string_to_unix_timestamp(const char *iso_string, time_t *t) {
     iso8601_time time;
     if (iso8601_parse(iso_string, &time) != 0) {
         return false;
@@ -16,16 +16,16 @@ bool iso_string_to_unix_timestamp(const char *iso_string, time_t *t) {
     return true;
 }
 
-void unix_timestamp_to_iso_string(time_t timestamp, JsonObject payload, const char *key) {
+static void unix_timestamp_to_iso_string(time_t timestamp, JsonObject payload, const char *key) {
     char buf[OCPP_ISO_8601_MAX_LEN] = {0};
     const tm *t = gmtime(&timestamp);
 
-    strftime(buf, ARRAY_SIZE(buf), "%FT%TZ", t),
+    strftime(buf, ARRAY_SIZE(buf), "%FT%TZ", t);
 
     payload[key] = buf;
 }
 
-uint32_t next_call_id = 0;
+static uint32_t next_call_id = 0;
 
 const char *ChangeAvailabilityResponseStatusStrings[] = {
     "Accepted",
@@ -489,7 +489,6 @@ DynamicJsonDocument Heartbeat() {
     result.add((int32_t)OcppRpcMessageType::CALL);
     result.add(std::to_string(next_call_id));
     result.add("Heartbeat");
-    JsonObject payload = result.createNestedObject();
 
     result.shrinkToFit();
     return result;
@@ -2151,21 +2150,11 @@ const char *CallActionStrings[] = {
     "TriggerMessage"
 };
 CallResponse callHandler(const char *uid, const char *action_string, JsonObject obj, OcppChargePoint *cp) {
-    CallAction action;
-    {
-        bool found = false;
-        for(size_t i = 0; i < ARRAY_SIZE(CallActionStrings); ++i) {
-            if (strcmp(action_string, CallActionStrings[i]) != 0)
-                continue;
+    size_t action_idx = 0;
+    if (!lookup_key(&action_idx, action_string, CallActionStrings, ARRAY_SIZE(CallActionStrings)))
+        return CallResponse{CallErrorCode::NotImplemented, "unknown action passed"};
 
-            action = (CallAction)i;
-            found = true;
-            break;
-        }
-
-        if (!found)
-            return CallResponse{CallErrorCode::NotImplemented, "unknown action passed"};
-    }
+    CallAction action = (CallAction) action_idx;
 
     switch(action) {
         case CallAction::CHANGE_AVAILABILITY: {
@@ -2240,7 +2229,53 @@ CallResponse callHandler(const char *uid, const char *action_string, JsonObject 
             return cp->handleUnlockConnector(uid, UnlockConnectorView{obj});
         }
 
-        default:
+        case CallAction::AUTHORIZE:
+        case CallAction::BOOT_NOTIFICATION:
+        case CallAction::CHANGE_AVAILABILITY_RESPONSE:
+        case CallAction::CHANGE_CONFIGURATION_RESPONSE:
+        case CallAction::CLEAR_CACHE_RESPONSE:
+        case CallAction::GET_CONFIGURATION_RESPONSE:
+        case CallAction::HEARTBEAT:
+        case CallAction::METER_VALUES:
+        case CallAction::REMOTE_START_TRANSACTION_RESPONSE:
+        case CallAction::REMOTE_STOP_TRANSACTION_RESPONSE:
+        case CallAction::RESET_RESPONSE:
+        case CallAction::START_TRANSACTION:
+        case CallAction::STATUS_NOTIFICATION:
+        case CallAction::STOP_TRANSACTION:
+        case CallAction::UNLOCK_CONNECTOR_RESPONSE:
+        case CallAction::AUTHORIZE_RESPONSE:
+        case CallAction::BOOT_NOTIFICATION_RESPONSE:
+        case CallAction::DATA_TRANSFER_RESPONSE:
+        case CallAction::HEARTBEAT_RESPONSE:
+        case CallAction::METER_VALUES_RESPONSE:
+        case CallAction::START_TRANSACTION_RESPONSE:
+        case CallAction::STATUS_NOTIFICATION_RESPONSE:
+        case CallAction::STOP_TRANSACTION_RESPONSE:
+        case CallAction::GET_DIAGNOSTICS_RESPONSE:
+        case CallAction::DIAGNOSTICS_STATUS_NOTIFICATION:
+        case CallAction::FIRMWARE_STATUS_NOTIFICATION:
+        case CallAction::UPDATE_FIRMWARE_RESPONSE:
+        case CallAction::GET_DIAGNOSTICS:
+        case CallAction::DIAGNOSTICS_STATUS_NOTIFICATION_RESPONSE:
+        case CallAction::FIRMWARE_STATUS_NOTIFICATION_RESPONSE:
+        case CallAction::UPDATE_FIRMWARE:
+        case CallAction::GET_LOCAL_LIST_VERSION_RESPONSE:
+        case CallAction::SEND_LOCAL_LIST_RESPONSE:
+        case CallAction::GET_LOCAL_LIST_VERSION:
+        case CallAction::SEND_LOCAL_LIST:
+        case CallAction::CANCEL_RESERVATION_RESPONSE:
+        case CallAction::RESERVE_NOW_RESPONSE:
+        case CallAction::CANCEL_RESERVATION:
+        case CallAction::RESERVE_NOW:
+        case CallAction::CLEAR_CHARGING_PROFILE_RESPONSE:
+        case CallAction::GET_COMPOSITE_SCHEDULE_RESPONSE:
+        case CallAction::SET_CHARGING_PROFILE_RESPONSE:
+        case CallAction::CLEAR_CHARGING_PROFILE:
+        case CallAction::GET_COMPOSITE_SCHEDULE:
+        case CallAction::SET_CHARGING_PROFILE:
+        case CallAction::TRIGGER_MESSAGE_RESPONSE:
+        case CallAction::TRIGGER_MESSAGE:
             return CallResponse{CallErrorCode::NotSupported, "action not supported"};
     }
 }
@@ -2312,7 +2347,54 @@ CallResponse callResultHandler(uint32_t message_id, CallAction resultTo, JsonObj
             return cp->handleStopTransactionResponse(message_id, StopTransactionResponseView{obj});
         }
 
-        default:
+        case CallAction::CHANGE_AVAILABILITY_RESPONSE:
+        case CallAction::CHANGE_CONFIGURATION_RESPONSE:
+        case CallAction::CLEAR_CACHE_RESPONSE:
+        case CallAction::GET_CONFIGURATION_RESPONSE:
+        case CallAction::REMOTE_START_TRANSACTION_RESPONSE:
+        case CallAction::REMOTE_STOP_TRANSACTION_RESPONSE:
+        case CallAction::RESET_RESPONSE:
+        case CallAction::UNLOCK_CONNECTOR_RESPONSE:
+        case CallAction::AUTHORIZE_RESPONSE:
+        case CallAction::BOOT_NOTIFICATION_RESPONSE:
+        case CallAction::CHANGE_AVAILABILITY:
+        case CallAction::CHANGE_CONFIGURATION:
+        case CallAction::CLEAR_CACHE:
+        case CallAction::DATA_TRANSFER_RESPONSE:
+        case CallAction::GET_CONFIGURATION:
+        case CallAction::HEARTBEAT_RESPONSE:
+        case CallAction::METER_VALUES_RESPONSE:
+        case CallAction::REMOTE_START_TRANSACTION:
+        case CallAction::REMOTE_STOP_TRANSACTION:
+        case CallAction::RESET:
+        case CallAction::START_TRANSACTION_RESPONSE:
+        case CallAction::STATUS_NOTIFICATION_RESPONSE:
+        case CallAction::STOP_TRANSACTION_RESPONSE:
+        case CallAction::UNLOCK_CONNECTOR:
+        case CallAction::GET_DIAGNOSTICS_RESPONSE:
+        case CallAction::DIAGNOSTICS_STATUS_NOTIFICATION:
+        case CallAction::FIRMWARE_STATUS_NOTIFICATION:
+        case CallAction::UPDATE_FIRMWARE_RESPONSE:
+        case CallAction::GET_DIAGNOSTICS:
+        case CallAction::DIAGNOSTICS_STATUS_NOTIFICATION_RESPONSE:
+        case CallAction::FIRMWARE_STATUS_NOTIFICATION_RESPONSE:
+        case CallAction::UPDATE_FIRMWARE:
+        case CallAction::GET_LOCAL_LIST_VERSION_RESPONSE:
+        case CallAction::SEND_LOCAL_LIST_RESPONSE:
+        case CallAction::GET_LOCAL_LIST_VERSION:
+        case CallAction::SEND_LOCAL_LIST:
+        case CallAction::CANCEL_RESERVATION_RESPONSE:
+        case CallAction::RESERVE_NOW_RESPONSE:
+        case CallAction::CANCEL_RESERVATION:
+        case CallAction::RESERVE_NOW:
+        case CallAction::CLEAR_CHARGING_PROFILE_RESPONSE:
+        case CallAction::GET_COMPOSITE_SCHEDULE_RESPONSE:
+        case CallAction::SET_CHARGING_PROFILE_RESPONSE:
+        case CallAction::CLEAR_CHARGING_PROFILE:
+        case CallAction::GET_COMPOSITE_SCHEDULE:
+        case CallAction::SET_CHARGING_PROFILE:
+        case CallAction::TRIGGER_MESSAGE_RESPONSE:
+        case CallAction::TRIGGER_MESSAGE:
             return CallResponse{CallErrorCode::NotSupported, "action not supported"};
     }
 }

@@ -11,13 +11,29 @@ OcppConfiguration OcppConfiguration::integer(int32_t value,
                                              bool requires_reboot,
                                              int32_t min_,
                                              int32_t max_) {
-    return OcppConfiguration{OcppConfigurationValueType::Integer, {.integer = {value,min_, max_}}, readonly, requires_reboot};
+    // designated initializers are a C++20 extension, so we have to do this manually.
+    OcppConfiguration result;
+    result.type = OcppConfigurationValueType::Integer;
+    result.value.integer.i = value;
+    result.value.integer.min_ = min_;
+    result.value.integer.max_ = max_;
+    result.readonly = readonly;
+    result.requires_reboot = requires_reboot;
+
+    return result;
 }
 
 OcppConfiguration OcppConfiguration::boolean(bool value,
                           bool readonly,
                           bool requires_reboot) {
-    return OcppConfiguration{OcppConfigurationValueType::Boolean, {.boolean = {value}}, readonly, requires_reboot};
+    // designated initializers are a C++20 extension, so we have to do this manually.
+    OcppConfiguration result;
+    result.type = OcppConfigurationValueType::Boolean;
+    result.value.boolean.b = value;
+    result.readonly = readonly;
+    result.requires_reboot = requires_reboot;
+
+    return result;
 }
 
 OcppConfiguration OcppConfiguration::csl(const char *value,
@@ -30,7 +46,18 @@ OcppConfiguration OcppConfiguration::csl(const char *value,
                                  bool prefix_index) {
     size_t len = sizeof(char) * max_len;
 
-    auto result = OcppConfiguration{OcppConfigurationValueType::CSL, {.csl = {(char *)malloc(len), max_len, (size_t*)malloc(sizeof(size_t) * max_elements), 0, allowed_values, allowed_values_len, prefix_index, max_elements}}, readonly, requires_reboot};
+    OcppConfiguration result;
+    result.type = OcppConfigurationValueType::CSL;
+    result.value.csl.c = (char *)malloc(len);
+    result.value.csl.len = max_len;
+    result.value.csl.parsed = (size_t*)malloc(sizeof(size_t) * max_elements);
+    result.value.csl.parsed_len = 0;
+    result.value.csl.allowed_values = allowed_values;
+    result.value.csl.allowed_values_len = allowed_values_len;
+    result.value.csl.prefix_index = prefix_index;
+    result.value.csl.max_num_allowed_values = max_elements;
+    result.readonly = readonly;
+    result.requires_reboot = requires_reboot;
 
     memset(result.value.csl.c, 0, len);
     strncpy(result.value.csl.c, value, len);
@@ -56,7 +83,6 @@ ChangeConfigurationResponseStatus OcppConfiguration::setValue(const char *newVal
                 value.integer.i = parsed;
                 return requires_reboot ? ChangeConfigurationResponseStatus::REBOOT_REQUIRED : ChangeConfigurationResponseStatus::ACCEPTED;
             }
-            break;
         case OcppConfigurationValueType::Boolean: {
                 StaticJsonDocument<10> doc;
                 if (deserializeJson(doc, newValue) != DeserializationError::Ok || !doc.is<bool>())
@@ -65,7 +91,6 @@ ChangeConfigurationResponseStatus OcppConfiguration::setValue(const char *newVal
                 value.boolean.b = doc.as<bool>();
                 return requires_reboot ? ChangeConfigurationResponseStatus::REBOOT_REQUIRED : ChangeConfigurationResponseStatus::ACCEPTED;
             }
-            break;
         case OcppConfigurationValueType::CSL: {
                 size_t len = strlen(newValue);
 
@@ -104,10 +129,10 @@ ChangeConfigurationResponseStatus OcppConfiguration::setValue(const char *newVal
                             if (!opt.is_set())
                                 return ChangeConfigurationResponseStatus::REJECTED;
 
-                            if (opt.get() < 0 || opt.get() >= value.csl.allowed_values_len)
+                            if (opt.get() < 0 || (size_t)opt.get() >= value.csl.allowed_values_len)
                                 return ChangeConfigurationResponseStatus::REJECTED;
 
-                            next_parsed_buf_insert = opt.get();
+                            next_parsed_buf_insert = (size_t)opt.get();
                             token += strlen(num) + 1; // Skip over number and .
                             num[strlen(num)] = '.'; // Reinsert . so that the next strtok_r call does not trip over the null terminator.
                         }
@@ -138,12 +163,11 @@ ChangeConfigurationResponseStatus OcppConfiguration::setValue(const char *newVal
                 value.csl.parsed_len = new_parsed_len;
                 return requires_reboot ? ChangeConfigurationResponseStatus::REBOOT_REQUIRED : ChangeConfigurationResponseStatus::ACCEPTED;
             }
-            break;
     }
     return ChangeConfigurationResponseStatus::REJECTED;
 }
 
-const char *connectorPhaseRotationStrings[] = {
+static const char *connectorPhaseRotationStrings[] = {
     "NotApplicable",
     "Unknown",
     "RST",
@@ -191,7 +215,7 @@ const char *config_keys[CONFIG_COUNT] {
     "WebSocketPingInterval",
 };
 
-OcppConfiguration config[CONFIG_COUNT] = {
+static OcppConfiguration config[CONFIG_COUNT] = {
     /*AllowOfflineTxForUnknownId*/        //OcppConfiguration::boolean(false, false, false),
     /*AuthorizationCacheEnabled*/         //OcppConfiguration::boolean(false, false, false),
     /*AuthorizeRemoteTxRequests*/         OcppConfiguration::boolean(false, false, false),

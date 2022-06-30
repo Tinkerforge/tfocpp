@@ -51,8 +51,8 @@ struct Connector {
 
     IdTagInfo authorized_for;
 
-    int32_t tag_deadline = 0;
-    int32_t cable_deadline = 0;
+    uint32_t tag_deadline = 0;
+    uint32_t cable_deadline = 0;
     int32_t transaction_id = -1;
 
     uint32_t waiting_for_message_id = 0;
@@ -69,7 +69,7 @@ struct Connector {
 
     void onAuthorizeConf(IdTagInfo info);
 
-    void onStartTransactionConf(IdTagInfo info, int32_t transaction_id);
+    void onStartTransactionConf(IdTagInfo info, int32_t txn_id);
 
     StatusNotificationStatus getStatus();
 

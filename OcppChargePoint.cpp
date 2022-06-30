@@ -19,8 +19,8 @@ Point.
 • For operations initiated by the Charge Point (when reporting), ConnectorId 0 is reserved for the Charge
 Point main controller.
 */
-Connector connectors[NUM_CONNECTORS];
-StatusNotificationStatus last_connector_status[NUM_CONNECTORS];
+static Connector connectors[NUM_CONNECTORS];
+//static StatusNotificationStatus last_connector_status[NUM_CONNECTORS];
 
 void OcppChargePoint::tick_power_on() {
     if (last_bn_send_ms == 0 && !platform_ws_connected(platform_ctx))
@@ -58,7 +58,7 @@ void OcppChargePoint::tick() {
             break;
     }
 
-    for(size_t i = 0; i < ARRAY_SIZE(connectors); ++i) {
+    for(int32_t i = 0; i < NUM_CONNECTORS; ++i) {
         connectors[i].tick();
     }
     connection.tick();
@@ -69,7 +69,7 @@ void OcppChargePoint::onConnect()
     if (state != OcppState::Idle)
         return;
 
-    for(size_t i = 0; i < ARRAY_SIZE(connectors); ++i)
+    for(int32_t i = 0; i < NUM_CONNECTORS; ++i)
         connectors[i].sendStatus(connectors[i].getStatus());
 }
 
@@ -90,7 +90,7 @@ CallResponse OcppChargePoint::handleAuthorizeResponse(uint32_t messageId, Author
     IdTagInfo info;
     info.updateFromIdTagInfo(conf.idTagInfo());
 
-    for(size_t i = 0; i < NUM_CONNECTORS; ++i) {
+    for(int32_t i = 0; i < NUM_CONNECTORS; ++i) {
         if (connectors[i].waiting_for_message_id != messageId)
             continue;
         connectors[i].waiting_for_message_id = 0;
@@ -102,6 +102,8 @@ CallResponse OcppChargePoint::handleAuthorizeResponse(uint32_t messageId, Author
 }
 
 CallResponse OcppChargePoint::handleBootNotificationResponse(uint32_t messageId, BootNotificationResponseView conf) {
+    (void) messageId;
+
     if ((state != OcppState::PowerOn) &&
         (state != OcppState::Pending) &&
         (state != OcppState::Rejected))
@@ -122,7 +124,7 @@ CallResponse OcppChargePoint::handleBootNotificationResponse(uint32_t messageId,
 
             this->sendCallAction(CallAction::STATUS_NOTIFICATION, StatusNotification(0, StatusNotificationErrorCode::NO_ERROR, StatusNotificationStatus::AVAILABLE, nullptr, platform_get_system_time(platform_ctx)));
 
-            for(size_t i = 0; i < ARRAY_SIZE(connectors); ++i)
+            for(size_t i = 0; i < NUM_CONNECTORS; ++i)
                 connectors[i].sendStatus(connectors[i].getStatus());
             break;
         }
@@ -141,6 +143,8 @@ CallResponse OcppChargePoint::handleBootNotificationResponse(uint32_t messageId,
 
 CallResponse OcppChargePoint::handleChangeAvailability(const char *uid, ChangeAvailabilityView req)
 {
+    (void) uid;
+    (void) req;
     return CallResponse{CallErrorCode::InternalError, "not implemented yet!"};
 }
 
@@ -163,6 +167,7 @@ CallResponse OcppChargePoint::handleChangeConfiguration(const char *uid, ChangeC
 
 CallResponse OcppChargePoint::handleClearCache(const char *uid, ClearCacheView req)
 {
+    (void) req;
     /* Errata 4.0 3.23:
     In OCPP 1.6, the Cache is not required, but the message: ClearCache.req is required to be implemented. OCPP
     does not define what the expected behaviour is.
@@ -177,6 +182,7 @@ CallResponse OcppChargePoint::handleClearCache(const char *uid, ClearCacheView r
 
 CallResponse OcppChargePoint::handleDataTransfer(const char *uid, DataTransferView req)
 {
+    (void) req;
     /*
     If the recipient of the request has no implementation for the specific vendorId it SHALL return a status
     ‘UnknownVendor’ and the data element SHALL not be present.
@@ -188,6 +194,8 @@ CallResponse OcppChargePoint::handleDataTransfer(const char *uid, DataTransferVi
 
 CallResponse OcppChargePoint::handleDataTransferResponse(uint32_t messageId, DataTransferResponseView conf)
 {
+    (void) messageId;
+    (void) conf;
     return CallResponse{CallErrorCode::InternalError, "not implemented yet!"};
 }
 
@@ -243,10 +251,16 @@ CallResponse OcppChargePoint::handleGetConfiguration(const char *uid, GetConfigu
                 case OcppConfigurationValueType::Boolean:
                     config_value = config.value.boolean.b ? "true" : "false";
                     break;
-                case OcppConfigurationValueType::Integer:
-                    config_value = (const char *)scratch_buf + scratch_buf_idx;
-                    scratch_buf_idx += snprintf(scratch_buf + scratch_buf_idx, scratch_buf_size - scratch_buf_idx, "%d", config.value.integer.i);
-                    ++scratch_buf_idx; // for null terminator
+                case OcppConfigurationValueType::Integer: {
+                        config_value = (const char *)scratch_buf + scratch_buf_idx;
+                        int written = snprintf(scratch_buf + scratch_buf_idx, scratch_buf_size - scratch_buf_idx, "%d", config.value.integer.i);
+                        if (written < 0) {
+                            platform_printfln("Failed to dump all configuration: %d", written);
+                            break; //TODO: what to do if this happens?
+                        }
+                        scratch_buf_idx += (size_t)written;
+                        ++scratch_buf_idx; // for null terminator
+                    }
                     break;
                 case OcppConfigurationValueType::CSL:
                     config_value = config.value.csl.c;
@@ -261,16 +275,22 @@ CallResponse OcppChargePoint::handleGetConfiguration(const char *uid, GetConfigu
         for(size_t i = 0; i < req.key_count(); ++i) {
             size_t result = i;
             if (lookup_key(&result, req.key(i).get(), config_keys, ARRAY_SIZE(config_keys))) {
-                const char *config_value;
+                const char *config_value = "";
                 OcppConfiguration &config = getConfig(result);
                 switch(config.type) {
                     case OcppConfigurationValueType::Boolean:
                         config_value = config.value.boolean.b ? "true" : "false";
                         break;
-                    case OcppConfigurationValueType::Integer:
-                        config_value = (const char *)scratch_buf + scratch_buf_idx;
-                        scratch_buf_idx += snprintf(scratch_buf + scratch_buf_idx, scratch_buf_size - scratch_buf_idx, "%d", config.value.integer.i);
-                        ++scratch_buf_idx; // for null terminator
+                    case OcppConfigurationValueType::Integer: {
+                            config_value = (const char *)scratch_buf + scratch_buf_idx;
+                            int written = snprintf(scratch_buf + scratch_buf_idx, scratch_buf_size - scratch_buf_idx, "%d", config.value.integer.i);
+                            if (written < 0) {
+                                platform_printfln("Failed to write int config value: %d", written);
+                                continue; //TODO: what to do if this happens?
+                            }
+                            scratch_buf_idx += (size_t)written;
+                            ++scratch_buf_idx; // for null terminator
+                        }
                         break;
                     case OcppConfigurationValueType::CSL:
                         config_value = config.value.csl.c;
@@ -299,27 +319,36 @@ CallResponse OcppChargePoint::handleGetConfiguration(const char *uid, GetConfigu
 
 CallResponse OcppChargePoint::handleHeartbeatResponse(uint32_t messageId, HeartbeatResponseView conf)
 {
+    (void)messageId;
     platform_set_system_time(platform_ctx, conf.currentTime());
     return CallResponse{CallErrorCode::OK, ""};
 }
 
 CallResponse OcppChargePoint::handleMeterValuesResponse(uint32_t messageId, MeterValuesResponseView conf)
 {
+    (void) messageId;
+    (void) conf;
     return CallResponse{CallErrorCode::InternalError, "not implemented yet!"};
 }
 
 CallResponse OcppChargePoint::handleRemoteStartTransaction(const char *uid, RemoteStartTransactionView req)
 {
+    (void) uid;
+    (void) req;
     return CallResponse{CallErrorCode::InternalError, "not implemented yet!"};
 }
 
 CallResponse OcppChargePoint::handleRemoteStopTransaction(const char *uid, RemoteStopTransactionView req)
 {
+    (void) uid;
+    (void) req;
     return CallResponse{CallErrorCode::InternalError, "not implemented yet!"};
 }
 
 CallResponse OcppChargePoint::handleReset(const char *uid, ResetView req)
 {
+    (void) uid;
+    (void) req;
     return CallResponse{CallErrorCode::InternalError, "not implemented yet!"};
 }
 
@@ -341,16 +370,22 @@ CallResponse OcppChargePoint::handleStartTransactionResponse(uint32_t messageId,
 
 CallResponse OcppChargePoint::handleStatusNotificationResponse(uint32_t messageId, StatusNotificationResponseView conf)
 {
+    (void) messageId;
+    (void) conf;
     return CallResponse{CallErrorCode::InternalError, "not implemented yet!"};
 }
 
 CallResponse OcppChargePoint::handleStopTransactionResponse(uint32_t messageId, StopTransactionResponseView conf)
 {
+    (void) messageId;
+    (void) conf;
     return CallResponse{CallErrorCode::InternalError, "not implemented yet!"};
 }
 
 CallResponse OcppChargePoint::handleUnlockConnector(const char *uid, UnlockConnectorView req)
 {
+    (void) uid;
+    (void) req;
     return CallResponse{CallErrorCode::InternalError, "not implemented yet!"};
 }
 
@@ -358,11 +393,11 @@ void OcppChargePoint::handleTagSeen(int32_t connectorId, const char *tagId)
 {
     platform_printfln("Seen tag %s at connector %d. State is %d", tagId, connectorId, (int)this->state);
 
-    if (connectorId > ARRAY_SIZE(connectors))
-        return;
-
     // Don't allow tags at connector 0 (i.e. the charge point itself)
     if (connectorId <= 0)
+        return;
+
+    if (connectorId > NUM_CONNECTORS)
         return;
 
     auto &conn = connectors[connectorId - 1];
@@ -371,7 +406,7 @@ void OcppChargePoint::handleTagSeen(int32_t connectorId, const char *tagId)
 
 void OcppChargePoint::start(const char *websocket_endpoint_url, const char *charge_point_name_percent_encoded) {
     platform_ctx = connection.start(websocket_endpoint_url, charge_point_name_percent_encoded, this);
-    for(size_t i = 0; i < ARRAY_SIZE(connectors); ++i) {
+    for(int32_t i = 0; i < NUM_CONNECTORS; ++i) {
         connectors[i].cp = this;
         connectors[i].connectorId = i + 1;
     }

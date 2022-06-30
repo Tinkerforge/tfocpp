@@ -7,7 +7,7 @@ void Connector::deauth() {
     authorized_for = IdTagInfo{};
 }
 
-const char * ConnectorState_Strings[] = {
+static const char * ConnectorState_Strings[] = {
     "IDLE",
     "WAITING_FOR_TAG",
     "AUTHORIZING_FOR_START_C",
@@ -99,14 +99,14 @@ void Connector::sendStatus(StatusNotificationStatus newStatus, StatusNotificatio
     if (last_sent_status == newStatus)
         return;
 
-    this->sendCallAction(CallAction::STATUS_NOTIFICATION, StatusNotification(connectorId, StatusNotificationErrorCode::NO_ERROR, newStatus, info, platform_get_system_time(cp->platform_ctx)));
+    this->sendCallAction(CallAction::STATUS_NOTIFICATION, StatusNotification(connectorId, error, newStatus, info, platform_get_system_time(cp->platform_ctx)));
     last_sent_status = newStatus;
 }
 
 void Connector::sendCallAction(CallAction action, const DynamicJsonDocument &doc)
 {
     long id = std::atol(doc[1]);
-    this->waiting_for_message_id = id;
+    this->waiting_for_message_id = (uint32_t)id;
     cp->sendCallAction(action, doc);
 }
 
@@ -159,7 +159,16 @@ void Connector::onTagSeen(const char *tag_id) {
             // it has even started.
             break;
 
-        default:
+        // We are already authorizing a tag. Ignore tags until we've get a response or timeout.
+        case ConnectorState::AUTHORIZING_FOR_START_C:
+        case ConnectorState::AUTHORIZING_FOR_START_NC:
+        case ConnectorState::AUTHORIZING_FOR_STOP:
+            break;
+
+        // Those states are unobservable as setting them immediatly transitions to another state.
+        case ConnectorState::NOTIFY_START:
+        case ConnectorState::NOTIFY_STOP:
+        case ConnectorState::NOTIFY_STOP_NC:
             break;
     }
 }
@@ -175,6 +184,7 @@ void Connector::onAuthorizeConf(IdTagInfo info) {
 
             setState(ConnectorState::WAITING_FOR_TAG);
             return;
+
         case ConnectorState::AUTHORIZING_FOR_START_NC:
             if (info.status == ResponseIdTagInfoEntriesStatus::ACCEPTED) {
                 setState(ConnectorState::WAITING_FOR_CABLE);
@@ -183,6 +193,7 @@ void Connector::onAuthorizeConf(IdTagInfo info) {
 
             setState(ConnectorState::IDLE);
             return;
+
         case ConnectorState::AUTHORIZING_FOR_STOP:
             if (info.status == ResponseIdTagInfoEntriesStatus::ACCEPTED) {
                 setState(ConnectorState::NOTIFY_STOP);
@@ -191,19 +202,28 @@ void Connector::onAuthorizeConf(IdTagInfo info) {
 
             setState(ConnectorState::TRANSACTION);
             return;
-        default:
+
+        case ConnectorState::IDLE:
+        case ConnectorState::WAITING_FOR_TAG:
+        case ConnectorState::WAITING_FOR_CABLE:
+        case ConnectorState::NOTIFY_START:
+        case ConnectorState::TRANSACTION:
+        case ConnectorState::NOTIFY_STOP:
+        case ConnectorState::NOTIFY_STOP_NT:
+        case ConnectorState::NOTIFY_STOP_NC:
+        case ConnectorState::FINISHING:
             return;
     }
 }
 
-void Connector::onStartTransactionConf(IdTagInfo info, int32_t transaction_id) {
+void Connector::onStartTransactionConf(IdTagInfo info, int32_t txn_id) {
     if (state != ConnectorState::NOTIFY_START && state != ConnectorState::TRANSACTION)
         return;
 
     authorized_for.updateFromIdTagInfo(info);
 
     if (info.status == ResponseIdTagInfoEntriesStatus::ACCEPTED) {
-        this->transaction_id = transaction_id;
+        this->transaction_id = txn_id;
         return;
     }
 
@@ -272,7 +292,9 @@ void Connector::tick() {
                 case EVSEState::Connected:
                     setState(ConnectorState::WAITING_FOR_TAG);
                     break;
-                default:
+                case EVSEState::ReadyToCharge:
+                case EVSEState::Charging:
+                case EVSEState::Faulted:
                     platform_printfln("Unexpected EVSEState %d while Connector is in state %d", (int)evse_state, (int)state);
                     break;
             }
@@ -285,7 +307,9 @@ void Connector::tick() {
                     break;
                 case EVSEState::Connected:
                     break;
-                default:
+                case EVSEState::ReadyToCharge:
+                case EVSEState::Charging:
+                case EVSEState::Faulted:
                     platform_printfln("Unexpected EVSEState %d while Connector is in state %d", (int)evse_state, (int)state);
                     break;
             }
@@ -298,7 +322,9 @@ void Connector::tick() {
                 case EVSEState::Connected:
                     setState(ConnectorState::AUTHORIZING_FOR_START_C);
                     break;
-                default:
+                case EVSEState::ReadyToCharge:
+                case EVSEState::Charging:
+                case EVSEState::Faulted:
                     platform_printfln("Unexpected EVSEState %d while Connector is in state %d", (int)evse_state, (int)state);
                     break;
             }
@@ -310,7 +336,9 @@ void Connector::tick() {
                 case EVSEState::Connected:
                     setState(ConnectorState::NOTIFY_START);
                     break;
-                default:
+                case EVSEState::ReadyToCharge:
+                case EVSEState::Charging:
+                case EVSEState::Faulted:
                     platform_printfln("Unexpected EVSEState %d while Connector is in state %d", (int)evse_state, (int)state);
                     break;
             }
@@ -321,14 +349,20 @@ void Connector::tick() {
                 setState(ConnectorState::NOTIFY_STOP_NC);
             break;
 
-        case ConnectorState::NOTIFY_START:
-
         case ConnectorState::AUTHORIZING_FOR_STOP:
-        case ConnectorState::NOTIFY_STOP:
-        case ConnectorState::NOTIFY_STOP_NT:
         case ConnectorState::FINISHING:
             if (evse_state == EVSEState::NotConnected)
                 setState(ConnectorState::IDLE);
+            break;
+
+        // We wait for the user to show their tag.
+        case ConnectorState::NOTIFY_STOP_NT:
+            break;
+
+        // These states is unobservable.
+        case ConnectorState::NOTIFY_START:
+        case ConnectorState::NOTIFY_STOP:
+        case ConnectorState::NOTIFY_STOP_NC:
             break;
     }
 
