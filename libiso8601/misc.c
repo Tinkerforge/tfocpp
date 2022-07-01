@@ -194,9 +194,10 @@ void iso8601_to_timeval(const iso8601_time *time, struct timeval *tv)
     iso8601_to_tm(time, &tm);
 
     tv->tv_usec = time->usecond;
-    tv->tv_sec = mktime(&tm);
     if (!time->localtime)
-        tv->tv_sec = timegm(&tm) - time->tzminutes * 60;
+        tv->tv_sec = timegm(&tm);
+    else
+        tv->tv_sec = mktime(&tm);
 }
 
 void iso8601_from_timeval(const struct timeval *tv, bool localtime,
