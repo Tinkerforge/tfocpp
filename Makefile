@@ -1,4 +1,4 @@
-.SILENT:
+#.SILENT:
 
 CC = clang
 CXX = clang++
@@ -8,7 +8,7 @@ COMPILE_FLAGS = -g -fPIC -O0 ${CLANG_WARNINGS} -fdiagnostics-color=always
 CFLAGS += -std=c99 ${COMPILE_FLAGS}
 CXXFLAGS += -std=c++11 ${COMPILE_FLAGS}
 LDFLAGS += -pthread
-LIBS += -lwebsockets -lstdc++ ./libiso8601/builddir/libiso8601.a
+LIBS += -lwebsockets -lstdc++ $(wildcard libiso8601/*.c.o)
 
 WITH_DEBUG ?= yes
 
