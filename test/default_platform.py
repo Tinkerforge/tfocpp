@@ -82,9 +82,18 @@ def platform_lock_cable(connectorId):
 def platform_unlock_cable(connectorId):
     print("Cable unlocked for connector", connectorId)
 
+charging_current = {}
+
 @ctypes.CFUNCTYPE(None, ctypes.c_int32, ctypes.c_uint32)
 def platform_set_charging_current(connectorId, milliAmps):
     print("Set charge current to {} for connector {}".format(milliAmps, connectorId))
+    charging_current[connectorId] = milliAmps
+
+CONNECTOR_STATE_NOT_CONNECTED = 0
+CONNECTOR_STATE_CONNECTED = 1
+CONNECTOR_STATE_READY_TO_CHARGE = 2
+CONNECTOR_STATE_CHARGING = 3
+CONNECTOR_STATE_FAULTED = 4
 
 connector_state = {}
 

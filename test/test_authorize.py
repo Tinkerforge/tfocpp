@@ -34,47 +34,92 @@ class TestAuthorize(unittest.TestCase):
         test.assertTrue(c.done)
 
     """
-    When stopping a Transaction, the
-    Charge Point SHALL only send an Authorize.req when the identifier used for stopping the transaction is different
-    from the identifier that started the transaction.
+    The Charge Point SHALL only supply energy after authorization.
     """
-    def test_reauthorize_on_other_tag(test):
+    def test_authorization_status(test):
+        class TestCP(default_central.DefaultChargePoint):
+            state = 0
+            @after(Action.BootNotification)
+            def after_boot_notification(self, *args, **kwargs):
+                default_platform.connector_state[1] = default_platform.CONNECTOR_STATE_CONNECTED
+                default_platform.show_tag(test, 1, "C0:FF:EE")
+
+            @on(Action.Authorize)
+            def on_authorize(self, id_tag):
+                status = {
+                    0: "ConcurrentTx",
+                    1: "Invalid",
+                    2: "Expired",
+                    3: "Blocked",
+                    4: "Accepted"
+                }[self.state]
+
+                self.state += 1
+
+                return call_result.AuthorizePayload(id_tag_info={"status": status})
+
+            @after(Action.Authorize)
+            def after_authorize(self, id_tag):
+                default_platform.show_tag(test, 1, "C0:FF:EE")
+                self.done = self.state == 5
+
+        def verify_current(libocpp, c):
+            if c is None or c.state != 5:
+                if 1 in default_platform.charging_current:
+                    test.assertEqual(default_platform.charging_current[1], 0)
+
+        _, c = run_test(TestCP, sim_len_secs=2, speedup=100, tick_fn=verify_current)
+        test.assertTrue(c.done)
+
+    def test_reauthorize_other_tag_to_stop(test):
         #TODO: start transaction to be able to stop it with another tag
         class TestCP(default_central.DefaultChargePoint):
             first = True
             @after(Action.BootNotification)
             def after_boot_notification(self, *args, **kwargs):
                 default_platform.show_tag(test, 1, "C0:FF:EE")
+                default_platform.connector_state[1] = default_platform.CONNECTOR_STATE_CONNECTED
 
             @after(Action.Authorize)
             def after_authorize(self, id_tag):
                 if self.first:
                     test.assertEqual(id_tag, "C0:FF:EE")
-                    default_platform.show_tag(test, 1, "CA:FE")
                     self.first = False
                 else:
-                    default_platform.show_tag(test, 1, "CA:FE")
+                    test.assertEqual(id_tag, "CA:FE")
                     self.done = True
+
+            @after(Action.StatusNotification)
+            def after_sn(self, connector_id, error_code, status, **kwargs):
+                if status == "SuspendedEVSE":
+                    default_platform.show_tag(test, 1, "CA:FE")
+
 
         _, c = run_test(TestCP, sim_len_secs=2, speedup=100)
         test.assertTrue(c.done)
+        test.assertEqual(c.received_calls[Action.Authorize], 2)
 
     def test_dont_reauthorize_on_same_tag(test):
-        #TODO: use status notifications to make sure we are in idle again
         class TestCP(default_central.DefaultChargePoint):
-            first = True
+            status = []
             @after(Action.BootNotification)
             def after_boot_notification(self, *args, **kwargs):
                 default_platform.show_tag(test, 1, "C0:FF:EE")
+                default_platform.connector_state[1] = default_platform.CONNECTOR_STATE_CONNECTED
 
             @after(Action.Authorize)
             def after_authorize(self, id_tag):
                 test.assertEqual(id_tag, "C0:FF:EE")
-                if self.first:
+
+            @after(Action.StatusNotification)
+            def after_sn(self, connector_id, error_code, status, **kwargs):
+                self.status.append(status)
+                if status == "SuspendedEVSE":
                     default_platform.show_tag(test, 1, "C0:FF:EE")
-                    self.first = False
+                if status == "Finishing":
+                    self.done = True
 
-
-        _, c = run_test(TestCP, sim_len_secs=2, speedup=100)
-        #test.assertTrue(c.done)
+        _, c = run_test(TestCP, sim_len_secs=10, speedup=100)
+        test.assertTrue(c.done)
         test.assertEqual(c.received_calls[Action.Authorize], 1)
+        test.assertEqual(c.status, ["Available", "Preparing", "SuspendedEVSE", "Finishing"])
