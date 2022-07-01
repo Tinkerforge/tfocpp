@@ -489,6 +489,7 @@ DynamicJsonDocument Heartbeat() {
     result.add((int32_t)OcppRpcMessageType::CALL);
     result.add(std::to_string(next_call_id));
     result.add("Heartbeat");
+    result.createNestedObject();
 
     result.shrinkToFit();
     return result;
