@@ -78,6 +78,7 @@ void Connector::setState(ConnectorState newState) {
         case ConnectorState::NOTIFY_STOP_NT:
             this->sendCallAction(CallAction::STOP_TRANSACTION, StopTransaction(platform_get_energy(connectorId), platform_get_system_time(cp->platform_ctx), transaction_id, authorized_for.tagId, StopTransactionReason::DE_AUTHORIZED));
             transaction_id = -1;
+            platform_set_charging_current(connectorId, 0);
             // Don't go to finishing here: User has to present the tag to unlock the cable.
             break;
         case ConnectorState::NOTIFY_STOP_NC:
