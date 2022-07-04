@@ -223,8 +223,9 @@ void Connector::onStartTransactionConf(IdTagInfo info, int32_t txn_id) {
 
     authorized_for.updateFromIdTagInfo(info);
 
+    this->transaction_id = txn_id;
+
     if (info.status == ResponseIdTagInfoEntriesStatus::ACCEPTED) {
-        this->transaction_id = txn_id;
         return;
     }
 
