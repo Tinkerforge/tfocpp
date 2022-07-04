@@ -1,9 +1,10 @@
 import asyncio
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 import sys
 import threading
 import time
+
 
 try:
     import websockets
@@ -29,12 +30,12 @@ class DefaultChargePoint(cp):
         self.received_results = {}
         self.received_errors = {}
         self.timescale = 1
-        self.datetime_start = datetime.utcnow()
+        self.datetime_start = datetime.now(timezone.utc).replace(microsecond=0)
         self.time_start = time.time()
         self.libocpp = None
 
     def get_datetime(self):
-        return (self.datetime_start + (datetime.utcnow() - self.datetime_start) * self.timescale)
+        return (self.datetime_start + (datetime.now(timezone.utc).replace(microsecond=0) - self.datetime_start) * self.timescale)
 
     def get_time(self):
         return (self.time_start + (time.time() - self.time_start) * self.timescale)
@@ -81,7 +82,7 @@ class DefaultChargePoint(cp):
     @on(Action.Heartbeat)
     def on_heartbeat(self, **kwargs):
         t = self.get_datetime().isoformat()
-        return call_result.HeartbeatPayload(current_time=t + "Z")
+        return call_result.HeartbeatPayload(current_time=t)
 
     @on(Action.FirmwareStatusNotification)
     def on_firmware_status(self, **kwargs):
