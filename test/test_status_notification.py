@@ -138,9 +138,26 @@ class TestStatusNotification(unittest.TestCase):
     """
     Typically a Connector is in preparing state when a user presents a tag [...]
     """
-    @unittest.skip("Not implemented yet")
     def test_notify_preparing_on_tag(test):
-        pass
+        @addTester(test)
+        class TestCP(TestBaseCP):
+            first = True
+            @after(Action.BootNotification)
+            def after_boot_notification(self, *args, **kwargs):
+                default_platform.show_tag(test, 1, "C0:FF:EE")
+
+            @after(Action.StatusNotification)
+            def after_status_notification(self, connector_id, error_code, status, **kwargs):
+                if self.first and connector_id == 1 and status == "Available":
+                    self.first = False # allow one available notification after boot up
+                    return
+
+                if connector_id == 1:
+                    test.assertEqual(status, "Preparing")
+                    self.done = True
+
+        _, c = run_test(TestCP, sim_len_secs=2, speedup=100)
+        test.assertTrue(c.done)
 
 
     """

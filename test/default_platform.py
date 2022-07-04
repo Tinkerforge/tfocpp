@@ -74,12 +74,16 @@ def platform_tag_timed_out(connectorId):
 def platform_cable_timed_out(connectorId):
     print("Cable timed out for connector", connectorId)
 
+connector_locked = {}
+
 @ctypes.CFUNCTYPE(None, ctypes.c_int32)
 def platform_lock_cable(connectorId):
+    connector_locked[connectorId] = True
     print("Cable locked for connector", connectorId)
 
 @ctypes.CFUNCTYPE(None, ctypes.c_int32)
 def platform_unlock_cable(connectorId):
+    connector_locked[connectorId] = False
     print("Cable unlocked for connector", connectorId)
 
 charging_current = {}
@@ -106,10 +110,19 @@ def platform_get_evse_state(connectorId):
 def platform_get_meter_value(connectorId, measurant):
     return "123.45"
 
+connector_energy = {}
+
+def set_connector_energy(connectorId, milliAmps):
+    global thread_id
+    if threading.get_ident() != thread_id:
+        work_queue.put((set_connector_energy, [connectorId, milliAmps]))
+        return
+
+    connector_energy[connectorId] = milliAmps
 
 @ctypes.CFUNCTYPE(ctypes.c_int32, ctypes.c_int32)
 def platform_get_energy(connectorId):
-    return 1234
+    return connector_energy.get(connectorId, 0)
 
 
 def register_default_functions(libocpp):
