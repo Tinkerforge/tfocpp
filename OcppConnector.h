@@ -26,13 +26,13 @@ bool valid_status_transitions[VALID_STATUS_STRIDE * VALID_STATUS_STRIDE] = {
 
 enum class ConnectorState {
     IDLE,
-    WAITING_FOR_TAG,
-    AUTHORIZING_FOR_START_C,
-    AUTHORIZING_FOR_START_NC,
-    WAITING_FOR_CABLE,
+    NO_TAG,
+    AUTH_START,
+    AUTH_START_NO_CABLE,
+    NO_CABLE,
     NOTIFY_START,
     TRANSACTION, //This represents charging, suspended EVSE and suspended EV, as those are not controlled by us
-    AUTHORIZING_FOR_STOP,
+    AUTH_STOP,
     NOTIFY_STOP,
     NOTIFY_STOP_NT,
     NOTIFY_STOP_NC,
@@ -66,6 +66,7 @@ struct Connector {
     void sendCallAction(CallAction action, const DynamicJsonDocument &doc);
 
     void onTagSeen(const char *tag_id);
+    void onStop(StopReason reason);
 
     void onAuthorizeConf(IdTagInfo info);
 

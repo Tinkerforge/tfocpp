@@ -9,13 +9,13 @@ void Connector::deauth() {
 
 static const char * ConnectorState_Strings[] = {
     "IDLE",
-    "WAITING_FOR_TAG",
-    "AUTHORIZING_FOR_START_C",
-    "AUTHORIZING_FOR_START_NC",
-    "WAITING_FOR_CABLE",
+    "NO_TAG",
+    "AUTH_START",
+    "AUTH_START_NO_CABLE",
+    "NO_CABLE",
     "NOTIFY_START",
     "TRANSACTION",
-    "AUTHORIZING_FOR_STOP",
+    "AUTH_STOP",
     "NOTIFY_STOP",
     "NOTIFY_STOP_NT",
     "NOTIFY_STOP_NC",
@@ -36,23 +36,23 @@ void Connector::setState(ConnectorState newState) {
             cable_deadline = 0;
             transaction_id = -1;
             break;
-        case ConnectorState::WAITING_FOR_TAG:
+        case ConnectorState::NO_TAG:
             // The spec does not specify explicitly which timeout to use here:
             // The configuration spec only talks about inserting the cable, however
             // transition B9 says "time out (configured by the configuration key: ConnectionTimeOut) on expected user action"
             tag_deadline = platform_now_ms() + getIntConfig(ConfigKey::ConnectionTimeOut) * 1000;
             break;
-        case ConnectorState::AUTHORIZING_FOR_START_C:
+        case ConnectorState::AUTH_START:
             //tag_deadline = 0;
             cable_deadline = 0;
             break;
-        case ConnectorState::AUTHORIZING_FOR_START_NC:
+        case ConnectorState::AUTH_START_NO_CABLE:
             // We have to set the timeout here: The spec says
             // "Interval *from beginning of status: 'Preparing' until incipient Transaction is automatically canceled, due to failure of EV driver to
             // (correctly) insert the charging cable connector(s) into the appropriate socket(s)."
             cable_deadline = platform_now_ms() + getIntConfig(ConfigKey::ConnectionTimeOut) * 1000;
             break;
-        case ConnectorState::WAITING_FOR_CABLE:
+        case ConnectorState::NO_CABLE:
             break;
         case ConnectorState::NOTIFY_START:
             tag_deadline = 0;
@@ -66,7 +66,7 @@ void Connector::setState(ConnectorState newState) {
             break;
         case ConnectorState::TRANSACTION:
             break;
-        case ConnectorState::AUTHORIZING_FOR_STOP:
+        case ConnectorState::AUTH_STOP:
             break;
         case ConnectorState::NOTIFY_STOP:
             // TODO: this is guestimated without reading the spec. Figure out stoptransactionreason etc.
@@ -113,14 +113,14 @@ void Connector::sendCallAction(CallAction action, const DynamicJsonDocument &doc
 
 void Connector::onTagSeen(const char *tag_id) {
     switch (state) {
-        case ConnectorState::WAITING_FOR_TAG:
+        case ConnectorState::NO_TAG:
         case ConnectorState::FINISHING:
-            setState(ConnectorState::AUTHORIZING_FOR_START_C);
+            setState(ConnectorState::AUTH_START);
             authorized_for.updateTagId(tag_id);
             this->sendCallAction(CallAction::AUTHORIZE, Authorize(tag_id));
             break;
         case ConnectorState::IDLE:
-            setState(ConnectorState::AUTHORIZING_FOR_START_NC);
+            setState(ConnectorState::AUTH_START_NO_CABLE);
             authorized_for.updateTagId(tag_id);
             this->sendCallAction(CallAction::AUTHORIZE, Authorize(tag_id));
             break;
@@ -136,7 +136,7 @@ void Connector::onTagSeen(const char *tag_id) {
                 break;
             }
 
-            setState(ConnectorState::AUTHORIZING_FOR_STOP);
+            setState(ConnectorState::AUTH_STOP);
             authorized_for.updateTagId(tag_id);
             this->sendCallAction(CallAction::AUTHORIZE, Authorize(tag_id));
             break;
@@ -150,7 +150,7 @@ void Connector::onTagSeen(const char *tag_id) {
             // the starttransaction.conf is received later and does not accept the tag,
             // only _the same tag_ (or one with the same parentId) may unlock the cable.
             break;
-        case ConnectorState::WAITING_FOR_CABLE:
+        case ConnectorState::NO_CABLE:
             if (authorized_for.is_same_tag(tag_id)) {
                 setState(ConnectorState::IDLE);
                 break;
@@ -161,10 +161,35 @@ void Connector::onTagSeen(const char *tag_id) {
             break;
 
         // We are already authorizing a tag. Ignore tags until we've get a response or timeout.
-        case ConnectorState::AUTHORIZING_FOR_START_C:
-        case ConnectorState::AUTHORIZING_FOR_START_NC:
-        case ConnectorState::AUTHORIZING_FOR_STOP:
+        case ConnectorState::AUTH_START:
+        case ConnectorState::AUTH_START_NO_CABLE:
+        case ConnectorState::AUTH_STOP:
             break;
+
+        // Those states are unobservable as setting them immediatly transitions to another state.
+        case ConnectorState::NOTIFY_START:
+        case ConnectorState::NOTIFY_STOP:
+        case ConnectorState::NOTIFY_STOP_NC:
+            break;
+    }
+}
+
+void Connector::onStop(StopReason reason)
+{
+    switch (state) {
+        case ConnectorState::NO_TAG:
+        case ConnectorState::FINISHING:
+        case ConnectorState::IDLE:
+        case ConnectorState::NOTIFY_STOP_NT:
+        case ConnectorState::NO_CABLE:
+        case ConnectorState::AUTH_START:
+        case ConnectorState::AUTH_START_NO_CABLE:
+            // No transaction is running. We
+            break;
+
+        case ConnectorState::TRANSACTION:
+
+        case ConnectorState::AUTH_STOP:
 
         // Those states are unobservable as setting them immediatly transitions to another state.
         case ConnectorState::NOTIFY_START:
@@ -177,25 +202,25 @@ void Connector::onTagSeen(const char *tag_id) {
 void Connector::onAuthorizeConf(IdTagInfo info) {
     authorized_for.updateFromIdTagInfo(info);
     switch (state) {
-        case ConnectorState::AUTHORIZING_FOR_START_C:
+        case ConnectorState::AUTH_START:
             if (info.status == ResponseIdTagInfoEntriesStatus::ACCEPTED) {
                 setState(ConnectorState::NOTIFY_START);
                 return;
             }
 
-            setState(ConnectorState::WAITING_FOR_TAG);
+            setState(ConnectorState::NO_TAG);
             return;
 
-        case ConnectorState::AUTHORIZING_FOR_START_NC:
+        case ConnectorState::AUTH_START_NO_CABLE:
             if (info.status == ResponseIdTagInfoEntriesStatus::ACCEPTED) {
-                setState(ConnectorState::WAITING_FOR_CABLE);
+                setState(ConnectorState::NO_CABLE);
                 return;
             }
 
             setState(ConnectorState::IDLE);
             return;
 
-        case ConnectorState::AUTHORIZING_FOR_STOP:
+        case ConnectorState::AUTH_STOP:
             if (info.status == ResponseIdTagInfoEntriesStatus::ACCEPTED) {
                 setState(ConnectorState::NOTIFY_STOP);
                 return;
@@ -205,8 +230,8 @@ void Connector::onAuthorizeConf(IdTagInfo info) {
             return;
 
         case ConnectorState::IDLE:
-        case ConnectorState::WAITING_FOR_TAG:
-        case ConnectorState::WAITING_FOR_CABLE:
+        case ConnectorState::NO_TAG:
+        case ConnectorState::NO_CABLE:
         case ConnectorState::NOTIFY_START:
         case ConnectorState::TRANSACTION:
         case ConnectorState::NOTIFY_STOP:
@@ -253,15 +278,15 @@ StatusNotificationStatus Connector::getStatus() {
         case ConnectorState::NOTIFY_STOP_NC:
             return StatusNotificationStatus::AVAILABLE;
 
-        case ConnectorState::WAITING_FOR_TAG:
-        case ConnectorState::AUTHORIZING_FOR_START_C:
-        case ConnectorState::AUTHORIZING_FOR_START_NC:
-        case ConnectorState::WAITING_FOR_CABLE:
+        case ConnectorState::NO_TAG:
+        case ConnectorState::AUTH_START:
+        case ConnectorState::AUTH_START_NO_CABLE:
+        case ConnectorState::NO_CABLE:
             return StatusNotificationStatus::PREPARING;
 
         case ConnectorState::NOTIFY_START:
         case ConnectorState::TRANSACTION:
-        case ConnectorState::AUTHORIZING_FOR_STOP:
+        case ConnectorState::AUTH_STOP:
             switch (evse_state) {
                 case EVSEState::Connected:
                     return StatusNotificationStatus::SUSPENDED_EVSE;
@@ -292,7 +317,7 @@ void Connector::tick() {
                 case EVSEState::NotConnected:
                     break;
                 case EVSEState::Connected:
-                    setState(ConnectorState::WAITING_FOR_TAG);
+                    setState(ConnectorState::NO_TAG);
                     break;
                 case EVSEState::ReadyToCharge:
                 case EVSEState::Charging:
@@ -301,8 +326,8 @@ void Connector::tick() {
                     break;
             }
             break;
-        case ConnectorState::WAITING_FOR_TAG:
-        case ConnectorState::AUTHORIZING_FOR_START_C:
+        case ConnectorState::NO_TAG:
+        case ConnectorState::AUTH_START:
             switch (evse_state) {
                 case EVSEState::NotConnected:
                     setState(ConnectorState::IDLE);
@@ -317,12 +342,12 @@ void Connector::tick() {
             }
             break;
 
-        case ConnectorState::AUTHORIZING_FOR_START_NC:
+        case ConnectorState::AUTH_START_NO_CABLE:
             switch (evse_state) {
                 case EVSEState::NotConnected:
                     break;
                 case EVSEState::Connected:
-                    setState(ConnectorState::AUTHORIZING_FOR_START_C);
+                    setState(ConnectorState::AUTH_START);
                     break;
                 case EVSEState::ReadyToCharge:
                 case EVSEState::Charging:
@@ -331,7 +356,7 @@ void Connector::tick() {
                     break;
             }
             break;
-        case ConnectorState::WAITING_FOR_CABLE:
+        case ConnectorState::NO_CABLE:
             switch (evse_state) {
                 case EVSEState::NotConnected:
                     break;
@@ -351,14 +376,17 @@ void Connector::tick() {
                 setState(ConnectorState::NOTIFY_STOP_NC);
             break;
 
-        case ConnectorState::AUTHORIZING_FOR_STOP:
+        case ConnectorState::AUTH_STOP:
         case ConnectorState::FINISHING:
             if (evse_state == EVSEState::NotConnected)
                 setState(ConnectorState::IDLE);
             break;
 
         // We wait for the user to show their tag.
+        // If the user disconnects the cable on the EV side, this counts as authentication.
         case ConnectorState::NOTIFY_STOP_NT:
+            if (evse_state == EVSEState::NotConnected)
+                setState(ConnectorState::IDLE);
             break;
 
         // These states is unobservable.

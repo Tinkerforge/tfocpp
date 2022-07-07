@@ -404,6 +404,20 @@ void OcppChargePoint::handleTagSeen(int32_t connectorId, const char *tagId)
     conn.onTagSeen(tagId);
 }
 
+void OcppChargePoint::handleStop(int32_t connectorId, StopReason reason) {
+    platform_printfln("connector %d wants to stop with reason %d", connectorId, (int)reason);
+
+    // Don't allow tags at connector 0 (i.e. the charge point itself)
+    if (connectorId <= 0)
+        return;
+
+    if (connectorId > NUM_CONNECTORS)
+        return;
+
+    auto &conn = connectors[connectorId - 1];
+    conn.onStop(reason);
+}
+
 void OcppChargePoint::start(const char *websocket_endpoint_url, const char *charge_point_name_percent_encoded) {
     platform_ctx = connection.start(websocket_endpoint_url, charge_point_name_percent_encoded, this);
     for(int32_t i = 0; i < NUM_CONNECTORS; ++i) {
@@ -412,4 +426,5 @@ void OcppChargePoint::start(const char *websocket_endpoint_url, const char *char
     }
 
     platform_register_tag_seen_callback(platform_ctx, [](int32_t connectorId, const char *tagId, void *user_data){((OcppChargePoint*)user_data)->handleTagSeen(connectorId, tagId);}, this);
+    platform_register_stop_callback(platform_ctx, [](int32_t connectorId, StopReason reason, void *user_data){((OcppChargePoint*)user_data)->handleStop(connectorId, reason);}, this);
 }

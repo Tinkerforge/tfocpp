@@ -26,14 +26,13 @@ void *platform_init(const char *websocket_url);
 void platform_disconnect(void *ctx);
 void platform_destroy(void *ctx);
 
+bool platform_ws_connected(void *ctx);
+void platform_ws_send(void *ctx, const char *buf, size_t buf_len);
+void platform_ws_register_receive_callback(void *ctx, void(*cb)(char *, size_t, void *), void *user_data);
+
 uint32_t platform_now_ms();
 void platform_set_system_time(void *ctx, time_t t);
 time_t platform_get_system_time(void *ctx);
-
-bool platform_ws_connected(void *ctx);
-void platform_ws_send(void *ctx, const char *buf, size_t buf_len);
-
-void platform_ws_register_receive_callback(void *ctx, void(*cb)(char *, size_t, void *), void *user_data);
 
 void platform_printfln(const char *fmt, ...) __attribute__((__format__(__printf__, 1, 2)));
 
@@ -50,8 +49,12 @@ void platform_tag_rejected(const char *tag, TagRejectionType trt);
 void platform_tag_timed_out(int32_t connectorId);
 void platform_cable_timed_out(int32_t connectorId);
 
+void platform_lock_cable(int32_t connectorId);
+void platform_unlock_cable(int32_t connectorId);
+
 enum EVSEState {
     NotConnected,
+    PlugDetected,
     Connected,
     ReadyToCharge,
     Charging,
@@ -59,6 +62,25 @@ enum EVSEState {
 };
 
 EVSEState platform_get_evse_state(int32_t connectorId);
+
+#define OCPP_PLATFORM_MAX_CHARGING_CURRENT 0xFFFFFFFF
+void platform_set_charging_current(int32_t connectorId, uint32_t milliAmps);
+
+enum StopReason {
+    //DeAuthorized, // handled by OCPP
+    EmergencyStop, // if EVSE emergency stop button is pressed
+    //EVDisconnected, detected via platform_get_evse_state
+    //HardReset, // handled by OCPP
+    Local, // "normal" EVSE stop button
+    Other,
+    PowerLoss, // "Complete loss of power." maybe use this if contactor check fails (before contactor)
+    Reboot, // "A locally initiated reset/reboot occurred. (for instance watchdog kicked in)"
+    Remote, // "Stopped remotely on request of the user." maybe use this when stopping over the web interface?
+    // SoftReset, // handled by OCPP
+    // UnlockCommand, // handled by OCPP
+};
+
+void platform_register_stop_callback(void *ctx, void (*cb)(int32_t, StopReason, void *));
 
 /*
 Value as a “Raw” (decimal) number or “SignedData”. Field Type is
@@ -70,10 +92,3 @@ const char * platform_get_meter_value(int32_t connectorId, SampledValueMeasurand
 
 // This is the Energy.Active.Import.Register measurant in Wh
 int32_t platform_get_energy(int32_t connectorId);
-
-void platform_lock_cable(int32_t connectorId);
-void platform_unlock_cable(int32_t connectorId);
-
-#define OCPP_PLATFORM_MAX_CHARGING_CURRENT 0xFFFFFFFF
-void platform_set_charging_current(int32_t connectorId, uint32_t milliAmps);
-

@@ -15,6 +15,7 @@ void set_platform_get_evse_state_cb(EVSEState (*cb)(int32_t connectorId));
 void set_platform_set_charging_current_cb(void (*cb)(int32_t connectorId, uint32_t milliAmps));
 void set_platform_get_meter_value_cb(const char * (*cb)(int32_t connectorId, SampledValueMeasurand measurant));
 void set_platform_get_energy_cb(int32_t (*cb)(int32_t connectorId));
+void set_platform_register_stop_callback_cb(void (*cb)(void *ctx, void (*cb)(int32_t, StopReason, void *), void *user_data));
 
 void ocpp_start(const char *ws_url, const char *charge_point_name);
 void ocpp_tick();

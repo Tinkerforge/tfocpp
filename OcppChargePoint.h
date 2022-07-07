@@ -40,6 +40,7 @@ public:
     }
 
     void handleTagSeen(int32_t connectorId, const char *tagId);
+    void handleStop(int32_t connectorId, StopReason reason);
 
     void tick_power_on();
     void tick_idle();
