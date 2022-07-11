@@ -72,7 +72,6 @@ class TestAuthorize(unittest.TestCase):
         test.assertTrue(c.done)
 
     def test_reauthorize_other_tag_to_stop(test):
-        #TODO: start transaction to be able to stop it with another tag
         class TestCP(default_central.DefaultChargePoint):
             first = True
             @after(Action.BootNotification)
