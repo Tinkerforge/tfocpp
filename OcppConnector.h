@@ -26,17 +26,22 @@ bool valid_status_transitions[VALID_STATUS_STRIDE * VALID_STATUS_STRIDE] = {
 
 enum class ConnectorState {
     IDLE,
+
+    NO_CABLE_NO_TAG,
     NO_TAG,
-    AUTH_START,
+    AUTH_START_NO_PLUG,
     AUTH_START_NO_CABLE,
+    AUTH_START,
+    NO_PLUG,
     NO_CABLE,
-    NOTIFY_START,
-    TRANSACTION, //This represents charging, suspended EVSE and suspended EV, as those are not controlled by us
+
+    TRANSACTION,  //This represents charging, suspended EVSE and suspended EV, as those are not controlled by us
     AUTH_STOP,
-    NOTIFY_STOP,
-    NOTIFY_STOP_NT,
-    NOTIFY_STOP_NC,
-    FINISHING
+
+    FINISHING_UNLOCKED,
+    FINISHING_NO_CABLE_UNLOCKED,
+    FINISHING_NO_CABLE_LOCKED,
+    FINISHING_NO_SAME_TAG,
 };
 
 class OcppChargePoint;
@@ -54,14 +59,22 @@ struct Connector {
     uint32_t tag_deadline = 0;
     uint32_t cable_deadline = 0;
     int32_t transaction_id = -1;
+    bool transaction_with_invalid_tag_id = false;
+    StopTransactionReason next_stop_reason = StopTransactionReason::NONE;
+
 
     uint32_t waiting_for_message_id = 0;
 
     OcppChargePoint *cp = nullptr;
 
     void deauth();
+    void setTagDeadline();
+    void clearTagDeadline();
+    void setCableDeadline();
+    void clearCableDeadline();
 
     void setState(ConnectorState newState);
+    void applyState();
     void sendStatus(StatusNotificationStatus newStatus, StatusNotificationErrorCode error = StatusNotificationErrorCode::NO_ERROR, const char info[51] = nullptr);
     void sendCallAction(CallAction action, const DynamicJsonDocument &doc);
 
