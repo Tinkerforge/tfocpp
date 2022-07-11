@@ -79,8 +79,9 @@ enum StopReason {
     // SoftReset, // handled by OCPP
     // UnlockCommand, // handled by OCPP
 };
-
-void platform_register_stop_callback(void *ctx, void (*cb)(int32_t, StopReason, void *));
+// Calling the stop callback will _never_ unlock the cable if it is currently locked. The same tag (or one in the same group) is required to unlock the cable.
+// For example to implement a remote stop that unlocks immediately, use platform_unlock_cable.
+void platform_register_stop_callback(void *ctx, void (*cb)(int32_t, StopReason, void *), void *user_data);
 
 /*
 Value as a “Raw” (decimal) number or “SignedData”. Field Type is

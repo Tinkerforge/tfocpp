@@ -94,10 +94,11 @@ def platform_set_charging_current(connectorId, milliAmps):
     charging_current[connectorId] = milliAmps
 
 CONNECTOR_STATE_NOT_CONNECTED = 0
-CONNECTOR_STATE_CONNECTED = 1
-CONNECTOR_STATE_READY_TO_CHARGE = 2
-CONNECTOR_STATE_CHARGING = 3
-CONNECTOR_STATE_FAULTED = 4
+CONNECTOR_STATE_PLUG_DETECTED = 1
+CONNECTOR_STATE_CONNECTED = 2
+CONNECTOR_STATE_READY_TO_CHARGE = 3
+CONNECTOR_STATE_CHARGING = 4
+CONNECTOR_STATE_FAULTED = 5
 
 connector_state = {}
 
@@ -124,6 +125,33 @@ def set_connector_energy(connectorId, milliAmps):
 def platform_get_energy(connectorId):
     return connector_energy.get(connectorId, 0)
 
+stop_cb = None
+stop_cb_user_data = None
+
+@ctypes.CFUNCTYPE(None, ctypes.c_void_p, ctypes.CFUNCTYPE(None, ctypes.c_int32, ctypes.c_int32, ctypes.c_void_p), ctypes.c_void_p)
+def platform_register_stop_callback(ctx, cb, user_data):
+    global stop_cb
+    global stop_cb_user_data
+    stop_cb = cb
+    stop_cb_user_data = user_data
+
+STOP_REASON_EMERGENCY_STOP = 0 # if EVSE emergency stop button is pressed
+STOP_REASON_LOCAL = 1 # "normal" EVSE stop button
+STOP_REASON_OTHER = 2
+STOP_REASON_POWERLOSS = 3 # "Complete loss of power." maybe use this if contactor check fails (before contactor)
+STOP_REASON_REBOOT = 4 # "A locally initiated reset/reboot occurred. (for instance watchdog kicked in)"
+STOP_REASON_REMOTE = 5 # "Stopped remotely on request of the user." maybe use this when stopping over the web interface?
+def trigger_stop(test, connector_id, reason):
+    global thread_id
+    if threading.get_ident() != thread_id:
+        work_queue.put((trigger_stop, [test, connector_id, reason]))
+        return
+
+    global stop_cb
+    global stop_cb_user_data
+    test.assertIsNotNone(stop_cb)
+    stop_cb(connector_id, reason, stop_cb_user_data)
+
 
 def register_default_functions(libocpp):
     libocpp.set_platform_now_ms_cb(platform_now_ms)
@@ -131,6 +159,7 @@ def register_default_functions(libocpp):
     libocpp.set_platform_get_system_time_cb(platform_get_system_time)
     libocpp.set_platform_printfln_cb(platform_printfln)
     libocpp.set_platform_register_tag_seen_callback_cb(platform_register_tag_seen_callback)
+    libocpp.set_platform_register_stop_callback_cb(platform_register_stop_callback)
     libocpp.set_platform_tag_rejected_cb(platform_tag_rejected)
     libocpp.set_platform_get_evse_state_cb(platform_get_evse_state)
     libocpp.set_platform_get_meter_value_cb(platform_get_meter_value)

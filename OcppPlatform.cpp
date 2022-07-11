@@ -12,6 +12,10 @@ struct mg_mgr mgr;        // Event manager
 struct mg_connection *c;  // Client connection
 void(*recv_cb)(char *, size_t, void *) = nullptr;
 void *recv_cb_userdata = nullptr;
+
+void (*stop_cb)(int32_t, StopReason, void *) = nullptr;
+void *stop_cb_userdata = nullptr;
+
 bool connected = false;
 bool done = false;        // Event handler flips it to true
 
@@ -87,6 +91,12 @@ void platform_ws_register_receive_callback(void *ctx, void(*cb)(char *, size_t, 
 {
     recv_cb = cb;
     recv_cb_userdata = user_data;
+}
+
+void platform_register_stop_callback(void *ctx, void(*cb)(int32_t, StopReason, void *), void *user_data)
+{
+    stop_cb = cb;
+    stop_cb_userdata = user_data;
 }
 
 uint32_t platform_now_ms() {
