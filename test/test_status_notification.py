@@ -63,9 +63,12 @@ def addTester(test):
 
 class TestBaseCP(default_central.DefaultChargePoint):
     last_status = {}
+    status = {}
     test = None
     @on(Action.StatusNotification)
     def on_status_notification(self, connector_id, error_code, status, **kwargs):
+        self.status.setdefault(connector_id, []).append(status)
+
         if connector_id in self.last_status:
             self.test.assertTrue(is_valid_transition(self.last_status[connector_id], status))
 
@@ -78,6 +81,10 @@ class TestBaseCP(default_central.DefaultChargePoint):
             """
             self.test.assertIn(status, ["Available", "Unavailable", "Faulted"])
 
+        """
+        ChargePointErrorCode EVCommunicationError SHALL only be used with status Preparing,
+        SuspendedEV, SuspendedEVSE and Finishing and be treated as warning.
+        """
         if error_code == "EVCommunicationError":
             self.test.assertIn(status, ["Preparing", "SuspendedEV", "SuspendedEVSE", "Finishing"])
 
@@ -117,23 +124,18 @@ class TestStatusNotification(unittest.TestCase):
     def test_notify_preparing_on_connect(test):
         @addTester(test)
         class TestCP(TestBaseCP):
-            first = True
             @after(Action.BootNotification)
             def after_boot_notification(self, *args, **kwargs):
-                default_platform.connector_state[1] = 1
+                default_platform.connector_state[1] = default_platform.CONNECTOR_STATE_PLUG_DETECTED
 
             @after(Action.StatusNotification)
             def after_status_notification(self, connector_id, error_code, status, **kwargs):
-                if self.first and connector_id == 1 and status == "Available":
-                    self.first = False # allow one available notification after boot up
-                    return
-
-                if connector_id == 1:
-                    test.assertEqual(status, "Preparing")
+                if connector_id == 1 and status == "Preparing":
                     self.done = True
 
         _, c = run_test(TestCP, sim_len_secs=2, speedup=100)
         test.assertTrue(c.done)
+        test.assertEqual(c.status[1], ["Available", "Preparing"])
 
     """
     Typically a Connector is in preparing state when a user presents a tag [...]
@@ -141,55 +143,129 @@ class TestStatusNotification(unittest.TestCase):
     def test_notify_preparing_on_tag(test):
         @addTester(test)
         class TestCP(TestBaseCP):
-            first = True
+            @after(Action.StatusNotification)
+            def after_status_notification(self, connector_id, error_code, status, **kwargs):
+                if connector_id != 1:
+                    return
+
+                if status == "Preparing":
+                    self.done = True
+                else:
+                    default_platform.show_tag(test, 1, "C0:FF:EE")
+
+        _, c = run_test(TestCP, sim_len_secs=2, speedup=100)
+        test.assertTrue(c.done)
+        test.assertEqual(c.status[1], ["Available", "Preparing"])
+
+
+    """
+    When the EV is connected to the EVSE but the EVSE is not offering energy to the EV, e.g. due to a smart charging restriction,
+    local supply power constraints, or as the result of StartTransaction.conf indicating that charging is not allowed etc.
+    """
+
+    def test_notify_suspended_evse_on_slot_blocked(test):
+        @addTester(test)
+        class TestCP(TestBaseCP):
             @after(Action.BootNotification)
             def after_boot_notification(self, *args, **kwargs):
                 default_platform.show_tag(test, 1, "C0:FF:EE")
+                default_platform.connector_state[1] = default_platform.CONNECTOR_STATE_CONNECTED
+
 
             @after(Action.StatusNotification)
             def after_status_notification(self, connector_id, error_code, status, **kwargs):
-                if self.first and connector_id == 1 and status == "Available":
-                    self.first = False # allow one available notification after boot up
-                    return
-
-                if connector_id == 1:
-                    test.assertEqual(status, "Preparing")
+                if connector_id == 1 and status == "SuspendedEVSE":
                     self.done = True
 
         _, c = run_test(TestCP, sim_len_secs=2, speedup=100)
         test.assertTrue(c.done)
+        test.assertEqual(c.status[1], ["Available", "Preparing", "SuspendedEVSE"])
 
 
     """
     When the EV is connected to the EVSE but the EVSE is not offering energy to the EV, e.g. due to a smart charging restriction,
     local supply power constraints, or as the result of StartTransaction.conf indicating that charging is not allowed etc.
     """
-    @unittest.skip("Not implemented yet")
-    def test_notify_suspended_evse_on_slot_blocked(test):
-        pass
-
-
-    """
-    When the EV is connected to the EVSE but the EVSE is not offering energy to the EV, e.g. due to a smart charging restriction,
-    local supply power constraints, or as the result of StartTransaction.conf indicating that charging is not allowed etc.
-    """
-    @unittest.skip("Not implemented yet")
     def test_notify_suspended_evse_on_start_transaction_blocked(test):
-        pass
+        @addTester(test)
+        class TestCP(TestBaseCP):
+            @on(Action.StartTransaction)
+            def on_start_transaction(self, connector_id: int, id_tag: str, meter_start: int, timestamp: str, **kwargs):
+                return call_result.StartTransactionPayload(transaction_id=1234, id_tag_info={"status": "ConcurrentTx"})
+
+            @after(Action.BootNotification)
+            def after_boot_notification(self, *args, **kwargs):
+                default_platform.show_tag(test, 1, "C0:FF:EE")
+                default_platform.connector_state[1] = default_platform.CONNECTOR_STATE_CONNECTED
+
+
+            @after(Action.StatusNotification)
+            def after_status_notification(self, connector_id, error_code, status, **kwargs):
+                if connector_id != 1:
+                    return
+
+                if status == "Preparing":
+                    default_platform.connector_state[1] = default_platform.CONNECTOR_STATE_CHARGING
+                elif status == "SuspendedEVSE":
+                    self.done = True
+
+        _, c = run_test(TestCP, sim_len_secs=2, speedup=100)
+        test.assertTrue(c.done)
+        test.assertEqual(c.status[1], ["Available", "Preparing", "Charging", "SuspendedEVSE"])
 
     """
     When the EV is connected to the EVSE and the EVSE is offering energy but the EV is not taking any energy.
     """
-    @unittest.skip("Not implemented yet")
     def test_notify_suspended_ev(test):
-        pass
+        @addTester(test)
+        class TestCP(TestBaseCP):
+            @after(Action.BootNotification)
+            def after_boot_notification(self, *args, **kwargs):
+                default_platform.show_tag(test, 1, "C0:FF:EE")
+                default_platform.connector_state[1] = default_platform.CONNECTOR_STATE_CONNECTED
+
+
+            @after(Action.StatusNotification)
+            def after_status_notification(self, connector_id, error_code, status, **kwargs):
+                if connector_id != 1:
+                    return
+
+                if status == "Preparing":
+                    default_platform.connector_state[1] = default_platform.CONNECTOR_STATE_READY_TO_CHARGE
+                elif status == "SuspendedEV":
+                    self.done = True
+
+        _, c = run_test(TestCP, sim_len_secs=2, speedup=100)
+        test.assertTrue(c.done)
+        test.assertEqual(c.status[1], ["Available", "Preparing", "SuspendedEV"])
 
     """
     When a Transaction has stopped at a Connector, but the Connector is not yet available for a new user, e.g. the cable has not been removed [...]
     """
-    @unittest.skip("Not implemented yet")
     def test_notify_finishing(test):
-        pass
+        @addTester(test)
+        class TestCP(TestBaseCP):
+            @after(Action.BootNotification)
+            def after_boot_notification(self, *args, **kwargs):
+                default_platform.show_tag(test, 1, "C0:FF:EE")
+                default_platform.connector_state[1] = default_platform.CONNECTOR_STATE_CONNECTED
+
+
+            @after(Action.StatusNotification)
+            def after_status_notification(self, connector_id, error_code, status, **kwargs):
+                if connector_id != 1:
+                    return
+
+                if status == "Preparing":
+                    default_platform.connector_state[1] = default_platform.CONNECTOR_STATE_CHARGING
+                elif status == "Charging":
+                    default_platform.connector_state[1] = default_platform.CONNECTOR_STATE_PLUG_DETECTED
+                elif status == "Finishing":
+                    self.done = True
+
+        _, c = run_test(TestCP, sim_len_secs=2, speedup=100)
+        test.assertTrue(c.done)
+        test.assertEqual(c.status[1], ["Available", "Preparing", "Charging", "Finishing"])
 
 
     """
@@ -215,9 +291,32 @@ class TestStatusNotification(unittest.TestCase):
     If charging is suspended both by the EV and the EVSE, status SuspendedEVSE SHALL have
     precedence over status SuspendedEV.
     """
-    @unittest.skip("Not implemented yet")
     def test_suspended_precedence(test):
-        pass
+        @addTester(test)
+        class TestCP(TestBaseCP):
+            @on(Action.StartTransaction)
+            def on_start_transaction(self, connector_id: int, id_tag: str, meter_start: int, timestamp: str, **kwargs):
+                return call_result.StartTransactionPayload(transaction_id=1234, id_tag_info={"status": "ConcurrentTx"})
+
+            @after(Action.BootNotification)
+            def after_boot_notification(self, *args, **kwargs):
+                default_platform.show_tag(test, 1, "C0:FF:EE")
+                default_platform.connector_state[1] = default_platform.CONNECTOR_STATE_CONNECTED
+
+
+            @after(Action.StatusNotification)
+            def after_status_notification(self, connector_id, error_code, status, **kwargs):
+                if connector_id != 1:
+                    return
+
+                if status == "Preparing":
+                    default_platform.connector_state[1] = default_platform.CONNECTOR_STATE_READY_TO_CHARGE
+                elif status == "SuspendedEVSE":
+                    self.done = True
+
+        _, c = run_test(TestCP, sim_len_secs=2, speedup=100)
+        #test.assertTrue(c.done)
+        test.assertEqual(c.status[1], ["Available", "Preparing", "SuspendedEV", "SuspendedEVSE"])
 
     """
     When a Charge Point or a Connector is set to status Unavailable by a Change Availability

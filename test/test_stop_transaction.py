@@ -111,7 +111,7 @@ class TestStopTransaction(unittest.TestCase):
 
             @after(Action.StopTransaction)
             def after_stop_transaction(self, meter_stop: int, timestamp: str, transaction_id: int, **kwargs):
-                test.assertEqual(kwargs.get("reason", "Local"))
+                test.assertEqual(kwargs.get("reason", "Local"), "Local")
                 self.done = True
 
         _, c = run_test(TestCP, sim_len_secs=2, speedup=100)
@@ -122,6 +122,9 @@ class TestStopTransaction(unittest.TestCase):
     normally, the Reason SHOULD be set to a correct value.
     """
     #todo test all reasons. Add functions to platform interface to trigger those reasons. Maybe "platform_set_stop_callback" and then cb(StopReason.EmergencyStop) etc.
+    @unittest.skip("Not implemented yet")
+    def test_all_reasons(test):
+        pass
 
 
     """
@@ -129,6 +132,9 @@ class TestStopTransaction(unittest.TestCase):
     supported, this functionality is reported and controlled by the configuration key
     UnlockConnectorOnEVSideDisconnect.
     """
+    @unittest.skip("Not implemented yet")
+    def test_unlock_on_ev_disconnect(test):
+        pass
 
 
     """
@@ -136,4 +142,7 @@ class TestStopTransaction(unittest.TestCase):
     is disconnected from the EV. If the EV is reconnected, energy transfer is not allowed until the transaction is
     stopped and a new transaction is started
     """
+    @unittest.skip("Not implemented yet")
+    def test_stop_on_ev_disconnect(test):
+        pass
     # false is not supported, see errata 4.0. implement this key (it is optional but we don't want to trip centrals that expect it to be required) as readonly, always true

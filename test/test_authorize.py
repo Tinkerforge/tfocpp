@@ -112,6 +112,8 @@ class TestAuthorize(unittest.TestCase):
 
             @after(Action.StatusNotification)
             def after_sn(self, connector_id, error_code, status, **kwargs):
+                if connector_id != 1:
+                    return
                 self.status.append(status)
                 if status == "SuspendedEVSE":
                     default_platform.show_tag(test, 1, "C0:FF:EE")
