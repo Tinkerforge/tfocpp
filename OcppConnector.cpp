@@ -787,7 +787,7 @@ void Connector::onStartTransactionConf(IdTagInfo info, int32_t txn_id) {
     // TODO: filter with message ID to make sure we don't act on a StartTxn.conf that was for an old transaction.
 
     if (state != ConnectorState::TRANSACTION && state != ConnectorState::AUTH_STOP) {
-        platform_printfln("Ignoring Authorize.conf in state %s", ConnectorState_Strings[(size_t)state]);
+        platform_printfln("Ignoring StartTransaction.conf in state %s", ConnectorState_Strings[(size_t)state]);
         return;
     }
 
