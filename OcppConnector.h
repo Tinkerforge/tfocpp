@@ -75,7 +75,8 @@ struct Connector {
 
     void setState(ConnectorState newState);
     void applyState();
-    void sendStatus(StatusNotificationStatus newStatus, StatusNotificationErrorCode error = StatusNotificationErrorCode::NO_ERROR, const char info[51] = nullptr);
+    void sendStatus();
+    void forceSendStatus();
     void sendCallAction(CallAction action, const DynamicJsonDocument &doc);
 
     void onTagSeen(const char *tag_id);

@@ -70,7 +70,7 @@ void OcppChargePoint::onConnect()
         return;
 
     for(int32_t i = 0; i < NUM_CONNECTORS; ++i)
-        connectors[i].sendStatus(connectors[i].getStatus());
+        connectors[i].forceSendStatus();
 }
 
 void OcppChargePoint::onDisconnect()
@@ -127,7 +127,7 @@ CallResponse OcppChargePoint::handleBootNotificationResponse(uint32_t messageId,
             this->sendCallAction(CallAction::STATUS_NOTIFICATION, StatusNotification(0, StatusNotificationErrorCode::NO_ERROR, StatusNotificationStatus::AVAILABLE, nullptr, platform_get_system_time(platform_ctx)));
 
             for(size_t i = 0; i < NUM_CONNECTORS; ++i)
-                connectors[i].sendStatus(connectors[i].getStatus());
+                connectors[i].forceSendStatus();
             break;
         }
         case BootNotificationResponseStatus::PENDING: {

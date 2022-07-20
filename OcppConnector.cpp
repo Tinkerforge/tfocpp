@@ -158,7 +158,6 @@ void Connector::setState(ConnectorState newState) {
     platform_printfln("%s -> %s", ConnectorState_Strings[(int)state], ConnectorState_Strings[(int)newState]);
     ConnectorState oldState = state;
     state = newState;
-    this->sendStatus(getStatus());
 
     switch (newState) {
         case ConnectorState::AUTH_START_NO_PLUG:
@@ -246,11 +245,20 @@ void Connector::setState(ConnectorState newState) {
     }
 }
 
-void Connector::sendStatus(StatusNotificationStatus newStatus, StatusNotificationErrorCode error, const char info[51]) {
+void Connector::sendStatus() {
+    StatusNotificationStatus newStatus = getStatus();
     if (last_sent_status == newStatus)
         return;
 
-    this->sendCallAction(CallAction::STATUS_NOTIFICATION, StatusNotification(connectorId, error, newStatus, info, platform_get_system_time(cp->platform_ctx)));
+    forceSendStatus();
+}
+
+void Connector::forceSendStatus()
+{
+    StatusNotificationStatus newStatus = getStatus();
+    platform_printfln("Sending status %s for connector %d", StatusNotificationStatusStrings[(size_t)newStatus], connectorId);
+
+    this->sendCallAction(CallAction::STATUS_NOTIFICATION, StatusNotification(connectorId, StatusNotificationErrorCode::NO_ERROR, newStatus, nullptr, platform_get_system_time(cp->platform_ctx)));
     last_sent_status = newStatus;
 }
 
@@ -639,7 +647,7 @@ void Connector::tick() {
     }
 
     this->applyState();
-    this->sendStatus(getStatus());
+    this->sendStatus();
 }
 
 // Handles TagSeen, SameTagSeen
