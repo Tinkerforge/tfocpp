@@ -80,6 +80,8 @@ void OcppChargePoint::onDisconnect()
 
 bool OcppChargePoint::sendCallAction(CallAction action, const DynamicJsonDocument &doc)
 {
+    if (state != OcppState::Idle && action != CallAction::BOOT_NOTIFICATION)
+        return false;
     // Filter messages here
     connection.sendCallAction(action, doc);
     return true;
