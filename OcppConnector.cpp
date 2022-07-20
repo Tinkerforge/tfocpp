@@ -290,21 +290,36 @@ StatusNotificationStatus Connector::getStatus() {
             return StatusNotificationStatus::PREPARING;
 
         case ConnectorState::TRANSACTION:
-        case ConnectorState::AUTH_STOP:
+        case ConnectorState::AUTH_STOP: {
+            StatusNotificationStatus result = StatusNotificationStatus::SUSPENDED_EVSE;
+
             switch (evse_state) {
                 case EVSEState::Connected:
-                    return StatusNotificationStatus::SUSPENDED_EVSE;
+                    result = StatusNotificationStatus::SUSPENDED_EVSE;
+                    break;
                 case EVSEState::ReadyToCharge:
-                    return StatusNotificationStatus::SUSPENDED_EV;
+                    result = StatusNotificationStatus::SUSPENDED_EV;
+                    break;
                 case EVSEState::Charging:
-                    return StatusNotificationStatus::CHARGING;
+                    result = StatusNotificationStatus::CHARGING;
+                    break;
                 case EVSEState::PlugDetected: // connector state will transition to finishing* in the next tick
-                    return StatusNotificationStatus::FINISHING;
+                    result = StatusNotificationStatus::FINISHING;
+                    break;
                 case EVSEState::NotConnected: // connector state will transition to idle in the next tick
-                    return StatusNotificationStatus::AVAILABLE;
+                    result = StatusNotificationStatus::AVAILABLE;
+                    break;
                 case EVSEState::Faulted:
-                    return StatusNotificationStatus::FAULTED;
+                    result = StatusNotificationStatus::FAULTED;
+                    break;
             }
+
+            // transaction_with_invalid_tag_id is set if StartTransaction.Conf returns not accepted.
+            // In this case report SuspendedEVSE as it has precedence over SuspendedEV or Charging
+            if ((result == StatusNotificationStatus::SUSPENDED_EV || result == StatusNotificationStatus::CHARGING) && transaction_with_invalid_tag_id)
+                return StatusNotificationStatus::SUSPENDED_EVSE;
+            return result;
+        }
 
         case ConnectorState::FINISHING_UNLOCKED:
         case ConnectorState::FINISHING_NO_CABLE_UNLOCKED:
