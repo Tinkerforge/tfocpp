@@ -686,6 +686,7 @@ void Connector::onTagSeen(const char *tag_id) {
                 platform_printfln("Unexpected same tag in state %s. Was auth not cleared?", ConnectorState_Strings[(size_t)state]);
                 break;
         }
+        return;
     }
 
 
