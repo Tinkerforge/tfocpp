@@ -12,7 +12,9 @@ enum class OcppState {
     PowerOn, // send boot notification, wait for boot notification conf, don't do anything else
     Idle, // boot notification received, accepted
     Pending, // boot notification received, pending
-    Rejected, // boot notification received, rejected
+    Rejected, // boot notification received, rejected,
+    Unavailable,
+    Faulted
 };
 
 struct IdleInfo {
@@ -49,6 +51,12 @@ public:
 
     void onConnect();
     void onDisconnect();
+    ChangeAvailabilityResponseStatus onChangeAvailability(ChangeAvailabilityType type);
+
+    StatusNotificationStatus last_sent_status = StatusNotificationStatus::NONE;
+    StatusNotificationStatus getStatus();
+    void sendStatus();
+    void forceSendStatus();
 
     bool sendCallAction(CallAction action, const DynamicJsonDocument &doc);
 

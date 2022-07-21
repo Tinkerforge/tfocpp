@@ -54,8 +54,9 @@ void Connector::applyState() {
         case ConnectorState::IDLE:
         case ConnectorState::FINISHING_UNLOCKED:
         case ConnectorState::FINISHING_NO_CABLE_UNLOCKED:
-            platform_unlock_cable(connectorId);
+        case ConnectorState::UNAVAILABLE:
             platform_set_charging_current(connectorId, 0);
+            platform_unlock_cable(connectorId);
 
             clearTagDeadline();
             clearCableDeadline();
@@ -67,8 +68,8 @@ void Connector::applyState() {
             break;
 
         case ConnectorState::NO_CABLE_NO_TAG:
-            platform_unlock_cable(connectorId);
             platform_set_charging_current(connectorId, 0);
+            platform_unlock_cable(connectorId);
 
             setTagDeadline();
             setCableDeadline();
@@ -80,8 +81,8 @@ void Connector::applyState() {
             break;
 
         case ConnectorState::NO_TAG:
-            platform_unlock_cable(connectorId);
             platform_set_charging_current(connectorId, 0);
+            platform_unlock_cable(connectorId);
 
             setTagDeadline();
             clearCableDeadline();
@@ -94,8 +95,8 @@ void Connector::applyState() {
 
         case ConnectorState::AUTH_START_NO_PLUG:
         case ConnectorState::AUTH_START_NO_CABLE:
-            platform_unlock_cable(connectorId);
             platform_set_charging_current(connectorId, 0);
+            platform_unlock_cable(connectorId);
 
             // We have to set the timeout here: The spec says
             // "Interval *from beginning of status: 'Preparing' until incipient Transaction is automatically canceled, due to failure of EV driver to
@@ -108,8 +109,8 @@ void Connector::applyState() {
             break;
 
         case ConnectorState::AUTH_START:
-            platform_unlock_cable(connectorId);
             platform_set_charging_current(connectorId, 0);
+            platform_unlock_cable(connectorId);
 
             setTagDeadline();
             clearCableDeadline();
@@ -120,8 +121,8 @@ void Connector::applyState() {
 
         case ConnectorState::NO_PLUG:
         case ConnectorState::NO_CABLE:
-            platform_unlock_cable(connectorId);
             platform_set_charging_current(connectorId, 0);
+            platform_unlock_cable(connectorId);
 
             clearTagDeadline();
             setCableDeadline();
@@ -155,6 +156,30 @@ void Connector::applyState() {
 }
 
 void Connector::setState(ConnectorState newState) {
+    if (this->unavailable_requested) {
+        switch (newState) {
+            case ConnectorState::TRANSACTION:
+            case ConnectorState::AUTH_STOP:
+            case ConnectorState::FINISHING_NO_CABLE_LOCKED:
+            case ConnectorState::FINISHING_NO_SAME_TAG:
+                break;
+
+            case ConnectorState::IDLE:
+            case ConnectorState::NO_CABLE_NO_TAG:
+            case ConnectorState::NO_TAG:
+            case ConnectorState::FINISHING_UNLOCKED:
+            case ConnectorState::FINISHING_NO_CABLE_UNLOCKED:
+            case ConnectorState::AUTH_START_NO_PLUG:
+            case ConnectorState::AUTH_START_NO_CABLE:
+            case ConnectorState::AUTH_START:
+            case ConnectorState::NO_PLUG:
+            case ConnectorState::NO_CABLE:
+            case ConnectorState::UNAVAILABLE:
+                this->unavailable_requested = false;
+                newState = ConnectorState::UNAVAILABLE;
+        }
+    }
+
     platform_printfln("%s -> %s", ConnectorState_Strings[(int)state], ConnectorState_Strings[(int)newState]);
     ConnectorState oldState = state;
     state = newState;
@@ -180,6 +205,7 @@ void Connector::setState(ConnectorState newState) {
                 case ConnectorState::NO_CABLE:
                 case ConnectorState::FINISHING_NO_CABLE_LOCKED:
                 case ConnectorState::FINISHING_NO_SAME_TAG:
+                case ConnectorState::UNAVAILABLE:
                     break;
             }
             break;
@@ -202,6 +228,7 @@ void Connector::setState(ConnectorState newState) {
                 case ConnectorState::FINISHING_NO_CABLE_UNLOCKED:
                 case ConnectorState::FINISHING_NO_CABLE_LOCKED:
                 case ConnectorState::FINISHING_NO_SAME_TAG:
+                case ConnectorState::UNAVAILABLE:
                     break;
             }
             break;
@@ -231,6 +258,7 @@ void Connector::setState(ConnectorState newState) {
                 case ConnectorState::FINISHING_NO_CABLE_UNLOCKED:
                 case ConnectorState::FINISHING_NO_CABLE_LOCKED:
                 case ConnectorState::FINISHING_NO_SAME_TAG:
+                case ConnectorState::UNAVAILABLE:
                     break;
             }
             break;
@@ -241,6 +269,7 @@ void Connector::setState(ConnectorState newState) {
         case ConnectorState::NO_PLUG:
         case ConnectorState::NO_CABLE:
         case ConnectorState::AUTH_STOP:
+        case ConnectorState::UNAVAILABLE:
             break;
     }
 }
@@ -274,7 +303,7 @@ StatusNotificationStatus Connector::getStatus() {
     if (evse_state == EVSEState::Faulted)
         return StatusNotificationStatus::FAULTED;
 
-    // TODO: implemented unavailable and reserved
+    // TODO: implement reserved
 
     switch (state) {
         case ConnectorState::IDLE:
@@ -326,6 +355,9 @@ StatusNotificationStatus Connector::getStatus() {
         case ConnectorState::FINISHING_NO_CABLE_LOCKED:
         case ConnectorState::FINISHING_NO_SAME_TAG:
             return StatusNotificationStatus::FINISHING;
+
+        case ConnectorState::UNAVAILABLE:
+            return StatusNotificationStatus::UNAVAILABLE;
     }
     return StatusNotificationStatus::NONE;
 }
@@ -593,6 +625,23 @@ void Connector::tick() {
                     break;
             }
             break;
+        case ConnectorState::UNAVAILABLE:
+            switch (evse_state) {
+                case EVSEState::NotConnected:
+                    break;
+                case EVSEState::PlugDetected:
+                    // Error here if we lock the connector while unavailable to make sure a plug can not be inserted
+                    break;
+                case EVSEState::Connected:
+                    // Error here if we lock the connector while unavailable to make sure a plug can not be inserted
+                    break;
+                case EVSEState::ReadyToCharge:
+                case EVSEState::Charging:
+                case EVSEState::Faulted:
+                    platform_printfln("Unexpected EVSEState %d while Connector is in state %d", (int)evse_state, (int)state);
+                    break;
+            }
+            break;
     }
 
     if (tag_deadline != 0 && deadline_elapsed(tag_deadline)) {
@@ -623,6 +672,7 @@ void Connector::tick() {
             case ConnectorState::FINISHING_NO_CABLE_UNLOCKED:
             case ConnectorState::FINISHING_NO_CABLE_LOCKED:
             case ConnectorState::FINISHING_NO_SAME_TAG:
+            case ConnectorState::UNAVAILABLE:
                 platform_printfln("Unexpected tag deadline elapsed while Connector is in state %d. Was deadline not cleared?", (int)state);
             break;
         }
@@ -656,6 +706,7 @@ void Connector::tick() {
             case ConnectorState::IDLE:
             case ConnectorState::NO_TAG:
             case ConnectorState::AUTH_START:
+            case ConnectorState::UNAVAILABLE:
                 platform_printfln("Unexpected tag deadline elapsed while Connector is in state %d. Was deadline not cleared?", (int)state);
             break;
         }
@@ -698,6 +749,7 @@ void Connector::onTagSeen(const char *tag_id) {
             case ConnectorState::NO_TAG:
             case ConnectorState::FINISHING_UNLOCKED:
             case ConnectorState::FINISHING_NO_CABLE_UNLOCKED:
+            case ConnectorState::UNAVAILABLE:
                 platform_printfln("Unexpected same tag in state %s. Was auth not cleared?", ConnectorState_Strings[(size_t)state]);
                 break;
         }
@@ -737,6 +789,7 @@ void Connector::onTagSeen(const char *tag_id) {
         case ConnectorState::AUTH_STOP:
         case ConnectorState::FINISHING_NO_CABLE_LOCKED:
         case ConnectorState::FINISHING_NO_SAME_TAG:
+        case ConnectorState::UNAVAILABLE:
             platform_printfln("Ignoring other tag in state %s", ConnectorState_Strings[(size_t)state]);
             break;
     }
@@ -777,6 +830,7 @@ void Connector::onAuthorizeConf(IdTagInfo info) {
         case ConnectorState::FINISHING_NO_CABLE_UNLOCKED:
         case ConnectorState::FINISHING_NO_CABLE_LOCKED:
         case ConnectorState::FINISHING_NO_SAME_TAG:
+        case ConnectorState::UNAVAILABLE:
             platform_printfln("Ignoring Authorize.conf in state %s", ConnectorState_Strings[(size_t)state]);
             return;
     }
@@ -810,6 +864,52 @@ void Connector::onStartTransactionConf(IdTagInfo info, int32_t txn_id) {
     //if (info.status == ResponseIdTagInfoEntriesStatus::INVALID) {
         this->transaction_with_invalid_tag_id = true;
     //}
+}
+
+ChangeAvailabilityResponseStatus Connector::onChangeAvailability(ChangeAvailabilityType type) {
+    switch(type) {
+        case ChangeAvailabilityType::OPERATIVE:
+            /* In the event that Central System requests Charge Point to change to a status it is already in, Charge Point SHALL
+               respond with availability status ‘Accepted’. */
+            // Currently there is no reason to not accept this.
+            // If in the future a connector can transition to UNAVAILABLE on its own, check here if the reason for this transition was fixed.
+            this->unavailable_requested = false;
+            this->setState(ConnectorState::IDLE);
+            return ChangeAvailabilityResponseStatus::ACCEPTED;
+
+        case ChangeAvailabilityType::INOPERATIVE:
+            switch (state) {
+                case ConnectorState::TRANSACTION:
+                case ConnectorState::AUTH_STOP:
+                    this->unavailable_requested = true;
+                    return ChangeAvailabilityResponseStatus::SCHEDULED;
+
+                case ConnectorState::FINISHING_NO_CABLE_LOCKED:
+                case ConnectorState::FINISHING_NO_SAME_TAG:
+                    this->unavailable_requested = true;
+                    return ChangeAvailabilityResponseStatus::ACCEPTED;
+
+                case ConnectorState::UNAVAILABLE:
+                /* In the event that Central System requests Charge Point to change to a status it is already in, Charge Point SHALL
+                   respond with availability status ‘Accepted’. */
+                    this->unavailable_requested = false;
+                    return ChangeAvailabilityResponseStatus::ACCEPTED;
+
+                case ConnectorState::IDLE:
+                case ConnectorState::NO_CABLE_NO_TAG:
+                case ConnectorState::NO_TAG:
+                case ConnectorState::AUTH_START_NO_PLUG:
+                case ConnectorState::AUTH_START_NO_CABLE:
+                case ConnectorState::AUTH_START:
+                case ConnectorState::NO_PLUG:
+                case ConnectorState::NO_CABLE:
+                case ConnectorState::FINISHING_UNLOCKED:
+                case ConnectorState::FINISHING_NO_CABLE_UNLOCKED:
+                    this->unavailable_requested = false;
+                    this->setState(ConnectorState::UNAVAILABLE);
+                    return ChangeAvailabilityResponseStatus::ACCEPTED;
+            }
+    }
 }
 
 // Handles StopCallback
@@ -854,6 +954,7 @@ void Connector::onStop(StopReason reason)
         case ConnectorState::FINISHING_NO_CABLE_UNLOCKED:
         case ConnectorState::FINISHING_NO_CABLE_LOCKED:
         case ConnectorState::FINISHING_NO_SAME_TAG:
+        case ConnectorState::UNAVAILABLE:
             // No transaction is running. Ignore the callback.
             break;
     }

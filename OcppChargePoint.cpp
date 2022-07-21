@@ -44,6 +44,7 @@ void OcppChargePoint::tick_idle() {
     platform_printfln("Sending heartbeat. %u %u %u %u", platform_now_ms(), last_bn_send_ms, last_bn_send_ms + 1000 * getIntConfig(ConfigKey::HeartbeatInterval), 1000 * getIntConfig(ConfigKey::HeartbeatInterval));
 
     this->sendCallAction(CallAction::HEARTBEAT, Heartbeat());
+    this->sendStatus();
 }
 
 void OcppChargePoint::tick() {
@@ -53,13 +54,18 @@ void OcppChargePoint::tick() {
         case OcppState::Rejected:
             tick_power_on();
             break;
+
         case OcppState::Idle:
+        case OcppState::Unavailable:
+        case OcppState::Faulted:
             tick_idle();
             break;
     }
 
-    for(int32_t i = 0; i < NUM_CONNECTORS; ++i) {
-        connectors[i].tick();
+    if (state != OcppState::Unavailable && state != OcppState::Faulted) {
+        for(int32_t i = 0; i < NUM_CONNECTORS; ++i) {
+            connectors[i].tick();
+        }
     }
     connection.tick();
 }
@@ -69,6 +75,7 @@ void OcppChargePoint::onConnect()
     if (state != OcppState::Idle)
         return;
 
+    this->forceSendStatus();
     for(int32_t i = 0; i < NUM_CONNECTORS; ++i)
         connectors[i].forceSendStatus();
 }
@@ -76,6 +83,78 @@ void OcppChargePoint::onConnect()
 void OcppChargePoint::onDisconnect()
 {
 
+}
+
+ChangeAvailabilityResponseStatus OcppChargePoint::onChangeAvailability(ChangeAvailabilityType type)
+{
+    switch(type) {
+        case ChangeAvailabilityType::OPERATIVE:
+            /* In the event that Central System requests Charge Point to change to a status it is already in, Charge Point SHALL
+               respond with availability status ‘Accepted’. */
+            // Currently there is no reason to not accept this.
+            // If in the future a connector can transition to UNAVAILABLE on its own, check here if the reason for this transition was fixed.
+            switch(state) {
+                case OcppState::PowerOn:
+                case OcppState::Pending:
+                case OcppState::Rejected:
+                case OcppState::Faulted:
+                    return ChangeAvailabilityResponseStatus::REJECTED;
+
+                case OcppState::Idle:
+                case OcppState::Unavailable:
+                    this->state = OcppState::Idle;
+                    return ChangeAvailabilityResponseStatus::ACCEPTED;
+            }
+
+        case ChangeAvailabilityType::INOPERATIVE:
+             switch(state) {
+                case OcppState::PowerOn:
+                case OcppState::Pending:
+                case OcppState::Rejected:
+                case OcppState::Faulted:
+                    return ChangeAvailabilityResponseStatus::REJECTED;
+
+                case OcppState::Idle:
+                case OcppState::Unavailable:
+                    this->state = OcppState::Unavailable;
+                    return ChangeAvailabilityResponseStatus::ACCEPTED;
+            }
+    }
+}
+
+StatusNotificationStatus OcppChargePoint::getStatus()
+{
+    switch(state) {
+        case OcppState::Unavailable:
+            return StatusNotificationStatus::UNAVAILABLE;
+
+        case OcppState::Faulted:
+            return StatusNotificationStatus::FAULTED;
+
+        case OcppState::PowerOn:
+        case OcppState::Pending:
+        case OcppState::Rejected:
+        case OcppState::Idle:
+            return StatusNotificationStatus::AVAILABLE;
+    }
+}
+
+void OcppChargePoint::sendStatus()
+{
+    StatusNotificationStatus newStatus = getStatus();
+    if (last_sent_status == newStatus)
+        return;
+
+    forceSendStatus();
+}
+
+void OcppChargePoint::forceSendStatus()
+{
+    StatusNotificationStatus newStatus = getStatus();
+    platform_printfln("Sending status %s for charge point", StatusNotificationStatusStrings[(size_t)newStatus]);
+
+    this->sendCallAction(CallAction::STATUS_NOTIFICATION, StatusNotification(0, StatusNotificationErrorCode::NO_ERROR, newStatus, nullptr, platform_get_system_time(this->platform_ctx)));
+    last_sent_status = newStatus;
 }
 
 bool OcppChargePoint::sendCallAction(CallAction action, const DynamicJsonDocument &doc)
@@ -124,7 +203,7 @@ CallResponse OcppChargePoint::handleBootNotificationResponse(uint32_t messageId,
             platform_set_system_time(platform_ctx, conf.currentTime());
             state = OcppState::Idle;
 
-            this->sendCallAction(CallAction::STATUS_NOTIFICATION, StatusNotification(0, StatusNotificationErrorCode::NO_ERROR, StatusNotificationStatus::AVAILABLE, nullptr, platform_get_system_time(platform_ctx)));
+            this->forceSendStatus();
 
             for(size_t i = 0; i < NUM_CONNECTORS; ++i)
                 connectors[i].forceSendStatus();
@@ -145,9 +224,27 @@ CallResponse OcppChargePoint::handleBootNotificationResponse(uint32_t messageId,
 
 CallResponse OcppChargePoint::handleChangeAvailability(const char *uid, ChangeAvailabilityView req)
 {
-    (void) uid;
-    (void) req;
-    return CallResponse{CallErrorCode::InternalError, "not implemented yet!"};
+    int conn_id = req.connectorId();
+    if (conn_id == 0) {
+        auto resp = this->onChangeAvailability(req.type());
+        if (resp == ChangeAvailabilityResponseStatus::REJECTED)
+            connection.sendCallResponse(ChangeAvailabilityResponse(uid, ChangeAvailabilityResponseStatus::REJECTED));
+
+        for(size_t i = 0; i < NUM_CONNECTORS; ++i) {
+            auto conn_resp = connectors[i].onChangeAvailability(req.type());
+            if (conn_resp == ChangeAvailabilityResponseStatus::REJECTED)
+                platform_printfln("Connectors rejecting the change availability request is not supported yet!");
+            else if (conn_resp == ChangeAvailabilityResponseStatus::SCHEDULED)
+                resp = conn_resp;
+        }
+        connection.sendCallResponse(ChangeAvailabilityResponse(uid, resp));
+    } else if (conn_id < 0 || conn_id > NUM_CONNECTORS) {
+        connection.sendCallResponse(ChangeAvailabilityResponse(uid, ChangeAvailabilityResponseStatus::REJECTED));
+    } else {
+        auto resp = connectors[conn_id].onChangeAvailability(req.type());
+        connection.sendCallResponse(ChangeAvailabilityResponse(uid, resp));
+    }
+    return CallResponse{CallErrorCode::OK, ""};
 }
 
 CallResponse OcppChargePoint::handleChangeConfiguration(const char *uid, ChangeConfigurationView req)
