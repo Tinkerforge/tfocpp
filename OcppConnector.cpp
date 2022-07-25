@@ -157,30 +157,6 @@ void Connector::applyState() {
 }
 
 void Connector::setState(ConnectorState newState) {
-    if (this->unavailable_requested) {
-        switch (newState) {
-            case ConnectorState::TRANSACTION:
-            case ConnectorState::AUTH_STOP:
-            case ConnectorState::FINISHING_NO_CABLE_LOCKED:
-            case ConnectorState::FINISHING_NO_SAME_TAG:
-                break;
-
-            case ConnectorState::IDLE:
-            case ConnectorState::NO_CABLE_NO_TAG:
-            case ConnectorState::NO_TAG:
-            case ConnectorState::FINISHING_UNLOCKED:
-            case ConnectorState::FINISHING_NO_CABLE_UNLOCKED:
-            case ConnectorState::AUTH_START_NO_PLUG:
-            case ConnectorState::AUTH_START_NO_CABLE:
-            case ConnectorState::AUTH_START:
-            case ConnectorState::NO_PLUG:
-            case ConnectorState::NO_CABLE:
-            case ConnectorState::UNAVAILABLE:
-                this->unavailable_requested = false;
-                newState = ConnectorState::UNAVAILABLE;
-        }
-    }
-
     platform_printfln("%s -> %s", ConnectorState_Strings[(int)state], ConnectorState_Strings[(int)newState]);
     ConnectorState oldState = state;
     state = newState;
@@ -272,6 +248,30 @@ void Connector::setState(ConnectorState newState) {
         case ConnectorState::AUTH_STOP:
         case ConnectorState::UNAVAILABLE:
             break;
+    }
+
+    if (this->unavailable_requested) {
+        switch (newState) {
+            case ConnectorState::TRANSACTION:
+            case ConnectorState::AUTH_STOP:
+            case ConnectorState::FINISHING_NO_CABLE_LOCKED:
+            case ConnectorState::FINISHING_NO_SAME_TAG:
+                break;
+
+            case ConnectorState::IDLE:
+            case ConnectorState::NO_CABLE_NO_TAG:
+            case ConnectorState::NO_TAG:
+            case ConnectorState::AUTH_START_NO_PLUG:
+            case ConnectorState::AUTH_START_NO_CABLE:
+            case ConnectorState::AUTH_START:
+            case ConnectorState::FINISHING_UNLOCKED:
+            case ConnectorState::FINISHING_NO_CABLE_UNLOCKED:
+            case ConnectorState::NO_PLUG:
+            case ConnectorState::NO_CABLE:
+            case ConnectorState::UNAVAILABLE:
+                this->unavailable_requested = false;
+                state = ConnectorState::UNAVAILABLE;
+        }
     }
 }
 
