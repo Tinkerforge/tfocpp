@@ -241,7 +241,7 @@ CallResponse OcppChargePoint::handleChangeAvailability(const char *uid, ChangeAv
     } else if (conn_id < 0 || conn_id > NUM_CONNECTORS) {
         connection.sendCallResponse(ChangeAvailabilityResponse(uid, ChangeAvailabilityResponseStatus::REJECTED));
     } else {
-        auto resp = connectors[conn_id].onChangeAvailability(req.type());
+        auto resp = connectors[conn_id - 1].onChangeAvailability(req.type());
         connection.sendCallResponse(ChangeAvailabilityResponse(uid, resp));
     }
     return CallResponse{CallErrorCode::OK, ""};
