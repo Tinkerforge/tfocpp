@@ -46,7 +46,8 @@ static const char * ConnectorState_Strings[] = {
     "FINISHING_UNLOCKED",
     "FINISHING_NO_CABLE_UNLOCKED",
     "FINISHING_NO_CABLE_LOCKED",
-    "FINISHING_NO_SAME_TAG"
+    "FINISHING_NO_SAME_TAG",
+    "UNAVAILABLE"
 };
 
 void Connector::applyState() {
