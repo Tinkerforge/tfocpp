@@ -4,10 +4,11 @@ CC = clang
 CXX = clang++
 CLANG_WARNINGS = -Weverything -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-old-style-cast -Wno-shadow-field-in-constructor -Wno-padded
 
-COMPILE_FLAGS = -g -fPIC -O0 ${CLANG_WARNINGS} -fdiagnostics-color=always
+COMPILE_FLAGS = -g -fPIC -O0 ${CLANG_WARNINGS} -fdiagnostics-color=always -fsanitize=address,undefined,leak
 CFLAGS += -std=c99 ${COMPILE_FLAGS}
 CXXFLAGS += -std=c++11 ${COMPILE_FLAGS}
-LDFLAGS += -pthread
+LDFLAGS += -pthread -fsanitize=address,undefined,leak
+LIB_LD_FLAGS = -shared-libasan
 LIBS += -lwebsockets -lstdc++ $(wildcard libiso8601/*.c.o)
 
 WITH_DEBUG ?= yes
@@ -29,7 +30,7 @@ OBJECTS_EXEC := ${SOURCES_EXEC:.cpp=.o}
 all: libocpp.so ocpp
 
 libocpp.so: $(OBJECTS_LIB)
-	$(CXX) $(OBJECTS_LIB) $(LIBS) $(LDFLAGS) -shared -o $@
+	$(CXX) $(OBJECTS_LIB) $(LIBS) $(LDFLAGS) $(LIB_LD_FLAGS) -shared -o $@
 
 ocpp: $(OBJECTS_EXEC)
 	$(CXX) $(OBJECTS_EXEC) $(LIBS) $(LDFLAGS) -o $@
