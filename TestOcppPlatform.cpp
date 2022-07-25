@@ -74,6 +74,8 @@ static void fn(struct mg_connection *c, int ev, void *ev_data, void *fn_data) {
     if (recv_cb != nullptr) {
         recv_cb(useless_copy, wm->data.len, recv_cb_userdata);
     }
+
+    free(useless_copy);
   }
 
   if (ev == MG_EV_ERROR || ev == MG_EV_CLOSE) {
