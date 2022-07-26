@@ -191,12 +191,12 @@ void Connector::setState(ConnectorState newState) {
                 case ConnectorState::AUTH_START:
                 case ConnectorState::NO_PLUG:
                 case ConnectorState::NO_CABLE:
+                case ConnectorState::NO_TAG:
                     this->sendCallAction(CallAction::START_TRANSACTION, StartTransaction(connectorId, authorized_for.tagId, platform_get_energy(connectorId), platform_get_system_time(cp->platform_ctx)));
                     break;
 
                 case ConnectorState::IDLE:
                 case ConnectorState::NO_CABLE_NO_TAG:
-                case ConnectorState::NO_TAG:
                 case ConnectorState::AUTH_START_NO_PLUG:
                 case ConnectorState::AUTH_START_NO_CABLE:
                 case ConnectorState::TRANSACTION:
