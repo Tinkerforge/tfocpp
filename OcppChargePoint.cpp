@@ -36,6 +36,8 @@ void OcppChargePoint::tick_power_on() {
 }
 
 void OcppChargePoint::tick_idle() {
+    this->sendStatus();
+
     if (!deadline_elapsed(last_bn_send_ms + 1000 * getIntConfig(ConfigKey::HeartbeatInterval)))
         return;
 
@@ -44,7 +46,6 @@ void OcppChargePoint::tick_idle() {
     platform_printfln("Sending heartbeat. %u %u %u %u", platform_now_ms(), last_bn_send_ms, last_bn_send_ms + 1000 * getIntConfig(ConfigKey::HeartbeatInterval), 1000 * getIntConfig(ConfigKey::HeartbeatInterval));
 
     this->sendCallAction(CallAction::HEARTBEAT, Heartbeat());
-    this->sendStatus();
 }
 
 void OcppChargePoint::tick() {
