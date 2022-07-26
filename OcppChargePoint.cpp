@@ -443,9 +443,6 @@ CallResponse OcppChargePoint::handleMeterValuesResponse(uint32_t messageId, Mete
 
 CallResponse OcppChargePoint::handleRemoteStartTransaction(const char *uid, RemoteStartTransactionView req)
 {
-    (void) uid;
-    (void) req;
-
     int conn_id = -1;
 
     if (!req.connectorId().is_set()) {
