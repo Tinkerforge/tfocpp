@@ -538,9 +538,17 @@ CallResponse OcppChargePoint::handleStopTransactionResponse(uint32_t messageId, 
 
 CallResponse OcppChargePoint::handleUnlockConnector(const char *uid, UnlockConnectorView req)
 {
-    (void) uid;
-    (void) req;
-    return CallResponse{CallErrorCode::InternalError, "not implemented yet!"};
+    int32_t conn_id = req.connectorId() - 1;
+
+    if (conn_id < 0 || conn_id >= NUM_CONNECTORS) {
+        connection.sendCallResponse(UnlockConnectorResponse(uid, UnlockConnectorResponseStatus::NOT_SUPPORTED));
+        return CallResponse{CallErrorCode::OK, ""};
+    }
+
+    auto result = connectors[conn_id].onUnlockConnector();
+
+    connection.sendCallResponse(UnlockConnectorResponse(uid, result));
+    return CallResponse{CallErrorCode::OK, ""};
 }
 
 void OcppChargePoint::handleTagSeen(int32_t connectorId, const char *tagId)

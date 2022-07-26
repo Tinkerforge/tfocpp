@@ -122,6 +122,8 @@ struct Connector {
     void onRemoteStartTransaction(const char *tag_id);
     void onRemoteStopTransaction();
 
+    UnlockConnectorResponseStatus onUnlockConnector();
+
     ChangeAvailabilityResponseStatus onChangeAvailability(ChangeAvailabilityType type);
 
     StatusNotificationStatus getStatus();

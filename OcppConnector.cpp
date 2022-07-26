@@ -987,6 +987,34 @@ void Connector::onRemoteStopTransaction()
     }
 }
 
+UnlockConnectorResponseStatus Connector::onUnlockConnector()
+{
+    switch (state) {
+        case ConnectorState::IDLE:
+        case ConnectorState::NO_CABLE_NO_TAG:
+        case ConnectorState::NO_TAG:
+        case ConnectorState::AUTH_START_NO_PLUG:
+        case ConnectorState::AUTH_START_NO_CABLE:
+        case ConnectorState::AUTH_START:
+        case ConnectorState::NO_PLUG:
+        case ConnectorState::NO_CABLE:
+        case ConnectorState::FINISHING_UNLOCKED:
+        case ConnectorState::FINISHING_NO_CABLE_UNLOCKED:
+        case ConnectorState::UNAVAILABLE:
+            return UnlockConnectorResponseStatus::UNLOCKED;
+
+        case ConnectorState::FINISHING_NO_CABLE_LOCKED:
+            setState(ConnectorState::FINISHING_NO_CABLE_UNLOCKED);
+            return UnlockConnectorResponseStatus::UNLOCKED;
+
+        case ConnectorState::TRANSACTION:
+        case ConnectorState::AUTH_STOP:
+        case ConnectorState::FINISHING_NO_SAME_TAG:
+            setState(ConnectorState::FINISHING_UNLOCKED);
+            return UnlockConnectorResponseStatus::UNLOCKED;
+    }
+}
+
 ChangeAvailabilityResponseStatus Connector::onChangeAvailability(ChangeAvailabilityType type) {
     switch(type) {
         case ChangeAvailabilityType::OPERATIVE:
