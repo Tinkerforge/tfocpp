@@ -109,12 +109,16 @@ struct Connector {
     void forceSendStatus();
     void sendCallAction(CallAction action, const DynamicJsonDocument &doc);
 
+    bool isSelectableForRemoteStartTxn();
+
     void onTagSeen(const char *tag_id);
     void onStop(StopReason reason);
 
     void onAuthorizeConf(IdTagInfo info);
 
     void onStartTransactionConf(IdTagInfo info, int32_t txn_id);
+
+    void onRemoteStartTransaction(const char *tag_id);
 
     ChangeAvailabilityResponseStatus onChangeAvailability(ChangeAvailabilityType type);
 

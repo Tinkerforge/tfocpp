@@ -299,6 +299,39 @@ void Connector::sendCallAction(CallAction action, const DynamicJsonDocument &doc
     cp->sendCallAction(action, doc);
 }
 
+bool Connector::isSelectableForRemoteStartTxn()
+{
+    // A connector is selectable if
+    // - it is not unavailable or faulted
+    // - no transaction is running (we can't start one if one is already running)
+    // - at least the plug is detected (as an indicator which connector is selected by the user)
+
+    EVSEState evse_state = platform_get_evse_state(connectorId);
+    if (evse_state == EVSEState::Faulted)
+        return false;
+
+    switch (state) {
+        case ConnectorState::UNAVAILABLE:
+        case ConnectorState::IDLE:
+        case ConnectorState::NO_PLUG:
+        case ConnectorState::AUTH_START_NO_PLUG:
+        case ConnectorState::TRANSACTION:
+        case ConnectorState::AUTH_STOP:
+            return false;
+
+        case ConnectorState::NO_CABLE_NO_TAG:
+        case ConnectorState::NO_TAG:
+        case ConnectorState::AUTH_START_NO_CABLE: //TODO: How to handle that an authorization is in flight (that could be responded to by the central!)
+        case ConnectorState::AUTH_START:
+        case ConnectorState::NO_CABLE:
+        case ConnectorState::FINISHING_UNLOCKED:
+        case ConnectorState::FINISHING_NO_CABLE_UNLOCKED:
+        case ConnectorState::FINISHING_NO_CABLE_LOCKED:
+        case ConnectorState::FINISHING_NO_SAME_TAG:
+            return true;
+    }
+}
+
 StatusNotificationStatus Connector::getStatus() {
     EVSEState evse_state = platform_get_evse_state(connectorId);
     if (evse_state == EVSEState::Faulted)
@@ -865,6 +898,45 @@ void Connector::onStartTransactionConf(IdTagInfo info, int32_t txn_id) {
     //if (info.status == ResponseIdTagInfoEntriesStatus::INVALID) {
         this->transaction_with_invalid_tag_id = true;
     //}
+}
+
+void Connector::onRemoteStartTransaction(const char *tag_id)
+{
+    switch (state) {
+        case ConnectorState::IDLE:
+        case ConnectorState::AUTH_START_NO_PLUG:
+            authorized_for.updateTagId(tag_id);
+            setState(ConnectorState::NO_PLUG);
+            break;
+
+        case ConnectorState::NO_CABLE_NO_TAG:
+        case ConnectorState::AUTH_START_NO_CABLE:
+        case ConnectorState::FINISHING_NO_CABLE_UNLOCKED:
+        case ConnectorState::FINISHING_NO_CABLE_LOCKED:
+            authorized_for.updateTagId(tag_id);
+            setState(ConnectorState::NO_CABLE);
+            break;
+
+        case ConnectorState::NO_TAG:
+        case ConnectorState::AUTH_START:
+        case ConnectorState::FINISHING_UNLOCKED:
+        case ConnectorState::FINISHING_NO_SAME_TAG:
+            authorized_for.updateTagId(tag_id);
+            setState(ConnectorState::TRANSACTION);
+            break;
+
+        case ConnectorState::NO_PLUG:
+        case ConnectorState::NO_CABLE:
+            authorized_for.updateTagId(tag_id);
+            // stay in this state, only change tag id
+            break;
+
+        case ConnectorState::TRANSACTION:
+        case ConnectorState::AUTH_STOP:
+        case ConnectorState::UNAVAILABLE:
+            platform_printfln("Ignoring remote start transaction in state %s", ConnectorState_Strings[(size_t)state]);
+            break;
+    }
 }
 
 ChangeAvailabilityResponseStatus Connector::onChangeAvailability(ChangeAvailabilityType type) {

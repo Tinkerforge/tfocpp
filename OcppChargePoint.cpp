@@ -445,7 +445,46 @@ CallResponse OcppChargePoint::handleRemoteStartTransaction(const char *uid, Remo
 {
     (void) uid;
     (void) req;
-    return CallResponse{CallErrorCode::InternalError, "not implemented yet!"};
+
+    int conn_id = -1;
+
+    if (!req.connectorId().is_set()) {
+        for(int i = 0; i < NUM_CONNECTORS; ++i) {
+            if (!connectors[i].isSelectableForRemoteStartTxn())
+                continue;
+
+            if (conn_id != -1) {
+                // We already have another selectable connector.
+                // -> Reject the request as it is ambiguous which connector to start.
+                connection.sendCallResponse(RemoteStartTransactionResponse(uid, ResponseStatus::REJECTED));
+                return CallResponse{CallErrorCode::OK, ""};
+            }
+
+            conn_id = i;
+        }
+    } else
+        conn_id = req.connectorId().get() - 1;
+
+    if (conn_id < 0 || conn_id >= NUM_CONNECTORS) {
+        connection.sendCallResponse(RemoteStartTransactionResponse(uid, ResponseStatus::REJECTED));
+        return CallResponse{CallErrorCode::OK, ""};
+    }
+
+    // TODO: We could also reject here if the selected connector is faulted, unavailable or in an transaction.
+    // However this is a different criterion than the one used in isSelectableForRemoteStartTxn,
+    // as this function also requires at least the plug to return true. This is not required here, as we
+    // can handle the request just as if the user starts interacting with the connector with a tag (i.e.
+    // the IDLE -> AUTH_START_NO_PLUG transistion)
+
+    connection.sendCallResponse(RemoteStartTransactionResponse(uid, ResponseStatus::ACCEPTED));
+
+    if (getBoolConfig(ConfigKey::AuthorizeRemoteTxRequests)) {
+        connectors[conn_id].onTagSeen(req.idTag());
+    } else {
+        connectors[conn_id].onRemoteStartTransaction(req.idTag());
+    }
+
+    return CallResponse{CallErrorCode::OK, ""};
 }
 
 CallResponse OcppChargePoint::handleRemoteStopTransaction(const char *uid, RemoteStopTransactionView req)
