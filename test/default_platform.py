@@ -152,6 +152,9 @@ def trigger_stop(test, connector_id, reason):
     test.assertIsNotNone(stop_cb)
     stop_cb(connector_id, reason, stop_cb_user_data)
 
+@ctypes.CFUNCTYPE(None)
+def platform_reset():
+    return print("platform_reset")
 
 def register_default_functions(libocpp):
     libocpp.set_platform_now_ms_cb(platform_now_ms)
@@ -169,6 +172,7 @@ def register_default_functions(libocpp):
     libocpp.set_platform_lock_cable_cb(platform_lock_cable)
     libocpp.set_platform_unlock_cable_cb(platform_unlock_cable)
     libocpp.set_platform_set_charging_current_cb(platform_set_charging_current)
+    libocpp.set_platform_reset_cb(platform_reset)
 
 def start_client(port, tscale):
     global thread_id

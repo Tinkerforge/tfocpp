@@ -14,7 +14,9 @@ enum class OcppState {
     Pending, // boot notification received, pending
     Rejected, // boot notification received, rejected,
     Unavailable,
-    Faulted
+    Faulted,
+    SoftReset,
+    HardReset
 };
 
 struct IdleInfo {
@@ -46,6 +48,13 @@ public:
 
     void tick_power_on();
     void tick_idle();
+
+    void tick_soft_reset();
+    uint32_t soft_reset_start_ms = 0;
+
+    void tick_hard_reset();
+    uint32_t hard_reset_start_ms = 0;
+
 
     void tick();
 

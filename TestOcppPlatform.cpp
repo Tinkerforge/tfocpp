@@ -30,6 +30,8 @@ static const char * (*platform_get_meter_value_cb)(int32_t connectorId, SampledV
 
 static int32_t (*platform_get_energy_cb)(int32_t connectorId) = nullptr;
 
+static void (*platform_reset_cb)() = nullptr;
+
 void set_platform_now_ms_cb(uint32_t (*cb)()) {platform_now_ms_cb = cb;}
 void set_platform_set_system_time_cb(void (*cb)(void *ctx, time_t t)) {platform_set_system_time_cb = cb;}
 void set_platform_get_system_time_cb(time_t (*cb)(void *ctx)) {platform_get_system_time_cb = cb;}
@@ -45,6 +47,7 @@ void set_platform_set_charging_current_cb(void (*cb)(int32_t connectorId, uint32
 void set_platform_get_meter_value_cb(const char * (*cb)(int32_t connectorId, SampledValueMeasurand measurant)) {platform_get_meter_value_cb = cb;}
 void set_platform_get_energy_cb(int32_t (*cb)(int32_t connectorId)) {platform_get_energy_cb = cb;}
 void set_platform_register_stop_callback_cb(void (*cb)(void *ctx, void (*cb)(int32_t, StopReason, void *), void *user_data)) {platform_register_stop_callback_cb = cb;}
+void set_platform_reset_cb(void (*cb)()) {platform_reset_cb = cb;}
 
 
 struct mg_mgr mgr;        // Event manager
@@ -216,3 +219,6 @@ void ocpp_destroy() {
     cp = nullptr;
 }
 
+void platform_reset() {
+    platform_reset_cb();
+}

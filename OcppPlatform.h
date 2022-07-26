@@ -93,3 +93,5 @@ const char * platform_get_meter_value(int32_t connectorId, SampledValueMeasurand
 
 // This is the Energy.Active.Import.Register measurant in Wh
 int32_t platform_get_energy(int32_t connectorId);
+
+void platform_reset();

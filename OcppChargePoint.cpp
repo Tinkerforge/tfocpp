@@ -48,6 +48,24 @@ void OcppChargePoint::tick_idle() {
     this->sendCallAction(CallAction::HEARTBEAT, Heartbeat());
 }
 
+void OcppChargePoint::tick_hard_reset() {
+    // TODO: if persistence is implemented: Write all txn messages to flash and reboot instantly.
+    platform_reset();
+}
+
+void OcppChargePoint::tick_soft_reset() {
+    // Stay in soft reset until all transaction messages are sent (to the platforms websocket impl).
+    // Then stop, but allow the platform as long as it takes to send those websocket messages.
+    // Then reset.
+
+    if (connection.transaction_messages.size() != 0)
+        return;
+
+    this->stop();
+
+    platform_reset();
+}
+
 void OcppChargePoint::tick() {
     switch (state) {
         case OcppState::PowerOn:
@@ -61,9 +79,17 @@ void OcppChargePoint::tick() {
         case OcppState::Faulted:
             tick_idle();
             break;
+
+        case OcppState::SoftReset:
+            tick_soft_reset();
+            break;
+
+        case OcppState::HardReset:
+            tick_hard_reset();
+            break;
     }
 
-    if (state != OcppState::Unavailable && state != OcppState::Faulted) {
+    if (state != OcppState::SoftReset && state != OcppState::HardReset) {
         for(int32_t i = 0; i < NUM_CONNECTORS; ++i) {
             connectors[i].tick();
         }
@@ -99,6 +125,8 @@ ChangeAvailabilityResponseStatus OcppChargePoint::onChangeAvailability(ChangeAva
                 case OcppState::Pending:
                 case OcppState::Rejected:
                 case OcppState::Faulted:
+                case OcppState::SoftReset:
+                case OcppState::HardReset:
                     return ChangeAvailabilityResponseStatus::REJECTED;
 
                 case OcppState::Idle:
@@ -106,6 +134,7 @@ ChangeAvailabilityResponseStatus OcppChargePoint::onChangeAvailability(ChangeAva
                     this->state = OcppState::Idle;
                     return ChangeAvailabilityResponseStatus::ACCEPTED;
             }
+            break;
 
         case ChangeAvailabilityType::INOPERATIVE:
              switch(state) {
@@ -113,6 +142,8 @@ ChangeAvailabilityResponseStatus OcppChargePoint::onChangeAvailability(ChangeAva
                 case OcppState::Pending:
                 case OcppState::Rejected:
                 case OcppState::Faulted:
+                case OcppState::SoftReset:
+                case OcppState::HardReset:
                     return ChangeAvailabilityResponseStatus::REJECTED;
 
                 case OcppState::Idle:
@@ -120,6 +151,7 @@ ChangeAvailabilityResponseStatus OcppChargePoint::onChangeAvailability(ChangeAva
                     this->state = OcppState::Unavailable;
                     return ChangeAvailabilityResponseStatus::ACCEPTED;
             }
+            break;
     }
 }
 
@@ -127,6 +159,8 @@ StatusNotificationStatus OcppChargePoint::getStatus()
 {
     switch(state) {
         case OcppState::Unavailable:
+        case OcppState::SoftReset:
+        case OcppState::HardReset:
             return StatusNotificationStatus::UNAVAILABLE;
 
         case OcppState::Faulted:
@@ -170,6 +204,8 @@ bool OcppChargePoint::sendCallAction(CallAction action, const DynamicJsonDocumen
         case OcppState::Idle:
         case OcppState::Unavailable:
         case OcppState::Faulted:
+        case OcppState::SoftReset:
+        case OcppState::HardReset:
             break;
     }
     // Filter messages here
@@ -306,7 +342,8 @@ CallResponse OcppChargePoint::handleDataTransferResponse(uint32_t messageId, Dat
 {
     (void) messageId;
     (void) conf;
-    return CallResponse{CallErrorCode::InternalError, "not implemented yet!"};
+
+    return CallResponse{CallErrorCode::OK, ""};
 }
 
 CallResponse OcppChargePoint::handleGetConfiguration(const char *uid, GetConfigurationView req)
@@ -503,7 +540,21 @@ CallResponse OcppChargePoint::handleReset(const char *uid, ResetView req)
 {
     (void) uid;
     (void) req;
-    return CallResponse{CallErrorCode::InternalError, "not implemented yet!"};
+
+    connection.sendCallResponse(ResetResponse(uid, ResponseStatus::ACCEPTED));
+
+    for(size_t i = 0; i < NUM_CONNECTORS; ++i) {
+        connectors[i].onRemoteStopTransaction();
+        connectors[i].onChangeAvailability(ChangeAvailabilityType::INOPERATIVE);
+    }
+
+    if (req.type() == ResetType::SOFT) {
+        this->state = OcppState::SoftReset;
+    } else {
+        this->state = OcppState::HardReset;
+    }
+
+    return CallResponse{CallErrorCode::OK, ""};
 }
 
 CallResponse OcppChargePoint::handleStartTransactionResponse(uint32_t messageId, StartTransactionResponseView conf)
@@ -526,14 +577,17 @@ CallResponse OcppChargePoint::handleStatusNotificationResponse(uint32_t messageI
 {
     (void) messageId;
     (void) conf;
-    return CallResponse{CallErrorCode::InternalError, "not implemented yet!"};
+
+    return CallResponse{CallErrorCode::OK, ""};
 }
 
 CallResponse OcppChargePoint::handleStopTransactionResponse(uint32_t messageId, StopTransactionResponseView conf)
 {
     (void) messageId;
     (void) conf;
-    return CallResponse{CallErrorCode::InternalError, "not implemented yet!"};
+
+    // conf only contains a idTagInfo for updating the authorization cache. We don't implement that yet.
+    return CallResponse{CallErrorCode::OK, ""};
 }
 
 CallResponse OcppChargePoint::handleUnlockConnector(const char *uid, UnlockConnectorView req)

@@ -72,8 +72,14 @@ void* platform_init(const char *websocket_url)
 }
 
 void platform_disconnect(void *ctx) {
-    if (connected)
-        mg_ws_send(c, "", 0, WEBSOCKET_OP_CLOSE);
+    if (!connected)
+        return;
+
+    mg_ws_send(c, "", 0, WEBSOCKET_OP_CLOSE);
+    c->is_draining = 1;
+
+    while(connected)
+        mg_mgr_poll(&mgr, 1);
 }
 
 void platform_destroy(void *ctx) {
@@ -200,8 +206,13 @@ void platform_set_charging_current(int32_t connectorId, uint32_t milliAmps)
     send_message("Set charge current");
 }
 
+int argc_;
+char **argv_;
 
 int main(int argc, char **argv) {
+    argc_ = argc;
+    argv_ = argv;
+
     OcppChargePoint cp;
 
     cp.start("ws://localhost:8180/steve/websocket/CentralSystemService", "CP_1");
@@ -232,4 +243,10 @@ int main(int argc, char **argv) {
     }
 
     return 0;
+}
+
+void platform_reset() {
+    char *exec_argv[] = { argv_[0], 0 };
+
+    execv("/proc/self/exe", exec_argv);
 }
