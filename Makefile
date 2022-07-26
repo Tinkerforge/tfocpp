@@ -1,4 +1,4 @@
-#.SILENT:
+.SILENT:
 
 CC = clang
 CXX = clang++
