@@ -332,6 +332,30 @@ bool Connector::isSelectableForRemoteStartTxn()
     }
 }
 
+bool Connector::canHandleRemoteStopTxn(int32_t txn_id)
+{
+    switch (state) {
+        case ConnectorState::IDLE:
+        case ConnectorState::NO_CABLE_NO_TAG:
+        case ConnectorState::NO_TAG:
+        case ConnectorState::AUTH_START_NO_PLUG:
+        case ConnectorState::AUTH_START_NO_CABLE:
+        case ConnectorState::AUTH_START:
+        case ConnectorState::NO_PLUG:
+        case ConnectorState::NO_CABLE:
+        case ConnectorState::FINISHING_UNLOCKED:
+        case ConnectorState::FINISHING_NO_CABLE_UNLOCKED:
+        case ConnectorState::FINISHING_NO_CABLE_LOCKED:
+        case ConnectorState::FINISHING_NO_SAME_TAG:
+        case ConnectorState::UNAVAILABLE:
+            return false;
+
+        case ConnectorState::TRANSACTION:
+        case ConnectorState::AUTH_STOP:
+            return this->transaction_id == txn_id;
+    }
+}
+
 StatusNotificationStatus Connector::getStatus() {
     EVSEState evse_state = platform_get_evse_state(connectorId);
     if (evse_state == EVSEState::Faulted)
@@ -936,6 +960,30 @@ void Connector::onRemoteStartTransaction(const char *tag_id)
         case ConnectorState::UNAVAILABLE:
             platform_printfln("Ignoring remote start transaction in state %s", ConnectorState_Strings[(size_t)state]);
             break;
+    }
+}
+
+void Connector::onRemoteStopTransaction()
+{
+     switch (state) {
+        case ConnectorState::IDLE:
+        case ConnectorState::NO_CABLE_NO_TAG:
+        case ConnectorState::NO_TAG:
+        case ConnectorState::AUTH_START_NO_PLUG:
+        case ConnectorState::AUTH_START_NO_CABLE:
+        case ConnectorState::AUTH_START:
+        case ConnectorState::NO_PLUG:
+        case ConnectorState::NO_CABLE:
+        case ConnectorState::FINISHING_UNLOCKED:
+        case ConnectorState::FINISHING_NO_CABLE_UNLOCKED:
+        case ConnectorState::FINISHING_NO_CABLE_LOCKED:
+        case ConnectorState::FINISHING_NO_SAME_TAG:
+        case ConnectorState::UNAVAILABLE:
+            return;
+
+        case ConnectorState::TRANSACTION:
+        case ConnectorState::AUTH_STOP:
+            setState(ConnectorState::FINISHING_UNLOCKED);
     }
 }
 

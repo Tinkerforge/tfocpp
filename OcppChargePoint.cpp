@@ -489,9 +489,17 @@ CallResponse OcppChargePoint::handleRemoteStartTransaction(const char *uid, Remo
 
 CallResponse OcppChargePoint::handleRemoteStopTransaction(const char *uid, RemoteStopTransactionView req)
 {
-    (void) uid;
-    (void) req;
-    return CallResponse{CallErrorCode::InternalError, "not implemented yet!"};
+    for(int i = 0; i < NUM_CONNECTORS; ++i) {
+        if (!connectors[i].canHandleRemoteStopTxn(req.transactionId()))
+            continue;
+
+        connectors[i].onRemoteStopTransaction();
+        connection.sendCallResponse(RemoteStopTransactionResponse(uid, ResponseStatus::ACCEPTED));
+        return CallResponse{CallErrorCode::OK, ""};
+    }
+
+    connection.sendCallResponse(RemoteStopTransactionResponse(uid, ResponseStatus::REJECTED));
+    return CallResponse{CallErrorCode::OK, ""};
 }
 
 CallResponse OcppChargePoint::handleReset(const char *uid, ResetView req)
