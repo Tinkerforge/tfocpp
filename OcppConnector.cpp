@@ -965,7 +965,7 @@ void Connector::onRemoteStartTransaction(const char *tag_id)
 
 void Connector::onRemoteStopTransaction()
 {
-     switch (state) {
+    switch (state) {
         case ConnectorState::IDLE:
         case ConnectorState::NO_CABLE_NO_TAG:
         case ConnectorState::NO_TAG:
