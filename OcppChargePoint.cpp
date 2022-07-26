@@ -160,8 +160,18 @@ void OcppChargePoint::forceSendStatus()
 
 bool OcppChargePoint::sendCallAction(CallAction action, const DynamicJsonDocument &doc)
 {
-    if (state != OcppState::Idle && action != CallAction::BOOT_NOTIFICATION)
-        return false;
+    switch (state) {
+        case OcppState::PowerOn:
+        case OcppState::Pending:
+        case OcppState::Rejected:
+            if (action != CallAction::BOOT_NOTIFICATION)
+                return false;
+            break;
+        case OcppState::Idle:
+        case OcppState::Unavailable:
+        case OcppState::Faulted:
+            break;
+    }
     // Filter messages here
     connection.sendCallAction(action, doc);
     return true;
