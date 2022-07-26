@@ -94,7 +94,8 @@ void* platform_init(const char *websocket_url)
 }
 
 void platform_disconnect(void *ctx) {
-    mg_ws_send(c, "", 0, WEBSOCKET_OP_CLOSE);
+    if (connected)
+        mg_ws_send(c, "", 0, WEBSOCKET_OP_CLOSE);
 }
 
 void platform_destroy(void *ctx) {
