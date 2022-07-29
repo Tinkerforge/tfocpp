@@ -211,7 +211,7 @@ const char *SampledValueLocationStrings[] = {
     "Body"
 };
 
-const char *MeterValuesMeterValueSampledValueUnitStrings[] = {
+const char *SampledValueUnitStrings[] = {
     "Wh",
     "kWh",
     "varh",
@@ -225,27 +225,7 @@ const char *MeterValuesMeterValueSampledValueUnitStrings[] = {
     "A",
     "V",
     "K",
-    "Celcius",
     "Celsius",
-    "Fahrenheit",
-    "Percent"
-};
-
-const char *StopTransactionTransactionDataSampledValueUnitStrings[] = {
-    "Wh",
-    "kWh",
-    "varh",
-    "kvarh",
-    "W",
-    "kW",
-    "VA",
-    "kVA",
-    "var",
-    "kvar",
-    "A",
-    "V",
-    "K",
-    "Celcius",
     "Fahrenheit",
     "Percent"
 };
@@ -274,7 +254,7 @@ void MeterValuesMeterValueSampledValue::serializeInto(JsonObject payload) {
         if (measurand != SampledValueMeasurand::NONE) payload["measurand"] = SampledValueMeasurandStrings[(size_t)measurand];
         if (phase != SampledValuePhase::NONE) payload["phase"] = SampledValuePhaseStrings[(size_t)phase];
         if (location != SampledValueLocation::NONE) payload["location"] = SampledValueLocationStrings[(size_t)location];
-        if (unit != MeterValuesMeterValueSampledValueUnit::NONE) payload["unit"] = MeterValuesMeterValueSampledValueUnitStrings[(size_t)unit];
+        if (unit != SampledValueUnit::NONE) payload["unit"] = SampledValueUnitStrings[(size_t)unit];
     }
 
 void StopTransactionTransactionDataSampledValue::serializeInto(JsonObject payload) {
@@ -284,7 +264,7 @@ void StopTransactionTransactionDataSampledValue::serializeInto(JsonObject payloa
         if (measurand != SampledValueMeasurand::NONE) payload["measurand"] = SampledValueMeasurandStrings[(size_t)measurand];
         if (phase != SampledValuePhase::NONE) payload["phase"] = SampledValuePhaseStrings[(size_t)phase];
         if (location != SampledValueLocation::NONE) payload["location"] = SampledValueLocationStrings[(size_t)location];
-        if (unit != StopTransactionTransactionDataSampledValueUnit::NONE) payload["unit"] = StopTransactionTransactionDataSampledValueUnitStrings[(size_t)unit];
+        if (unit != SampledValueUnit::NONE) payload["unit"] = SampledValueUnitStrings[(size_t)unit];
     }
 
 

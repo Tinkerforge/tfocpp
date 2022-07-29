@@ -246,9 +246,9 @@ enum class SampledValueLocation {
     NONE
 };
 
-extern const char *MeterValuesMeterValueSampledValueUnitStrings[];
+extern const char *SampledValueUnitStrings[];
 
-enum class MeterValuesMeterValueSampledValueUnit {
+enum class SampledValueUnit {
     WH,
     K_WH,
     VARH,
@@ -262,30 +262,7 @@ enum class MeterValuesMeterValueSampledValueUnit {
     A,
     V,
     K,
-    CELCIUS,
     CELSIUS,
-    FAHRENHEIT,
-    PERCENT,
-    NONE
-};
-
-extern const char *StopTransactionTransactionDataSampledValueUnitStrings[];
-
-enum class StopTransactionTransactionDataSampledValueUnit {
-    WH,
-    K_WH,
-    VARH,
-    KVARH,
-    W,
-    K_W,
-    VA,
-    K_VA,
-    VAR,
-    KVAR,
-    A,
-    V,
-    K,
-    CELCIUS,
     FAHRENHEIT,
     PERCENT,
     NONE
@@ -716,7 +693,7 @@ struct StopTransactionTransactionDataSampledValue {
     SampledValueMeasurand measurand = SampledValueMeasurand::NONE;
     SampledValuePhase phase = SampledValuePhase::NONE;
     SampledValueLocation location = SampledValueLocation::NONE;
-    StopTransactionTransactionDataSampledValueUnit unit = StopTransactionTransactionDataSampledValueUnit::NONE;
+    SampledValueUnit unit = SampledValueUnit::NONE;
 
     void serializeInto(JsonObject payload);
 };
@@ -728,7 +705,7 @@ struct MeterValuesMeterValueSampledValue {
     SampledValueMeasurand measurand = SampledValueMeasurand::NONE;
     SampledValuePhase phase = SampledValuePhase::NONE;
     SampledValueLocation location = SampledValueLocation::NONE;
-    MeterValuesMeterValueSampledValueUnit unit = MeterValuesMeterValueSampledValueUnit::NONE;
+    SampledValueUnit unit = SampledValueUnit::NONE;
 
     void serializeInto(JsonObject payload);
 };
