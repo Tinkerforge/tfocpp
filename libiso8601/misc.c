@@ -166,6 +166,8 @@ void iso8601_from_tm(const struct tm *tm, uint32_t usecond, bool localtime,
     time->tzminutes = tzminutes;
 }
 
+// timegm is a nonstandard GNU extension that are also present on the BSDs.
+#if not defined(timegm)
 // From https://blog.reverberate.org/2020/05/12/optimizing-date-algorithms.html
 static int epoch_days_fast(int y, int m, int d) {
   const uint32_t year_base = 4800;    /* Before min year, multiple of 400. */
@@ -187,6 +189,7 @@ static time_t timegm(struct tm *tm) {
     int secs = hms_to_time(tm->tm_hour, tm->tm_min, tm->tm_sec);
     return days * 86400 + secs;
 }
+#endif
 
 void iso8601_to_timeval(const iso8601_time *time, struct timeval *tv)
 {
