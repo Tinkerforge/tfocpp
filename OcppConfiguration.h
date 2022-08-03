@@ -71,7 +71,7 @@ struct OcppConfiguration {
     ChangeConfigurationResponseStatus setValue(const char *newValue);
 };
 
-#define CONFIG_COUNT 23
+#define CONFIG_COUNT 24
 #define MAX_CONFIG_LENGTH 501 // the spec does not specify a maximum length. however the payload of a change configuration message has a max length of 500
 
 extern const char *config_keys[CONFIG_COUNT];

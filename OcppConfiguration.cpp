@@ -203,6 +203,7 @@ const char *config_keys[CONFIG_COUNT] {
     "ResetRetries",
     "StopTransactionOnEVSideDisconnect",
     "StopTransactionOnInvalidId",
+    "StopTransactionMaxMeterValues",
     "StopTxnAlignedData",
     //"StopTxnAlignedDataMaxLength",
     "StopTxnSampledData",
@@ -254,6 +255,13 @@ static OcppConfiguration config[CONFIG_COUNT] = {
     /*ResetRetries*/                      OcppConfiguration::integer(1, false, false, 0),
     /*StopTransactionOnEVSideDisconnect*/ OcppConfiguration::boolean(false, false, false),
     /*StopTransactionOnInvalidId*/        OcppConfiguration::boolean(false, false, false),
+
+    // Hardcode 2: This is the maximum amount of _meter values_ to send in a stoptxn.
+    // However the size of the packet depends on which values to sample _per_ meter value.
+    // To make sure we don't have to recalculate this if the configuration which values to sample changes,
+    // we just abuse that the spec (errata 4.0) rules "The Start and Stop meter values SHALL never be dropped."
+    // This should be sufficient in real-life, as we still periodically send meter values anyway.
+    /*StopTransactionMaxMeterValues*/     OcppConfiguration::integer(2, true, true),
 
     // Same reasoning as with MeterValuesAlignedData.
     /*StopTxnAlignedData*/                OcppConfiguration::csl("", MAX_CONFIG_LENGTH, (size_t)SampledValueMeasurand::NONE, false, false, SampledValueMeasurandStrings, (size_t)SampledValueMeasurand::NONE),
