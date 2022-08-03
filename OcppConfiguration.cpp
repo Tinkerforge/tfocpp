@@ -240,7 +240,7 @@ static OcppConfiguration config[CONFIG_COUNT] = {
 
     // Its save to use the number of possible measurands as limit in elements,
     // because the complete list has a length of 465.
-    // This also means that we don't have to implemeht the MeterValuesAlignedDataMaxLength key.
+    // This also means that we don't have to implement the MeterValuesAlignedDataMaxLength key.
     /*MeterValuesAlignedData*/            OcppConfiguration::csl("", MAX_CONFIG_LENGTH, (size_t)SampledValueMeasurand::NONE, false, false, SampledValueMeasurandStrings, (size_t)SampledValueMeasurand::NONE),
     /*MeterValuesAlignedDataMaxLength*/   //OcppConfiguration::integer(MAX_CONFIG_LENGTH / strlen("Energy.Reactive.Import.Register,"), true, false, 0),
 
