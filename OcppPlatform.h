@@ -83,15 +83,38 @@ enum StopReason {
 // For example to implement a remote stop that unlocks immediately, use platform_unlock_cable.
 void platform_register_stop_callback(void *ctx, void (*cb)(int32_t, StopReason, void *), void *user_data);
 
+#define PLATFORM_MEASURAND_MAX_DATA_LEN 16 // 11 digits, point, 3 digits, \0
+#define PLATFORM_MEASURAND_ACQUISITION_INTERVAL_MS 1000 //Tune this depending on the meter/communication speed
 /*
 Value as a “Raw” (decimal) number or “SignedData”. Field Type is
 “string” to allow for digitally signed data readings. Decimal numeric values are
 also acceptable to allow fractional values for measurands such as Temperature
 and Current.
 */
-const char * platform_get_meter_value(int32_t connectorId, SampledValueMeasurand measurant);
+/*
+If the connectorId is 0, it is associated with the
+entire Charge Point. If the connectorId is 0 and the Measurand is energy related, the sample SHOULD be
+taken from the main energy meter.
+*/
+// Only REGISTER values are allowed to be signed?
+// We must calculate the average over all non-energy values
+// this cannot be done if they are signed (intransparent) binary blobs.
+bool platform_get_signed_meter_value(int32_t connectorId, SampledValueMeasurand measurant, SampledValuePhase phase, SampledValueLocation location, char buf[PLATFORM_MEASURAND_MAX_DATA_LEN]);
+float platform_get_raw_meter_value(int32_t connectorId, SampledValueMeasurand measurant, SampledValuePhase phase, SampledValueLocation location);
 
 // This is the Energy.Active.Import.Register measurant in Wh
 int32_t platform_get_energy(int32_t connectorId);
 
 void platform_reset();
+
+struct SupportedMeasurand {
+    SampledValuePhase phase;
+    SampledValueLocation location;
+    SampledValueUnit unit;
+    bool is_signed;
+};
+
+// Return number of ALL supported measurands if measurand == NONE
+size_t platform_get_supported_measurand_count(int32_t connector_id, SampledValueMeasurand measurand);
+// Return ALL supported measurands if measurand == NONE
+SupportedMeasurand *platform_get_supported_measurands(int32_t connector_id, SampledValueMeasurand measurand = SampledValueMeasurand::NONE);

@@ -182,7 +182,12 @@ Value as a “Raw” (decimal) number or “SignedData”. Field Type is
 also acceptable to allow fractional values for measurands such as Temperature
 and Current.
 */
-const char * platform_get_meter_value(int32_t connectorId, SampledValueMeasurand measurant) {
+/*
+If the connectorId is 0, it is associated with the
+entire Charge Point. If the connectorId is 0 and the Measurand is energy related, the sample SHOULD be
+taken from the main energy meter.
+*/
+const char *platform_get_meter_value(int32_t connectorId, SampledValueMeasurand measurant, SampledValuePhase phase, SampledValueLocation location, bool *is_signed) {
     return platform_get_meter_value_cb(connectorId, measurant);
 }
 

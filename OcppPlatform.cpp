@@ -171,17 +171,6 @@ EVSEState platform_get_evse_state(int32_t connectorId) {
     return (EVSEState)pr.evse_state[connectorId - 1];
 }
 
-/*
-Value as a “Raw” (decimal) number or “SignedData”. Field Type is
-“string” to allow for digitally signed data readings. Decimal numeric values are
-also acceptable to allow fractional values for measurands such as Temperature
-and Current.
-*/
-const char * platform_get_meter_value(int32_t connectorId, SampledValueMeasurand measurant) {
-    printf("platform_get_meter_value not implemented yet!\n");
-    return "";
-}
-
 // This is the Energy.Active.Import.Register measurant in Wh
 int32_t platform_get_energy(int32_t connectorId) {
     printf("platform_get_energy not implemented yet!\n");
@@ -249,4 +238,123 @@ void platform_reset() {
     char *exec_argv[] = { argv_[0], 0 };
 
     execv("/proc/self/exe", exec_argv);
+}
+
+SupportedMeasurand supported_measurands[] = {
+    //ENERGY_ACTIVE_EXPORT_REGISTER
+    {SampledValuePhase::L1, SampledValueLocation::OUTLET, SampledValueUnit::K_WH, false},
+    {SampledValuePhase::L2, SampledValueLocation::OUTLET, SampledValueUnit::K_WH, false},
+    {SampledValuePhase::L3, SampledValueLocation::OUTLET, SampledValueUnit::K_WH, false},
+
+    //ENERGY_ACTIVE_IMPORT_REGISTER
+    {SampledValuePhase::L1, SampledValueLocation::OUTLET, SampledValueUnit::K_WH, false},
+    {SampledValuePhase::L2, SampledValueLocation::OUTLET, SampledValueUnit::K_WH, false},
+    {SampledValuePhase::L3, SampledValueLocation::OUTLET, SampledValueUnit::K_WH, false},
+
+    //ENERGY_REACTIVE_EXPORT_REGISTER
+    {SampledValuePhase::L1, SampledValueLocation::OUTLET, SampledValueUnit::KVARH, false},
+    {SampledValuePhase::L2, SampledValueLocation::OUTLET, SampledValueUnit::KVARH, false},
+    {SampledValuePhase::L3, SampledValueLocation::OUTLET, SampledValueUnit::KVARH, false},
+
+    //ENERGY_REACTIVE_IMPORT_REGISTER
+    {SampledValuePhase::L1, SampledValueLocation::OUTLET, SampledValueUnit::KVARH, false},
+    {SampledValuePhase::L2, SampledValueLocation::OUTLET, SampledValueUnit::KVARH, false},
+    {SampledValuePhase::L3, SampledValueLocation::OUTLET, SampledValueUnit::KVARH, false},
+
+    //POWER_ACTIVE_EXPORT
+    {SampledValuePhase::L1, SampledValueLocation::OUTLET, SampledValueUnit::W, false},
+    {SampledValuePhase::L2, SampledValueLocation::OUTLET, SampledValueUnit::W, false},
+    {SampledValuePhase::L3, SampledValueLocation::OUTLET, SampledValueUnit::W, false},
+
+    //POWER_ACTIVE_IMPORT
+    {SampledValuePhase::L1, SampledValueLocation::OUTLET, SampledValueUnit::W, false},
+    {SampledValuePhase::L2, SampledValueLocation::OUTLET, SampledValueUnit::W, false},
+    {SampledValuePhase::L3, SampledValueLocation::OUTLET, SampledValueUnit::W, false},
+
+    //POWER_REACTIVE_EXPORT
+    {SampledValuePhase::L1, SampledValueLocation::OUTLET, SampledValueUnit::W, false},
+    {SampledValuePhase::L2, SampledValueLocation::OUTLET, SampledValueUnit::W, false},
+    {SampledValuePhase::L3, SampledValueLocation::OUTLET, SampledValueUnit::W, false},
+
+    //POWER_REACTIVE_IMPORT
+    {SampledValuePhase::L1, SampledValueLocation::OUTLET, SampledValueUnit::W, false},
+    {SampledValuePhase::L2, SampledValueLocation::OUTLET, SampledValueUnit::W, false},
+    {SampledValuePhase::L3, SampledValueLocation::OUTLET, SampledValueUnit::W, false},
+
+    //POWER_FACTOR
+    {SampledValuePhase::L1, SampledValueLocation::OUTLET, SampledValueUnit::NONE, false},
+    {SampledValuePhase::L2, SampledValueLocation::OUTLET, SampledValueUnit::NONE, false},
+    {SampledValuePhase::L3, SampledValueLocation::OUTLET, SampledValueUnit::NONE, false},
+
+    // We can measure this with 1. the offered current and 2. the connected phases
+
+    //CURRENT_OFFERED
+    {SampledValuePhase::L1, SampledValueLocation::OUTLET, SampledValueUnit::A, false},
+    {SampledValuePhase::L2, SampledValueLocation::OUTLET, SampledValueUnit::A, false},
+    {SampledValuePhase::L3, SampledValueLocation::OUTLET, SampledValueUnit::A, false},
+
+    //VOLTAGE
+    {SampledValuePhase::L1_N, SampledValueLocation::OUTLET, SampledValueUnit::V, false},
+    {SampledValuePhase::L2_N, SampledValueLocation::OUTLET, SampledValueUnit::V, false},
+    {SampledValuePhase::L3_N, SampledValueLocation::OUTLET, SampledValueUnit::V, false},
+    {SampledValuePhase::L1_L2, SampledValueLocation::OUTLET, SampledValueUnit::V, false},
+    {SampledValuePhase::L2_L3, SampledValueLocation::OUTLET, SampledValueUnit::V, false},
+    {SampledValuePhase::L3_L1, SampledValueLocation::OUTLET, SampledValueUnit::V, false},
+
+    //FREQUENCY
+    /*
+    NOTE: OCPP 1.6 does not have a UnitOfMeasure for
+    frequency, the UnitOfMeasure for any SampledValue with measurand: Frequency is Hertz.
+    */
+    {SampledValuePhase::NONE, SampledValueLocation::OUTLET, SampledValueUnit::NONE, false},
+};
+
+size_t supported_measurand_offsets[] = {
+    0,  /*ENERGY_ACTIVE_EXPORT_REGISTER*/
+    3,  /*ENERGY_ACTIVE_IMPORT_REGISTER*/
+    6,  /*ENERGY_REACTIVE_EXPORT_REGISTER*/
+    9,  /*ENERGY_REACTIVE_IMPORT_REGISTER*/
+    12, /*ENERGY_ACTIVE_EXPORT_INTERVAL*/
+    12, /*ENERGY_ACTIVE_IMPORT_INTERVAL*/
+    12, /*ENERGY_REACTIVE_EXPORT_INTERVAL*/
+    12, /*ENERGY_REACTIVE_IMPORT_INTERVAL*/
+    12, /*POWER_ACTIVE_EXPORT*/
+    15, /*POWER_ACTIVE_IMPORT*/
+    18, /*POWER_OFFERED*/
+    18, /*POWER_REACTIVE_EXPORT*/
+    21, /*POWER_REACTIVE_IMPORT*/
+    24, /*POWER_FACTOR*/
+    27, /*CURRENT_IMPORT*/
+    27, /*CURRENT_EXPORT*/
+    27, /*CURRENT_OFFERED*/
+    30, /*VOLTAGE*/
+    36, /*FREQUENCY*/
+    37, /*TEMPERATURE*/
+    37, /*SO_C*/
+    37, /*RPM*/
+    37  /*NONE*/
+};
+
+size_t platform_get_supported_measurand_count(int32_t connector_id, SampledValueMeasurand measurand) {
+    if (connector_id == 0)
+        return 0;
+    if (measurand == SampledValueMeasurand::NONE)
+        return ARRAY_SIZE(supported_measurands);
+    return supported_measurand_offsets[(size_t)measurand + 1] - supported_measurand_offsets[(size_t)measurand];
+}
+
+SupportedMeasurand *platform_get_supported_measurands(int32_t connector_id, SampledValueMeasurand measurand) {
+    if (connector_id == 0)
+        return nullptr;
+    if (measurand == SampledValueMeasurand::NONE)
+        return supported_measurands;
+    return supported_measurands + supported_measurand_offsets[(size_t)measurand];
+}
+
+bool platform_get_signed_meter_value(int32_t connectorId, SampledValueMeasurand measurant, SampledValuePhase phase, SampledValueLocation location, char buf[PLATFORM_MEASURAND_MAX_DATA_LEN]) {
+    platform_printfln("signed values not supported yet!");
+}
+
+float platform_get_raw_meter_value(int32_t connectorId, SampledValueMeasurand measurant, SampledValuePhase phase, SampledValueLocation location) {
+    return 123.456f;
 }

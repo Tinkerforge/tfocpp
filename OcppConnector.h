@@ -6,6 +6,7 @@
 #include "OcppPlatform.h"
 #include "OcppMessages.h"
 #include "OcppConnection.h"
+#include "OcppMeterValueHandler.h"
 
 enum class ConnectorState {
     IDLE,
@@ -41,6 +42,9 @@ struct Connector {
     int32_t connectorId;
 
     OcppChargePoint *cp = nullptr;
+
+    OcppMeterValueHandler meter_value_handler;
+
     ConnectorState state = ConnectorState::IDLE;
     StatusNotificationStatus last_sent_status = StatusNotificationStatus::NONE;
 
@@ -115,4 +119,8 @@ struct Connector {
     StatusNotificationStatus getStatus();
 
     void tick();
+
+    void tickClockAlignedMeterValues();
+
+    void tickSendClockAlignedMeterValues();
 };

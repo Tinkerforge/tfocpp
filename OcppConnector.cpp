@@ -772,6 +772,7 @@ void Connector::tick() {
 
     this->applyState();
     this->sendStatus();
+    this->meter_value_handler.tick();
 }
 
 // Handles TagSeen, SameTagSeen

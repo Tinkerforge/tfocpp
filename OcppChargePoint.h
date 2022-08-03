@@ -57,6 +57,8 @@ public:
     void tick_hard_reset();
     uint32_t hard_reset_start_ms = 0;
 
+    void tick_clock_aligned_meter_values();
+
 
     void tick();
 
