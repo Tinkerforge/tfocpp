@@ -7,6 +7,8 @@
 #include "OcppMessages.h"
 #include "OcppPlatform.h"
 #include "OcppTools.h"
+#include "OcppDefines.h"
+#include "OcppConnector.h"
 
 enum class OcppState {
     PowerOn, // send boot notification, wait for boot notification conf, don't do anything else
@@ -97,4 +99,16 @@ public:
     uint32_t last_bn_send_ms = 0;
 
     OcppConnection connection;
+
+    /*
+    Connectors numbering (ConnectorIds) MUST be as follows:
+    • ID of the first connector MUST be 1
+    • Additional connectors MUST be sequentially numbered (no numbers may be skipped)
+    • ConnectorIds MUST never be higher than the total number of connectors of a Charge Point
+    • For operations intiated by the Central System, ConnectorId 0 is reserved for addressing the entire Charge
+    Point.
+    • For operations initiated by the Charge Point (when reporting), ConnectorId 0 is reserved for the Charge
+    Point main controller.
+    */
+    Connector connectors[NUM_CONNECTORS];
 };
