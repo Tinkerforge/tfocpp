@@ -686,7 +686,7 @@ struct AuthorizeResponseView {
 
 };
 
-struct StopTransactionTransactionDataSampledValue {
+struct MeterValueSampledValue {
     const char *value;
     SampledValueContext context = SampledValueContext::NONE;
     SampledValueFormat format = SampledValueFormat::NONE;
@@ -698,28 +698,9 @@ struct StopTransactionTransactionDataSampledValue {
     void serializeInto(JsonObject payload);
 };
 
-struct MeterValuesMeterValueSampledValue {
-    const char *value;
-    SampledValueContext context = SampledValueContext::NONE;
-    SampledValueFormat format = SampledValueFormat::NONE;
-    SampledValueMeasurand measurand = SampledValueMeasurand::NONE;
-    SampledValuePhase phase = SampledValuePhase::NONE;
-    SampledValueLocation location = SampledValueLocation::NONE;
-    SampledValueUnit unit = SampledValueUnit::NONE;
-
-    void serializeInto(JsonObject payload);
-};
-
-struct StopTransactionTransactionData {
+struct MeterValue {
     time_t timestamp;
-    StopTransactionTransactionDataSampledValue *sampledValue; size_t sampledValue_length;
-
-    void serializeInto(JsonObject payload);
-};
-
-struct MeterValuesMeterValue {
-    time_t timestamp;
-    MeterValuesMeterValueSampledValue *sampledValue; size_t sampledValue_length;
+    MeterValueSampledValue *sampledValue; size_t sampledValue_length;
 
     void serializeInto(JsonObject payload);
 };
@@ -769,7 +750,7 @@ DynamicJsonDocument GetConfigurationResponse(const char *call_id,
 DynamicJsonDocument Heartbeat();
 
 DynamicJsonDocument MeterValues(int32_t connectorId,
-        MeterValuesMeterValue *meterValue, size_t meterValue_length,
+        MeterValue *meterValue, size_t meterValue_length,
         int32_t transactionId = OCPP_INTEGER_NOT_PASSED);
 
 DynamicJsonDocument RemoteStartTransactionResponse(const char *call_id,
@@ -800,7 +781,7 @@ DynamicJsonDocument StopTransaction(int32_t meterStop,
         int32_t transactionId,
         const char idTag[21] = nullptr,
         StopTransactionReason reason = StopTransactionReason::NONE,
-        StopTransactionTransactionData *transactionData = nullptr, size_t transactionData_length = 0);
+        MeterValue *transactionData = nullptr, size_t transactionData_length = 0);
 
 DynamicJsonDocument UnlockConnectorResponse(const char *call_id,
         UnlockConnectorResponseStatus status);

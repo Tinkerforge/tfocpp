@@ -237,27 +237,12 @@ void GetConfigurationResponseConfigurationKey::serializeInto(JsonObject payload)
         if (value != nullptr) payload["value"] = value;
     }
 
-void MeterValuesMeterValue::serializeInto(JsonObject payload) {
+void MeterValue::serializeInto(JsonObject payload) {
         if (timestamp != OCPP_DATETIME_NOT_PASSED) unix_timestamp_to_iso_string(timestamp, payload, "timestamp");
         if (sampledValue != nullptr) { JsonArray arr = payload.createNestedArray("sampledValue"); for(size_t i = 0; i < sampledValue_length; ++i) { JsonObject obj = arr.createNestedObject(); sampledValue[i].serializeInto(obj); } }
     }
 
-void StopTransactionTransactionData::serializeInto(JsonObject payload) {
-        if (timestamp != OCPP_DATETIME_NOT_PASSED) unix_timestamp_to_iso_string(timestamp, payload, "timestamp");
-        if (sampledValue != nullptr) { JsonArray arr = payload.createNestedArray("sampledValue"); for(size_t i = 0; i < sampledValue_length; ++i) { JsonObject obj = arr.createNestedObject(); sampledValue[i].serializeInto(obj); } }
-    }
-
-void MeterValuesMeterValueSampledValue::serializeInto(JsonObject payload) {
-        if (value != nullptr) payload["value"] = value;
-        if (context != SampledValueContext::NONE) payload["context"] = SampledValueContextStrings[(size_t)context];
-        if (format != SampledValueFormat::NONE) payload["format"] = SampledValueFormatStrings[(size_t)format];
-        if (measurand != SampledValueMeasurand::NONE) payload["measurand"] = SampledValueMeasurandStrings[(size_t)measurand];
-        if (phase != SampledValuePhase::NONE) payload["phase"] = SampledValuePhaseStrings[(size_t)phase];
-        if (location != SampledValueLocation::NONE) payload["location"] = SampledValueLocationStrings[(size_t)location];
-        if (unit != SampledValueUnit::NONE) payload["unit"] = SampledValueUnitStrings[(size_t)unit];
-    }
-
-void StopTransactionTransactionDataSampledValue::serializeInto(JsonObject payload) {
+void MeterValueSampledValue::serializeInto(JsonObject payload) {
         if (value != nullptr) payload["value"] = value;
         if (context != SampledValueContext::NONE) payload["context"] = SampledValueContextStrings[(size_t)context];
         if (format != SampledValueFormat::NONE) payload["format"] = SampledValueFormatStrings[(size_t)format];
@@ -476,7 +461,7 @@ DynamicJsonDocument Heartbeat() {
 }
 
 DynamicJsonDocument MeterValues(int32_t connectorId,
-        MeterValuesMeterValue *meterValue, size_t meterValue_length,
+        MeterValue *meterValue, size_t meterValue_length,
         int32_t transactionId) {
     if (connectorId == OCPP_INTEGER_NOT_PASSED) { platform_printfln("Required connectorId missing."); return DynamicJsonDocument{0}; }
     if (meterValue == nullptr) { platform_printfln("Required meterValue missing."); return DynamicJsonDocument{0}; }
@@ -633,7 +618,7 @@ DynamicJsonDocument StopTransaction(int32_t meterStop,
         int32_t transactionId,
         const char idTag[21],
         StopTransactionReason reason,
-        StopTransactionTransactionData *transactionData, size_t transactionData_length) {
+        MeterValue *transactionData, size_t transactionData_length) {
     if (meterStop == OCPP_INTEGER_NOT_PASSED) { platform_printfln("Required meterStop missing."); return DynamicJsonDocument{0}; }
     if (timestamp == OCPP_DATETIME_NOT_PASSED) { platform_printfln("Required timestamp missing."); return DynamicJsonDocument{0}; }
     if (transactionId == OCPP_INTEGER_NOT_PASSED) { platform_printfln("Required transactionId missing."); return DynamicJsonDocument{0}; }
