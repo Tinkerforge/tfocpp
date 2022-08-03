@@ -7,23 +7,6 @@
 #include "OcppMessages.h"
 #include "OcppConnection.h"
 
-
-#if 0
-#define VALID_STATUS_STRIDE 9
-bool valid_status_transitions[VALID_STATUS_STRIDE * VALID_STATUS_STRIDE] = {
-/*From           To Avail  Prep   Charge SuspEV SuEVSE Finish Reserv Unavai Fault */
-/*Available    */   false, true , true , true , true , false, true , true , true ,
-/*Preparing    */   true , false, true , true , true , true , false, false, false,
-/*Charging     */   true , false, false, true , true , true , false, true , true ,
-/*SuspendedEV  */   true , false, true , false, true , true , false, true , true ,
-/*SuspendedEVSE*/   true , false, true , true , false, true , false, true , true ,
-/*Finishing    */   true , true , false, false, false, false, false, true , true ,
-/*Reserved     */   true , true , false, false, false, false, false, true , true ,
-/*Unavailable  */   true , true , true , true , true , false, false, false, true ,
-/*Faulted      */   true , true , true , true , true , true , true , true , false,
-};
-#endif
-
 enum class ConnectorState {
     IDLE,
 
