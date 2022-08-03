@@ -118,3 +118,6 @@ struct SupportedMeasurand {
 size_t platform_get_supported_measurand_count(int32_t connector_id, SampledValueMeasurand measurand);
 // Return ALL supported measurands if measurand == NONE
 SupportedMeasurand *platform_get_supported_measurands(int32_t connector_id, SampledValueMeasurand measurand = SampledValueMeasurand::NONE);
+
+size_t platform_read_file(const char *name, char buf[8192]);
+bool platform_write_file(const char *name, char *buf, size_t len);

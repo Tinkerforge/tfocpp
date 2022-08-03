@@ -343,3 +343,67 @@ bool setBoolConfig(ConfigKey key, bool b) {
     cfg.value.boolean.b = b;
     return true;
 }
+
+void loadConfig()
+{
+    auto buf = std::unique_ptr<char[]>(new char[8192]);
+    size_t len = platform_read_file("config", buf.get());
+    StaticJsonDocument<JSON_OBJECT_SIZE(MAX_SPECIFIED_CONFIGS)> doc;
+    if (deserializeJson(doc, buf.get(), len) != DeserializationError::Ok)
+        return;
+
+    if (!doc.is<JsonObject>())
+        return;
+
+    JsonObject root = doc.as<JsonObject>();
+
+    for (JsonPair kv : root) {
+        size_t key_idx = 0;
+        if (!lookup_key(&key_idx, kv.key().c_str(), config_keys, CONFIG_COUNT)) {
+            continue;
+        }
+
+        getConfig(key_idx).setValue(kv.value().as<const char *>());
+    }
+}
+
+void saveConfig()
+{
+    StaticJsonDocument<JSON_OBJECT_SIZE(CONFIG_COUNT)> doc;
+
+    size_t scratch_buf_size = CONFIG_COUNT * 20;
+    size_t scratch_buf_idx = 0;
+    auto scratch_buf = std::unique_ptr<char[]>(new char[scratch_buf_size]);
+
+    for(size_t i = 0; i < CONFIG_COUNT; ++i) {
+        auto &cfg = getConfig(i);
+        switch(cfg.type) {
+            case OcppConfigurationValueType::Boolean:
+                doc[config_keys[i]] = cfg.value.boolean.b ? "true" : "false";
+                break;
+            case OcppConfigurationValueType::CSL:
+                doc[config_keys[i]] = (const char *)cfg.value.csl.c;
+                break;
+            case OcppConfigurationValueType::Integer:
+                char *val = scratch_buf.get() + scratch_buf_idx;
+
+                int written = snprintf(val, scratch_buf_size - scratch_buf_idx, "%d", cfg.value.integer.i);
+                if (written < 0) {
+                    platform_printfln("Failed to save config: %d", written);
+                    break; //TODO: what to do if this happens?
+                }
+
+                doc[config_keys[i]] = (const char *)val;
+                scratch_buf_idx += written;
+                ++scratch_buf_idx; // for null terminator
+                break;
+
+        }
+    }
+
+    auto buf_size = measureJson(doc);
+
+    auto buf = std::unique_ptr<char[]>(new char[buf_size]);
+    size_t written = serializeJson(doc, buf.get(), buf_size);
+    platform_write_file("config", buf.get(), written);
+}

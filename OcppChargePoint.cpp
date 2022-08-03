@@ -296,6 +296,9 @@ CallResponse OcppChargePoint::handleChangeConfiguration(const char *uid, ChangeC
         status = getConfig(key_idx).setValue(req.value());
     }
 
+    if (status == ChangeConfigurationResponseStatus::ACCEPTED || status == ChangeConfigurationResponseStatus::REBOOT_REQUIRED)
+        saveConfig();
+
     connection.sendCallResponse(ChangeConfigurationResponse(uid, status));
 
     return CallResponse{CallErrorCode::OK, ""};
@@ -625,6 +628,7 @@ void OcppChargePoint::handleStop(int32_t connectorId, StopReason reason) {
 }
 
 void OcppChargePoint::start(const char *websocket_endpoint_url, const char *charge_point_name_percent_encoded) {
+    loadConfig();
     platform_ctx = connection.start(websocket_endpoint_url, charge_point_name_percent_encoded, this);
     for(int32_t i = 0; i < NUM_CONNECTORS; ++i) {
         connectors[i].init(i + 1, this);

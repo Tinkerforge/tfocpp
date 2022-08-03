@@ -358,3 +358,19 @@ bool platform_get_signed_meter_value(int32_t connectorId, SampledValueMeasurand 
 float platform_get_raw_meter_value(int32_t connectorId, SampledValueMeasurand measurant, SampledValuePhase phase, SampledValueLocation location) {
     return 123.456f;
 }
+
+size_t platform_read_file(const char *name, char buf[8192])
+{
+    auto fd = open(name, O_RDONLY | O_CREAT);
+    auto result = read(fd, buf, sizeof(char) * 8192);
+    close(fd);
+    return result < 0 ? 0 : result;
+}
+
+bool platform_write_file(const char *name, char *buf, size_t len)
+{
+    auto fd = open(name, O_WRONLY | O_TRUNC | O_CREAT, 0644);
+    auto written = write(fd, buf, len);
+    close(fd);
+    return written == len;
+}
