@@ -627,8 +627,7 @@ void OcppChargePoint::handleStop(int32_t connectorId, StopReason reason) {
 void OcppChargePoint::start(const char *websocket_endpoint_url, const char *charge_point_name_percent_encoded) {
     platform_ctx = connection.start(websocket_endpoint_url, charge_point_name_percent_encoded, this);
     for(int32_t i = 0; i < NUM_CONNECTORS; ++i) {
-        connectors[i].cp = this;
-        connectors[i].connectorId = i + 1;
+        connectors[i].init(i + 1, this);
     }
 
     platform_register_tag_seen_callback(platform_ctx, [](int32_t connectorId, const char *tagId, void *user_data){((OcppChargePoint*)user_data)->handleTagSeen(connectorId, tagId);}, this);

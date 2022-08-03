@@ -32,10 +32,15 @@ enum class ConnectorState {
 class OcppChargePoint;
 
 struct Connector {
-    /*For ConnectorId 0, only a limited set is applicable, namely: Available, Unavailable and Faulted.
-    The status of ConnectorId 0 has no direct connection to the status of the individual Connectors (>0).*/
+    void init(int32_t connId, OcppChargePoint *chargePoint);
+
+    /*
+    For ConnectorId 0, only a limited set is applicable, namely: Available, Unavailable and Faulted.
+    The status of ConnectorId 0 has no direct connection to the status of the individual Connectors (>0).
+    */
     int32_t connectorId;
 
+    OcppChargePoint *cp = nullptr;
     ConnectorState state = ConnectorState::IDLE;
     StatusNotificationStatus last_sent_status = StatusNotificationStatus::NONE;
 
@@ -77,8 +82,6 @@ struct Connector {
 
 
     uint32_t waiting_for_message_id = 0;
-
-    OcppChargePoint *cp = nullptr;
 
     void deauth();
     void setTagDeadline();

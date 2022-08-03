@@ -1108,3 +1108,10 @@ void Connector::onStop(StopReason reason)
             break;
     }
 }
+
+void Connector::init(int32_t connId, OcppChargePoint *chargePoint)
+{
+    this->connectorId = connId;
+    this->cp = chargePoint;
+    this->meter_value_handler.init(connId, chargePoint);
+}
