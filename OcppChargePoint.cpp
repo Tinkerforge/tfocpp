@@ -145,6 +145,42 @@ ChangeAvailabilityResponseStatus OcppChargePoint::onChangeAvailability(ChangeAva
     }
 }
 
+void OcppChargePoint::saveAvailability()
+{
+    StaticJsonDocument<JSON_ARRAY_SIZE(NUM_CONNECTORS + 1)> doc;
+    doc.add(this->state != OcppState::Unavailable);
+
+    for(int i = 0; i < NUM_CONNECTORS; ++i) {
+        doc.add(!connectors[i].willBeUnavailable());
+    }
+
+    // ("false" + ',') * NUM_CONNECOTRS + '[' + ']' + '\0'
+    size_t buf_size = 6 * NUM_CONNECTORS + 3;
+    auto buf = std::unique_ptr<char[]>(new char[buf_size]);
+
+    size_t written = serializeJson(doc, buf.get(), buf_size);
+    platform_write_file("avail", buf.get(), written);
+}
+
+void OcppChargePoint::loadAvailability()
+{
+    size_t buf_size = 6 * NUM_CONNECTORS + 3;
+    auto buf = std::unique_ptr<char[]>(new char[buf_size]);
+    size_t len = platform_read_file("avail", buf.get(), buf_size);
+
+    StaticJsonDocument<JSON_ARRAY_SIZE(NUM_CONNECTORS + 1)> doc;
+    if (deserializeJson(doc, buf.get(), len) != DeserializationError::Ok)
+        return;
+
+    if (!doc.is<JsonArray>())
+        return;
+
+    for(int i = 0; i < NUM_CONNECTORS; ++i) {
+        if (!doc[i + 1].as<bool>())
+            connectors[i].onChangeAvailability(ChangeAvailabilityType::INOPERATIVE);
+    }
+}
+
 StatusNotificationStatus OcppChargePoint::getStatus()
 {
     switch(state) {
@@ -262,25 +298,30 @@ CallResponse OcppChargePoint::handleBootNotificationResponse(uint32_t messageId,
 CallResponse OcppChargePoint::handleChangeAvailability(const char *uid, ChangeAvailabilityView req)
 {
     int conn_id = req.connectorId();
-    if (conn_id == 0) {
-        auto resp = this->onChangeAvailability(req.type());
-        if (resp == ChangeAvailabilityResponseStatus::REJECTED)
-            connection.sendCallResponse(ChangeAvailabilityResponse(uid, ChangeAvailabilityResponseStatus::REJECTED));
+    auto resp = ChangeAvailabilityResponseStatus::NONE;
 
-        for(size_t i = 0; i < NUM_CONNECTORS; ++i) {
-            auto conn_resp = connectors[i].onChangeAvailability(req.type());
-            if (conn_resp == ChangeAvailabilityResponseStatus::REJECTED)
-                platform_printfln("Connectors rejecting the change availability request is not supported yet!");
-            else if (conn_resp == ChangeAvailabilityResponseStatus::SCHEDULED)
-                resp = conn_resp;
+    if (conn_id == 0) {
+        resp = this->onChangeAvailability(req.type());
+
+        if (resp != ChangeAvailabilityResponseStatus::REJECTED) {
+            for(size_t i = 0; i < NUM_CONNECTORS; ++i) {
+                auto conn_resp = connectors[i].onChangeAvailability(req.type());
+                if (conn_resp == ChangeAvailabilityResponseStatus::REJECTED)
+                    platform_printfln("Connectors rejecting the change availability request is not supported yet!");
+                else if (conn_resp == ChangeAvailabilityResponseStatus::SCHEDULED)
+                    resp = conn_resp;
+            }
         }
-        connection.sendCallResponse(ChangeAvailabilityResponse(uid, resp));
-    } else if (conn_id < 0 || conn_id > NUM_CONNECTORS) {
-        connection.sendCallResponse(ChangeAvailabilityResponse(uid, ChangeAvailabilityResponseStatus::REJECTED));
-    } else {
-        auto resp = connectors[conn_id - 1].onChangeAvailability(req.type());
-        connection.sendCallResponse(ChangeAvailabilityResponse(uid, resp));
-    }
+    } else if (conn_id < 0 || conn_id > NUM_CONNECTORS)
+        resp = ChangeAvailabilityResponseStatus::REJECTED;
+    else
+        resp = connectors[conn_id - 1].onChangeAvailability(req.type());
+
+    connection.sendCallResponse(ChangeAvailabilityResponse(uid, resp));
+
+    if (resp != ChangeAvailabilityResponseStatus::REJECTED)
+        saveAvailability();
+
     return CallResponse{CallErrorCode::OK, ""};
 }
 
@@ -624,6 +665,7 @@ void OcppChargePoint::handleStop(int32_t connectorId, StopReason reason) {
 
 void OcppChargePoint::start(const char *websocket_endpoint_url, const char *charge_point_name_percent_encoded) {
     loadConfig();
+    loadAvailability();
     platform_ctx = connection.start(websocket_endpoint_url, charge_point_name_percent_encoded, this);
     for(int32_t i = 0; i < NUM_CONNECTORS; ++i) {
         connectors[i].init(i + 1, this);

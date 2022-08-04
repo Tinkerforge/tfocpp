@@ -359,10 +359,10 @@ float platform_get_raw_meter_value(int32_t connectorId, SampledValueMeasurand me
     return 123.456f;
 }
 
-size_t platform_read_file(const char *name, char buf[8192])
+size_t platform_read_file(const char *name, char *buf, size_t len)
 {
     auto fd = open(name, O_RDONLY | O_CREAT);
-    auto result = read(fd, buf, sizeof(char) * 8192);
+    auto result = read(fd, buf, len);
     close(fd);
     return result < 0 ? 0 : result;
 }

@@ -65,6 +65,8 @@ public:
     void onConnect();
     void onDisconnect();
     ChangeAvailabilityResponseStatus onChangeAvailability(ChangeAvailabilityType type);
+    void saveAvailability();
+    void loadAvailability();
 
     StatusNotificationStatus last_sent_status = StatusNotificationStatus::NONE;
     StatusNotificationStatus getStatus();

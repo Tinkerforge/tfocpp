@@ -347,7 +347,7 @@ bool setBoolConfig(ConfigKey key, bool b) {
 void loadConfig()
 {
     auto buf = std::unique_ptr<char[]>(new char[8192]);
-    size_t len = platform_read_file("config", buf.get());
+    size_t len = platform_read_file("config", buf.get(), 8192);
     StaticJsonDocument<JSON_OBJECT_SIZE(MAX_SPECIFIED_CONFIGS)> doc;
     if (deserializeJson(doc, buf.get(), len) != DeserializationError::Ok)
         return;

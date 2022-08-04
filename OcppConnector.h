@@ -116,6 +116,10 @@ struct Connector {
 
     ChangeAvailabilityResponseStatus onChangeAvailability(ChangeAvailabilityType type);
 
+    bool willBeUnavailable() {
+        return unavailable_requested || state == ConnectorState::UNAVAILABLE;
+    }
+
     StatusNotificationStatus getStatus();
 
     void tick();
