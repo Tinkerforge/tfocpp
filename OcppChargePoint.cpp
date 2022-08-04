@@ -372,15 +372,14 @@ CallResponse OcppChargePoint::handleGetConfiguration(const char *uid, GetConfigu
         }
     }
 
-    //auto *known = (GetConfigurationResponseConfigurationKey *)malloc(sizeof(GetConfigurationResponseConfigurationKey) * known_keys);
-    auto *known = new GetConfigurationResponseConfigurationKey[known_keys]();
+    auto known = std::unique_ptr<GetConfigurationResponseConfigurationKey[]>(new GetConfigurationResponseConfigurationKey[known_keys]());
     size_t known_idx = 0;
 
-    auto *unknown = (const char **)malloc(sizeof(const char *) * unknown_keys);
+    auto unknown = std::unique_ptr<const char *[]>(new const char *[unknown_keys]);
     size_t unknown_idx = 0;
 
     // Scratch buffer used for strings created from int config values.
-    auto *scratch_buf = (char *)malloc(sizeof(char) * scratch_buf_size);
+    auto scratch_buf = std::unique_ptr<char[]>(new char[scratch_buf_size]);
     size_t scratch_buf_idx = 0;
 
     if (dump_all) {
@@ -392,8 +391,8 @@ CallResponse OcppChargePoint::handleGetConfiguration(const char *uid, GetConfigu
                     config_value = config.value.boolean.b ? "true" : "false";
                     break;
                 case OcppConfigurationValueType::Integer: {
-                        config_value = (const char *)scratch_buf + scratch_buf_idx;
-                        int written = snprintf(scratch_buf + scratch_buf_idx, scratch_buf_size - scratch_buf_idx, "%d", config.value.integer.i);
+                        config_value = (const char *)&scratch_buf[scratch_buf_idx];
+                        int written = snprintf(&scratch_buf[scratch_buf_idx], scratch_buf_size - scratch_buf_idx, "%d", config.value.integer.i);
                         if (written < 0) {
                             platform_printfln("Failed to dump all configuration: %d", written);
                             break; //TODO: what to do if this happens?
@@ -422,8 +421,8 @@ CallResponse OcppChargePoint::handleGetConfiguration(const char *uid, GetConfigu
                         config_value = config.value.boolean.b ? "true" : "false";
                         break;
                     case OcppConfigurationValueType::Integer: {
-                            config_value = (const char *)scratch_buf + scratch_buf_idx;
-                            int written = snprintf(scratch_buf + scratch_buf_idx, scratch_buf_size - scratch_buf_idx, "%d", config.value.integer.i);
+                            config_value = (const char *)&scratch_buf[scratch_buf_idx];
+                            int written = snprintf(&scratch_buf[scratch_buf_idx], scratch_buf_size - scratch_buf_idx, "%d", config.value.integer.i);
                             if (written < 0) {
                                 platform_printfln("Failed to write int config value: %d", written);
                                 continue; //TODO: what to do if this happens?
@@ -448,11 +447,7 @@ CallResponse OcppChargePoint::handleGetConfiguration(const char *uid, GetConfigu
         }
     }
 
-    connection.sendCallResponse(GetConfigurationResponse(uid, known, known_keys, unknown, unknown_keys));
-
-    delete[] known;
-    free(unknown);
-    free(scratch_buf);
+    connection.sendCallResponse(GetConfigurationResponse(uid, known.get(), known_keys, unknown.get(), unknown_keys));
 
     return CallResponse{CallErrorCode::OK, ""};
 }

@@ -71,14 +71,12 @@ static void fn(struct mg_connection *c, int ev, void *ev_data, void *fn_data) {
   } else if (ev == MG_EV_WS_MSG) {
     struct mg_ws_message *wm = (struct mg_ws_message *) ev_data;
 
-    char *useless_copy = (char *)malloc(wm->data.len);
-    memcpy(useless_copy, wm->data.ptr, wm->data.len);
+    auto useless_copy = std::unique_ptr<char[]>(new char[wm->data.len]);
+    memcpy(useless_copy.get(), wm->data.ptr, wm->data.len);
 
     if (recv_cb != nullptr) {
-        recv_cb(useless_copy, wm->data.len, recv_cb_userdata);
+        recv_cb(useless_copy.get(), wm->data.len, recv_cb_userdata);
     }
-
-    free(useless_copy);
   }
 
   if (ev == MG_EV_ERROR || ev == MG_EV_CLOSE) {
