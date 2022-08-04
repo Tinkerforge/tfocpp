@@ -19,6 +19,9 @@ struct MeterValueAccumulator {
     void reset();
     void tick();
     std::unique_ptr<float[]> meter_values = nullptr;
+    std::unique_ptr<SampledValueMeasurand[]> measurands = nullptr;
+    size_t measurand_count;
+    size_t supported_measurand_count;
     size_t meter_values_len = 0;
     uint32_t samples_this_run = 0;
 

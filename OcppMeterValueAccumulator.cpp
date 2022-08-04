@@ -54,15 +54,13 @@ void MeterValueAccumulator::tick()
 {
     size_t value_offset = 0;
 
-    size_t measurand_count = getCSLConfigLen(data_to_sample);
-    size_t *measurands = getCSLConfig(data_to_sample);
-    for(size_t measurand_idx = 0; measurand_idx < measurand_count; ++measurand_idx) {
-        auto measurand = (SampledValueMeasurand)measurands[measurand_idx];
+    for(size_t i = 0; i < measurand_count; ++i) {
+        auto measurand = measurands[i];
         auto measurand_type = get_measurand_type(measurand);
         // If we want an interval measurand, get the corresponding register value to calculate the interval with.
         // We should not query the platform for interval measurements.
         if (measurand_type == MeasurandType::Interval)
-            measurand = (SampledValueMeasurand)measurands[measurand_idx - 4];
+            measurand = (SampledValueMeasurand)((size_t)measurand - 4);
 
         size_t supported_count = platform_get_supported_measurand_count(this->connectorId, measurand);
         SupportedMeasurand *supported = platform_get_supported_measurands(this->connectorId, measurand);
@@ -103,31 +101,17 @@ void MeterValueAccumulator::tick()
 
 ValueToSend MeterValueAccumulator::get(SampledValueContext context)
 {
-    size_t measurand_count = getCSLConfigLen(data_to_sample);
-    size_t *measurands = getCSLConfig(data_to_sample);
-
-    size_t sampled_value_count = 0;
-
-    for(size_t measurand_idx = 0; measurand_idx < measurand_count; ++measurand_idx) {
-        auto measurand = (SampledValueMeasurand)measurands[measurand_idx];
-        if (get_measurand_type(measurand) == MeasurandType::Interval)
-            measurand = (SampledValueMeasurand)measurands[measurand_idx - 4];
-        sampled_value_count += platform_get_supported_measurand_count(this->connectorId, measurand);
-    }
-
-    // No need to handle sampled_value_count == 0 here: If sampled_value_count is 0, get will not be called anyway.
-
     // Sample a value per connector and phase.
-    auto sampled_values = std::unique_ptr<MeterValueSampledValue[]>(new MeterValueSampledValue[sampled_value_count]);
-    auto sampled_value_content = std::unique_ptr<char[]>(new char[sampled_value_count * PLATFORM_MEASURAND_MAX_DATA_LEN]);
+    auto sampled_values = std::unique_ptr<MeterValueSampledValue[]>(new MeterValueSampledValue[supported_measurand_count]);
+    auto sampled_value_content = std::unique_ptr<char[]>(new char[supported_measurand_count * PLATFORM_MEASURAND_MAX_DATA_LEN]);
     size_t sampled_value_idx = 0;
     size_t value_offset = 0;
 
     for(size_t i = 0; i < measurand_count; ++i) {
-        SampledValueMeasurand measurand = (SampledValueMeasurand) measurands[i];
+        auto measurand = measurands[i];
         auto measurand_type = get_measurand_type(measurand);
         if (measurand_type == MeasurandType::Interval)
-            measurand = (SampledValueMeasurand)measurands[i - 4];
+            measurand = (SampledValueMeasurand)((size_t)measurand - 4);
 
         size_t count = platform_get_supported_measurand_count(this->connectorId, measurand);
         SupportedMeasurand *sup = platform_get_supported_measurands(this->connectorId, measurand);
@@ -161,7 +145,7 @@ ValueToSend MeterValueAccumulator::get(SampledValueContext context)
     return ValueToSend{
         platform_get_system_time(this->cp->platform_ctx),
         std::move(sampled_values),
-        sampled_value_count,
+        supported_measurand_count,
         std::move(sampled_value_content)};
 }
 
@@ -179,18 +163,24 @@ void MeterValueAccumulator::init(int32_t connId, OcppChargePoint *chargePoint, C
 
     meter_values_len = 0;
 
-    size_t measurand_count = getCSLConfigLen(dataToSample);
-    size_t *measurands = getCSLConfig(dataToSample);
-    for(size_t measurand_idx = 0; measurand_idx < measurand_count; ++measurand_idx) {
-        auto measurand = (SampledValueMeasurand)measurands[measurand_idx];
-        auto measurand_type = get_measurand_type(measurand);
+    measurand_count = getCSLConfigLen(dataToSample);
+    supported_measurand_count = 0;
+    size_t *measurands_configured = getCSLConfig(dataToSample);
+
+    measurands = std::unique_ptr<SampledValueMeasurand[]>(new SampledValueMeasurand[measurand_count]);
+    for(size_t i = 0; i < measurand_count; ++i) {
+        auto m = (SampledValueMeasurand)measurands_configured[i];
+        measurands[i] = m; // Store the unmodified measurand to be able to disambiguate between _INTERVAL and _REGISTER later.
+
+        auto type = get_measurand_type(m);
         // If we want an interval measurand, get the corresponding register value to calculate the interval with.
         // We should not query the platform for interval measurements.
-        if (measurand_type == MeasurandType::Interval)
-            measurand = (SampledValueMeasurand)measurands[measurand_idx - 4];
+        if (type == MeasurandType::Interval)
+            m = (SampledValueMeasurand)((size_t)m - 4);
 
-        size_t supported_count = platform_get_supported_measurand_count(this->connectorId, measurand);
-        meter_values_len += supported_count * (measurand_type == MeasurandType::Interval ? 2 : 1);
+        size_t supported_count = platform_get_supported_measurand_count(this->connectorId, m);
+        supported_measurand_count += supported_count;
+        meter_values_len += supported_count * (type == MeasurandType::Interval ? 2 : 1);
     }
 
     meter_values = std::unique_ptr<float[]>(new float[meter_values_len]);
