@@ -10,16 +10,16 @@
 
 class OcppChargePoint;
 
-class QueueEntry {
+class QueueItem {
 public:
     CallAction action;
     std::unique_ptr<char[]> buf;
     uint32_t message_id;
     size_t len;
 
-    QueueEntry() : action(CallAction::AUTHORIZE), buf(nullptr), message_id(0), len(0) {}
+    QueueItem() : action(CallAction::AUTHORIZE), buf(nullptr), message_id(0), len(0) {}
 
-    QueueEntry(CallAction action, const DynamicJsonDocument &doc) :
+    QueueItem(CallAction action, const DynamicJsonDocument &doc) :
         action(action),
         buf(new char[4096]),
         message_id(doc[1].as<uint32_t>()),
@@ -63,9 +63,9 @@ public:
     void *platform_ctx;
     OcppChargePoint *cp;
 
-    QueueEntry message_in_flight;
+    QueueItem message_in_flight;
 
-    std::deque<QueueEntry> messages;
-    std::deque<QueueEntry> status_notifications;
-    std::deque<QueueEntry> transaction_messages;
+    std::deque<QueueItem> messages;
+    std::deque<QueueItem> status_notifications;
+    std::deque<QueueItem> transaction_messages;
 };

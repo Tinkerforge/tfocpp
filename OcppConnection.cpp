@@ -104,7 +104,7 @@ void OcppConnection::handleMessage(char *message, size_t message_len)
         }
 
         CallResponse res = callResultHandler((uint32_t)uid, message_in_flight.action, doc[2].as<JsonObject>(), cp);
-        message_in_flight = QueueEntry{};
+        message_in_flight = QueueItem{};
         (void)res;
         /*if (res.result != CallErrorCode::OK)
             sendCallError(uniqueID, res.result, res.error_description, JsonObject());*/
@@ -148,7 +148,7 @@ void OcppConnection::handleCallError(CallErrorCode code, const char *desc, JsonO
     //if (!is_transaction_related(message_in_flight.action))
 
     //TODO Don't throw away transaction related messages here. Resend them!
-    message_in_flight = QueueEntry{};
+    message_in_flight = QueueItem{};
 }
 
 
@@ -186,7 +186,7 @@ static bool is_transaction_related(CallAction action) {
         || action == CallAction::METER_VALUES;
 }
 /*
-bool is_transaction_related(QueueEntry entry) {
+bool is_transaction_related(QueueItem entry) {
     return is_transaction_related(entry.action);
 }
 */
