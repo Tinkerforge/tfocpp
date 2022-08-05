@@ -144,6 +144,8 @@ ChangeAvailabilityResponseStatus OcppChargePoint::onChangeAvailability(ChangeAva
             break;
     }
 }
+// ("false" + ',') * (NUM_CONNECTORS + 1) + '[' + ']' + '\0'
+#define AVAILABLE_STRING_BUF_SIZE 6 * (NUM_CONNECTORS + 1) + 3
 
 void OcppChargePoint::saveAvailability()
 {
@@ -154,19 +156,17 @@ void OcppChargePoint::saveAvailability()
         doc.add(!connectors[i].willBeUnavailable());
     }
 
-    // ("false" + ',') * NUM_CONNECOTRS + '[' + ']' + '\0'
-    size_t buf_size = 6 * NUM_CONNECTORS + 3;
-    auto buf = std::unique_ptr<char[]>(new char[buf_size]);
+    auto buf = std::unique_ptr<char[]>(new char[AVAILABLE_STRING_BUF_SIZE]);
 
-    size_t written = serializeJson(doc, buf.get(), buf_size);
+    size_t written = serializeJson(doc, buf.get(), AVAILABLE_STRING_BUF_SIZE);
     platform_write_file("avail", buf.get(), written);
 }
 
+
 void OcppChargePoint::loadAvailability()
 {
-    size_t buf_size = 6 * NUM_CONNECTORS + 3;
-    auto buf = std::unique_ptr<char[]>(new char[buf_size]);
-    size_t len = platform_read_file("avail", buf.get(), buf_size);
+    auto buf = std::unique_ptr<char[]>(new char[AVAILABLE_STRING_BUF_SIZE]);
+    size_t len = platform_read_file("avail", buf.get(), AVAILABLE_STRING_BUF_SIZE);
 
     StaticJsonDocument<JSON_ARRAY_SIZE(NUM_CONNECTORS + 1)> doc;
     if (deserializeJson(doc, buf.get(), len) != DeserializationError::Ok)
