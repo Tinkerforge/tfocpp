@@ -19,6 +19,7 @@ class TestRemoteStartTransaction(unittest.TestCase):
     transaction for the idTag given in the RemoteStartTransaction.req message.
     """
     def test_remote_start_works(test):
+        @default_central.addTester(test)
         class TestCP(default_central.DefaultChargePoint):
             @after(Action.BootNotification)
             async def after_boot_notification(self, *args, **kwargs):
@@ -42,6 +43,7 @@ class TestRemoteStartTransaction(unittest.TestCase):
     RemoteStartTransaction.req message.
     """
     def test_authorize_remote_txn_reqs(test):
+        @default_central.addTester(test)
         class TestCP(default_central.DefaultChargePoint):
             @after(Action.BootNotification)
             async def after_boot_notification(self, *args, **kwargs):
@@ -63,6 +65,7 @@ class TestRemoteStartTransaction(unittest.TestCase):
     A transaction will only be started after authorization was obtained.
     """
     def test_authorize_fail_blocks_txn(test):
+        @default_central.addTester(test)
         class TestCP(default_central.DefaultChargePoint):
             start_txn_recvd = False
             @after(Action.BootNotification)
@@ -89,6 +92,7 @@ class TestRemoteStartTransaction(unittest.TestCase):
     start a transaction, to send a StartTransaction.req to Central System.
     """
     def test_override_tag_id(test):
+        @default_central.addTester(test)
         class TestCP(default_central.DefaultChargePoint):
             @after(Action.BootNotification)
             async def after_boot_notification(self, *args, **kwargs):
@@ -115,6 +119,7 @@ class TestRemoteStartTransaction(unittest.TestCase):
     connector selection. A Charge Point MAY reject a RemoteStartTransaction.req without a connector id.
     """
     def test_no_connector_id(test):
+        @default_central.addTester(test)
         class TestCP(default_central.DefaultChargePoint):
             @after(Action.BootNotification)
             async def after_boot_notification(self, *args, **kwargs):
@@ -133,6 +138,7 @@ class TestRemoteStartTransaction(unittest.TestCase):
         test.assertTrue(c.done)
 
     def test_reject_on_invalid_connector_id(test):
+        @default_central.addTester(test)
         class TestCP(default_central.DefaultChargePoint):
             @after(Action.BootNotification)
             async def after_boot_notification(self, *args, **kwargs):

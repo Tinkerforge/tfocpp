@@ -64,33 +64,33 @@ def tick():
 
 @ctypes.CFUNCTYPE(None, ctypes.c_char_p, ctypes.c_uint8)
 def platform_tag_rejected(tag, trt):
-    print("Tag {} rejected: {}".format(tag.decode('utf-8'), trt))
+    pass#print("Tag {} rejected: {}".format(tag.decode('utf-8'), trt))
 
 @ctypes.CFUNCTYPE(None, ctypes.c_int32)
 def platform_tag_timed_out(connectorId):
-    print("Tag timed out for connector", connectorId)
+    pass#print("Tag timed out for connector", connectorId)
 
 @ctypes.CFUNCTYPE(None, ctypes.c_int32)
 def platform_cable_timed_out(connectorId):
-    print("Cable timed out for connector", connectorId)
+    pass#print("Cable timed out for connector", connectorId)
 
 connector_locked = {}
 
 @ctypes.CFUNCTYPE(None, ctypes.c_int32)
 def platform_lock_cable(connectorId):
     connector_locked[connectorId] = True
-    print("Cable locked for connector", connectorId)
+    #print("Cable locked for connector", connectorId)
 
 @ctypes.CFUNCTYPE(None, ctypes.c_int32)
 def platform_unlock_cable(connectorId):
     connector_locked[connectorId] = False
-    print("Cable unlocked for connector", connectorId)
+    #print("Cable unlocked for connector", connectorId)
 
 charging_current = {}
 
 @ctypes.CFUNCTYPE(None, ctypes.c_int32, ctypes.c_uint32)
 def platform_set_charging_current(connectorId, milliAmps):
-    print("Set charge current to {} for connector {}".format(milliAmps, connectorId))
+    #print("Set charge current to {} for connector {}".format(milliAmps, connectorId))
     charging_current[connectorId] = milliAmps
 
 CONNECTOR_STATE_NOT_CONNECTED = 0

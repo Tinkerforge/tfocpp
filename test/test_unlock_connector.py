@@ -19,6 +19,7 @@ class TestUnlockConnector(unittest.TestCase):
     PDU. The response PDU SHALL indicate whether the Charge Point was able to unlock its connector.
     """
     def test_unlock_works(test):
+        @default_central.addTester(test)
         class TestCP(default_central.DefaultChargePoint):
             @after(Action.BootNotification)
             async def after_boot_notification(self, *args, **kwargs):
@@ -50,6 +51,7 @@ class TestUnlockConnector(unittest.TestCase):
     first as described in Stop Transaction.
     """
     def test_unlock_sends_stop_txn(test):
+        @default_central.addTester(test)
         class TestCP(default_central.DefaultChargePoint):
             @after(Action.BootNotification)
             async def after_boot_notification(self, *args, **kwargs):
@@ -79,6 +81,7 @@ class TestUnlockConnector(unittest.TestCase):
     NotSupported: Charge Point has no connector lock, or ConnectorId is unknown.
     """
     def test_unlock_not_supported_on_invalid_connector_id(test):
+        @default_central.addTester(test)
         class TestCP(default_central.DefaultChargePoint):
             @after(Action.BootNotification)
             async def after_boot_notification(self, *args, **kwargs):

@@ -35,6 +35,7 @@ class TestStartTransaction(unittest.TestCase):
         test.assertTrue(c.done)
 
     def test_request_params_valid(test):
+        @default_central.addTester(test)
         class TestCP(default_central.DefaultChargePoint):
             cable_time = None
             @after(Action.BootNotification)
@@ -77,6 +78,7 @@ class TestStartTransaction(unittest.TestCase):
       owner presents his identifier.
     """
     def test_not_accepted_stop_on_invalid_id(test):
+        @default_central.addTester(test)
         class TestCP(default_central.DefaultChargePoint):
             @after(Action.BootNotification)
             async def after_boot_notification(self, *args, **kwargs):
@@ -107,6 +109,7 @@ class TestStartTransaction(unittest.TestCase):
     transaction (StartTransaction.req) is presented.
     """
     def test_not_accepted_stop_on_invalid_id_dont_unlock_on_other_tag(test):
+        @default_central.addTester(test)
         class TestCP(default_central.DefaultChargePoint):
             @after(Action.BootNotification)
             async def after_boot_notification(self, *args, **kwargs):
@@ -133,6 +136,7 @@ class TestStartTransaction(unittest.TestCase):
         test.assertEqual(default_platform.charging_current[1], 0)
 
     def test_not_accepted_stop_on_invalid_id_unlock_on_same_tag(test):
+        @default_central.addTester(test)
         class TestCP(default_central.DefaultChargePoint):
             @after(Action.BootNotification)
             async def after_boot_notification(self, *args, **kwargs):
@@ -167,6 +171,7 @@ class TestStartTransaction(unittest.TestCase):
         configuration key: MaxEnergyOnInvalidId.
     """
     def test_not_accepted_dont_stop_on_invalid_id(test):
+        @default_central.addTester(test)
         class TestCP(default_central.DefaultChargePoint):
             @after(Action.BootNotification)
             async def after_boot_notification(self, *args, **kwargs):

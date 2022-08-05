@@ -37,6 +37,7 @@ class TestAuthorize(unittest.TestCase):
     The Charge Point SHALL only supply energy after authorization.
     """
     def test_authorization_status(test):
+        @default_central.addTester(test)
         class TestCP(default_central.DefaultChargePoint):
             state = 0
             @after(Action.BootNotification)
@@ -72,6 +73,7 @@ class TestAuthorize(unittest.TestCase):
         test.assertTrue(c.done)
 
     def test_reauthorize_other_tag_to_stop(test):
+        @default_central.addTester(test)
         class TestCP(default_central.DefaultChargePoint):
             first = True
             @after(Action.BootNotification)
@@ -99,8 +101,8 @@ class TestAuthorize(unittest.TestCase):
         test.assertEqual(c.received_calls[Action.Authorize], 2)
 
     def test_dont_reauthorize_on_same_tag(test):
+        @default_central.addTester(test)
         class TestCP(default_central.DefaultChargePoint):
-            status = []
             @after(Action.BootNotification)
             def after_boot_notification(self, *args, **kwargs):
                 default_platform.show_tag(test, 1, "C0:FF:EE")
@@ -114,7 +116,6 @@ class TestAuthorize(unittest.TestCase):
             def after_sn(self, connector_id, error_code, status, **kwargs):
                 if connector_id != 1:
                     return
-                self.status.append(status)
                 if status == "SuspendedEVSE":
                     default_platform.show_tag(test, 1, "C0:FF:EE")
                 if status == "Finishing":
@@ -123,4 +124,4 @@ class TestAuthorize(unittest.TestCase):
         _, c = run_test(TestCP, sim_len_secs=10, speedup=100)
         test.assertTrue(c.done)
         test.assertEqual(c.received_calls[Action.Authorize], 1)
-        test.assertEqual(c.status, ["Available", "Preparing", "SuspendedEVSE", "Finishing"])
+        test.assertEqual(c.status[1], ["Available", "Preparing", "SuspendedEVSE", "Finishing"])

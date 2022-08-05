@@ -25,6 +25,7 @@ class TestRemoteStopTransaction(unittest.TestCase):
     connector.
     """
     def test_remote_stop_works(test):
+        @default_central.addTester(test)
         class TestCP(default_central.DefaultChargePoint):
             @after(Action.BootNotification)
             async def after_boot_notification(self, *args, **kwargs):
@@ -51,6 +52,7 @@ class TestRemoteStopTransaction(unittest.TestCase):
         test.assertFalse(default_platform.connector_locked[1])
 
     def test_remote_stop_rejected_on_invalid_id(test):
+        @default_central.addTester(test)
         class TestCP(default_central.DefaultChargePoint):
             @after(Action.BootNotification)
             async def after_boot_notification(self, *args, **kwargs):
@@ -72,6 +74,7 @@ class TestRemoteStopTransaction(unittest.TestCase):
         test.assertTrue(default_platform.connector_locked[1])
 
     def test_remote_stop_rejected_if_no_txn_running(test):
+        @default_central.addTester(test)
         class TestCP(default_central.DefaultChargePoint):
             @after(Action.BootNotification)
             async def after_boot_notification(self, *args, **kwargs):

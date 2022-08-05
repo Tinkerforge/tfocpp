@@ -104,7 +104,8 @@ expected_config = [
 ]
 
 class TestCoreProfile(unittest.TestCase):
-    def test_core_profile_supported(self):
+    def test_core_profile_supported(test):
+        @default_central.addTester(test)
         class TestCP(default_central.DefaultChargePoint):
             task = None
 
@@ -121,9 +122,10 @@ class TestCoreProfile(unittest.TestCase):
                 continue
             val = conf["value"]
 
-        self.assertIn("Core", val)
+        test.assertIn("Core", val)
 
-    def test_get_all_config_values(self):
+    def test_get_all_config_values(test):
+        @default_central.addTester(test)
         class TestCP(default_central.DefaultChargePoint):
             task = None
 
@@ -134,7 +136,7 @@ class TestCoreProfile(unittest.TestCase):
         _, c = run_test(TestCP, sim_len_secs=2, speedup=100)
 
         ck =  c.task.result().configuration_key
-        self.assertGreaterEqual(len(ck), 21, "three known keys requested")
+        test.assertGreaterEqual(len(ck), 21, "three known keys requested")
 
         # OCPP does not specify the result array order, so testing this is a bit more complicated
         for name, required, rw, type_, *valid_values in expected_config:
@@ -143,25 +145,25 @@ class TestCoreProfile(unittest.TestCase):
                     continue
 
                 if rw == "R":
-                    self.assertTrue(config["readonly"])
+                    test.assertTrue(config["readonly"])
                 elif rw == "RW":
-                    self.assertFalse(config["readonly"])
+                    test.assertFalse(config["readonly"])
 
-                self.assertIsInstance(config["value"], str, "All values must be passed as string")
+                test.assertIsInstance(config["value"], str, "All values must be passed as string")
 
                 if type_ == "integer":
                     try:
                         int(config["value"])
                     except ValueError:
-                        self.fail("Key {} must have a value that can be parsed as integer, not '{}'".format(name, config["value"]))
+                        test.fail("Key {} must have a value that can be parsed as integer, not '{}'".format(name, config["value"]))
                 elif type_ == "boolean":
-                    self.assertIn(config["value"], ["true", "false"], name)
+                    test.assertIn(config["value"], ["true", "false"], name)
                 elif type_ == "CSL":
                     if len(config["value"]) == 0:
                         break
 
                     for x in config["value"].split(","):
-                        self.assertIn(x, valid_values[0], name)
+                        test.assertIn(x, valid_values[0], name)
                 elif type_ == "numCSL":
                     if len(config["value"]) == 0:
                         break
@@ -169,26 +171,26 @@ class TestCoreProfile(unittest.TestCase):
                     zero_found = False
                     for x in config["value"].split(","):
                         num, val = x.split(".")
-                        self.assertIn(val, valid_values[0], name)
+                        test.assertIn(val, valid_values[0], name)
                         try:
                             num = int(num)
                         except ValueError:
-                            self.fail("Key {} must have a value that can be parsed as integer, not '{}'".format(name, config["value"]))
+                            test.fail("Key {} must have a value that can be parsed as integer, not '{}'".format(name, config["value"]))
                         if num == 0:
                             zero_found = True
 
                     offset = 0 if zero_found else 1
-                    self.assertEqual(sorted([int(x.split(".")[0]) for x in config["value"].split(",")]), list(range(offset, offset + len(config["value"].split(",")))))
+                    test.assertEqual(sorted([int(x.split(".")[0]) for x in config["value"].split(",")]), list(range(offset, offset + len(config["value"].split(",")))))
                 break
             else:
                 if required == "required":
-                    self.fail("Required configuration key {} not found in response.".format(name))
+                    test.fail("Required configuration key {} not found in response.".format(name))
 
     # This is not specified, however negative values don't make any sense for
     # all integer configuration keys. We check that the default value is not
     # negative and it is not possible to set them to a negative value.
     # (Only WebSocketPingInterval specifies that negative values are not allowed)
-    def test_non_negative(self):
+    def test_non_negative(test):
         for name, required, rw, type_, *valid_values in expected_config:
             if type_ != "integer":
                 continue
@@ -204,8 +206,8 @@ class TestCoreProfile(unittest.TestCase):
 
                     conf = result.configuration_key[0]
 
-                    self.assertEqual(conf["key"], name)
-                    self.assertGreaterEqual(int(conf["value"]), 0)
+                    test.assertEqual(conf["key"], name)
+                    test.assertGreaterEqual(int(conf["value"]), 0)
 
                     if conf["readonly"]:
                         inner_self.done = True
@@ -214,9 +216,9 @@ class TestCoreProfile(unittest.TestCase):
                     await inner_self.call(call.ChangeConfigurationPayload(name, '-1'))
                     new_conf = (await inner_self.call(call.GetConfigurationPayload([name]))).configuration_key[0]
 
-                    self.assertEqual(conf["value"], new_conf["value"])
+                    test.assertEqual(conf["value"], new_conf["value"])
                     inner_self.done = True
 
             _, c = run_test(TestCP, sim_len_secs=2, speedup=100)
 
-            self.assertTrue(c.done) # If this fails one of the asserts in the async code has probably failed.
+            test.assertTrue(c.done) # If this fails one of the asserts in the async code has probably failed.

@@ -15,6 +15,7 @@ from test_runner import run_test
 
 class TestChangeConfiguration(unittest.TestCase):
     def test_bool(test):
+        @default_central.addTester(test)
         class TestCP(default_central.DefaultChargePoint):
             @after(Action.BootNotification)
             async def after_boot_notification(self, *args, **kwargs):
@@ -37,6 +38,7 @@ class TestChangeConfiguration(unittest.TestCase):
         test.assertTrue(c.done)
 
     def test_integer(test):
+        @default_central.addTester(test)
         class TestCP(default_central.DefaultChargePoint):
             @after(Action.BootNotification)
             async def after_boot_notification(self, *args, **kwargs):
@@ -67,6 +69,7 @@ class TestChangeConfiguration(unittest.TestCase):
         test.assertTrue(c.done)
 
     def test_csl(test):
+        @default_central.addTester(test)
         class TestCP(default_central.DefaultChargePoint):
             @after(Action.BootNotification)
             async def after_boot_notification(self, *args, **kwargs):
@@ -89,6 +92,7 @@ class TestChangeConfiguration(unittest.TestCase):
         test.assertTrue(c.done)
 
     def test_numcsl(test):
+        @default_central.addTester(test)
         class TestCP(default_central.DefaultChargePoint):
             @after(Action.BootNotification)
             async def after_boot_notification(self, *args, **kwargs):
@@ -122,6 +126,7 @@ class TestChangeConfiguration(unittest.TestCase):
     a status 'NotSupported'.
     """
     def test_unknown_key(test):
+        @default_central.addTester(test)
         class TestCP(default_central.DefaultChargePoint):
             @after(Action.BootNotification)
             async def after_boot_notification(self, *args, **kwargs):
@@ -137,6 +142,7 @@ class TestChangeConfiguration(unittest.TestCase):
     requests with values that do not conform to an expected format.
     """
     def test_out_of_range(test):
+        @default_central.addTester(test)
         class TestCP(default_central.DefaultChargePoint):
             @after(Action.BootNotification)
             async def after_boot_notification(self, *args, **kwargs):
@@ -176,6 +182,7 @@ class TestChangeConfiguration(unittest.TestCase):
         test.assertTrue(c.done)
 
     def test_csl_separator_errors(test):
+        @default_central.addTester(test)
         class TestCP(default_central.DefaultChargePoint):
             @after(Action.BootNotification)
             async def after_boot_notification(self, *args, **kwargs):
@@ -217,6 +224,7 @@ class TestChangeConfiguration(unittest.TestCase):
         test.assertTrue(c.done)
 
     def test_numcsl_separator_errors(test):
+        @default_central.addTester(test)
         class TestCP(default_central.DefaultChargePoint):
             @after(Action.BootNotification)
             async def after_boot_notification(self, *args, **kwargs):
@@ -313,6 +321,7 @@ class TestChangeConfiguration(unittest.TestCase):
         test.assertTrue(c.done)
 
     def test_empty_value(test):
+        @default_central.addTester(test)
         class TestCP(default_central.DefaultChargePoint):
             @after(Action.BootNotification)
             async def after_boot_notification(self, *args, **kwargs):
@@ -338,6 +347,7 @@ class TestChangeConfiguration(unittest.TestCase):
         test.assertTrue(c.done)
 
     def test_type_error_int(test):
+        @default_central.addTester(test)
         class TestCP(default_central.DefaultChargePoint):
             @after(Action.BootNotification)
             async def after_boot_notification(self, *args, **kwargs):
@@ -379,6 +389,7 @@ class TestChangeConfiguration(unittest.TestCase):
         test.assertTrue(c.done)
 
     def test_type_error_bool(test):
+        @default_central.addTester(test)
         class TestCP(default_central.DefaultChargePoint):
             @after(Action.BootNotification)
             async def after_boot_notification(self, *args, **kwargs):
@@ -416,6 +427,7 @@ class TestChangeConfiguration(unittest.TestCase):
         test.assertTrue(c.done)
 
     def test_type_error_csl(test):
+        @default_central.addTester(test)
         class TestCP(default_central.DefaultChargePoint):
             @after(Action.BootNotification)
             async def after_boot_notification(self, *args, **kwargs):

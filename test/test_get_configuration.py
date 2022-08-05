@@ -18,7 +18,8 @@ class TestGetConfiguration(unittest.TestCase):
     If the list of keys in the request PDU is empty or missing (it is optional), the Charge Point SHALL return a list of all
     configuration settings
     """
-    def test_get_all_values_empty_list(self):
+    def test_get_all_values_empty_list(test):
+        @default_central.addTester(test)
         class TestCP(default_central.DefaultChargePoint):
             task = None
 
@@ -28,16 +29,17 @@ class TestGetConfiguration(unittest.TestCase):
 
         _, c = run_test(TestCP, sim_len_secs=2, speedup=100)
 
-        self.assertTrue(c.task.done())
-        self.assertTrue(c.task.result().unknown_key is None or len(c.task.result().unknown_key) == 0)
+        test.assertTrue(c.task.done())
+        test.assertTrue(c.task.result().unknown_key is None or len(c.task.result().unknown_key) == 0)
 
         result = c.task.result()
         # At least all core profile config keys must be returned.
         # Further tests (i.e. about writeability, correctness and completeness of keys etc.)
         # is done in the profile specific tests
-        self.assertGreaterEqual(len(result.configuration_key), 21) # 21 keys of the core profile are required
+        test.assertGreaterEqual(len(result.configuration_key), 21) # 21 keys of the core profile are required
 
-    def test_get_all_values_omitted_list(self):
+    def test_get_all_values_omitted_list(test):
+        @default_central.addTester(test)
         class TestCP(default_central.DefaultChargePoint):
             task = None
 
@@ -47,20 +49,21 @@ class TestGetConfiguration(unittest.TestCase):
 
         _, c = run_test(TestCP, sim_len_secs=2, speedup=100)
 
-        self.assertTrue(c.task.done())
-        self.assertTrue(c.task.result().unknown_key is None or len(c.task.result().unknown_key) == 0)
+        test.assertTrue(c.task.done())
+        test.assertTrue(c.task.result().unknown_key is None or len(c.task.result().unknown_key) == 0)
 
         result = c.task.result()
         # At least all core profile config keys must be returned.
         # Further tests (i.e. about writeability, correctness and completeness of keys etc.)
         # is done in the profile specific tests
-        self.assertGreaterEqual(len(result.configuration_key), 21) # 21 keys of the core profile are required
+        test.assertGreaterEqual(len(result.configuration_key), 21) # 21 keys of the core profile are required
 
     """
     Otherwise Charge Point SHALL return a list of recognized keys
     and their corresponding values and read-only state.
     """
-    def test_get_single_value(self):
+    def test_get_single_value(test):
+        @default_central.addTester(test)
         class TestCP(default_central.DefaultChargePoint):
             task = None
 
@@ -70,13 +73,14 @@ class TestGetConfiguration(unittest.TestCase):
 
         _, c = run_test(TestCP, sim_len_secs=2, speedup=100)
 
-        self.assertTrue(c.task.done())
-        self.assertTrue(c.task.result().unknown_key is None or len(c.task.result().unknown_key) == 0)
+        test.assertTrue(c.task.done())
+        test.assertTrue(c.task.result().unknown_key is None or len(c.task.result().unknown_key) == 0)
 
         result = c.task.result()
-        self.assertEqual(int(result.configuration_key[0]["value"]), 10)
+        test.assertEqual(int(result.configuration_key[0]["value"]), 10)
 
-    def test_get_multiple_values(self):
+    def test_get_multiple_values(test):
+        @default_central.addTester(test)
         class TestCP(default_central.DefaultChargePoint):
             task = None
 
@@ -87,25 +91,26 @@ class TestGetConfiguration(unittest.TestCase):
         _, c = run_test(TestCP, sim_len_secs=2, speedup=100)
 
 
-        self.assertTrue(c.task.done())
-        self.assertTrue(c.task.result().unknown_key is None or len(c.task.result().unknown_key) == 0)
+        test.assertTrue(c.task.done())
+        test.assertTrue(c.task.result().unknown_key is None or len(c.task.result().unknown_key) == 0)
 
         ck =  c.task.result().configuration_key
-        self.assertGreaterEqual(len(ck), 3, "three known keys requested")
+        test.assertGreaterEqual(len(ck), 3, "three known keys requested")
 
         # OCPP does not specify the result array order, so testing this is a bit more complicated
 
-        self.assertEqual(sorted([ck[x]["key"] for x in range(len(ck))]), sorted(["HeartbeatInterval", "LocalAuthorizeOffline", "ConnectorPhaseRotation"]))
+        test.assertEqual(sorted([ck[x]["key"] for x in range(len(ck))]), sorted(["HeartbeatInterval", "LocalAuthorizeOffline", "ConnectorPhaseRotation"]))
 
-        self.assertEqual(ck[0]["readonly"], False)
-        self.assertEqual(ck[1]["readonly"], False)
-        self.assertEqual(ck[2]["readonly"], False)
+        test.assertEqual(ck[0]["readonly"], False)
+        test.assertEqual(ck[1]["readonly"], False)
+        test.assertEqual(ck[2]["readonly"], False)
 
-        self.assertIsInstance(ck[0]["value"], str, "All values must be passed as string")
-        self.assertIsInstance(ck[1]["value"], str, "All values must be passed as string")
-        self.assertIsInstance(ck[2]["value"], str, "All values must be passed as string")
+        test.assertIsInstance(ck[0]["value"], str, "All values must be passed as string")
+        test.assertIsInstance(ck[1]["value"], str, "All values must be passed as string")
+        test.assertIsInstance(ck[2]["value"], str, "All values must be passed as string")
 
-    def test_single_unknown_value(self):
+    def test_single_unknown_value(test):
+        @default_central.addTester(test)
         class TestCP(default_central.DefaultChargePoint):
             task = None
 
@@ -115,14 +120,15 @@ class TestGetConfiguration(unittest.TestCase):
 
         _, c = run_test(TestCP, sim_len_secs=2, speedup=100)
 
-        self.assertTrue(c.task.done())
-        self.assertTrue(c.task.result().configuration_key is None or len(c.task.result().configuration_key) == 0)
+        test.assertTrue(c.task.done())
+        test.assertTrue(c.task.result().configuration_key is None or len(c.task.result().configuration_key) == 0)
 
         result = c.task.result()
-        self.assertEqual(len(result.unknown_key), 1)
-        self.assertEqual(result.unknown_key[0], "Unknown1")
+        test.assertEqual(len(result.unknown_key), 1)
+        test.assertEqual(result.unknown_key[0], "Unknown1")
 
-    def test_multiple_unknown_values(self):
+    def test_multiple_unknown_values(test):
+        @default_central.addTester(test)
         class TestCP(default_central.DefaultChargePoint):
             task = None
 
@@ -132,17 +138,18 @@ class TestGetConfiguration(unittest.TestCase):
 
         _, c = run_test(TestCP, sim_len_secs=2, speedup=100)
 
-        self.assertTrue(c.task.done())
-        self.assertTrue(c.task.result().configuration_key is None or len(c.task.result().configuration_key) == 0)
+        test.assertTrue(c.task.done())
+        test.assertTrue(c.task.result().configuration_key is None or len(c.task.result().configuration_key) == 0)
 
         result = c.task.result()
-        self.assertEqual(len(result.unknown_key), 4)
-        self.assertEqual(result.unknown_key[0], "Unknown1")
-        self.assertEqual(result.unknown_key[1], "Unknown2")
-        self.assertEqual(result.unknown_key[2], "Unknown3")
-        self.assertEqual(result.unknown_key[3], "Unknown4")
+        test.assertEqual(len(result.unknown_key), 4)
+        test.assertEqual(result.unknown_key[0], "Unknown1")
+        test.assertEqual(result.unknown_key[1], "Unknown2")
+        test.assertEqual(result.unknown_key[2], "Unknown3")
+        test.assertEqual(result.unknown_key[3], "Unknown4")
 
-    def test_mixed(self):
+    def test_mixed(test):
+        @default_central.addTester(test)
         class TestCP(default_central.DefaultChargePoint):
             task = None
 
@@ -152,35 +159,36 @@ class TestGetConfiguration(unittest.TestCase):
 
         _, c = run_test(TestCP, sim_len_secs=2, speedup=100)
 
-        self.assertTrue(c.task.done())
+        test.assertTrue(c.task.done())
 
         result = c.task.result()
-        self.assertEqual(len(result.unknown_key), 4)
-        self.assertEqual(result.unknown_key[0], "Unknown1")
-        self.assertEqual(result.unknown_key[1], "Unknown2")
-        self.assertEqual(result.unknown_key[2], "Unknown3")
-        self.assertEqual(result.unknown_key[3], "Unknown4")
+        test.assertEqual(len(result.unknown_key), 4)
+        test.assertEqual(result.unknown_key[0], "Unknown1")
+        test.assertEqual(result.unknown_key[1], "Unknown2")
+        test.assertEqual(result.unknown_key[2], "Unknown3")
+        test.assertEqual(result.unknown_key[3], "Unknown4")
 
         ck =  c.task.result().configuration_key
-        self.assertGreaterEqual(len(ck), 3, "three known keys requested")
+        test.assertGreaterEqual(len(ck), 3, "three known keys requested")
 
         # OCPP does not specify the result array order, so testing this is a bit more complicated
 
-        self.assertEqual(sorted([ck[x]["key"] for x in range(len(ck))]), sorted(["HeartbeatInterval", "LocalAuthorizeOffline", "ConnectorPhaseRotation"]))
+        test.assertEqual(sorted([ck[x]["key"] for x in range(len(ck))]), sorted(["HeartbeatInterval", "LocalAuthorizeOffline", "ConnectorPhaseRotation"]))
 
-        self.assertEqual(ck[0]["readonly"], False)
-        self.assertEqual(ck[1]["readonly"], False)
-        self.assertEqual(ck[2]["readonly"], False)
+        test.assertEqual(ck[0]["readonly"], False)
+        test.assertEqual(ck[1]["readonly"], False)
+        test.assertEqual(ck[2]["readonly"], False)
 
-        self.assertIsInstance(ck[0]["value"], str, "All values must be passed as string")
-        self.assertIsInstance(ck[1]["value"], str, "All values must be passed as string")
-        self.assertIsInstance(ck[2]["value"], str, "All values must be passed as string")
+        test.assertIsInstance(ck[0]["value"], str, "All values must be passed as string")
+        test.assertIsInstance(ck[1]["value"], str, "All values must be passed as string")
+        test.assertIsInstance(ck[2]["value"], str, "All values must be passed as string")
 
     """
     The number of configuration keys requested in a single PDU MAY be limited by the Charge Point. This maximum
     can be retrieved by reading the configuration key GetConfigurationMaxKeys.
     """
-    def test_max_keys(self):
+    def test_max_keys(test):
+        @default_central.addTester(test)
         class TestCP(default_central.DefaultChargePoint):
             all_keys = None
             max_keys = None
@@ -188,11 +196,11 @@ class TestGetConfiguration(unittest.TestCase):
             @after(Action.BootNotification)
             async def after_boot_notification(inner_self, *args, **kwargs):
                 conf = (await inner_self.call(call.GetConfigurationPayload(["GetConfigurationMaxKeys"]))).configuration_key[0]
-                self.assertEqual(conf["key"], "GetConfigurationMaxKeys")
+                test.assertEqual(conf["key"], "GetConfigurationMaxKeys")
                 inner_self.max_keys = int(conf["value"])
                 inner_self.all_keys = await inner_self.call(call.GetConfigurationPayload([]))
                 inner_self.done = True
 
         _, c = run_test(TestCP, sim_len_secs=2, speedup=100)
 
-        self.assertLessEqual(len(c.all_keys.configuration_key), c.max_keys)
+        test.assertLessEqual(len(c.all_keys.configuration_key), c.max_keys)

@@ -18,7 +18,8 @@ class TestHeartbeat(unittest.TestCase):
     The Charge Point SHALL send a Heartbeat.req PDU for ensuring that the Central System knows that a Charge
     Point is still alive.
     """
-    def test_heartbeat_sent(self):
+    def test_heartbeat_sent(test):
+        @default_central.addTester(test)
         class TestCP(default_central.DefaultChargePoint):
             @on(Action.BootNotification)
             def on_boot_notification(self, charge_point_vendor: str, charge_point_model: str, **kwargs):
@@ -29,14 +30,15 @@ class TestHeartbeat(unittest.TestCase):
                 )
         _, c = run_test(TestCP, sim_len_secs=10, speedup=100)
 
-        self.assertEqual(c.received_calls[Action.Heartbeat], 9, "Expected exactly nine heartbeats")
+        test.assertEqual(c.received_calls[Action.Heartbeat], 9, "Expected exactly nine heartbeats")
 
     """
     The response
     PDU SHALL contain the current time of the Central System, which is RECOMMENDED to be used by the Charge
     Point to synchronize its internal clock.
     """
-    def test_clock_adjusted(self):
+    def test_clock_adjusted(test):
+        @default_central.addTester(test)
         class TestCP(default_central.DefaultChargePoint):
             sent_time = 0
 
@@ -57,5 +59,5 @@ class TestHeartbeat(unittest.TestCase):
 
         start = time.time()
         _, c = run_test(TestCP, 10, speedup=100)
-        self.assertGreaterEqual(default_platform.last_time_set_at, start)
-        self.assertEqual(default_platform.last_time_set, c.sent_time)
+        test.assertGreaterEqual(default_platform.last_time_set_at, start)
+        test.assertEqual(default_platform.last_time_set, c.sent_time)

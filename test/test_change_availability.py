@@ -15,6 +15,7 @@ from test_runner import run_test
 
 class TestChangeAvailability(unittest.TestCase):
     def test_set_unavailable_accepted(test):
+        @default_central.addTester(test)
         class TestCP(default_central.DefaultChargePoint):
             @after(Action.BootNotification)
             async def after_boot_notification(self, *args, **kwargs):
@@ -30,6 +31,7 @@ class TestChangeAvailability(unittest.TestCase):
     allow any charging.
     """
     def test_no_charging_while_unavailable(test):
+        @default_central.addTester(test)
         class TestCP(default_central.DefaultChargePoint):
             @after(Action.BootNotification)
             async def after_boot_notification(self, *args, **kwargs):
@@ -51,6 +53,7 @@ class TestChangeAvailability(unittest.TestCase):
     (“operative”) when it is charging or ready for charging.
     """
     def test_charging_works_again_after_unavailable(test):
+        @default_central.addTester(test)
         class TestCP(default_central.DefaultChargePoint):
             unavail_done = False
             @after(Action.BootNotification)
@@ -83,6 +86,7 @@ class TestChangeAvailability(unittest.TestCase):
     respond with availability status ‘Accepted’.
     """
     def test_accepted_if_already_in_state(test):
+        @default_central.addTester(test)
         class TestCP(default_central.DefaultChargePoint):
             @after(Action.BootNotification)
             async def after_boot_notification(self, *args, **kwargs):
@@ -100,22 +104,18 @@ class TestChangeAvailability(unittest.TestCase):
         test.assertTrue(c.done)
 
     def test_state_stays_the_same_if_already_operative(test):
+        @default_central.addTester(test)
         class TestCP(default_central.DefaultChargePoint):
-            auth_responed = False
-            status = {}
+            auth_responded = False
             @after(Action.BootNotification)
             def after_boot_notification(self, *args, **kwargs):
                 default_platform.show_tag(test, 1, "C0:FF:EE")
 
             @after(Action.Authorize)
             async def after_authorize(self, *args, **kwargs):
-                auth_responed = True
+                auth_responded = True
                 result = await self.call(call.ChangeAvailabilityPayload(1, "Operative"))
                 test.assertTrue(result.status == "Accepted")
-
-            @after(Action.StatusNotification)
-            def after_sn(self, connector_id, error_code, status, **kwargs):
-                self.status.setdefault(connector_id, []).append(status)
 
         _, c = run_test(TestCP, sim_len_secs=2, speedup=100)
         test.assertEqual(c.status[1], ["Available", "Preparing"])
@@ -128,6 +128,7 @@ class TestChangeAvailability(unittest.TestCase):
     inform Central System of its new availability status with a StatusNotification.req as described there.
     """
     def test_scheduled_if_txn_is_running(test):
+        @default_central.addTester(test)
         class TestCP(default_central.DefaultChargePoint):
             txn_stopped = False
             @after(Action.BootNotification)
@@ -160,6 +161,7 @@ class TestChangeAvailability(unittest.TestCase):
     the Charge Point and all Connectors.
     """
     def test_connector_id_zero(test):
+        @default_central.addTester(test)
         class TestCP(default_central.DefaultChargePoint):
             seen = 0
             num_connectors = 0

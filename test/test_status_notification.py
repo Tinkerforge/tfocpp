@@ -13,84 +13,6 @@ import default_central
 
 from test_runner import run_test
 
-def is_valid_transition(before, after):
-    states = ["Available",
-              "Preparing",
-              "Charging",
-              "SuspendedEVSE",
-              "SuspendedEV",
-              "Finishing",
-              "Reserved",
-              "Unavailable",
-              "Faulted"]
-
-    transition = "{}{}".format(chr(ord('A') + states.index(before)),
-                               chr(ord('1') + states.index(after)))
-
-    valid_transitions = [                                         # From
-              "A2", "A3", "A4", "A5",           "A7", "A8", "A9", # Available
-        "B1",       "B3", "B4", "B5", "B6",                 "B9", # Preparing
-        "C1",             "C4", "C5", "C6",           "C8", "C9", # Charging
-        "D1",       "D3",       "D5", "D6",           "D8", "D9", # SuspendedEV
-        "E1",       "E3", "E4",       "E6",           "E8", "E9", # SuspendedEVSE
-        "F1", "F2",                                   "F8", "F9", # Finishing
-
-        "G1", "G2",                                   "G8", "G9", # Reserved
-        "H1", "H2", "H3", "H4", "H5",                       "H9", # Unavailable
-        "I1", "I2", "I3", "I4", "I5", "I6",     "I7", "I8"        # Faulted
-     # To A     P     C     S     S     F         R     U     F
-     #    v     r     h     u     u     i         e     n     a
-     #    a     e     a     s     s     n         s     a     u
-     #    i     p     r     p     p     i         e     v     l
-     #    l     a     g     e     e     s         r     a     t
-     #    a     r     i     n     n     h         v     i     e
-     #    b     i     n     d     d     i         e     l     d
-     #    l     n     g     e     e     n         d     a
-     #    e     g           d     d     g               b
-     #                      E     E                     l
-     #                      V     V                     e
-     #                            S
-     #                            E
-    ]
-
-    return transition in valid_transitions
-
-def addTester(test):
-    def decorator(clazz):
-        clazz.test = test
-        return clazz
-    return decorator
-
-class TestBaseCP(default_central.DefaultChargePoint):
-    last_status = {}
-    status = {}
-    test = None
-    @on(Action.StatusNotification)
-    def on_status_notification(self, connector_id, error_code, status, **kwargs):
-        self.status.setdefault(connector_id, []).append(status)
-
-        if connector_id in self.last_status:
-            self.test.assertTrue(is_valid_transition(self.last_status[connector_id], status))
-
-        self.last_status[connector_id] = status
-
-        if connector_id == 0:
-            """
-            A Charge Point Connector MAY have any of the 9 statuses as shown in the table above. For
-            ConnectorId 0, only a limited set is applicable, namely: Available, Unavailable and Faulted.
-            """
-            self.test.assertIn(status, ["Available", "Unavailable", "Faulted"])
-
-        """
-        ChargePointErrorCode EVCommunicationError SHALL only be used with status Preparing,
-        SuspendedEV, SuspendedEVSE and Finishing and be treated as warning.
-        """
-        if error_code == "EVCommunicationError":
-            self.test.assertIn(status, ["Preparing", "SuspendedEV", "SuspendedEVSE", "Finishing"])
-
-        return call_result.StatusNotificationPayload()
-
-
 class TestStatusNotification(unittest.TestCase):
     """
     (Errata 4.0)
@@ -98,32 +20,27 @@ class TestStatusNotification(unittest.TestCase):
     SHALL send a StatusNotification.req PDU for connectorId 0 and all connectors with the current status.
     """
     def test_available_on_boot(test):
-        @addTester(test)
-        class TestCP(TestBaseCP):
-            received_status = {}
+        @default_central.addTester(test)
+        class TestCP(default_central.DefaultChargePoint):
             task = None
 
             @after(Action.BootNotification)
             def after_boot_notification(self, *args, **kwargs):
                 self.task = asyncio.create_task(self.call(call.GetConfigurationPayload(["NumberOfConnectors"])))
 
-            @after(Action.StatusNotification)
-            def after_status_notification(self, connector_id, error_code, status, **kwargs):
-                self.received_status[connector_id] = status
-
         _, c = run_test(TestCP, sim_len_secs=2, speedup=100)
         test.assertTrue(c.task.done())
         num_connectors = int(c.task.result().configuration_key[0]["value"])
 
-        test.assertEqual(len(c.received_status), num_connectors + 1)
-        test.assertEqual(list(c.received_status.values()), ["Available"] * (num_connectors + 1))
+        test.assertEqual(len(c.status), num_connectors + 1)
+        test.assertEqual(list(c.status.values()), [["Available"]] * (num_connectors + 1))
 
     """
     Typically a Connector is in preparing state when a user [...] inserts a cable [...]
     """
     def test_notify_preparing_on_connect(test):
-        @addTester(test)
-        class TestCP(TestBaseCP):
+        @default_central.addTester(test)
+        class TestCP(default_central.DefaultChargePoint):
             @after(Action.BootNotification)
             def after_boot_notification(self, *args, **kwargs):
                 default_platform.connector_state[1] = default_platform.CONNECTOR_STATE_PLUG_DETECTED
@@ -141,8 +58,8 @@ class TestStatusNotification(unittest.TestCase):
     Typically a Connector is in preparing state when a user presents a tag [...]
     """
     def test_notify_preparing_on_tag(test):
-        @addTester(test)
-        class TestCP(TestBaseCP):
+        @default_central.addTester(test)
+        class TestCP(default_central.DefaultChargePoint):
             @after(Action.StatusNotification)
             def after_status_notification(self, connector_id, error_code, status, **kwargs):
                 if connector_id != 1:
@@ -164,8 +81,8 @@ class TestStatusNotification(unittest.TestCase):
     """
 
     def test_notify_suspended_evse_on_slot_blocked(test):
-        @addTester(test)
-        class TestCP(TestBaseCP):
+        @default_central.addTester(test)
+        class TestCP(default_central.DefaultChargePoint):
             @after(Action.BootNotification)
             def after_boot_notification(self, *args, **kwargs):
                 default_platform.show_tag(test, 1, "C0:FF:EE")
@@ -187,8 +104,8 @@ class TestStatusNotification(unittest.TestCase):
     local supply power constraints, or as the result of StartTransaction.conf indicating that charging is not allowed etc.
     """
     def test_notify_suspended_evse_on_start_transaction_blocked(test):
-        @addTester(test)
-        class TestCP(TestBaseCP):
+        @default_central.addTester(test)
+        class TestCP(default_central.DefaultChargePoint):
             @on(Action.StartTransaction)
             def on_start_transaction(self, connector_id: int, id_tag: str, meter_start: int, timestamp: str, **kwargs):
                 return call_result.StartTransactionPayload(transaction_id=1234, id_tag_info={"status": "ConcurrentTx"})
@@ -217,8 +134,8 @@ class TestStatusNotification(unittest.TestCase):
     When the EV is connected to the EVSE and the EVSE is offering energy but the EV is not taking any energy.
     """
     def test_notify_suspended_ev(test):
-        @addTester(test)
-        class TestCP(TestBaseCP):
+        @default_central.addTester(test)
+        class TestCP(default_central.DefaultChargePoint):
             @after(Action.BootNotification)
             def after_boot_notification(self, *args, **kwargs):
                 default_platform.show_tag(test, 1, "C0:FF:EE")
@@ -243,8 +160,8 @@ class TestStatusNotification(unittest.TestCase):
     When a Transaction has stopped at a Connector, but the Connector is not yet available for a new user, e.g. the cable has not been removed [...]
     """
     def test_notify_finishing(test):
-        @addTester(test)
-        class TestCP(TestBaseCP):
+        @default_central.addTester(test)
+        class TestCP(default_central.DefaultChargePoint):
             @after(Action.BootNotification)
             def after_boot_notification(self, *args, **kwargs):
                 default_platform.show_tag(test, 1, "C0:FF:EE")
@@ -292,8 +209,8 @@ class TestStatusNotification(unittest.TestCase):
     precedence over status SuspendedEV.
     """
     def test_suspended_precedence(test):
-        @addTester(test)
-        class TestCP(TestBaseCP):
+        @default_central.addTester(test)
+        class TestCP(default_central.DefaultChargePoint):
             @on(Action.StartTransaction)
             def on_start_transaction(self, connector_id: int, id_tag: str, meter_start: int, timestamp: str, **kwargs):
                 return call_result.StartTransactionPayload(transaction_id=1234, id_tag_info={"status": "ConcurrentTx"})

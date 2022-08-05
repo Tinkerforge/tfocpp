@@ -20,6 +20,7 @@ class TestStopTransaction(unittest.TestCase):
     System that the transaction has stopped.
     """
     def test_stop_transaction_sent(test):
+        @default_central.addTester(test)
         class TestCP(default_central.DefaultChargePoint):
             @after(Action.BootNotification)
             def after_boot_notification(self, *args, **kwargs):
@@ -39,6 +40,7 @@ class TestStopTransaction(unittest.TestCase):
         test.assertTrue(c.done)
 
     def test_request_params_valid(test):
+        @default_central.addTester(test)
         class TestCP(default_central.DefaultChargePoint):
             start_time = None
 
@@ -75,6 +77,7 @@ class TestStopTransaction(unittest.TestCase):
     Charge Point SHALL unlock the cable (if not permanently attached).
     """
     def test_cable_unlock(test):
+        @default_central.addTester(test)
         class TestCP(default_central.DefaultChargePoint):
             @after(Action.BootNotification)
             def after_boot_notification(self, *args, **kwargs):
@@ -99,6 +102,7 @@ class TestStopTransaction(unittest.TestCase):
     Reason element MAY be omitted and the Reason SHOULD be assumed 'Local'.
     """
     def test_stop_transaction_optional_reason_on_local_stop(test):
+        @default_central.addTester(test)
         class TestCP(default_central.DefaultChargePoint):
             @after(Action.BootNotification)
             def after_boot_notification(self, *args, **kwargs):

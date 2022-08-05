@@ -24,10 +24,10 @@ def assert_no_other_packets(test_case, c):
     test_case.assertEqual(len(c.received_errors), 0, "Expected no received errors")
 
 class TestBootNotification(unittest.TestCase):
-    def test_req_sent(self):
+    def test_req_sent(test):
         _, c = run_test(default_central.DefaultChargePoint, sim_len_secs=10, speedup=100)
 
-        self.assertEqual(c.received_calls[Action.BootNotification], 1, "Expected exactly one boot notification if it is accepted")
+        test.assertEqual(c.received_calls[Action.BootNotification], 1, "Expected exactly one boot notification if it is accepted")
         # dont assert no other packets here: status notifications will be sent
 
     """
@@ -35,7 +35,8 @@ class TestBootNotification(unittest.TestCase):
     something other than Accepted, the value of the interval field indicates the minimum wait time before sending a
     next BootNotification request.
     """
-    def test_retry_on_pending(self):
+    def test_retry_on_pending(test):
+        @default_central.addTester(test)
         class TestCP(default_central.DefaultChargePoint):
             @on(Action.BootNotification)
             def on_boot_notification(self, charge_point_vendor: str, charge_point_model: str, **kwargs):
@@ -46,10 +47,11 @@ class TestBootNotification(unittest.TestCase):
                 )
 
         _, c = run_test(TestCP, 10, speedup=100)
-        self.assertEqual(c.received_calls[Action.BootNotification], 10, "Expected one boot notification resend per interval")
-        assert_no_other_packets(self, c)
+        test.assertEqual(c.received_calls[Action.BootNotification], 10, "Expected one boot notification resend per interval")
+        assert_no_other_packets(test, c)
 
-    def test_retry_on_rejected(self):
+    def test_retry_on_rejected(test):
+        @default_central.addTester(test)
         class TestCP(default_central.DefaultChargePoint):
             @on(Action.BootNotification)
             def on_boot_notification(self, charge_point_vendor: str, charge_point_model: str, **kwargs):
@@ -60,14 +62,15 @@ class TestBootNotification(unittest.TestCase):
                 )
 
         _, c = run_test(TestCP, 10, speedup=100)
-        self.assertEqual(c.received_calls[Action.BootNotification], 10, "Expected one boot notification resend per interval")
-        assert_no_other_packets(self, c)
+        test.assertEqual(c.received_calls[Action.BootNotification], 10, "Expected one boot notification resend per interval")
+        assert_no_other_packets(test, c)
 
     """
     If that interval value is zero, the Charge Point chooses a waiting interval on its
     own, in a way that avoids flooding the Central System with requests.
     """
-    def test_interval_zero(self):
+    def test_interval_zero(test):
+        @default_central.addTester(test)
         class TestCP(default_central.DefaultChargePoint):
             @on(Action.BootNotification)
             def on_boot_notification(self, charge_point_vendor: str, charge_point_model: str, **kwargs):
@@ -79,15 +82,15 @@ class TestBootNotification(unittest.TestCase):
 
         _, c = run_test(TestCP, 100, speedup=100)
         # don't flood := at most one notification every 10 seconds
-        self.assertLessEqual(c.received_calls[Action.BootNotification], 10, "Expected one boot notification resend per interval")
-        assert_no_other_packets(self, c)
+        test.assertLessEqual(c.received_calls[Action.BootNotification], 10, "Expected one boot notification resend per interval")
+        assert_no_other_packets(test, c)
 
     """
     If the Central System returns something other than Accepted[...] A Charge Point SHOULD NOT send a
     BootNotification.req earlier, unless requested to do so with a TriggerMessage.req.
     """
     @unittest.skip("Not implemented yet")
-    def test_respond_to_trigger_message(self):
+    def test_respond_to_trigger_message(test):
         # configure interval longer than test time
         # send trigger message after short interval
         # check if two notifications were received (one on boot up, one on trigger)
@@ -96,7 +99,8 @@ class TestBootNotification(unittest.TestCase):
     """
     While Rejected, the Charge Point SHALL NOT respond to any Central System initiated message.
     """
-    def test_dont_respond_while_rejected(self):
+    def test_dont_respond_while_rejected(test):
+        @default_central.addTester(test)
         class TestCP(default_central.DefaultChargePoint):
             get_conf_task = None
 
@@ -114,13 +118,14 @@ class TestBootNotification(unittest.TestCase):
 
         _, c = run_test(TestCP, 10, speedup=100)
 
-        self.assertTrue(c.get_conf_task.done())
-        assert_no_other_packets(self, c)
+        test.assertTrue(c.get_conf_task.done())
+        assert_no_other_packets(test, c)
 
     """
     [...]Pending[...] The Central System MAY send request messages to retrieve information from the Charge Point or change its configuration. The Charge Point SHOULD respond to these messages.
     """
-    def test_respond_while_pending(self):
+    def test_respond_while_pending(test):
+        @default_central.addTester(test)
         class TestCP(default_central.DefaultChargePoint):
             get_conf_task = None
             first = True
@@ -141,13 +146,13 @@ class TestBootNotification(unittest.TestCase):
 
         _, c = run_test(TestCP, 10, speedup=100)
 
-        self.assertTrue(c.get_conf_task.done())
+        test.assertTrue(c.get_conf_task.done())
 
-        self.assertEqual(len(c.received_results), 1, "Expected received get configuration result")
-        self.assertEqual(c.received_results[call_result.GetConfigurationPayload], 1, "Expected one get configuration result")
+        test.assertEqual(len(c.received_results), 1, "Expected received get configuration result")
+        test.assertEqual(c.received_results[call_result.GetConfigurationPayload], 1, "Expected one get configuration result")
 
-        self.assertEqual(len(c.received_calls), 1, "Expected no other received calls")
-        self.assertEqual(len(c.received_errors), 0, "Expected no received errors")
+        test.assertEqual(len(c.received_calls), 1, "Expected no other received calls")
+        test.assertEqual(len(c.received_errors), 0, "Expected no received errors")
 
     """
     The Charge
@@ -155,7 +160,7 @@ class TestBootNotification(unittest.TestCase):
     System to do so with a TriggerMessage.req request.
     """
     @unittest.skip("TriggerMessage not implemented yet")
-    def test_handle_trigger_message_while_pending(self):
+    def test_handle_trigger_message_while_pending(test):
         pass
 
     """
@@ -165,7 +170,7 @@ class TestBootNotification(unittest.TestCase):
     messages that are still present in the Charge Point from before.
     """
     @unittest.skip("Not implemented yet")
-    def test_boot_notification_after_reboot(self):
+    def test_boot_notification_after_reboot(test):
         pass
 
 
@@ -173,7 +178,8 @@ class TestBootNotification(unittest.TestCase):
     When the Central System responds with a BootNotification.conf with a status Accepted, the Charge Point will
     adjust the heartbeat interval in accordance with the interval from the response PDU
     """
-    def test_heartbeat_interval_adjusted(self):
+    def test_heartbeat_interval_adjusted(test):
+        @default_central.addTester(test)
         class TestCP(default_central.DefaultChargePoint):
             get_conf_task = None
             first = True
@@ -193,17 +199,18 @@ class TestBootNotification(unittest.TestCase):
                 self.first = False
 
         _, c = run_test(TestCP, 10, speedup=100)
-        self.assertTrue(c.get_conf_task.done())
+        test.assertTrue(c.get_conf_task.done())
 
         result = c.get_conf_task.result()
 
-        self.assertEqual(int(result.configuration_key[0]["value"]), 12321)
+        test.assertEqual(int(result.configuration_key[0]["value"]), 12321)
 
     """
     When the Central System responds with a BootNotification.conf with a status Accepted, [...] it is RECOMMENDED to
     synchronize its internal clock with the supplied Central System’s current time.
     """
-    def test_clock_adjusted(self):
+    def test_clock_adjusted(test):
+        @default_central.addTester(test)
         class TestCP(default_central.DefaultChargePoint):
             sent_time = 0
 
@@ -222,15 +229,15 @@ class TestBootNotification(unittest.TestCase):
 
         start = time.time()
         _, c = run_test(TestCP, 10, speedup=100)
-        self.assertGreaterEqual(default_platform.last_time_set_at, start)
-        self.assertEqual(default_platform.last_time_set, c.sent_time)
+        test.assertGreaterEqual(default_platform.last_time_set_at, start)
+        test.assertEqual(default_platform.last_time_set, c.sent_time)
 
     """
     While in pending state, the following Central System initiated messages are not allowed:
     RemoteStartTransaction.req and RemoteStopTransaction.req
     """
     @unittest.skip("RemoteStartTransaction not implemented yet")
-    def test_remote_start_stop_while_pending(self):
+    def test_remote_start_stop_while_pending(test):
         # It is unclear what to do if we receive a remotestart/stop from the central. For now we handle those as if we've received any message while rejected: Just throw it away and don't answer at all.
 
         class TestCP(default_central.DefaultChargePoint):
@@ -246,8 +253,8 @@ class TestBootNotification(unittest.TestCase):
         _, c = run_test(TestCP, 10, speedup=100)
 
         result = c.remote_start_task.result()
-        self.assertEqual(result, None)
-        assert_no_other_packets(self, c)
+        test.assertEqual(result, None)
+        assert_no_other_packets(test, c)
 
 
 if __name__ == '__main__':
