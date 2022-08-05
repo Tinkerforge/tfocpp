@@ -26,11 +26,19 @@ static void (*platform_set_charging_current_cb)(int32_t connectorId, uint32_t mi
 
 static EVSEState (*platform_get_evse_state_cb)(int32_t connectorId) = nullptr;
 
-static const char * (*platform_get_meter_value_cb)(int32_t connectorId, SampledValueMeasurand measurant) = nullptr;
+static const char *(*platform_get_meter_value_cb)(int32_t connectorId, SampledValueMeasurand measurant) = nullptr;
 
 static int32_t (*platform_get_energy_cb)(int32_t connectorId) = nullptr;
 
 static void (*platform_reset_cb)() = nullptr;
+
+static size_t (*platform_read_file_cb)(const char *name, char *buf, size_t len) = nullptr;
+static bool (*platform_write_file_cb)(const char *name, char *buf, size_t len) = nullptr;
+
+static size_t (*platform_get_supported_measurand_count_cb)(int32_t connector_id, SampledValueMeasurand measurand) = nullptr;
+static SupportedMeasurand *(*platform_get_supported_measurands_cb)(int32_t connector_id, SampledValueMeasurand measurand) = nullptr;
+
+static float (*platform_get_raw_meter_value_cb)(int32_t connectorId, SampledValueMeasurand measurant, SampledValuePhase phase, SampledValueLocation location) = nullptr;
 
 void set_platform_now_ms_cb(uint32_t (*cb)()) {platform_now_ms_cb = cb;}
 void set_platform_set_system_time_cb(void (*cb)(void *ctx, time_t t)) {platform_set_system_time_cb = cb;}
@@ -49,6 +57,13 @@ void set_platform_get_energy_cb(int32_t (*cb)(int32_t connectorId)) {platform_ge
 void set_platform_register_stop_callback_cb(void (*cb)(void *ctx, void (*cb)(int32_t, StopReason, void *), void *user_data)) {platform_register_stop_callback_cb = cb;}
 void set_platform_reset_cb(void (*cb)()) {platform_reset_cb = cb;}
 
+void set_platform_read_file_cb(size_t (*cb)(const char *name, char *buf, size_t len)) { platform_read_file_cb = cb;}
+void set_platform_write_file_cb(bool (*cb)(const char *name, char *buf, size_t len)) { platform_write_file_cb = cb;}
+
+void set_platform_get_supported_measurand_count_cb(size_t (*cb)(int32_t connector_id, SampledValueMeasurand measurand)) {platform_get_supported_measurand_count_cb = cb;}
+void set_platform_get_supported_measurands_cb(SupportedMeasurand *(*cb)(int32_t connector_id, SampledValueMeasurand measurand)) {platform_get_supported_measurands_cb = cb;}
+
+void set_platform_get_raw_meter_value_cb(float (*cb)(int32_t connectorId, SampledValueMeasurand measurant, SampledValuePhase phase, SampledValueLocation location)) { platform_get_raw_meter_value_cb = cb;}
 
 struct mg_mgr mgr;        // Event manager
 struct mg_connection *c;  // Client connection
@@ -224,4 +239,27 @@ void ocpp_destroy() {
 
 void platform_reset() {
     platform_reset_cb();
+}
+
+size_t platform_read_file(const char *name, char *buf, size_t len) {
+    return platform_read_file_cb(name, buf, len);
+}
+bool platform_write_file(const char *name, char *buf, size_t len) {
+    return platform_write_file_cb(name, buf, len);
+}
+
+size_t platform_get_supported_measurand_count(int32_t connector_id, SampledValueMeasurand measurand) {
+    return platform_get_supported_measurand_count_cb(connector_id, measurand);
+}
+SupportedMeasurand *platform_get_supported_measurands(int32_t connector_id, SampledValueMeasurand measurand) {
+    return platform_get_supported_measurands_cb(connector_id, measurand);
+}
+
+bool platform_get_signed_meter_value(int32_t connectorId, SampledValueMeasurand measurant, SampledValuePhase phase, SampledValueLocation location, char buf[PLATFORM_MEASURAND_MAX_DATA_LEN]) {
+    //return platform_get_signed_meter_value_cb(connectorId, measurant, phase, location, buf);
+    return false;
+}
+
+float platform_get_raw_meter_value(int32_t connectorId, SampledValueMeasurand measurant, SampledValuePhase phase, SampledValueLocation location) {
+    return platform_get_raw_meter_value_cb(connectorId, measurant, phase, location);
 }

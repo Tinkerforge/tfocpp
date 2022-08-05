@@ -156,6 +156,21 @@ def trigger_stop(test, connector_id, reason):
 def platform_reset():
     return print("platform_reset")
 
+files = {}
+
+@ctypes.CFUNCTYPE(ctypes.c_size_t, ctypes.c_char_p, ctypes.POINTER(ctypes.c_char), ctypes.c_size_t)
+def platform_read_file(name, buf, len_):
+    b = files.get(name, bytearray([0]))
+    for i in range(len(b)):
+        buf[i] = b[i]
+    return len(b)
+
+@ctypes.CFUNCTYPE(ctypes.c_bool, ctypes.c_char_p, ctypes.POINTER(ctypes.c_char), ctypes.c_size_t)
+def platform_write_file(name, buf, len_):
+    b = (ctypes.c_char_p * len_).from_address(buf)
+    files[name] = b.value
+    return True
+
 def register_default_functions(libocpp):
     libocpp.set_platform_now_ms_cb(platform_now_ms)
     libocpp.set_platform_set_system_time_cb(platform_set_system_time)
@@ -173,6 +188,8 @@ def register_default_functions(libocpp):
     libocpp.set_platform_unlock_cable_cb(platform_unlock_cable)
     libocpp.set_platform_set_charging_current_cb(platform_set_charging_current)
     libocpp.set_platform_reset_cb(platform_reset)
+    libocpp.set_platform_read_file_cb(platform_read_file)
+    libocpp.set_platform_write_file_cb(platform_write_file)
 
 def start_client(port, tscale):
     global thread_id
