@@ -1024,7 +1024,8 @@ ChangeAvailabilityResponseStatus Connector::onChangeAvailability(ChangeAvailabil
             // Currently there is no reason to not accept this.
             // If in the future a connector can transition to UNAVAILABLE on its own, check here if the reason for this transition was fixed.
             this->unavailable_requested = false;
-            this->setState(ConnectorState::IDLE);
+            if (this->state == ConnectorState::UNAVAILABLE)
+                this->setState(ConnectorState::IDLE);
             return ChangeAvailabilityResponseStatus::ACCEPTED;
 
         case ChangeAvailabilityType::INOPERATIVE:

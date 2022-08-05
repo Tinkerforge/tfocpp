@@ -99,6 +99,27 @@ class TestChangeAvailability(unittest.TestCase):
         _, c = run_test(TestCP, sim_len_secs=2, speedup=100)
         test.assertTrue(c.done)
 
+    def test_state_stays_the_same_if_already_operative(test):
+        class TestCP(default_central.DefaultChargePoint):
+            auth_responed = False
+            status = {}
+            @after(Action.BootNotification)
+            def after_boot_notification(self, *args, **kwargs):
+                default_platform.show_tag(test, 1, "C0:FF:EE")
+
+            @after(Action.Authorize)
+            async def after_authorize(self, *args, **kwargs):
+                auth_responed = True
+                result = await self.call(call.ChangeAvailabilityPayload(1, "Operative"))
+                test.assertTrue(result.status == "Accepted")
+
+            @after(Action.StatusNotification)
+            def after_sn(self, connector_id, error_code, status, **kwargs):
+                self.status.setdefault(connector_id, []).append(status)
+
+        _, c = run_test(TestCP, sim_len_secs=2, speedup=100)
+        test.assertEqual(c.status[1], ["Available", "Preparing"])
+
     """
     When a transaction is in progress Charge Point SHALL respond with availability status 'Scheduled' to
     indicate that it is scheduled to occur after the transaction has finished.
