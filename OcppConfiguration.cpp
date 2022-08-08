@@ -205,9 +205,9 @@ const char *config_keys[CONFIG_COUNT] {
     "StopTransactionOnInvalidId",
     "StopTransactionMaxMeterValues",
     "StopTxnAlignedData",
-    //"StopTxnAlignedDataMaxLength",
+    "StopTxnAlignedDataMaxLength",
     "StopTxnSampledData",
-    //"StopTxnSampledDataMaxLength",
+    "StopTxnSampledDataMaxLength",
     "SupportedFeatureProfiles",
     //"SupportedFeatureProfilesMaxLength",
     "TransactionMessageAttempts",
@@ -265,11 +265,19 @@ static OcppConfiguration config[CONFIG_COUNT] = {
 
     // Same reasoning as with MeterValuesAlignedData.
     /*StopTxnAlignedData*/                OcppConfiguration::csl("", MAX_CONFIG_LENGTH, (size_t)SampledValueMeasurand::NONE, false, false, SampledValueMeasurandStrings, (size_t)SampledValueMeasurand::NONE),
-    /*StopTxnAlignedDataMaxLength*/       //OcppConfiguration::integer(0, true, false, 0),
+
+    // Hardcode 0 for now: We don't want to support sending metering data in StopTransaction.req for now. The spec says:
+    /*
+    3.16.5. No metering data in a Stop Transaction
+    When the configuration keys: StopTxnAlignedData and StopTxnSampledData are set to an empty string, the
+    Charge Point SHALL not put meter values in a StopTransaction.req PDU.
+    */
+    // So we make sure that StopTxnAlignedData and StopTxnSampledData are always an empty string.
+    /*StopTxnAlignedDataMaxLength*/       OcppConfiguration::integer(0, true, false, 0),
 
     // Same reasoning as with MeterValuesAlignedData.
     /*StopTxnSampledData*/                OcppConfiguration::csl("", MAX_CONFIG_LENGTH, (size_t)SampledValueMeasurand::NONE, false, false, SampledValueMeasurandStrings, (size_t)SampledValueMeasurand::NONE),
-    /*StopTxnSampledDataMaxLength*/       //OcppConfiguration::integer(0, true, false, 0),
+    /*StopTxnSampledDataMaxLength*/       OcppConfiguration::integer(0, true, false, 0),
 
     /*SupportedFeatureProfiles*/          OcppConfiguration::csl("Core", strlen("Core") + 1, 1, true, false, nullptr, 0, false),
     /*SupportedFeatureProfilesMaxLength*/ //OcppConfiguration::integer(1, true), //errata 4.0: "This configuration key does not have to be implemented. It should not have been part of OCPP 1.6, "SupportedFeatureProfiles" is a readonly configuration key, false, 0."

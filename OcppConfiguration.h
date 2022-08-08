@@ -72,7 +72,7 @@ struct OcppConfiguration {
 };
 
 // This is the number of supported configs
-#define CONFIG_COUNT 24
+#define CONFIG_COUNT 26
 
 // This is all configs specified in the OCPP spec.
 #define MAX_SPECIFIED_CONFIGS 46
