@@ -5,6 +5,13 @@
 
 static char send_buf[4096];
 
+static bool is_transaction_related(CallAction action) {
+     // TODO: only "periodic or clock-aligned MeterValues.req messages" are transaction related. Are those all MeterValues messages?
+    return action == CallAction::START_TRANSACTION
+        || action == CallAction::STOP_TRANSACTION
+        || action == CallAction::METER_VALUES;
+}
+
 void OcppConnection::handleMessage(char *message, size_t message_len)
 {
     platform_printfln("Received message %.*s", (int)std::min(message_len, (size_t)40), message);
@@ -105,6 +112,10 @@ void OcppConnection::handleMessage(char *message, size_t message_len)
 
         CallResponse res = callResultHandler((uint32_t)uid, message_in_flight.action, doc[2].as<JsonObject>(), cp);
         message_in_flight = QueueItem{};
+        transaction_message_retry_deadline = 0;
+        transaction_message_attempts = 0;
+        message_timeout_deadline = 0;
+
         (void)res;
         /*if (res.result != CallErrorCode::OK)
             sendCallError(uniqueID, res.result, res.error_description, JsonObject());*/
@@ -145,12 +156,22 @@ void OcppConnection::handleCallError(CallErrorCode code, const char *desc, JsonO
     serializeJsonPretty(details, details_string);
     platform_printfln("Received call error %s %s: %s", CallErrorCodeStrings[(size_t)code], desc, details_string.c_str());
 
-    //if (!is_transaction_related(message_in_flight.action))
+    if (!is_transaction_related(message_in_flight.action)) {
+        cp->onTimeout(message_in_flight.action, message_in_flight.message_id);
+        message_in_flight = QueueItem{};
+        return;
+    }
 
-    //TODO Don't throw away transaction related messages here. Resend them!
-    message_in_flight = QueueItem{};
+    transaction_messages.push_front(std::move(message_in_flight));
+    ++transaction_message_attempts;
+    if (transaction_message_attempts >= getIntConfig(ConfigKey::TransactionMessageAttempts)) {
+        cp->onTimeout(message_in_flight.action, message_in_flight.message_id);
+        message_in_flight = QueueItem{};
+        return;
+    }
+
+    transaction_message_retry_deadline = platform_now_ms() + transaction_message_attempts * getIntConfig(ConfigKey::TransactionMessageRetryInterval) * 1000;
 }
-
 
 void OcppConnection::sendCallError(const char *uid, CallErrorCode code, const char *desc, JsonObject details)
 {
@@ -179,17 +200,6 @@ bool OcppConnection::sendCallResponse(const DynamicJsonDocument &doc)
     return true;
 }
 
-static bool is_transaction_related(CallAction action) {
-     // TODO: only "periodic or clock-aligned MeterValues.req messages" are transaction related. Are those all MeterValues messages?
-    return action == CallAction::START_TRANSACTION
-        || action == CallAction::STOP_TRANSACTION
-        || action == CallAction::METER_VALUES;
-}
-/*
-bool is_transaction_related(QueueItem entry) {
-    return is_transaction_related(entry.action);
-}
-*/
 bool OcppConnection::sendCallAction(CallAction action, const DynamicJsonDocument &doc)
 {
     // TODO: handle full queues
@@ -237,8 +247,18 @@ void OcppConnection::tick() {
     // - handle connection loss: don't send any messages, maybe filter message queue
     // - handle timeouts for message in flight
 
-    if (message_in_flight.is_valid())
-        return;
+    if (message_in_flight.is_valid()) {
+        if (!deadline_elapsed(message_timeout_deadline))
+            return;
+
+        if (is_transaction_related(message_in_flight.action)) {
+            // Don't drop transaction related messages. Push to front to keep in order.
+            transaction_messages.push_front(std::move(message_in_flight));
+        } else {
+            cp->onTimeout(message_in_flight.action, message_in_flight.message_id);
+            message_in_flight = QueueItem{};
+        }
+    }
 
     /*
     The Charge Point SHOULD deliver transaction-related messages to the Central System in chronological order as
@@ -256,6 +276,8 @@ void OcppConnection::tick() {
         messages.pop_front();
     } else
         return;
+
+    message_timeout_deadline = platform_now_ms() + getIntConfig(ConfigKey::MessageTimeout) * 1000;
 
     platform_ws_send(platform_ctx, message_in_flight.buf.get(), message_in_flight.len);
 }

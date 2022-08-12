@@ -239,6 +239,90 @@ bool OcppChargePoint::sendCallAction(CallAction action, const DynamicJsonDocumen
     return true;
 }
 
+void OcppChargePoint::onTimeout(CallAction action, uint32_t messageId)
+{
+    switch (action) {
+        case CallAction::AUTHORIZE:
+            // notify connector
+            for(int32_t i = 0; i < NUM_CONNECTORS; ++i) {
+                if (connectors[i].waiting_for_message_id != messageId)
+                    continue;
+                connectors[i].waiting_for_message_id = 0;
+                connectors[i].onAuthorizeError();
+            }
+            break;
+
+        // Transaction related messages only trigger the timeout
+        // if all attempts to resend them failed
+        // because the central failed to process the message
+        // -> Nothing to do here
+        case CallAction::METER_VALUES:
+        case CallAction::START_TRANSACTION:
+        case CallAction::STOP_TRANSACTION:
+
+        // Nothing to do here
+        case CallAction::BOOT_NOTIFICATION:
+        case CallAction::HEARTBEAT:
+        case CallAction::STATUS_NOTIFICATION:
+
+        // Not core profile - should be unreachable
+        case CallAction::CANCEL_RESERVATION:
+        case CallAction::CLEAR_CACHE:
+        case CallAction::CLEAR_CHARGING_PROFILE:
+        case CallAction::DATA_TRANSFER:
+        case CallAction::DIAGNOSTICS_STATUS_NOTIFICATION:
+        case CallAction::FIRMWARE_STATUS_NOTIFICATION:
+        case CallAction::GET_COMPOSITE_SCHEDULE:
+        case CallAction::GET_DIAGNOSTICS:
+        case CallAction::GET_LOCAL_LIST_VERSION:
+        case CallAction::RESERVE_NOW:
+        case CallAction::SEND_LOCAL_LIST:
+        case CallAction::SET_CHARGING_PROFILE:
+        case CallAction::TRIGGER_MESSAGE:
+        case CallAction::UPDATE_FIRMWARE:
+
+        // Requests that are only sent from the central to us - should be unreachable
+        case CallAction::CHANGE_AVAILABILITY:
+        case CallAction::CHANGE_CONFIGURATION:
+        case CallAction::GET_CONFIGURATION:
+        case CallAction::REMOTE_START_TRANSACTION:
+        case CallAction::REMOTE_STOP_TRANSACTION:
+        case CallAction::RESET:
+        case CallAction::UNLOCK_CONNECTOR:
+
+        // Responses - should be unreachable
+        case CallAction::CHANGE_AVAILABILITY_RESPONSE:
+        case CallAction::CHANGE_CONFIGURATION_RESPONSE:
+        case CallAction::CLEAR_CACHE_RESPONSE:
+        case CallAction::DATA_TRANSFER_RESPONSE:
+        case CallAction::GET_CONFIGURATION_RESPONSE:
+        case CallAction::REMOTE_START_TRANSACTION_RESPONSE:
+        case CallAction::REMOTE_STOP_TRANSACTION_RESPONSE:
+        case CallAction::RESET_RESPONSE:
+        case CallAction::UNLOCK_CONNECTOR_RESPONSE:
+        case CallAction::AUTHORIZE_RESPONSE:
+        case CallAction::BOOT_NOTIFICATION_RESPONSE:
+        case CallAction::HEARTBEAT_RESPONSE:
+        case CallAction::METER_VALUES_RESPONSE:
+        case CallAction::START_TRANSACTION_RESPONSE:
+        case CallAction::STATUS_NOTIFICATION_RESPONSE:
+        case CallAction::STOP_TRANSACTION_RESPONSE:
+        case CallAction::GET_DIAGNOSTICS_RESPONSE:
+        case CallAction::UPDATE_FIRMWARE_RESPONSE:
+        case CallAction::DIAGNOSTICS_STATUS_NOTIFICATION_RESPONSE:
+        case CallAction::FIRMWARE_STATUS_NOTIFICATION_RESPONSE:
+        case CallAction::GET_LOCAL_LIST_VERSION_RESPONSE:
+        case CallAction::SEND_LOCAL_LIST_RESPONSE:
+        case CallAction::CANCEL_RESERVATION_RESPONSE:
+        case CallAction::RESERVE_NOW_RESPONSE:
+        case CallAction::CLEAR_CHARGING_PROFILE_RESPONSE:
+        case CallAction::GET_COMPOSITE_SCHEDULE_RESPONSE:
+        case CallAction::SET_CHARGING_PROFILE_RESPONSE:
+        case CallAction::TRIGGER_MESSAGE_RESPONSE:
+            break;
+    }
+}
+
 CallResponse OcppChargePoint::handleAuthorizeResponse(uint32_t messageId, AuthorizeResponseView conf)
 {
     IdTagInfo info;

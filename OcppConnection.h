@@ -64,6 +64,10 @@ public:
     OcppChargePoint *cp;
 
     QueueItem message_in_flight;
+    uint32_t message_timeout_deadline;
+
+    uint32_t transaction_message_retry_deadline;
+    int transaction_message_attempts = 0;
 
     std::deque<QueueItem> messages;
     std::deque<QueueItem> status_notifications;

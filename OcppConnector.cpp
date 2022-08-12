@@ -854,6 +854,10 @@ void Connector::onTagSeen(const char *tag_id) {
     }
 }
 
+void Connector::onAuthorizeError() {
+    this->onAuthorizeConf(IdTagInfo{});
+}
+
 // Handles AuthSuccess, AuthFail
 void Connector::onAuthorizeConf(IdTagInfo info) {
     bool auth_success = info.status == ResponseIdTagInfoEntriesStatus::ACCEPTED;

@@ -71,14 +71,9 @@ struct OcppConfiguration {
     ChangeConfigurationResponseStatus setValue(const char *newValue);
 };
 
-// This is the number of supported configs
-#define CONFIG_COUNT 26
-
 // This is all configs specified in the OCPP spec.
 #define MAX_SPECIFIED_CONFIGS 46
 #define MAX_CONFIG_LENGTH 501 // the spec does not specify a maximum length. however the payload of a change configuration message has a max length of 500
-
-extern const char *config_keys[CONFIG_COUNT];
 
 enum class ConnectorPhaseRotation {
     NotApplicable,
@@ -106,6 +101,7 @@ enum class ConfigKey {
     LocalAuthorizeOffline,
     LocalPreAuthorize,
     //MaxEnergyOnInvalidId,
+    MessageTimeout,
     MeterValuesAlignedData,
     //MeterValuesAlignedDataMaxLength,
     MeterValuesSampledData,
@@ -125,8 +121,13 @@ enum class ConfigKey {
     TransactionMessageAttempts,
     TransactionMessageRetryInterval,
     UnlockConnectorOnEVSideDisconnect,
-    WebSocketPingInterval
+    WebSocketPingInterval,
+    CONFIG_KEY_MAX
 };
+
+#define CONFIG_COUNT ((size_t)ConfigKey::CONFIG_KEY_MAX)
+
+extern const char *config_keys[CONFIG_COUNT];
 
 OcppConfiguration& getConfig(size_t key);
 OcppConfiguration& getConfig(ConfigKey key);

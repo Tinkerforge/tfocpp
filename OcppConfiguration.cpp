@@ -193,6 +193,7 @@ const char *config_keys[CONFIG_COUNT] {
     "LocalAuthorizeOffline",
     "LocalPreAuthorize",
     //"MaxEnergyOnInvalidId",
+    "MessageTimeout",
     "MeterValuesAlignedData",
     //"MeterValuesAlignedDataMaxLength",
     "MeterValuesSampledData",
@@ -238,6 +239,8 @@ static OcppConfiguration config[CONFIG_COUNT] = {
     /*LocalAuthorizeOffline*/             OcppConfiguration::boolean(false, false, false),
     /*LocalPreAuthorize*/                 OcppConfiguration::boolean(false, false, false),
     /*MaxEnergyOnInvalidId*/              //OcppConfiguration::integer(0, false, false, 0),
+
+    /*MessageTimeout*/                    OcppConfiguration::integer(10, false, false, 1),
 
     // Its save to use the number of possible measurands as limit in elements,
     // because the complete list has a length of 465.
