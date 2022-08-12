@@ -52,7 +52,8 @@ struct Connector {
 
     uint32_t tag_deadline = 0;
     uint32_t cable_deadline = 0;
-    int32_t transaction_id = -1;
+    int32_t transaction_id = INT32_MAX;
+    time_t transaction_confirmed_timestamp;
 
     // This is set to true if a StartTransaction.conf is received that was not accepted
     // and StopTransactionOnInvalidId is not configured to true.
@@ -97,7 +98,7 @@ struct Connector {
     void applyState();
     void sendStatus();
     void forceSendStatus();
-    void sendCallAction(CallAction action, const DynamicJsonDocument &doc);
+    void sendCallAction(CallAction action, const DynamicJsonDocument &doc, time_t timestamp = 0);
 
     bool isSelectableForRemoteStartTxn();
     bool canHandleRemoteStopTxn(int32_t transaction_id);

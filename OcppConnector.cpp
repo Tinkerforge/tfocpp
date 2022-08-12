@@ -2,6 +2,7 @@
 
 #include "OcppTools.h"
 #include "OcppChargePoint.h"
+#include "OcppPersistency.h"
 
 void Connector::deauth() {
     authorized_for = IdTagInfo{};
@@ -64,7 +65,7 @@ void Connector::applyState() {
 
             deauth();
 
-            transaction_id = -1;
+            transaction_id = INT32_MAX;
             transaction_with_invalid_tag_id = false;
             break;
 
@@ -77,7 +78,7 @@ void Connector::applyState() {
 
             deauth();
 
-            transaction_id = -1;
+            transaction_id = INT32_MAX;
             transaction_with_invalid_tag_id = false;
             break;
 
@@ -90,7 +91,7 @@ void Connector::applyState() {
 
             deauth();
 
-            transaction_id = -1;
+            transaction_id = INT32_MAX;
             transaction_with_invalid_tag_id = false;
             break;
 
@@ -105,7 +106,7 @@ void Connector::applyState() {
             setTagDeadline();
             setCableDeadline();
 
-            transaction_id = -1;
+            transaction_id = INT32_MAX;
             transaction_with_invalid_tag_id = false;
             break;
 
@@ -116,7 +117,7 @@ void Connector::applyState() {
             setTagDeadline();
             clearCableDeadline();
 
-            transaction_id = -1;
+            transaction_id = INT32_MAX;
             transaction_with_invalid_tag_id = false;
             break;
 
@@ -128,7 +129,7 @@ void Connector::applyState() {
             clearTagDeadline();
             setCableDeadline();
 
-            transaction_id = -1;
+            transaction_id = INT32_MAX;
             transaction_with_invalid_tag_id = false;
             break;
 
@@ -150,7 +151,7 @@ void Connector::applyState() {
             clearTagDeadline();
             clearCableDeadline();
 
-            transaction_id = -1;
+            transaction_id = INT32_MAX;
             transaction_with_invalid_tag_id = false;
             break;
     }
@@ -191,10 +192,24 @@ void Connector::setState(ConnectorState newState) {
                 case ConnectorState::AUTH_START:
                 case ConnectorState::NO_PLUG:
                 case ConnectorState::NO_CABLE:
-                case ConnectorState::NO_TAG:
-                    this->sendCallAction(CallAction::START_TRANSACTION, StartTransaction(connectorId, authorized_for.tagId, platform_get_energy(connectorId), platform_get_system_time(cp->platform_ctx)));
-                    break;
+                case ConnectorState::NO_TAG: {
+                    /*
+                    If the Charge Point was unable to deliver the StartTransaction.req despite repeated attempts, or if the Central System was
+                    unable to deliver the StartTransaction.conf response, then the Charge Point will not receive a transactionId.
 
+                    In that case, the Charge Point SHALL send any Transaction related messages for this transaction to the Central System with a
+                    transactionId = -1. The Central System SHALL respond as if these messages refer to a valid transactionId, so that the Charge
+                    Point is not blocked by this.
+                    */
+                    this->transaction_id = -1;
+                    this->meter_value_handler.onStartTransaction(this->transaction_id);
+
+                    auto timestamp = platform_get_system_time(cp->platform_ctx);
+                    auto energy = platform_get_energy(connectorId);
+                    persistStartTxn(connectorId, authorized_for.tagId, energy, OCPP_INTEGER_NOT_PASSED, timestamp);
+                    this->sendCallAction(CallAction::START_TRANSACTION, StartTransaction(connectorId, authorized_for.tagId, energy, timestamp), timestamp);
+                    break;
+                }
                 case ConnectorState::IDLE:
                 case ConnectorState::NO_CABLE_NO_TAG:
                 case ConnectorState::AUTH_START_NO_PLUG:
@@ -216,13 +231,18 @@ void Connector::setState(ConnectorState newState) {
         case ConnectorState::FINISHING_NO_SAME_TAG:
              switch (oldState) {
                 case ConnectorState::TRANSACTION:
-                case ConnectorState::AUTH_STOP:
+                case ConnectorState::AUTH_STOP: {
                     if (this->next_stop_reason == StopTransactionReason::NONE) {
                         platform_printfln("Attempting to send stop transaction but next stop reason is none!");
                     }
-                    this->sendCallAction(CallAction::STOP_TRANSACTION, StopTransaction(platform_get_energy(connectorId), platform_get_system_time(cp->platform_ctx), transaction_id, authorized_for.tagId, this->next_stop_reason));
-                    break;
+                    auto timestamp = platform_get_system_time(cp->platform_ctx);
+                    auto energy = platform_get_energy(connectorId);
 
+                    onTxnMsgResponseReceived(this->transaction_confirmed_timestamp);
+                    persistStopTxn((uint8_t)this->next_stop_reason, energy, transaction_id, authorized_for.tagId, timestamp);
+                    this->sendCallAction(CallAction::STOP_TRANSACTION, StopTransaction(energy, timestamp, transaction_id, authorized_for.tagId, this->next_stop_reason), timestamp);
+                    break;
+                }
                 case ConnectorState::IDLE:
                 case ConnectorState::NO_CABLE_NO_TAG:
                 case ConnectorState::NO_TAG:
@@ -292,11 +312,11 @@ void Connector::forceSendStatus()
     last_sent_status = newStatus;
 }
 
-void Connector::sendCallAction(CallAction action, const DynamicJsonDocument &doc)
+void Connector::sendCallAction(CallAction action, const DynamicJsonDocument &doc, time_t timestamp)
 {
     long id = std::atol(doc[1]);
     this->waiting_for_message_id = (uint32_t)id;
-    cp->sendCallAction(action, doc);
+    cp->sendCallAction(action, doc, timestamp);
 }
 
 bool Connector::isSelectableForRemoteStartTxn()
@@ -901,8 +921,6 @@ void Connector::onAuthorizeConf(IdTagInfo info) {
 
 // Handles StartTxnNotAccepted
 void Connector::onStartTransactionConf(IdTagInfo info, int32_t txn_id) {
-    // TODO: filter with message ID to make sure we don't act on a StartTxn.conf that was for an old transaction.
-
     if (state != ConnectorState::TRANSACTION && state != ConnectorState::AUTH_STOP) {
         platform_printfln("Ignoring StartTransaction.conf in state %s", ConnectorState_Strings[(size_t)state]);
         return;
@@ -911,6 +929,10 @@ void Connector::onStartTransactionConf(IdTagInfo info, int32_t txn_id) {
     authorized_for.updateFromIdTagInfo(info);
 
     this->transaction_id = txn_id;
+    this->meter_value_handler.transactionId = txn_id;
+
+    this->transaction_confirmed_timestamp = platform_get_system_time(cp->platform_ctx);
+    persistRunningTxn(this->connectorId, transaction_confirmed_timestamp, txn_id);
 
     if (info.status == ResponseIdTagInfoEntriesStatus::ACCEPTED) {
         return;

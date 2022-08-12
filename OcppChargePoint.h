@@ -12,6 +12,7 @@
 
 enum class OcppState {
     PowerOn, // send boot notification, wait for boot notification conf, don't do anything else
+    FlushPersistentMessages, // boot notification received, accepted, but we have to send old txn messages first
     Idle, // boot notification received, accepted
     Pending, // boot notification received, pending
     Rejected, // boot notification received, rejected,
@@ -49,6 +50,7 @@ public:
     void handleStop(int32_t connectorId, StopReason reason);
 
     void tick_power_on();
+    void tick_flush_persistent_messages();
     void tick_idle();
 
     void tick_soft_reset();
@@ -68,12 +70,13 @@ public:
     void saveAvailability();
     void loadAvailability();
 
+
     StatusNotificationStatus last_sent_status = StatusNotificationStatus::NONE;
     StatusNotificationStatus getStatus();
     void sendStatus();
     void forceSendStatus();
 
-    bool sendCallAction(CallAction action, const DynamicJsonDocument &doc);
+    bool sendCallAction(CallAction action, const DynamicJsonDocument &doc, time_t timestamp = 0);
     void onTimeout(CallAction action, uint32_t messageId);
 
     CallResponse handleAuthorizeResponse(uint32_t messageId, AuthorizeResponseView conf);

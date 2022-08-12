@@ -16,17 +16,19 @@ public:
     std::unique_ptr<char[]> buf;
     uint32_t message_id;
     size_t len;
+    time_t timestamp;
 
     QueueItem() : action(CallAction::AUTHORIZE), buf(nullptr), message_id(0), len(0) {}
 
-    QueueItem(CallAction action, const DynamicJsonDocument &doc) :
+    QueueItem(CallAction action, const DynamicJsonDocument &doc, time_t timestamp) :
         action(action),
         buf(nullptr),
         message_id(doc[1].as<uint32_t>()),
         len(0),
+        timestamp(timestamp)
     {
         auto length = measureJson(doc);
-
+        platform_printfln("Len: %lu", length);
         this->buf.reset(new char[length]);
         serializeJson(doc, this->buf.get(), length);
         this->len = length;
@@ -61,7 +63,7 @@ public:
 
     void sendCallError(const char *uid, CallErrorCode code, const char *desc, JsonObject details);
 
-    bool sendCallAction(CallAction action, const DynamicJsonDocument &doc);
+    bool sendCallAction(CallAction action, const DynamicJsonDocument &doc, time_t timestamp = 0);
     bool sendCallResponse(const DynamicJsonDocument &doc);
 
     void *platform_ctx;

@@ -5,6 +5,8 @@
 #include "OcppConfiguration.h"
 #include "OcppConnector.h"
 
+#include "OcppPersistency.h"
+
 extern "C" {
     #include "libiso8601/iso8601.h"
 }
@@ -56,12 +58,27 @@ void OcppChargePoint::tick_soft_reset() {
     platform_reset();
 }
 
+void OcppChargePoint::tick_flush_persistent_messages() {
+    if (connection.message_in_flight.is_valid())
+        return;
+
+    if (restoreNextTxnMessage(&connection))
+        return;
+
+    finishRestore();
+    this->state = OcppState::Idle;
+}
+
 void OcppChargePoint::tick() {
     switch (state) {
         case OcppState::PowerOn:
         case OcppState::Pending:
         case OcppState::Rejected:
             tick_power_on();
+            break;
+
+        case OcppState::FlushPersistentMessages:
+            tick_flush_persistent_messages();
             break;
 
         case OcppState::Idle:
@@ -123,6 +140,10 @@ ChangeAvailabilityResponseStatus OcppChargePoint::onChangeAvailability(ChangeAva
                 case OcppState::Unavailable:
                     this->state = OcppState::Idle;
                     return ChangeAvailabilityResponseStatus::ACCEPTED;
+
+                case OcppState::FlushPersistentMessages:
+                    this->state = OcppState::Idle;
+                    return ChangeAvailabilityResponseStatus::ACCEPTED;
             }
             break;
 
@@ -134,6 +155,7 @@ ChangeAvailabilityResponseStatus OcppChargePoint::onChangeAvailability(ChangeAva
                 case OcppState::Faulted:
                 case OcppState::SoftReset:
                 case OcppState::HardReset:
+                case OcppState::FlushPersistentMessages:
                     return ChangeAvailabilityResponseStatus::REJECTED;
 
                 case OcppState::Idle:
@@ -196,6 +218,7 @@ StatusNotificationStatus OcppChargePoint::getStatus()
         case OcppState::Pending:
         case OcppState::Rejected:
         case OcppState::Idle:
+        case OcppState::FlushPersistentMessages:
             return StatusNotificationStatus::AVAILABLE;
     }
 }
@@ -218,7 +241,7 @@ void OcppChargePoint::forceSendStatus()
     last_sent_status = newStatus;
 }
 
-bool OcppChargePoint::sendCallAction(CallAction action, const DynamicJsonDocument &doc)
+bool OcppChargePoint::sendCallAction(CallAction action, const DynamicJsonDocument &doc, time_t timestamp)
 {
     switch (state) {
         case OcppState::PowerOn:
@@ -232,10 +255,11 @@ bool OcppChargePoint::sendCallAction(CallAction action, const DynamicJsonDocumen
         case OcppState::Faulted:
         case OcppState::SoftReset:
         case OcppState::HardReset:
+        case OcppState::FlushPersistentMessages:
             break;
     }
-    // Filter messages here
-    connection.sendCallAction(action, doc);
+
+    connection.sendCallAction(action, doc, timestamp);
     return true;
 }
 
@@ -358,12 +382,17 @@ CallResponse OcppChargePoint::handleBootNotificationResponse(uint32_t messageId,
     switch (conf.status()) {
         case BootNotificationResponseStatus::ACCEPTED: {
             platform_set_system_time(platform_ctx, conf.currentTime());
+
             state = OcppState::Idle;
 
             this->forceSendStatus();
 
             for(size_t i = 0; i < NUM_CONNECTORS; ++i)
                 connectors[i].forceSendStatus();
+
+            if (startRestore())
+                this->state = OcppState::FlushPersistentMessages;
+
             break;
         }
         case BootNotificationResponseStatus::PENDING: {

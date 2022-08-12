@@ -1,7 +1,7 @@
 #include "OcppConnection.h"
 
 #include "OcppChargePoint.h"
-
+#include "OcppPersistency.h"
 
 static char send_buf[4096];
 
@@ -110,6 +110,9 @@ void OcppConnection::handleMessage(char *message, size_t message_len)
             return;
         }
 
+        if (is_transaction_related(message_in_flight.action))
+            onTxnMsgResponseReceived(message_in_flight.timestamp);
+
         CallResponse res = callResultHandler((uint32_t)uid, message_in_flight.action, doc[2].as<JsonObject>(), cp);
         message_in_flight = QueueItem{};
         transaction_message_retry_deadline = 0;
@@ -195,16 +198,34 @@ void OcppConnection::sendCallError(const char *uid, CallErrorCode code, const ch
 bool OcppConnection::sendCallResponse(const DynamicJsonDocument &doc)
 {
     size_t written = serializeJson(doc, send_buf);
-
+    platform_printfln("Written %lu", written);
     platform_ws_send(platform_ctx, send_buf, written);
     return true;
 }
 
-bool OcppConnection::sendCallAction(CallAction action, const DynamicJsonDocument &doc)
+bool OcppConnection::sendCallAction(CallAction action, const DynamicJsonDocument &doc, time_t timestamp)
 {
-    // TODO: handle full queues
+    // Not transaction-related messages are allowed to be dropped.
+    // This means that we can just enforce a queue depth of 5.
+    // Transaction-related messages may not be dropped, however we (currently) allow dropping meter values messages.
+    // This means that only Start and StopTxn messages will be emplaced in the txn_msg queue.
+    // To create a StartTxn message the connection must work, because we don't implement any way of authenticating offline.
+    // So only if the Authorize message gets through, we can create a StartTxn message.
+    // The worst case now is that we lose the connection directly after the Authorize message, and the transaction continues.
+    // We then have enqueued at most two messages, one StartTxn and one StopTxn.
     if (is_transaction_related(action)) {
-        transaction_messages.emplace_back(action, doc);
+        if (timestamp == 0) {
+            platform_printfln("Attempted to send transaction related call action without valid timestamp!");
+            return false;
+        }
+        if (transaction_messages.size() >= 5) {
+            size_t i;
+            for(i = 0; i < transaction_messages.size(); ++i)
+                if (transaction_messages[i].action == CallAction::METER_VALUES)
+                    break;
+            transaction_messages.erase(transaction_messages.begin() + i);
+        }
+        transaction_messages.emplace_back(action, doc, timestamp);
         return true;
     }
 
@@ -213,18 +234,18 @@ bool OcppConnection::sendCallAction(CallAction action, const DynamicJsonDocument
     if (!platform_ws_connected(platform_ctx))
         return false;
 
-    if (action == CallAction::STATUS_NOTIFICATION)
-        status_notifications.emplace_back(action, doc);
-    else
-        messages.emplace_back(action, doc);
+    if (action == CallAction::STATUS_NOTIFICATION) {
+        if (status_notifications.size() > 5)
+            status_notifications.pop_front();
+        status_notifications.emplace_back(action, doc, timestamp);
+    }
+    else {
+        if (messages.size() > 5)
+            messages.pop_front();
+        messages.emplace_back(action, doc, timestamp);
+    }
 
     return true;
-
-    /*last_call_action = action;
-    size_t written = serializeJson(*doc, send_buf);
-
-    platform_ws_send(platform_ctx, send_buf, written);
-    return true;*/
 }
 
 void OcppConnection::tick() {
@@ -243,9 +264,6 @@ void OcppConnection::tick() {
         return;
     }
 
-    // TODO
-    // - handle connection loss: don't send any messages, maybe filter message queue
-    // - handle timeouts for message in flight
 
     if (message_in_flight.is_valid()) {
         if (!deadline_elapsed(message_timeout_deadline))

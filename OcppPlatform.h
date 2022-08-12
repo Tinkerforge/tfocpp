@@ -121,3 +121,17 @@ SupportedMeasurand *platform_get_supported_measurands(int32_t connector_id, Samp
 
 size_t platform_read_file(const char *name, char *buf, size_t len);
 bool platform_write_file(const char *name, char *buf, size_t len);
+
+// return nullptr if name does not exist or is not a directory
+void *platform_open_dir(const char *name);
+
+struct OcppDirEnt {
+    bool is_dir;
+    char name[32] = "";
+};
+
+// return nullptr if no more files
+OcppDirEnt *platform_read_dir(void *dir_fd);
+void platform_close_dir(void *dir_fd);
+
+void platform_remove_file(const char *name);

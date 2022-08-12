@@ -10,6 +10,8 @@
 
 #include <memory>
 
+#include <dirent.h>
+
 struct mg_mgr mgr;        // Event manager
 struct mg_connection *c;  // Client connection
 void(*recv_cb)(char *, size_t, void *) = nullptr;
@@ -173,8 +175,7 @@ EVSEState platform_get_evse_state(int32_t connectorId) {
 
 // This is the Energy.Active.Import.Register measurant in Wh
 int32_t platform_get_energy(int32_t connectorId) {
-    printf("platform_get_energy not implemented yet!\n");
-    return 0;
+    return 1234;
 }
 
 void platform_lock_cable(int32_t connectorId)
@@ -373,4 +374,34 @@ bool platform_write_file(const char *name, char *buf, size_t len)
     auto written = write(fd, buf, len);
     close(fd);
     return written == len;
+}
+
+void* platform_open_dir(const char *name)
+{
+    return opendir(name);
+}
+
+static OcppDirEnt dir_ent;
+
+OcppDirEnt* platform_read_dir(void *dir_fd)
+{
+    auto *d = readdir((DIR *)dir_fd);
+    if (d == nullptr)
+        return nullptr;
+
+    dir_ent.is_dir = d->d_type != DT_REG;
+    memset(dir_ent.name, 0, sizeof(dir_ent.name));
+    strncpy(dir_ent.name, d->d_name, sizeof(dir_ent.name));
+    dir_ent.name[sizeof(dir_ent.name) - 1] = '\0';
+    return &dir_ent;
+}
+
+void platform_close_dir(void *dir_fd)
+{
+    closedir((DIR *)dir_fd);
+}
+
+void platform_remove_file(const char *name)
+{
+    unlink(name);
 }

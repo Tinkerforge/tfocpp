@@ -16,6 +16,7 @@ struct OcppMeterValueHandler {
     void tick();
     void onStartTransaction(int32_t txnId) {
         charging_session_meter_values.reset();
+        last_charging_session_send = 0;
         this->transactionId = txnId;
     }
 

@@ -22,7 +22,7 @@ void OcppMeterValueHandler::tick() {
         mv.timestamp = to_send.timestamp;
         mv.sampledValue = to_send.sampled_values.get();
         mv.sampledValue_length = to_send.sampled_value_count;
-        cp->sendCallAction(CallAction::METER_VALUES, MeterValues(this->connectorId, &mv, 1));
+        cp->sendCallAction(CallAction::METER_VALUES, MeterValues(this->connectorId, &mv, 1), mv.timestamp);
         clock_aligned_meter_values.reset();
     }
 
@@ -32,7 +32,7 @@ void OcppMeterValueHandler::tick() {
         mv.timestamp = to_send.timestamp;
         mv.sampledValue = to_send.sampled_values.get();
         mv.sampledValue_length = to_send.sampled_value_count;
-        cp->sendCallAction(CallAction::METER_VALUES, MeterValues(this->connectorId, &mv, 1));
+        cp->sendCallAction(CallAction::METER_VALUES, MeterValues(this->connectorId, &mv, 1), mv.timestamp);
         charging_session_meter_values.reset();
     }
 }
@@ -76,7 +76,10 @@ bool OcppMeterValueHandler::charging_session_interval_crossed()
     if (interval == 0)
         return false;
 
-    if (!deadline_elapsed(last_charging_session_send + interval * 1000))
+    if (!transaction_active())
+        return false;
+
+    if (last_charging_session_send != 0 && !deadline_elapsed(last_charging_session_send + interval * 1000))
         return false;
 
     last_charging_session_send = platform_now_ms();
