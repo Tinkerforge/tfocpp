@@ -21,11 +21,15 @@ public:
 
     QueueItem(CallAction action, const DynamicJsonDocument &doc) :
         action(action),
-        buf(new char[4096]),
+        buf(nullptr),
         message_id(doc[1].as<uint32_t>()),
-        len(serializeJson(doc, buf.get(), 4096))
+        len(0),
     {
+        auto length = measureJson(doc);
 
+        this->buf.reset(new char[length]);
+        serializeJson(doc, this->buf.get(), length);
+        this->len = length;
     }
 
     bool is_valid() {
