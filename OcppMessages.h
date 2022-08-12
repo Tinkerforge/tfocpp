@@ -1,3 +1,5 @@
+// THIS FILE IS AUTO-GENERATED. DO NOT EDIT.
+
 #pragma once
 
 #include "OcppTypes.h"
@@ -6,6 +8,8 @@ class OcppChargePoint;
 
 #define OCPP_INTEGER_NOT_PASSED INT32_MAX
 #define OCPP_DATETIME_NOT_PASSED 0
+
+#define JSON_MEM_CHECK(x) do {if (!x) platform_printfln("DynamicJsonDocument too small! %s:%d %s", __FILE__, __LINE__,  __func__);} while(0)
 
 extern const char *ChangeAvailabilityResponseStatusStrings[];
 
@@ -696,6 +700,7 @@ struct MeterValueSampledValue {
     SampledValueUnit unit = SampledValueUnit::NONE;
 
     void serializeInto(JsonObject payload);
+    size_t jsonSize();
 };
 
 struct MeterValue {
@@ -703,6 +708,7 @@ struct MeterValue {
     MeterValueSampledValue *sampledValue; size_t sampledValue_length;
 
     void serializeInto(JsonObject payload);
+    size_t jsonSize();
 };
 
 struct GetConfigurationResponseConfigurationKey {
@@ -711,6 +717,7 @@ struct GetConfigurationResponseConfigurationKey {
     const char *value = nullptr;
 
     void serializeInto(JsonObject payload);
+    size_t jsonSize();
 };
 
 

@@ -1,3 +1,5 @@
+// THIS FILE IS AUTO-GENERATED. DO NOT EDIT.
+
 #include "OcppMessages.h"
 
 #include "OcppChargePoint.h"
@@ -22,7 +24,7 @@ static void unix_timestamp_to_iso_string(time_t timestamp, JsonObject payload, c
 
     strftime(buf, ARRAY_SIZE(buf), "%FT%TZ", t);
 
-    payload[key] = buf;
+    JSON_MEM_CHECK(payload[key].set(buf));
 }
 
 static uint32_t next_call_id = 0;
@@ -232,9 +234,15 @@ const char *SampledValueUnitStrings[] = {
 
 
 void GetConfigurationResponseConfigurationKey::serializeInto(JsonObject payload) {
-        if (key != nullptr) payload["key"] = key;
-        payload["readonly"] = readonly;
-        if (value != nullptr) payload["value"] = value;
+        if (key != nullptr) JSON_MEM_CHECK(payload["key"].set(key));
+        JSON_MEM_CHECK(payload["readonly"].set(readonly));
+        if (value != nullptr) JSON_MEM_CHECK(payload["value"].set(value));
+    }
+
+    size_t GetConfigurationResponseConfigurationKey::jsonSize() {
+        size_t param_size = JSON_OBJECT_SIZE(3);
+
+        return param_size;
     }
 
 void MeterValue::serializeInto(JsonObject payload) {
@@ -242,14 +250,32 @@ void MeterValue::serializeInto(JsonObject payload) {
         if (sampledValue != nullptr) { JsonArray arr = payload.createNestedArray("sampledValue"); for(size_t i = 0; i < sampledValue_length; ++i) { JsonObject obj = arr.createNestedObject(); sampledValue[i].serializeInto(obj); } }
     }
 
+    size_t MeterValue::jsonSize() {
+        size_t param_size = JSON_OBJECT_SIZE(2);
+        param_size += OCPP_ISO_8601_MAX_LEN;
+
+        param_size += JSON_ARRAY_SIZE(sampledValue_length);
+        for(size_t i = 0; i < sampledValue_length; ++i) {
+            param_size += sampledValue[i].jsonSize();
+        }
+
+        return param_size;
+    }
+
 void MeterValueSampledValue::serializeInto(JsonObject payload) {
-        if (value != nullptr) payload["value"] = value;
-        if (context != SampledValueContext::NONE) payload["context"] = SampledValueContextStrings[(size_t)context];
-        if (format != SampledValueFormat::NONE) payload["format"] = SampledValueFormatStrings[(size_t)format];
-        if (measurand != SampledValueMeasurand::NONE) payload["measurand"] = SampledValueMeasurandStrings[(size_t)measurand];
-        if (phase != SampledValuePhase::NONE) payload["phase"] = SampledValuePhaseStrings[(size_t)phase];
-        if (location != SampledValueLocation::NONE) payload["location"] = SampledValueLocationStrings[(size_t)location];
-        if (unit != SampledValueUnit::NONE) payload["unit"] = SampledValueUnitStrings[(size_t)unit];
+        if (value != nullptr) JSON_MEM_CHECK(payload["value"].set(value));
+        if (context != SampledValueContext::NONE) JSON_MEM_CHECK(payload["context"].set(SampledValueContextStrings[(size_t)context]));
+        if (format != SampledValueFormat::NONE) JSON_MEM_CHECK(payload["format"].set(SampledValueFormatStrings[(size_t)format]));
+        if (measurand != SampledValueMeasurand::NONE) JSON_MEM_CHECK(payload["measurand"].set(SampledValueMeasurandStrings[(size_t)measurand]));
+        if (phase != SampledValuePhase::NONE) JSON_MEM_CHECK(payload["phase"].set(SampledValuePhaseStrings[(size_t)phase]));
+        if (location != SampledValueLocation::NONE) JSON_MEM_CHECK(payload["location"].set(SampledValueLocationStrings[(size_t)location]));
+        if (unit != SampledValueUnit::NONE) JSON_MEM_CHECK(payload["unit"].set(SampledValueUnitStrings[(size_t)unit]));
+    }
+
+    size_t MeterValueSampledValue::jsonSize() {
+        size_t param_size = JSON_OBJECT_SIZE(7);
+
+        return param_size;
     }
 
 
@@ -257,18 +283,16 @@ void MeterValueSampledValue::serializeInto(JsonObject payload) {
 DynamicJsonDocument Authorize(const char idTag[21]) {
     if (idTag == nullptr) { platform_printfln("Required idTag missing."); return DynamicJsonDocument{0}; }
 
-    DynamicJsonDocument result = DynamicJsonDocument{
-        OCPP_CALL_JSON_SIZE("Authorize")
-        + JSON_OBJECT_SIZE(1)
-        + 2000
-    };
+    size_t param_size = OCPP_CALL_JSON_SIZE("Authorize") + JSON_OBJECT_SIZE(1);
 
-    result.add((int32_t)OcppRpcMessageType::CALL);
-    result.add(std::to_string(next_call_id));
-    result.add("Authorize");
+    DynamicJsonDocument result = DynamicJsonDocument{param_size};
+
+    JSON_MEM_CHECK(result.add((int32_t)OcppRpcMessageType::CALL));
+    JSON_MEM_CHECK(result.add(std::to_string(next_call_id)));
+    JSON_MEM_CHECK(result.add("Authorize"));
     JsonObject payload = result.createNestedObject();
 
-    if (idTag != nullptr) payload["idTag"] = idTag;
+    if (idTag != nullptr) JSON_MEM_CHECK(payload["idTag"].set(idTag));
 
     result.shrinkToFit();
     return result;
@@ -286,26 +310,24 @@ DynamicJsonDocument BootNotification(const char chargePointVendor[21],
     if (chargePointVendor == nullptr) { platform_printfln("Required chargePointVendor missing."); return DynamicJsonDocument{0}; }
     if (chargePointModel == nullptr) { platform_printfln("Required chargePointModel missing."); return DynamicJsonDocument{0}; }
 
-    DynamicJsonDocument result = DynamicJsonDocument{
-        OCPP_CALL_JSON_SIZE("BootNotification")
-        + JSON_OBJECT_SIZE(9)
-        + 18000
-    };
+    size_t param_size = OCPP_CALL_JSON_SIZE("BootNotification") + JSON_OBJECT_SIZE(9);
 
-    result.add((int32_t)OcppRpcMessageType::CALL);
-    result.add(std::to_string(next_call_id));
-    result.add("BootNotification");
+    DynamicJsonDocument result = DynamicJsonDocument{param_size};
+
+    JSON_MEM_CHECK(result.add((int32_t)OcppRpcMessageType::CALL));
+    JSON_MEM_CHECK(result.add(std::to_string(next_call_id)));
+    JSON_MEM_CHECK(result.add("BootNotification"));
     JsonObject payload = result.createNestedObject();
 
-    if (chargePointVendor != nullptr) payload["chargePointVendor"] = chargePointVendor;
-    if (chargePointModel != nullptr) payload["chargePointModel"] = chargePointModel;
-    if (chargePointSerialNumber != nullptr) payload["chargePointSerialNumber"] = chargePointSerialNumber;
-    if (chargeBoxSerialNumber != nullptr) payload["chargeBoxSerialNumber"] = chargeBoxSerialNumber;
-    if (firmwareVersion != nullptr) payload["firmwareVersion"] = firmwareVersion;
-    if (iccid != nullptr) payload["iccid"] = iccid;
-    if (imsi != nullptr) payload["imsi"] = imsi;
-    if (meterType != nullptr) payload["meterType"] = meterType;
-    if (meterSerialNumber != nullptr) payload["meterSerialNumber"] = meterSerialNumber;
+    if (chargePointVendor != nullptr) JSON_MEM_CHECK(payload["chargePointVendor"].set(chargePointVendor));
+    if (chargePointModel != nullptr) JSON_MEM_CHECK(payload["chargePointModel"].set(chargePointModel));
+    if (chargePointSerialNumber != nullptr) JSON_MEM_CHECK(payload["chargePointSerialNumber"].set(chargePointSerialNumber));
+    if (chargeBoxSerialNumber != nullptr) JSON_MEM_CHECK(payload["chargeBoxSerialNumber"].set(chargeBoxSerialNumber));
+    if (firmwareVersion != nullptr) JSON_MEM_CHECK(payload["firmwareVersion"].set(firmwareVersion));
+    if (iccid != nullptr) JSON_MEM_CHECK(payload["iccid"].set(iccid));
+    if (imsi != nullptr) JSON_MEM_CHECK(payload["imsi"].set(imsi));
+    if (meterType != nullptr) JSON_MEM_CHECK(payload["meterType"].set(meterType));
+    if (meterSerialNumber != nullptr) JSON_MEM_CHECK(payload["meterSerialNumber"].set(meterSerialNumber));
 
     result.shrinkToFit();
     return result;
@@ -315,18 +337,16 @@ DynamicJsonDocument ChangeAvailabilityResponse(const char *call_id,
         ChangeAvailabilityResponseStatus status) {
     if (status == ChangeAvailabilityResponseStatus::NONE) { platform_printfln("Required status missing."); return DynamicJsonDocument{0}; }
 
-    DynamicJsonDocument result = DynamicJsonDocument{
-        OCPP_CALLRESULT_JSON_SIZE("ChangeAvailabilityResponse")
-        + JSON_OBJECT_SIZE(1)
-        + 2000
-    };
+    size_t param_size = OCPP_CALLRESULT_JSON_SIZE("ChangeAvailabilityResponse") + JSON_OBJECT_SIZE(1);
 
-    result.add((int32_t)OcppRpcMessageType::CALLRESULT);
-    result.add(call_id);
+    DynamicJsonDocument result = DynamicJsonDocument{param_size};
+
+    JSON_MEM_CHECK(result.add((int32_t)OcppRpcMessageType::CALLRESULT));
+    JSON_MEM_CHECK(result.add(call_id));
 
     JsonObject payload = result.createNestedObject();
 
-    if (status != ChangeAvailabilityResponseStatus::NONE) payload["status"] = ChangeAvailabilityResponseStatusStrings[(size_t)status];
+    if (status != ChangeAvailabilityResponseStatus::NONE) JSON_MEM_CHECK(payload["status"].set(ChangeAvailabilityResponseStatusStrings[(size_t)status]));
 
     result.shrinkToFit();
     return result;
@@ -336,18 +356,16 @@ DynamicJsonDocument ChangeConfigurationResponse(const char *call_id,
         ChangeConfigurationResponseStatus status) {
     if (status == ChangeConfigurationResponseStatus::NONE) { platform_printfln("Required status missing."); return DynamicJsonDocument{0}; }
 
-    DynamicJsonDocument result = DynamicJsonDocument{
-        OCPP_CALLRESULT_JSON_SIZE("ChangeConfigurationResponse")
-        + JSON_OBJECT_SIZE(1)
-        + 2000
-    };
+    size_t param_size = OCPP_CALLRESULT_JSON_SIZE("ChangeConfigurationResponse") + JSON_OBJECT_SIZE(1);
 
-    result.add((int32_t)OcppRpcMessageType::CALLRESULT);
-    result.add(call_id);
+    DynamicJsonDocument result = DynamicJsonDocument{param_size};
+
+    JSON_MEM_CHECK(result.add((int32_t)OcppRpcMessageType::CALLRESULT));
+    JSON_MEM_CHECK(result.add(call_id));
 
     JsonObject payload = result.createNestedObject();
 
-    if (status != ChangeConfigurationResponseStatus::NONE) payload["status"] = ChangeConfigurationResponseStatusStrings[(size_t)status];
+    if (status != ChangeConfigurationResponseStatus::NONE) JSON_MEM_CHECK(payload["status"].set(ChangeConfigurationResponseStatusStrings[(size_t)status]));
 
     result.shrinkToFit();
     return result;
@@ -357,18 +375,16 @@ DynamicJsonDocument ClearCacheResponse(const char *call_id,
         ResponseStatus status) {
     if (status == ResponseStatus::NONE) { platform_printfln("Required status missing."); return DynamicJsonDocument{0}; }
 
-    DynamicJsonDocument result = DynamicJsonDocument{
-        OCPP_CALLRESULT_JSON_SIZE("ClearCacheResponse")
-        + JSON_OBJECT_SIZE(1)
-        + 2000
-    };
+    size_t param_size = OCPP_CALLRESULT_JSON_SIZE("ClearCacheResponse") + JSON_OBJECT_SIZE(1);
 
-    result.add((int32_t)OcppRpcMessageType::CALLRESULT);
-    result.add(call_id);
+    DynamicJsonDocument result = DynamicJsonDocument{param_size};
+
+    JSON_MEM_CHECK(result.add((int32_t)OcppRpcMessageType::CALLRESULT));
+    JSON_MEM_CHECK(result.add(call_id));
 
     JsonObject payload = result.createNestedObject();
 
-    if (status != ResponseStatus::NONE) payload["status"] = ResponseStatusStrings[(size_t)status];
+    if (status != ResponseStatus::NONE) JSON_MEM_CHECK(payload["status"].set(ResponseStatusStrings[(size_t)status]));
 
     result.shrinkToFit();
     return result;
@@ -379,20 +395,18 @@ DynamicJsonDocument DataTransfer(const char vendorId[256],
         const char *data) {
     if (vendorId == nullptr) { platform_printfln("Required vendorId missing."); return DynamicJsonDocument{0}; }
 
-    DynamicJsonDocument result = DynamicJsonDocument{
-        OCPP_CALL_JSON_SIZE("DataTransfer")
-        + JSON_OBJECT_SIZE(3)
-        + 6000
-    };
+    size_t param_size = OCPP_CALL_JSON_SIZE("DataTransfer") + JSON_OBJECT_SIZE(3);
 
-    result.add((int32_t)OcppRpcMessageType::CALL);
-    result.add(std::to_string(next_call_id));
-    result.add("DataTransfer");
+    DynamicJsonDocument result = DynamicJsonDocument{param_size};
+
+    JSON_MEM_CHECK(result.add((int32_t)OcppRpcMessageType::CALL));
+    JSON_MEM_CHECK(result.add(std::to_string(next_call_id)));
+    JSON_MEM_CHECK(result.add("DataTransfer"));
     JsonObject payload = result.createNestedObject();
 
-    if (vendorId != nullptr) payload["vendorId"] = vendorId;
-    if (messageId != nullptr) payload["messageId"] = messageId;
-    if (data != nullptr) payload["data"] = data;
+    if (vendorId != nullptr) JSON_MEM_CHECK(payload["vendorId"].set(vendorId));
+    if (messageId != nullptr) JSON_MEM_CHECK(payload["messageId"].set(messageId));
+    if (data != nullptr) JSON_MEM_CHECK(payload["data"].set(data));
 
     result.shrinkToFit();
     return result;
@@ -403,19 +417,17 @@ DynamicJsonDocument DataTransferResponse(const char *call_id,
         const char *data) {
     if (status == DataTransferResponseStatus::NONE) { platform_printfln("Required status missing."); return DynamicJsonDocument{0}; }
 
-    DynamicJsonDocument result = DynamicJsonDocument{
-        OCPP_CALLRESULT_JSON_SIZE("DataTransferResponse")
-        + JSON_OBJECT_SIZE(2)
-        + 4000
-    };
+    size_t param_size = OCPP_CALLRESULT_JSON_SIZE("DataTransferResponse") + JSON_OBJECT_SIZE(2);
 
-    result.add((int32_t)OcppRpcMessageType::CALLRESULT);
-    result.add(call_id);
+    DynamicJsonDocument result = DynamicJsonDocument{param_size};
+
+    JSON_MEM_CHECK(result.add((int32_t)OcppRpcMessageType::CALLRESULT));
+    JSON_MEM_CHECK(result.add(call_id));
 
     JsonObject payload = result.createNestedObject();
 
-    if (status != DataTransferResponseStatus::NONE) payload["status"] = DataTransferResponseStatusStrings[(size_t)status];
-    if (data != nullptr) payload["data"] = data;
+    if (status != DataTransferResponseStatus::NONE) JSON_MEM_CHECK(payload["status"].set(DataTransferResponseStatusStrings[(size_t)status]));
+    if (data != nullptr) JSON_MEM_CHECK(payload["data"].set(data));
 
     result.shrinkToFit();
     return result;
@@ -425,19 +437,27 @@ DynamicJsonDocument GetConfigurationResponse(const char *call_id,
         GetConfigurationResponseConfigurationKey *configurationKey, size_t configurationKey_length,
         const char **unknownKey, size_t unknownKey_length) {
 
-    DynamicJsonDocument result = DynamicJsonDocument{
-        OCPP_CALLRESULT_JSON_SIZE("GetConfigurationResponse")
-        + JSON_OBJECT_SIZE(2)
-        + 4000
-    };
+    size_t param_size = OCPP_CALLRESULT_JSON_SIZE("GetConfigurationResponse") + JSON_OBJECT_SIZE(2);
 
-    result.add((int32_t)OcppRpcMessageType::CALLRESULT);
-    result.add(call_id);
+        param_size += JSON_ARRAY_SIZE(configurationKey_length);
+        for(size_t i = 0; i < configurationKey_length; ++i) {
+            param_size += configurationKey[i].jsonSize();
+        }
+
+        param_size += JSON_ARRAY_SIZE(unknownKey_length);
+        for(size_t i = 0; i < unknownKey_length; ++i) {
+
+        }
+
+    DynamicJsonDocument result = DynamicJsonDocument{param_size};
+
+    JSON_MEM_CHECK(result.add((int32_t)OcppRpcMessageType::CALLRESULT));
+    JSON_MEM_CHECK(result.add(call_id));
 
     JsonObject payload = result.createNestedObject();
 
     if (configurationKey != nullptr) { JsonArray arr = payload.createNestedArray("configurationKey"); for(size_t i = 0; i < configurationKey_length; ++i) { JsonObject obj = arr.createNestedObject(); configurationKey[i].serializeInto(obj); } }
-    if (unknownKey != nullptr) { JsonArray arr = payload.createNestedArray("unknownKey"); for(size_t i = 0; i < unknownKey_length; ++i) { arr.add(unknownKey[i]); } }
+    if (unknownKey != nullptr) { JsonArray arr = payload.createNestedArray("unknownKey"); for(size_t i = 0; i < unknownKey_length; ++i) { JSON_MEM_CHECK(arr.add(unknownKey[i])); } }
 
     result.shrinkToFit();
     return result;
@@ -445,15 +465,13 @@ DynamicJsonDocument GetConfigurationResponse(const char *call_id,
 
 DynamicJsonDocument Heartbeat() {
 
-    DynamicJsonDocument result = DynamicJsonDocument{
-        OCPP_CALL_JSON_SIZE("Heartbeat")
-        + JSON_OBJECT_SIZE(0)
-        + 0
-    };
+    size_t param_size = OCPP_CALL_JSON_SIZE("Heartbeat") + JSON_OBJECT_SIZE(0);
 
-    result.add((int32_t)OcppRpcMessageType::CALL);
-    result.add(std::to_string(next_call_id));
-    result.add("Heartbeat");
+    DynamicJsonDocument result = DynamicJsonDocument{param_size};
+
+    JSON_MEM_CHECK(result.add((int32_t)OcppRpcMessageType::CALL));
+    JSON_MEM_CHECK(result.add(std::to_string(next_call_id)));
+    JSON_MEM_CHECK(result.add("Heartbeat"));
     result.createNestedObject();
 
     result.shrinkToFit();
@@ -466,19 +484,23 @@ DynamicJsonDocument MeterValues(int32_t connectorId,
     if (connectorId == OCPP_INTEGER_NOT_PASSED) { platform_printfln("Required connectorId missing."); return DynamicJsonDocument{0}; }
     if (meterValue == nullptr) { platform_printfln("Required meterValue missing."); return DynamicJsonDocument{0}; }
 
-    DynamicJsonDocument result = DynamicJsonDocument{
-        OCPP_CALL_JSON_SIZE("MeterValues")
-        + JSON_OBJECT_SIZE(3)
-        + 6000
-    };
+    size_t param_size = OCPP_CALL_JSON_SIZE("MeterValues") + JSON_OBJECT_SIZE(3);
 
-    result.add((int32_t)OcppRpcMessageType::CALL);
-    result.add(std::to_string(next_call_id));
-    result.add("MeterValues");
+        param_size += JSON_ARRAY_SIZE(meterValue_length);
+        for(size_t i = 0; i < meterValue_length; ++i) {
+            param_size += meterValue[i].jsonSize();
+        }
+
+    platform_printfln("param_size: %u\n", param_size);
+    DynamicJsonDocument result = DynamicJsonDocument{param_size};
+
+    JSON_MEM_CHECK(result.add((int32_t)OcppRpcMessageType::CALL));
+    JSON_MEM_CHECK(result.add(std::to_string(next_call_id)));
+    JSON_MEM_CHECK(result.add("MeterValues"));
     JsonObject payload = result.createNestedObject();
 
-    if (connectorId != OCPP_INTEGER_NOT_PASSED) payload["connectorId"] = connectorId;
-    if (transactionId != OCPP_INTEGER_NOT_PASSED) payload["transactionId"] = transactionId;
+    if (connectorId != OCPP_INTEGER_NOT_PASSED) JSON_MEM_CHECK(payload["connectorId"].set(connectorId));
+    if (transactionId != OCPP_INTEGER_NOT_PASSED) JSON_MEM_CHECK(payload["transactionId"].set(transactionId));
     if (meterValue != nullptr) { JsonArray arr = payload.createNestedArray("meterValue"); for(size_t i = 0; i < meterValue_length; ++i) { JsonObject obj = arr.createNestedObject(); meterValue[i].serializeInto(obj); } }
 
     result.shrinkToFit();
@@ -489,18 +511,16 @@ DynamicJsonDocument RemoteStartTransactionResponse(const char *call_id,
         ResponseStatus status) {
     if (status == ResponseStatus::NONE) { platform_printfln("Required status missing."); return DynamicJsonDocument{0}; }
 
-    DynamicJsonDocument result = DynamicJsonDocument{
-        OCPP_CALLRESULT_JSON_SIZE("RemoteStartTransactionResponse")
-        + JSON_OBJECT_SIZE(1)
-        + 2000
-    };
+    size_t param_size = OCPP_CALLRESULT_JSON_SIZE("RemoteStartTransactionResponse") + JSON_OBJECT_SIZE(1);
 
-    result.add((int32_t)OcppRpcMessageType::CALLRESULT);
-    result.add(call_id);
+    DynamicJsonDocument result = DynamicJsonDocument{param_size};
+
+    JSON_MEM_CHECK(result.add((int32_t)OcppRpcMessageType::CALLRESULT));
+    JSON_MEM_CHECK(result.add(call_id));
 
     JsonObject payload = result.createNestedObject();
 
-    if (status != ResponseStatus::NONE) payload["status"] = ResponseStatusStrings[(size_t)status];
+    if (status != ResponseStatus::NONE) JSON_MEM_CHECK(payload["status"].set(ResponseStatusStrings[(size_t)status]));
 
     result.shrinkToFit();
     return result;
@@ -510,18 +530,16 @@ DynamicJsonDocument RemoteStopTransactionResponse(const char *call_id,
         ResponseStatus status) {
     if (status == ResponseStatus::NONE) { platform_printfln("Required status missing."); return DynamicJsonDocument{0}; }
 
-    DynamicJsonDocument result = DynamicJsonDocument{
-        OCPP_CALLRESULT_JSON_SIZE("RemoteStopTransactionResponse")
-        + JSON_OBJECT_SIZE(1)
-        + 2000
-    };
+    size_t param_size = OCPP_CALLRESULT_JSON_SIZE("RemoteStopTransactionResponse") + JSON_OBJECT_SIZE(1);
 
-    result.add((int32_t)OcppRpcMessageType::CALLRESULT);
-    result.add(call_id);
+    DynamicJsonDocument result = DynamicJsonDocument{param_size};
+
+    JSON_MEM_CHECK(result.add((int32_t)OcppRpcMessageType::CALLRESULT));
+    JSON_MEM_CHECK(result.add(call_id));
 
     JsonObject payload = result.createNestedObject();
 
-    if (status != ResponseStatus::NONE) payload["status"] = ResponseStatusStrings[(size_t)status];
+    if (status != ResponseStatus::NONE) JSON_MEM_CHECK(payload["status"].set(ResponseStatusStrings[(size_t)status]));
 
     result.shrinkToFit();
     return result;
@@ -531,18 +549,16 @@ DynamicJsonDocument ResetResponse(const char *call_id,
         ResponseStatus status) {
     if (status == ResponseStatus::NONE) { platform_printfln("Required status missing."); return DynamicJsonDocument{0}; }
 
-    DynamicJsonDocument result = DynamicJsonDocument{
-        OCPP_CALLRESULT_JSON_SIZE("ResetResponse")
-        + JSON_OBJECT_SIZE(1)
-        + 2000
-    };
+    size_t param_size = OCPP_CALLRESULT_JSON_SIZE("ResetResponse") + JSON_OBJECT_SIZE(1);
 
-    result.add((int32_t)OcppRpcMessageType::CALLRESULT);
-    result.add(call_id);
+    DynamicJsonDocument result = DynamicJsonDocument{param_size};
+
+    JSON_MEM_CHECK(result.add((int32_t)OcppRpcMessageType::CALLRESULT));
+    JSON_MEM_CHECK(result.add(call_id));
 
     JsonObject payload = result.createNestedObject();
 
-    if (status != ResponseStatus::NONE) payload["status"] = ResponseStatusStrings[(size_t)status];
+    if (status != ResponseStatus::NONE) JSON_MEM_CHECK(payload["status"].set(ResponseStatusStrings[(size_t)status]));
 
     result.shrinkToFit();
     return result;
@@ -558,21 +574,21 @@ DynamicJsonDocument StartTransaction(int32_t connectorId,
     if (meterStart == OCPP_INTEGER_NOT_PASSED) { platform_printfln("Required meterStart missing."); return DynamicJsonDocument{0}; }
     if (timestamp == OCPP_DATETIME_NOT_PASSED) { platform_printfln("Required timestamp missing."); return DynamicJsonDocument{0}; }
 
-    DynamicJsonDocument result = DynamicJsonDocument{
-        OCPP_CALL_JSON_SIZE("StartTransaction")
-        + JSON_OBJECT_SIZE(5)
-        + 10000
-    };
+    size_t param_size = OCPP_CALL_JSON_SIZE("StartTransaction") + JSON_OBJECT_SIZE(5);
 
-    result.add((int32_t)OcppRpcMessageType::CALL);
-    result.add(std::to_string(next_call_id));
-    result.add("StartTransaction");
+param_size += OCPP_ISO_8601_MAX_LEN;
+
+    DynamicJsonDocument result = DynamicJsonDocument{param_size};
+
+    JSON_MEM_CHECK(result.add((int32_t)OcppRpcMessageType::CALL));
+    JSON_MEM_CHECK(result.add(std::to_string(next_call_id)));
+    JSON_MEM_CHECK(result.add("StartTransaction"));
     JsonObject payload = result.createNestedObject();
 
-    if (connectorId != OCPP_INTEGER_NOT_PASSED) payload["connectorId"] = connectorId;
-    if (idTag != nullptr) payload["idTag"] = idTag;
-    if (meterStart != OCPP_INTEGER_NOT_PASSED) payload["meterStart"] = meterStart;
-    if (reservationId != OCPP_INTEGER_NOT_PASSED) payload["reservationId"] = reservationId;
+    if (connectorId != OCPP_INTEGER_NOT_PASSED) JSON_MEM_CHECK(payload["connectorId"].set(connectorId));
+    if (idTag != nullptr) JSON_MEM_CHECK(payload["idTag"].set(idTag));
+    if (meterStart != OCPP_INTEGER_NOT_PASSED) JSON_MEM_CHECK(payload["meterStart"].set(meterStart));
+    if (reservationId != OCPP_INTEGER_NOT_PASSED) JSON_MEM_CHECK(payload["reservationId"].set(reservationId));
     if (timestamp != OCPP_DATETIME_NOT_PASSED) unix_timestamp_to_iso_string(timestamp, payload, "timestamp");
 
     result.shrinkToFit();
@@ -590,24 +606,24 @@ DynamicJsonDocument StatusNotification(int32_t connectorId,
     if (errorCode == StatusNotificationErrorCode::NONE) { platform_printfln("Required errorCode missing."); return DynamicJsonDocument{0}; }
     if (status == StatusNotificationStatus::NONE) { platform_printfln("Required status missing."); return DynamicJsonDocument{0}; }
 
-    DynamicJsonDocument result = DynamicJsonDocument{
-        OCPP_CALL_JSON_SIZE("StatusNotification")
-        + JSON_OBJECT_SIZE(7)
-        + 14000
-    };
+    size_t param_size = OCPP_CALL_JSON_SIZE("StatusNotification") + JSON_OBJECT_SIZE(7);
 
-    result.add((int32_t)OcppRpcMessageType::CALL);
-    result.add(std::to_string(next_call_id));
-    result.add("StatusNotification");
+param_size += OCPP_ISO_8601_MAX_LEN;
+
+    DynamicJsonDocument result = DynamicJsonDocument{param_size};
+
+    JSON_MEM_CHECK(result.add((int32_t)OcppRpcMessageType::CALL));
+    JSON_MEM_CHECK(result.add(std::to_string(next_call_id)));
+    JSON_MEM_CHECK(result.add("StatusNotification"));
     JsonObject payload = result.createNestedObject();
 
-    if (connectorId != OCPP_INTEGER_NOT_PASSED) payload["connectorId"] = connectorId;
-    if (errorCode != StatusNotificationErrorCode::NONE) payload["errorCode"] = StatusNotificationErrorCodeStrings[(size_t)errorCode];
-    if (info != nullptr) payload["info"] = info;
-    if (status != StatusNotificationStatus::NONE) payload["status"] = StatusNotificationStatusStrings[(size_t)status];
+    if (connectorId != OCPP_INTEGER_NOT_PASSED) JSON_MEM_CHECK(payload["connectorId"].set(connectorId));
+    if (errorCode != StatusNotificationErrorCode::NONE) JSON_MEM_CHECK(payload["errorCode"].set(StatusNotificationErrorCodeStrings[(size_t)errorCode]));
+    if (info != nullptr) JSON_MEM_CHECK(payload["info"].set(info));
+    if (status != StatusNotificationStatus::NONE) JSON_MEM_CHECK(payload["status"].set(StatusNotificationStatusStrings[(size_t)status]));
     if (timestamp != OCPP_DATETIME_NOT_PASSED) unix_timestamp_to_iso_string(timestamp, payload, "timestamp");
-    if (vendorId != nullptr) payload["vendorId"] = vendorId;
-    if (vendorErrorCode != nullptr) payload["vendorErrorCode"] = vendorErrorCode;
+    if (vendorId != nullptr) JSON_MEM_CHECK(payload["vendorId"].set(vendorId));
+    if (vendorErrorCode != nullptr) JSON_MEM_CHECK(payload["vendorErrorCode"].set(vendorErrorCode));
 
     result.shrinkToFit();
     return result;
@@ -623,22 +639,27 @@ DynamicJsonDocument StopTransaction(int32_t meterStop,
     if (timestamp == OCPP_DATETIME_NOT_PASSED) { platform_printfln("Required timestamp missing."); return DynamicJsonDocument{0}; }
     if (transactionId == OCPP_INTEGER_NOT_PASSED) { platform_printfln("Required transactionId missing."); return DynamicJsonDocument{0}; }
 
-    DynamicJsonDocument result = DynamicJsonDocument{
-        OCPP_CALL_JSON_SIZE("StopTransaction")
-        + JSON_OBJECT_SIZE(6)
-        + 12000
-    };
+    size_t param_size = OCPP_CALL_JSON_SIZE("StopTransaction") + JSON_OBJECT_SIZE(6);
 
-    result.add((int32_t)OcppRpcMessageType::CALL);
-    result.add(std::to_string(next_call_id));
-    result.add("StopTransaction");
+param_size += OCPP_ISO_8601_MAX_LEN;
+
+        param_size += JSON_ARRAY_SIZE(transactionData_length);
+        for(size_t i = 0; i < transactionData_length; ++i) {
+            param_size += transactionData[i].jsonSize();
+        }
+
+    DynamicJsonDocument result = DynamicJsonDocument{param_size};
+
+    JSON_MEM_CHECK(result.add((int32_t)OcppRpcMessageType::CALL));
+    JSON_MEM_CHECK(result.add(std::to_string(next_call_id)));
+    JSON_MEM_CHECK(result.add("StopTransaction"));
     JsonObject payload = result.createNestedObject();
 
-    if (idTag != nullptr) payload["idTag"] = idTag;
-    if (meterStop != OCPP_INTEGER_NOT_PASSED) payload["meterStop"] = meterStop;
+    if (idTag != nullptr) JSON_MEM_CHECK(payload["idTag"].set(idTag));
+    if (meterStop != OCPP_INTEGER_NOT_PASSED) JSON_MEM_CHECK(payload["meterStop"].set(meterStop));
     if (timestamp != OCPP_DATETIME_NOT_PASSED) unix_timestamp_to_iso_string(timestamp, payload, "timestamp");
-    if (transactionId != OCPP_INTEGER_NOT_PASSED) payload["transactionId"] = transactionId;
-    if (reason != StopTransactionReason::NONE) payload["reason"] = StopTransactionReasonStrings[(size_t)reason];
+    if (transactionId != OCPP_INTEGER_NOT_PASSED) JSON_MEM_CHECK(payload["transactionId"].set(transactionId));
+    if (reason != StopTransactionReason::NONE) JSON_MEM_CHECK(payload["reason"].set(StopTransactionReasonStrings[(size_t)reason]));
     if (transactionData != nullptr) { JsonArray arr = payload.createNestedArray("transactionData"); for(size_t i = 0; i < transactionData_length; ++i) { JsonObject obj = arr.createNestedObject(); transactionData[i].serializeInto(obj); } }
 
     result.shrinkToFit();
@@ -649,18 +670,16 @@ DynamicJsonDocument UnlockConnectorResponse(const char *call_id,
         UnlockConnectorResponseStatus status) {
     if (status == UnlockConnectorResponseStatus::NONE) { platform_printfln("Required status missing."); return DynamicJsonDocument{0}; }
 
-    DynamicJsonDocument result = DynamicJsonDocument{
-        OCPP_CALLRESULT_JSON_SIZE("UnlockConnectorResponse")
-        + JSON_OBJECT_SIZE(1)
-        + 2000
-    };
+    size_t param_size = OCPP_CALLRESULT_JSON_SIZE("UnlockConnectorResponse") + JSON_OBJECT_SIZE(1);
 
-    result.add((int32_t)OcppRpcMessageType::CALLRESULT);
-    result.add(call_id);
+    DynamicJsonDocument result = DynamicJsonDocument{param_size};
+
+    JSON_MEM_CHECK(result.add((int32_t)OcppRpcMessageType::CALLRESULT));
+    JSON_MEM_CHECK(result.add(call_id));
 
     JsonObject payload = result.createNestedObject();
 
-    if (status != UnlockConnectorResponseStatus::NONE) payload["status"] = UnlockConnectorResponseStatusStrings[(size_t)status];
+    if (status != UnlockConnectorResponseStatus::NONE) JSON_MEM_CHECK(payload["status"].set(UnlockConnectorResponseStatusStrings[(size_t)status]));
 
     result.shrinkToFit();
     return result;
