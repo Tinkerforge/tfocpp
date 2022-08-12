@@ -4,7 +4,7 @@ CC = clang
 CXX = clang++
 CLANG_WARNINGS = -Weverything -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-old-style-cast -Wno-shadow-field-in-constructor -Wno-padded -Wno-exit-time-destructors
 
-COMPILE_FLAGS = -g -fPIC -O0 ${CLANG_WARNINGS} -fdiagnostics-color=always -fsanitize=address,undefined,leak
+COMPILE_FLAGS = -gdwarf-4 -fPIC -O0 ${CLANG_WARNINGS} -fdiagnostics-color=always -fsanitize=address,undefined,leak
 CFLAGS += -std=c99 ${COMPILE_FLAGS}
 CXXFLAGS += -std=c++11 ${COMPILE_FLAGS}
 LDFLAGS += -pthread -fsanitize=address,undefined,leak
