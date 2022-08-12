@@ -88,6 +88,7 @@ void MeterValueAccumulator::tick()
                     break;
                 case MeasurandType::Average:
                     float new_value = platform_get_raw_meter_value(this->connectorId, measurand, s.phase, s.location);
+                    // TODO: store value "undivided" here and divide by samples_this_run only in get()
                     meter_values[value_offset] = ((meter_values[value_offset] * samples_this_run) + new_value) / ((float)samples_this_run + 1);
                     break;
             }
@@ -184,4 +185,5 @@ void MeterValueAccumulator::init(int32_t connId, OcppChargePoint *chargePoint, C
     }
 
     meter_values = std::unique_ptr<float[]>(new float[meter_values_len]);
+    reset();
 }
