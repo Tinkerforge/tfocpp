@@ -18,7 +18,8 @@ ifeq ($(WITH_DEBUG),yes)
 endif
 
 SOURCES :=	$(wildcard *.cpp) \
-		    lib/mongoose/mongoose.cpp
+		    lib/mongoose/mongoose.cpp \
+			lib/TFJson/TFJson.cpp
 
 SOURCES_LIB := $(filter-out OcppPlatform.cpp, $(SOURCES))
 
