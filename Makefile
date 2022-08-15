@@ -9,7 +9,7 @@ CFLAGS += -std=c99 ${COMPILE_FLAGS}
 CXXFLAGS += -std=c++11 ${COMPILE_FLAGS}
 LDFLAGS += -pthread -fsanitize=address,undefined,leak
 LIB_LD_FLAGS = -shared-libasan
-LIBS += -lwebsockets -lstdc++ $(wildcard libiso8601/*.c.o)
+LIBS += -lwebsockets -lstdc++ $(wildcard lib/libiso8601/*.c.o)
 
 WITH_DEBUG ?= yes
 
@@ -18,7 +18,7 @@ ifeq ($(WITH_DEBUG),yes)
 endif
 
 SOURCES :=	$(wildcard *.cpp) \
-		    mongoose/mongoose.cpp
+		    lib/mongoose/mongoose.cpp
 
 SOURCES_LIB := $(filter-out OcppPlatform.cpp, $(SOURCES))
 

@@ -2,7 +2,7 @@
 #include "stdint.h"
 #include "stddef.h"
 #include "time.h"
-#include "ArduinoJson/ArduinoJson-v6.19.4.h"
+#include "lib/ArduinoJson/ArduinoJson-v6.19.4.h"
 
 #define OCPP_INTEGER_NOT_PASSED INT32_MAX
 #define OCPP_DATETIME_NOT_PASSED 0

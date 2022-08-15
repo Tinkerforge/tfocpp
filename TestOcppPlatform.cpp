@@ -6,7 +6,7 @@
 #define URL_PARSER_IMPLEMENTATION
 #include "url_parse/url.h"
 
-#include "mongoose/mongoose.h"
+#include "lib/mongoose/mongoose.h"
 
 static uint32_t (*platform_now_ms_cb)() = nullptr;
 static void (*platform_set_system_time_cb)(void *ctx, time_t t) = nullptr;

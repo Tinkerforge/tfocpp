@@ -6,7 +6,7 @@
 #define URL_PARSER_IMPLEMENTATION
 #include "url_parse/url.h"
 
-#include "mongoose/mongoose.h"
+#include "lib/mongoose/mongoose.h"
 
 #include <memory>
 
