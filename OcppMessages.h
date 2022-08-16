@@ -3,13 +3,12 @@
 #pragma once
 
 #include "OcppTypes.h"
+#include "lib/TFJson/TFJson.h"
 
 class OcppChargePoint;
 
 #define OCPP_INTEGER_NOT_PASSED INT32_MAX
 #define OCPP_DATETIME_NOT_PASSED 0
-
-#define JSON_MEM_CHECK(x) do {if (!x) platform_printfln("DynamicJsonDocument too small! %s:%d %s", __FILE__, __LINE__,  __func__);} while(0)
 
 extern const char *ChangeAvailabilityResponseStatusStrings[];
 
@@ -272,6 +271,82 @@ enum class SampledValueUnit {
     NONE
 };
 
+extern const char *CallActionStrings[];
+
+enum class CallAction {
+    AUTHORIZE,
+    BOOT_NOTIFICATION,
+    CHANGE_AVAILABILITY_RESPONSE,
+    CHANGE_CONFIGURATION_RESPONSE,
+    CLEAR_CACHE_RESPONSE,
+    DATA_TRANSFER,
+    DATA_TRANSFER_RESPONSE,
+    GET_CONFIGURATION_RESPONSE,
+    HEARTBEAT,
+    METER_VALUES,
+    REMOTE_START_TRANSACTION_RESPONSE,
+    REMOTE_STOP_TRANSACTION_RESPONSE,
+    RESET_RESPONSE,
+    START_TRANSACTION,
+    STATUS_NOTIFICATION,
+    STOP_TRANSACTION,
+    UNLOCK_CONNECTOR_RESPONSE,
+    AUTHORIZE_RESPONSE,
+    BOOT_NOTIFICATION_RESPONSE,
+    CHANGE_AVAILABILITY,
+    CHANGE_CONFIGURATION,
+    CLEAR_CACHE,
+    GET_CONFIGURATION,
+    HEARTBEAT_RESPONSE,
+    METER_VALUES_RESPONSE,
+    REMOTE_START_TRANSACTION,
+    REMOTE_STOP_TRANSACTION,
+    RESET,
+    START_TRANSACTION_RESPONSE,
+    STATUS_NOTIFICATION_RESPONSE,
+    STOP_TRANSACTION_RESPONSE,
+    UNLOCK_CONNECTOR,
+    GET_DIAGNOSTICS_RESPONSE,
+    DIAGNOSTICS_STATUS_NOTIFICATION,
+    FIRMWARE_STATUS_NOTIFICATION,
+    UPDATE_FIRMWARE_RESPONSE,
+    GET_DIAGNOSTICS,
+    DIAGNOSTICS_STATUS_NOTIFICATION_RESPONSE,
+    FIRMWARE_STATUS_NOTIFICATION_RESPONSE,
+    UPDATE_FIRMWARE,
+    GET_LOCAL_LIST_VERSION_RESPONSE,
+    SEND_LOCAL_LIST_RESPONSE,
+    GET_LOCAL_LIST_VERSION,
+    SEND_LOCAL_LIST,
+    CANCEL_RESERVATION_RESPONSE,
+    RESERVE_NOW_RESPONSE,
+    CANCEL_RESERVATION,
+    RESERVE_NOW,
+    CLEAR_CHARGING_PROFILE_RESPONSE,
+    GET_COMPOSITE_SCHEDULE_RESPONSE,
+    SET_CHARGING_PROFILE_RESPONSE,
+    CLEAR_CHARGING_PROFILE,
+    GET_COMPOSITE_SCHEDULE,
+    SET_CHARGING_PROFILE,
+    TRIGGER_MESSAGE_RESPONSE,
+    TRIGGER_MESSAGE
+};
+
+
+struct ICall {
+    ICall(CallAction action, uint32_t messageId): action(action), ocppJmessageId(messageId), ocppJcallId(nullptr) {}
+    ICall(CallAction action, const char *callId): action(action), ocppJmessageId(0), ocppJcallId(callId) {}
+    ICall(const ICall &) = delete;
+
+    virtual ~ICall();
+
+    size_t measureJson() const;
+    virtual size_t serializeJson(char *buf, size_t buf_len) const = 0;
+
+    CallAction action;
+    uint32_t ocppJmessageId;
+    const char *ocppJcallId;
+};
 
 struct UnlockConnectorView {
     JsonObject _obj;
@@ -699,16 +774,14 @@ struct MeterValueSampledValue {
     SampledValueLocation location = SampledValueLocation::NONE;
     SampledValueUnit unit = SampledValueUnit::NONE;
 
-    void serializeInto(JsonObject payload);
-    size_t jsonSize();
+    void serializeInto(TFJsonSerializer &json);
 };
 
 struct MeterValue {
     time_t timestamp;
     MeterValueSampledValue *sampledValue; size_t sampledValue_length;
 
-    void serializeInto(JsonObject payload);
-    size_t jsonSize();
+    void serializeInto(TFJsonSerializer &json);
 };
 
 struct GetConfigurationResponseConfigurationKey {
@@ -716,14 +789,32 @@ struct GetConfigurationResponseConfigurationKey {
     bool readonly;
     const char *value = nullptr;
 
-    void serializeInto(JsonObject payload);
-    size_t jsonSize();
+    void serializeInto(TFJsonSerializer &json);
 };
 
 
-DynamicJsonDocument Authorize(const char idTag[21]);
+CallResponse callHandler(const char *uid, const char *action_string, JsonObject obj, OcppChargePoint *cp);
 
-DynamicJsonDocument BootNotification(const char chargePointVendor[21],
+struct Authorize final : public ICall {
+    const char *idTag;
+
+    Authorize(const char idTag[21]);
+
+    size_t serializeJson(char *buf, size_t buf_len) const override;
+};
+
+struct BootNotification final : public ICall {
+    const char *chargePointVendor;
+    const char *chargePointModel;
+    const char *chargePointSerialNumber;
+    const char *chargeBoxSerialNumber;
+    const char *firmwareVersion;
+    const char *iccid;
+    const char *imsi;
+    const char *meterType;
+    const char *meterSerialNumber;
+
+    BootNotification(const char chargePointVendor[21],
         const char chargePointModel[21],
         const char chargePointSerialNumber[26] = nullptr,
         const char chargeBoxSerialNumber[26] = nullptr,
@@ -733,49 +824,142 @@ DynamicJsonDocument BootNotification(const char chargePointVendor[21],
         const char meterType[26] = nullptr,
         const char meterSerialNumber[26] = nullptr);
 
-DynamicJsonDocument ChangeAvailabilityResponse(const char *call_id,
+    size_t serializeJson(char *buf, size_t buf_len) const override;
+};
+
+struct ChangeAvailabilityResponse final : public ICall {
+    ChangeAvailabilityResponseStatus status;
+
+    ChangeAvailabilityResponse(const char *call_id,
         ChangeAvailabilityResponseStatus status);
 
-DynamicJsonDocument ChangeConfigurationResponse(const char *call_id,
+    size_t serializeJson(char *buf, size_t buf_len) const override;
+};
+
+struct ChangeConfigurationResponse final : public ICall {
+    ChangeConfigurationResponseStatus status;
+
+    ChangeConfigurationResponse(const char *call_id,
         ChangeConfigurationResponseStatus status);
 
-DynamicJsonDocument ClearCacheResponse(const char *call_id,
+    size_t serializeJson(char *buf, size_t buf_len) const override;
+};
+
+struct ClearCacheResponse final : public ICall {
+    ResponseStatus status;
+
+    ClearCacheResponse(const char *call_id,
         ResponseStatus status);
 
-DynamicJsonDocument DataTransfer(const char vendorId[256],
+    size_t serializeJson(char *buf, size_t buf_len) const override;
+};
+
+struct DataTransfer final : public ICall {
+    const char *vendorId;
+    const char *messageId;
+    const char *data;
+
+    DataTransfer(const char vendorId[256],
         const char messageId[51] = nullptr,
         const char *data = nullptr);
 
-DynamicJsonDocument DataTransferResponse(const char *call_id,
+    size_t serializeJson(char *buf, size_t buf_len) const override;
+};
+
+struct DataTransferResponse final : public ICall {
+    DataTransferResponseStatus status;
+    const char *data;
+
+    DataTransferResponse(const char *call_id,
         DataTransferResponseStatus status,
         const char *data = nullptr);
 
-DynamicJsonDocument GetConfigurationResponse(const char *call_id,
+    size_t serializeJson(char *buf, size_t buf_len) const override;
+};
+
+struct GetConfigurationResponse final : public ICall {
+    GetConfigurationResponseConfigurationKey *configurationKey; size_t configurationKey_length;
+    const char **unknownKey; size_t unknownKey_length;
+
+    GetConfigurationResponse(const char *call_id,
         GetConfigurationResponseConfigurationKey *configurationKey = nullptr, size_t configurationKey_length = 0,
         const char **unknownKey = nullptr, size_t unknownKey_length = 0);
 
-DynamicJsonDocument Heartbeat();
+    size_t serializeJson(char *buf, size_t buf_len) const override;
+};
 
-DynamicJsonDocument MeterValues(int32_t connectorId,
+struct Heartbeat final : public ICall {
+
+    Heartbeat();
+
+    size_t serializeJson(char *buf, size_t buf_len) const override;
+};
+
+struct MeterValues final : public ICall {
+    int32_t connectorId;
+    int32_t transactionId;
+    MeterValue *meterValue; size_t meterValue_length;
+
+    MeterValues(int32_t connectorId,
         MeterValue *meterValue, size_t meterValue_length,
         int32_t transactionId = OCPP_INTEGER_NOT_PASSED);
 
-DynamicJsonDocument RemoteStartTransactionResponse(const char *call_id,
+    size_t serializeJson(char *buf, size_t buf_len) const override;
+};
+
+struct RemoteStartTransactionResponse final : public ICall {
+    ResponseStatus status;
+
+    RemoteStartTransactionResponse(const char *call_id,
         ResponseStatus status);
 
-DynamicJsonDocument RemoteStopTransactionResponse(const char *call_id,
+    size_t serializeJson(char *buf, size_t buf_len) const override;
+};
+
+struct RemoteStopTransactionResponse final : public ICall {
+    ResponseStatus status;
+
+    RemoteStopTransactionResponse(const char *call_id,
         ResponseStatus status);
 
-DynamicJsonDocument ResetResponse(const char *call_id,
+    size_t serializeJson(char *buf, size_t buf_len) const override;
+};
+
+struct ResetResponse final : public ICall {
+    ResponseStatus status;
+
+    ResetResponse(const char *call_id,
         ResponseStatus status);
 
-DynamicJsonDocument StartTransaction(int32_t connectorId,
+    size_t serializeJson(char *buf, size_t buf_len) const override;
+};
+
+struct StartTransaction final : public ICall {
+    int32_t connectorId;
+    const char *idTag;
+    int32_t meterStart;
+    int32_t reservationId;
+    time_t timestamp;
+
+    StartTransaction(int32_t connectorId,
         const char idTag[21],
         int32_t meterStart,
         time_t timestamp,
         int32_t reservationId = OCPP_INTEGER_NOT_PASSED);
 
-DynamicJsonDocument StatusNotification(int32_t connectorId,
+    size_t serializeJson(char *buf, size_t buf_len) const override;
+};
+
+struct StatusNotification final : public ICall {
+    int32_t connectorId;
+    StatusNotificationErrorCode errorCode;
+    const char *info;
+    StatusNotificationStatus status;
+    time_t timestamp;
+    const char *vendorId;
+    const char *vendorErrorCode;
+
+    StatusNotification(int32_t connectorId,
         StatusNotificationErrorCode errorCode,
         StatusNotificationStatus status,
         const char info[51] = nullptr,
@@ -783,15 +967,35 @@ DynamicJsonDocument StatusNotification(int32_t connectorId,
         const char vendorId[256] = nullptr,
         const char vendorErrorCode[51] = nullptr);
 
-DynamicJsonDocument StopTransaction(int32_t meterStop,
+    size_t serializeJson(char *buf, size_t buf_len) const override;
+};
+
+struct StopTransaction final : public ICall {
+    const char *idTag;
+    int32_t meterStop;
+    time_t timestamp;
+    int32_t transactionId;
+    StopTransactionReason reason;
+    MeterValue *transactionData; size_t transactionData_length;
+
+    StopTransaction(int32_t meterStop,
         time_t timestamp,
         int32_t transactionId,
         const char idTag[21] = nullptr,
         StopTransactionReason reason = StopTransactionReason::NONE,
         MeterValue *transactionData = nullptr, size_t transactionData_length = 0);
 
-DynamicJsonDocument UnlockConnectorResponse(const char *call_id,
+    size_t serializeJson(char *buf, size_t buf_len) const override;
+};
+
+struct UnlockConnectorResponse final : public ICall {
+    UnlockConnectorResponseStatus status;
+
+    UnlockConnectorResponse(const char *call_id,
         UnlockConnectorResponseStatus status);
+
+    size_t serializeJson(char *buf, size_t buf_len) const override;
+};
 
 CallResponse parseAuthorizeResponse(JsonObject obj);
 
@@ -826,68 +1030,6 @@ CallResponse parseStatusNotificationResponse(JsonObject obj);
 CallResponse parseStopTransactionResponse(JsonObject obj);
 
 CallResponse parseUnlockConnector(JsonObject obj);
-
-CallResponse callHandler(const char *uid, const char *action_string, JsonObject obj, OcppChargePoint *cp);
-extern const char *CallActionStrings[];
-
-enum class CallAction {
-    AUTHORIZE,
-    BOOT_NOTIFICATION,
-    CHANGE_AVAILABILITY_RESPONSE,
-    CHANGE_CONFIGURATION_RESPONSE,
-    CLEAR_CACHE_RESPONSE,
-    DATA_TRANSFER,
-    DATA_TRANSFER_RESPONSE,
-    GET_CONFIGURATION_RESPONSE,
-    HEARTBEAT,
-    METER_VALUES,
-    REMOTE_START_TRANSACTION_RESPONSE,
-    REMOTE_STOP_TRANSACTION_RESPONSE,
-    RESET_RESPONSE,
-    START_TRANSACTION,
-    STATUS_NOTIFICATION,
-    STOP_TRANSACTION,
-    UNLOCK_CONNECTOR_RESPONSE,
-    AUTHORIZE_RESPONSE,
-    BOOT_NOTIFICATION_RESPONSE,
-    CHANGE_AVAILABILITY,
-    CHANGE_CONFIGURATION,
-    CLEAR_CACHE,
-    GET_CONFIGURATION,
-    HEARTBEAT_RESPONSE,
-    METER_VALUES_RESPONSE,
-    REMOTE_START_TRANSACTION,
-    REMOTE_STOP_TRANSACTION,
-    RESET,
-    START_TRANSACTION_RESPONSE,
-    STATUS_NOTIFICATION_RESPONSE,
-    STOP_TRANSACTION_RESPONSE,
-    UNLOCK_CONNECTOR,
-    GET_DIAGNOSTICS_RESPONSE,
-    DIAGNOSTICS_STATUS_NOTIFICATION,
-    FIRMWARE_STATUS_NOTIFICATION,
-    UPDATE_FIRMWARE_RESPONSE,
-    GET_DIAGNOSTICS,
-    DIAGNOSTICS_STATUS_NOTIFICATION_RESPONSE,
-    FIRMWARE_STATUS_NOTIFICATION_RESPONSE,
-    UPDATE_FIRMWARE,
-    GET_LOCAL_LIST_VERSION_RESPONSE,
-    SEND_LOCAL_LIST_RESPONSE,
-    GET_LOCAL_LIST_VERSION,
-    SEND_LOCAL_LIST,
-    CANCEL_RESERVATION_RESPONSE,
-    RESERVE_NOW_RESPONSE,
-    CANCEL_RESERVATION,
-    RESERVE_NOW,
-    CLEAR_CHARGING_PROFILE_RESPONSE,
-    GET_COMPOSITE_SCHEDULE_RESPONSE,
-    SET_CHARGING_PROFILE_RESPONSE,
-    CLEAR_CHARGING_PROFILE,
-    GET_COMPOSITE_SCHEDULE,
-    SET_CHARGING_PROFILE,
-    TRIGGER_MESSAGE_RESPONSE,
-    TRIGGER_MESSAGE
-};
 
 CallResponse callResultHandler(uint32_t message_id, CallAction resultTo, JsonObject obj, OcppChargePoint *cp);
 

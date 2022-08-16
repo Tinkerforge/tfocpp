@@ -76,7 +76,7 @@ public:
     void sendStatus();
     void forceSendStatus();
 
-    bool sendCallAction(CallAction action, const DynamicJsonDocument &doc, time_t timestamp = 0);
+    bool sendCallAction(const ICall &call, time_t timestamp = 0);
     void onTimeout(CallAction action, uint32_t messageId);
 
     CallResponse handleAuthorizeResponse(uint32_t messageId, AuthorizeResponseView conf);

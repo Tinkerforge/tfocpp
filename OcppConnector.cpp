@@ -172,7 +172,7 @@ void Connector::setState(ConnectorState newState) {
                 case ConnectorState::NO_TAG:
                 case ConnectorState::FINISHING_UNLOCKED:
                 case ConnectorState::FINISHING_NO_CABLE_UNLOCKED:
-                    this->sendCallAction(CallAction::AUTHORIZE, Authorize(authorized_for.tagId));
+                    this->sendCallAction(Authorize(authorized_for.tagId));
                     break;
                 case ConnectorState::TRANSACTION:
                 case ConnectorState::AUTH_STOP:
@@ -207,7 +207,7 @@ void Connector::setState(ConnectorState newState) {
                     auto timestamp = platform_get_system_time(cp->platform_ctx);
                     auto energy = platform_get_energy(connectorId);
                     persistStartTxn(connectorId, authorized_for.tagId, energy, OCPP_INTEGER_NOT_PASSED, timestamp);
-                    this->sendCallAction(CallAction::START_TRANSACTION, StartTransaction(connectorId, authorized_for.tagId, energy, timestamp), timestamp);
+                    this->sendCallAction(StartTransaction(connectorId, authorized_for.tagId, energy, timestamp), timestamp);
                     break;
                 }
                 case ConnectorState::IDLE:
@@ -240,7 +240,7 @@ void Connector::setState(ConnectorState newState) {
 
                     onTxnMsgResponseReceived(this->transaction_confirmed_timestamp);
                     persistStopTxn((uint8_t)this->next_stop_reason, energy, transaction_id, authorized_for.tagId, timestamp);
-                    this->sendCallAction(CallAction::STOP_TRANSACTION, StopTransaction(energy, timestamp, transaction_id, authorized_for.tagId, this->next_stop_reason), timestamp);
+                    this->sendCallAction(StopTransaction(energy, timestamp, transaction_id, authorized_for.tagId, this->next_stop_reason), timestamp);
                     break;
                 }
                 case ConnectorState::IDLE:
@@ -308,15 +308,14 @@ void Connector::forceSendStatus()
     StatusNotificationStatus newStatus = getStatus();
     platform_printfln("Sending status %s for connector %d", StatusNotificationStatusStrings[(size_t)newStatus], connectorId);
 
-    this->sendCallAction(CallAction::STATUS_NOTIFICATION, StatusNotification(connectorId, StatusNotificationErrorCode::NO_ERROR, newStatus, nullptr, platform_get_system_time(cp->platform_ctx)));
+    this->sendCallAction(StatusNotification(connectorId, StatusNotificationErrorCode::NO_ERROR, newStatus, nullptr, platform_get_system_time(cp->platform_ctx)));
     last_sent_status = newStatus;
 }
 
-void Connector::sendCallAction(CallAction action, const DynamicJsonDocument &doc, time_t timestamp)
+void Connector::sendCallAction(const ICall &call, time_t timestamp)
 {
-    long id = std::atol(doc[1]);
-    this->waiting_for_message_id = (uint32_t)id;
-    cp->sendCallAction(action, doc, timestamp);
+    this->waiting_for_message_id = call.ocppJmessageId;
+    cp->sendCallAction(call, timestamp);
 }
 
 bool Connector::isSelectableForRemoteStartTxn()
@@ -855,7 +854,7 @@ void Connector::onTagSeen(const char *tag_id) {
 
         case ConnectorState::TRANSACTION:
             // We still need the tag ID that started the transaction, so don't override authorized_for here, but send the AUTH request immediately.
-            this->sendCallAction(CallAction::AUTHORIZE, Authorize(tag_id));
+            this->sendCallAction(Authorize(tag_id));
             setState(ConnectorState::AUTH_STOP);
             break;
 

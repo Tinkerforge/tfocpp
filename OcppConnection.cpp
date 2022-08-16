@@ -2,8 +2,7 @@
 
 #include "OcppChargePoint.h"
 #include "OcppPersistency.h"
-
-static char send_buf[4096];
+#include "lib/TFJson/TFJson.h"
 
 static bool is_transaction_related(CallAction action) {
      // TODO: only "periodic or clock-aligned MeterValues.req messages" are transaction related. Are those all MeterValues messages?
@@ -71,7 +70,7 @@ void OcppConnection::handleMessage(char *message, size_t message_len)
 
         CallResponse res = callHandler(uniqueID, doc[2].as<const char *>(), doc[3].as<JsonObject>(), cp);
         if (res.result != CallErrorCode::OK)
-            sendCallError(uniqueID, res.result, res.error_description, JsonObject());
+            sendCallError(uniqueID, res.result, res.error_description);
         // TODO handle responses here?
         return;
     }
@@ -121,7 +120,7 @@ void OcppConnection::handleMessage(char *message, size_t message_len)
 
         (void)res;
         /*if (res.result != CallErrorCode::OK)
-            sendCallError(uniqueID, res.result, res.error_description, JsonObject());*/
+            sendCallError(uniqueID, res.result, res.error_description);*/
         return;
     }
 
@@ -176,34 +175,46 @@ void OcppConnection::handleCallError(CallErrorCode code, const char *desc, JsonO
     transaction_message_retry_deadline = platform_now_ms() + transaction_message_attempts * getIntConfig(ConfigKey::TransactionMessageRetryInterval) * 1000;
 }
 
-void OcppConnection::sendCallError(const char *uid, CallErrorCode code, const char *desc, JsonObject details)
-{
-    DynamicJsonDocument doc{
-        JSON_ARRAY_SIZE(5)
-        + details.memoryUsage()
-    };
-
-    doc.add((int32_t)OcppRpcMessageType::CALLERROR);
-    doc.add(uid);
-    doc.add(CallErrorCodeStrings[(size_t)code]);
-    doc.add(desc);
-    // TODO: use JsonVariant::link when ArduinoJson 6.20 is released.
-    doc.add(details);
-
-    size_t written = serializeJson(doc, send_buf);
-
-    platform_ws_send(platform_ctx, send_buf, written);
+static size_t buildCallError(TFJsonSerializer &json, const char *uid, CallErrorCode code, const char *desc) {
+    json.addArray();
+    json.add((int32_t)OcppRpcMessageType::CALLERROR);
+    json.add(uid);
+    json.add(CallErrorCodeStrings[(size_t)code]);
+    json.add(desc);
+    json.addObject();
+    json.endObject();
+    json.endArray();
+    return json.end();
 }
 
-bool OcppConnection::sendCallResponse(const DynamicJsonDocument &doc)
+void OcppConnection::sendCallError(const char *uid, CallErrorCode code, const char *desc)
 {
-    size_t written = serializeJson(doc, send_buf);
-    platform_printfln("Written %lu", written);
-    platform_ws_send(platform_ctx, send_buf, written);
+    size_t len = 0;
+    {
+        TFJsonSerializer json{nullptr, 0};
+        buildCallError(json, uid, code, desc);
+
+        len = buildCallError(json, uid, code, desc);
+    }
+    auto buf = std::unique_ptr<char[]>(new char[len]);
+    TFJsonSerializer json{buf.get(), len};
+    buildCallError(json, uid, code, desc);
+
+    platform_ws_send(platform_ctx, buf.get(), len);
+}
+
+bool OcppConnection::sendCallResponse(const ICall &call)
+{
+    auto len = call.measureJson();
+    auto buf = std::unique_ptr<char[]>(new char[len]);
+    call.serializeJson(buf.get(), len);
+
+    platform_printfln("Written %lu", len);
+    platform_ws_send(platform_ctx, buf.get(), len);
     return true;
 }
 
-bool OcppConnection::sendCallAction(CallAction action, const DynamicJsonDocument &doc, time_t timestamp)
+bool OcppConnection::sendCallAction(const ICall &call, time_t timestamp)
 {
     // Not transaction-related messages are allowed to be dropped.
     // This means that we can just enforce a queue depth of 5.
@@ -213,7 +224,7 @@ bool OcppConnection::sendCallAction(CallAction action, const DynamicJsonDocument
     // So only if the Authorize message gets through, we can create a StartTxn message.
     // The worst case now is that we lose the connection directly after the Authorize message, and the transaction continues.
     // We then have enqueued at most two messages, one StartTxn and one StopTxn.
-    if (is_transaction_related(action)) {
+    if (is_transaction_related(call.action)) {
         if (timestamp == 0) {
             platform_printfln("Attempted to send transaction related call action without valid timestamp!");
             return false;
@@ -225,7 +236,7 @@ bool OcppConnection::sendCallAction(CallAction action, const DynamicJsonDocument
                     break;
             transaction_messages.erase(transaction_messages.begin() + i);
         }
-        transaction_messages.emplace_back(action, doc, timestamp);
+        transaction_messages.emplace_back(call, timestamp);
         return true;
     }
 
@@ -234,15 +245,15 @@ bool OcppConnection::sendCallAction(CallAction action, const DynamicJsonDocument
     if (!platform_ws_connected(platform_ctx))
         return false;
 
-    if (action == CallAction::STATUS_NOTIFICATION) {
+    if (call.action == CallAction::STATUS_NOTIFICATION) {
         if (status_notifications.size() > 5)
             status_notifications.pop_front();
-        status_notifications.emplace_back(action, doc, timestamp);
+        status_notifications.emplace_back(call, timestamp);
     }
     else {
         if (messages.size() > 5)
             messages.pop_front();
-        messages.emplace_back(action, doc, timestamp);
+        messages.emplace_back(call, timestamp);
     }
 
     return true;

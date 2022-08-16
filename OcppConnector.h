@@ -98,7 +98,7 @@ struct Connector {
     void applyState();
     void sendStatus();
     void forceSendStatus();
-    void sendCallAction(CallAction action, const DynamicJsonDocument &doc, time_t timestamp = 0);
+    void sendCallAction(const ICall &call, time_t timestamp = 0);
 
     bool isSelectableForRemoteStartTxn();
     bool canHandleRemoteStopTxn(int32_t transaction_id);

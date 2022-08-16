@@ -20,17 +20,17 @@ public:
 
     QueueItem() : action(CallAction::AUTHORIZE), buf(nullptr), message_id(0), len(0) {}
 
-    QueueItem(CallAction action, const DynamicJsonDocument &doc, time_t timestamp) :
-        action(action),
+    QueueItem(const ICall &call, time_t timestamp) :
+        action(call.action),
         buf(nullptr),
-        message_id(doc[1].as<uint32_t>()),
+        message_id(call.ocppJmessageId),
         len(0),
         timestamp(timestamp)
     {
-        auto length = measureJson(doc);
+        auto length = call.measureJson();
         platform_printfln("Len: %lu", length);
         this->buf.reset(new char[length]);
-        serializeJson(doc, this->buf.get(), length);
+        call.serializeJson(this->buf.get(), length);
         this->len = length;
     }
 
@@ -61,10 +61,10 @@ public:
 
     void handleCallError(CallErrorCode code, const char *desc, JsonObject details);
 
-    void sendCallError(const char *uid, CallErrorCode code, const char *desc, JsonObject details);
+    void sendCallError(const char *uid, CallErrorCode code, const char *desc);
 
-    bool sendCallAction(CallAction action, const DynamicJsonDocument &doc, time_t timestamp = 0);
-    bool sendCallResponse(const DynamicJsonDocument &doc);
+    bool sendCallAction(const ICall &call, time_t timestamp = 0);
+    bool sendCallResponse(const ICall &call);
 
     void *platform_ctx;
     OcppChargePoint *cp;

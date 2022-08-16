@@ -24,7 +24,7 @@ void OcppChargePoint::tick_power_on() {
 
     last_bn_send_ms = platform_now_ms();
 
-    this->sendCallAction(CallAction::BOOT_NOTIFICATION, BootNotification("Warp 2 Charger Pro", "Tinkerforge GmbH", "warp2-X8A"));
+    this->sendCallAction(BootNotification("Warp 2 Charger Pro", "Tinkerforge GmbH", "warp2-X8A"));
 }
 
 void OcppChargePoint::tick_idle() {
@@ -37,7 +37,7 @@ void OcppChargePoint::tick_idle() {
 
     platform_printfln("Sending heartbeat. %u %u %u %u", platform_now_ms(), last_bn_send_ms, last_bn_send_ms + 1000 * getIntConfig(ConfigKey::HeartbeatInterval), 1000 * getIntConfig(ConfigKey::HeartbeatInterval));
 
-    this->sendCallAction(CallAction::HEARTBEAT, Heartbeat());
+    this->sendCallAction(Heartbeat());
 }
 
 void OcppChargePoint::tick_hard_reset() {
@@ -237,17 +237,17 @@ void OcppChargePoint::forceSendStatus()
     StatusNotificationStatus newStatus = getStatus();
     platform_printfln("Sending status %s for charge point", StatusNotificationStatusStrings[(size_t)newStatus]);
 
-    this->sendCallAction(CallAction::STATUS_NOTIFICATION, StatusNotification(0, StatusNotificationErrorCode::NO_ERROR, newStatus, nullptr, platform_get_system_time(this->platform_ctx)));
+    this->sendCallAction(StatusNotification(0, StatusNotificationErrorCode::NO_ERROR, newStatus, nullptr, platform_get_system_time(this->platform_ctx)));
     last_sent_status = newStatus;
 }
 
-bool OcppChargePoint::sendCallAction(CallAction action, const DynamicJsonDocument &doc, time_t timestamp)
+bool OcppChargePoint::sendCallAction(const ICall &call, time_t timestamp)
 {
     switch (state) {
         case OcppState::PowerOn:
         case OcppState::Pending:
         case OcppState::Rejected:
-            if (action != CallAction::BOOT_NOTIFICATION)
+            if (call.action != CallAction::BOOT_NOTIFICATION)
                 return false;
             break;
         case OcppState::Idle:
@@ -259,7 +259,7 @@ bool OcppChargePoint::sendCallAction(CallAction action, const DynamicJsonDocumen
             break;
     }
 
-    connection.sendCallAction(action, doc, timestamp);
+    connection.sendCallAction(call, timestamp);
     return true;
 }
 

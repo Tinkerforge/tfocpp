@@ -168,7 +168,7 @@ bool restoreNextTxnMessage(OcppConnection *conn) {
 
                     StartTxn start_txn;
                     memcpy(&start_txn, buf, sizeof(StartTxn));
-                    conn->sendCallAction(CallAction::START_TRANSACTION, StartTransaction(start_txn.connector_id, start_txn.id_tag, start_txn.meter_start, timestamp, start_txn.reservation_id), timestamp);
+                    conn->sendCallAction(StartTransaction(start_txn.connector_id, start_txn.id_tag, start_txn.meter_start, timestamp, start_txn.reservation_id), timestamp);
                     return true;
                 }
             case PERSISTENT_TYPE_STOP_TXN: {
@@ -177,7 +177,7 @@ bool restoreNextTxnMessage(OcppConnection *conn) {
 
                     StopTxn stop_txn;
                     memcpy(&stop_txn, buf, sizeof(StopTxn));
-                    conn->sendCallAction(CallAction::STOP_TRANSACTION, StopTransaction(stop_txn.meter_stop, timestamp, stop_txn.transaction_id, stop_txn.id_tag[0] == '\0' ? nullptr : stop_txn.id_tag, (StopTransactionReason)stop_txn.reason), timestamp);
+                    conn->sendCallAction(StopTransaction(stop_txn.meter_stop, timestamp, stop_txn.transaction_id, stop_txn.id_tag[0] == '\0' ? nullptr : stop_txn.id_tag, (StopTransactionReason)stop_txn.reason), timestamp);
                     return true;
                 }
             case PERSISTENT_TYPE_RUNNING_TXN: {
@@ -192,7 +192,7 @@ bool restoreNextTxnMessage(OcppConnection *conn) {
 
                 persistStopTxn((uint8_t)StopTransactionReason::REBOOT, new_energy, txn.transaction_id, "", new_timestamp);
                 platform_remove_file(name_buf);
-                conn->sendCallAction(CallAction::STOP_TRANSACTION, StopTransaction(new_energy, new_timestamp, txn.transaction_id, nullptr, StopTransactionReason::REBOOT), new_timestamp);
+                conn->sendCallAction(StopTransaction(new_energy, new_timestamp, txn.transaction_id, nullptr, StopTransactionReason::REBOOT), new_timestamp);
                 return true;
             }
             case PERSISTENT_TYPE_METER_VALUES:
