@@ -8,7 +8,7 @@
 // Use this macro and pass length to writeUnescaped so that the compiler can see (and create constants of) the string literal lengths.
 #define WRITE_LITERAL(x) this->writeUnescaped((x), strlen((x)))
 
-TFJsonSerializer::TFJsonSerializer(char *buf, size_t buf_size)  : buf(buf), buf_size(buf_size), head(buf), buf_required(0) {}
+TFJsonSerializer::TFJsonSerializer(char *buf, size_t buf_size) : buf(buf), buf_size(buf_size), head(buf), buf_required(0) {}
 
 void TFJsonSerializer::add(const char *key, uint32_t u) {
     this->addKey(key);
@@ -50,82 +50,103 @@ void TFJsonSerializer::addObject(const char *key) {
     this->write('{');
 }
 
-void TFJsonSerializer::add(uint32_t u) {
+void TFJsonSerializer::add(uint32_t u, bool enquote) {
+    if (!in_empty_container)
+        this->write(',');
+
     in_empty_container = false;
+    if (enquote)
+        this->write('"');
+
     this->writeFmt("%u", u);
+
+    if (enquote)
+        this->write('"');
 }
 
 void TFJsonSerializer::add(int32_t i) {
+    if (!in_empty_container)
+        this->write(',');
+
     in_empty_container = false;
-    this->writeFmt("%d,", i);
+    this->writeFmt("%d", i);
 }
 
 void TFJsonSerializer::add(float f) {
+    if (!in_empty_container)
+        this->write(',');
+
     in_empty_container = false;
 
     if (isfinite(f))
-        this->writeFmt("%f,", f);
+        this->writeFmt("%f", f);
     else
-        WRITE_LITERAL("null,");
+        WRITE_LITERAL("null");
 }
 
 void TFJsonSerializer::add(bool b) {
+    if (!in_empty_container)
+        this->write(',');
+
     in_empty_container = false;
 
     if (b)
-        WRITE_LITERAL("true,");
+        WRITE_LITERAL("true");
     else
-        WRITE_LITERAL("false,");
+        WRITE_LITERAL("false");
 }
 
 void TFJsonSerializer::addNull() {
+    if (!in_empty_container)
+        this->write(',');
+
     in_empty_container = false;
 
-    WRITE_LITERAL("null,");
+    WRITE_LITERAL("null");
 }
 
 void TFJsonSerializer::add(const char *c) {
+    if (!in_empty_container)
+        this->write(',');
+
     in_empty_container = false;
 
     WRITE_LITERAL("\"");
     this->write(c);
-    WRITE_LITERAL("\",");
+    WRITE_LITERAL("\"");
 }
 
 void TFJsonSerializer::addArray() {
+    if (!in_empty_container)
+        this->write(',');
+
     in_empty_container = true;
 
     WRITE_LITERAL("[");
 }
 
 void TFJsonSerializer::addObject() {
+    if (!in_empty_container)
+        this->write(',');
+
     in_empty_container = true;
 
     WRITE_LITERAL("{");
 }
 
 void TFJsonSerializer::endArray() {
-    if (!in_empty_container)
-        this->back(1);
-
     in_empty_container = false;
 
-    WRITE_LITERAL("],");
+    WRITE_LITERAL("]");
 }
 
 void TFJsonSerializer::endObject() {
-    if (!in_empty_container)
-        this->back(1);
-
     in_empty_container = false;
 
-    WRITE_LITERAL("},");
+    WRITE_LITERAL("}");
 }
 
 size_t TFJsonSerializer::end() {
-    if (!in_empty_container)
-        this->back(1);
-
     // Return required buffer size _without_ the null terminator.
     // This mirrors the behaviour of snprintf.
     size_t result = buf_required;
@@ -134,7 +155,10 @@ size_t TFJsonSerializer::end() {
 }
 
 void TFJsonSerializer::addKey(const char *key) {
-    in_empty_container = false;
+    if (!in_empty_container)
+        this->write(",");
+
+    in_empty_container = true;
 
     this->write('\"');
     this->write(key);
@@ -199,7 +223,7 @@ void TFJsonSerializer::write(const char *c) {
 void TFJsonSerializer::write(char c) {
     ++buf_required;
 
-    if (buf_size == 0 || (size_t)(head - buf) >= (buf_size - 1))
+    if (buf_size == 0 || (size_t)(head - buf) > (buf_size - 1))
         return;
 
     *head = c;
@@ -209,7 +233,7 @@ void TFJsonSerializer::write(char c) {
 void TFJsonSerializer::writeUnescaped(const char *c, size_t len) {
     buf_required += len;
 
-    if (len > buf_size || head >= (buf + buf_size - len))
+    if (len > buf_size || (head - buf) > (buf_size - len))
         return;
 
     memcpy(head, c, len);
