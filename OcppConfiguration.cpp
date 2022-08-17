@@ -195,9 +195,9 @@ const char *config_keys[CONFIG_COUNT] {
     //"MaxEnergyOnInvalidId",
     "MessageTimeout",
     "MeterValuesAlignedData",
-    //"MeterValuesAlignedDataMaxLength",
+    "MeterValuesAlignedDataMaxLength",
     "MeterValuesSampledData",
-    //"MeterValuesSampledDataMaxLength",
+    "MeterValuesSampledDataMaxLength",
     "MeterValueSampleInterval",
     //"MinimumStatusDuration",
     "NumberOfConnectors",
@@ -216,6 +216,8 @@ const char *config_keys[CONFIG_COUNT] {
     "UnlockConnectorOnEVSideDisconnect",
     "WebSocketPingInterval",
 };
+
+//TODO: implement that CSL max_elements and the corresponding ...MaxLength value are kept in sync
 
 static OcppConfiguration config[CONFIG_COUNT] = {
     /*AllowOfflineTxForUnknownId*/        //OcppConfiguration::boolean(false, false, false),
@@ -245,12 +247,12 @@ static OcppConfiguration config[CONFIG_COUNT] = {
     // Its save to use the number of possible measurands as limit in elements,
     // because the complete list has a length of 465.
     // This also means that we don't have to implement the MeterValuesAlignedDataMaxLength key.
-    /*MeterValuesAlignedData*/            OcppConfiguration::csl("", MAX_CONFIG_LENGTH, (size_t)SampledValueMeasurand::NONE, false, false, SampledValueMeasurandStrings, (size_t)SampledValueMeasurand::NONE),
-    /*MeterValuesAlignedDataMaxLength*/   //OcppConfiguration::integer(MAX_CONFIG_LENGTH / strlen("Energy.Reactive.Import.Register,"), true, false, 0),
+    /*MeterValuesAlignedData*/            OcppConfiguration::csl("", MAX_CONFIG_LENGTH, 5, false, false, SampledValueMeasurandStrings, (size_t)SampledValueMeasurand::NONE),
+    /*MeterValuesAlignedDataMaxLength*/   OcppConfiguration::integer(5, true, false, 0),
 
     // Same reasoning as with MeterValuesAlignedData.
-    /*MeterValuesSampledData*/            OcppConfiguration::csl("", MAX_CONFIG_LENGTH, (size_t)SampledValueMeasurand::NONE, false, false, SampledValueMeasurandStrings, (size_t)SampledValueMeasurand::NONE),
-    /*MeterValuesSampledDataMaxLength*/   //OcppConfiguration::integer(0, true, false, 0),
+    /*MeterValuesSampledData*/            OcppConfiguration::csl("", MAX_CONFIG_LENGTH, 5, false, false, SampledValueMeasurandStrings, (size_t)SampledValueMeasurand::NONE),
+    /*MeterValuesSampledDataMaxLength*/   OcppConfiguration::integer(5, true, false, 0),
 
     /*MeterValueSampleInterval*/          OcppConfiguration::integer(0, false, false, 0),
     /*MinimumStatusDuration*/             //OcppConfiguration::integer(1, false, false, 0),
@@ -267,7 +269,7 @@ static OcppConfiguration config[CONFIG_COUNT] = {
     /*StopTransactionMaxMeterValues*/     OcppConfiguration::integer(2, true, true),
 
     // Same reasoning as with MeterValuesAlignedData.
-    /*StopTxnAlignedData*/                OcppConfiguration::csl("", MAX_CONFIG_LENGTH, (size_t)SampledValueMeasurand::NONE, false, false, SampledValueMeasurandStrings, (size_t)SampledValueMeasurand::NONE),
+    /*StopTxnAlignedData*/                OcppConfiguration::csl("", MAX_CONFIG_LENGTH, 0, false, false, SampledValueMeasurandStrings, (size_t)SampledValueMeasurand::NONE),
 
     // Hardcode 0 for now: We don't want to support sending metering data in StopTransaction.req for now. The spec says:
     /*
@@ -279,7 +281,7 @@ static OcppConfiguration config[CONFIG_COUNT] = {
     /*StopTxnAlignedDataMaxLength*/       OcppConfiguration::integer(0, true, false, 0),
 
     // Same reasoning as with MeterValuesAlignedData.
-    /*StopTxnSampledData*/                OcppConfiguration::csl("", MAX_CONFIG_LENGTH, (size_t)SampledValueMeasurand::NONE, false, false, SampledValueMeasurandStrings, (size_t)SampledValueMeasurand::NONE),
+    /*StopTxnSampledData*/                OcppConfiguration::csl("", MAX_CONFIG_LENGTH, 0, false, false, SampledValueMeasurandStrings, (size_t)SampledValueMeasurand::NONE),
     /*StopTxnSampledDataMaxLength*/       OcppConfiguration::integer(0, true, false, 0),
 
     /*SupportedFeatureProfiles*/          OcppConfiguration::csl("Core", strlen("Core") + 1, 1, true, false, nullptr, 0, false),
