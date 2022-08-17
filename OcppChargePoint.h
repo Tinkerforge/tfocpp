@@ -76,25 +76,25 @@ public:
     void sendStatus();
     void forceSendStatus();
 
-    bool sendCallAction(const ICall &call, time_t timestamp = 0);
-    void onTimeout(CallAction action, uint32_t messageId);
+    bool sendCallAction(const ICall &call, time_t timestamp = 0, int32_t connectorId = 0);
+    void onTimeout(CallAction action, uint32_t messageId, int32_t connectorId);
 
-    CallResponse handleAuthorizeResponse(uint32_t messageId, AuthorizeResponseView conf);
-    CallResponse handleBootNotificationResponse(uint32_t messageId, BootNotificationResponseView conf);
+    CallResponse handleAuthorizeResponse(int32_t connectorId, AuthorizeResponseView conf);
+    CallResponse handleBootNotificationResponse(int32_t connectorId, BootNotificationResponseView conf);
     CallResponse handleChangeAvailability(const char *uid, ChangeAvailabilityView req);
     CallResponse handleChangeConfiguration(const char *uid, ChangeConfigurationView req);
     CallResponse handleClearCache(const char *uid, ClearCacheView req);
     CallResponse handleDataTransfer(const char *uid, DataTransferView req);
-    CallResponse handleDataTransferResponse(uint32_t messageId, DataTransferResponseView conf);
+    CallResponse handleDataTransferResponse(int32_t connectorId, DataTransferResponseView conf);
     CallResponse handleGetConfiguration(const char *uid, GetConfigurationView req);
-    CallResponse handleHeartbeatResponse(uint32_t messageId, HeartbeatResponseView conf);
-    CallResponse handleMeterValuesResponse(uint32_t messageId, MeterValuesResponseView conf);
+    CallResponse handleHeartbeatResponse(int32_t connectorId, HeartbeatResponseView conf);
+    CallResponse handleMeterValuesResponse(int32_t connectorId, MeterValuesResponseView conf);
     CallResponse handleRemoteStartTransaction(const char *uid, RemoteStartTransactionView req);
     CallResponse handleRemoteStopTransaction(const char *uid, RemoteStopTransactionView req);
     CallResponse handleReset(const char *uid, ResetView req);
-    CallResponse handleStartTransactionResponse(uint32_t messageId, StartTransactionResponseView conf);
-    CallResponse handleStatusNotificationResponse(uint32_t messageId, StatusNotificationResponseView conf);
-    CallResponse handleStopTransactionResponse(uint32_t messageId, StopTransactionResponseView conf);
+    CallResponse handleStartTransactionResponse(int32_t connectorId, StartTransactionResponseView conf);
+    CallResponse handleStatusNotificationResponse(int32_t connectorId, StatusNotificationResponseView conf);
+    CallResponse handleStopTransactionResponse(int32_t connectorId, StopTransactionResponseView conf);
     CallResponse handleUnlockConnector(const char *uid, UnlockConnectorView req);
 
     IdleInfo idle_info;

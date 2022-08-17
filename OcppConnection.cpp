@@ -112,7 +112,7 @@ void OcppConnection::handleMessage(char *message, size_t message_len)
         if (is_transaction_related(message_in_flight.action))
             onTxnMsgResponseReceived(message_in_flight.timestamp);
 
-        CallResponse res = callResultHandler((uint32_t)uid, message_in_flight.action, doc[2].as<JsonObject>(), cp);
+        CallResponse res = callResultHandler(message_in_flight.connector_id, message_in_flight.action, doc[2].as<JsonObject>(), cp);
         message_in_flight = QueueItem{};
         transaction_message_retry_deadline = 0;
         transaction_message_attempts = 0;
@@ -159,7 +159,7 @@ void OcppConnection::handleCallError(CallErrorCode code, const char *desc, JsonO
     platform_printfln("Received call error %s %s: %s", CallErrorCodeStrings[(size_t)code], desc, details_string.c_str());
 
     if (!is_transaction_related(message_in_flight.action)) {
-        cp->onTimeout(message_in_flight.action, message_in_flight.message_id);
+        cp->onTimeout(message_in_flight.action, message_in_flight.message_id, message_in_flight.connector_id);
         message_in_flight = QueueItem{};
         return;
     }
@@ -167,7 +167,7 @@ void OcppConnection::handleCallError(CallErrorCode code, const char *desc, JsonO
     transaction_messages.push_front(std::move(message_in_flight));
     ++transaction_message_attempts;
     if (transaction_message_attempts >= getIntConfig(ConfigKey::TransactionMessageAttempts)) {
-        cp->onTimeout(message_in_flight.action, message_in_flight.message_id);
+        cp->onTimeout(message_in_flight.action, message_in_flight.message_id, message_in_flight.connector_id);
         message_in_flight = QueueItem{};
         return;
     }
@@ -214,7 +214,7 @@ bool OcppConnection::sendCallResponse(const ICall &call)
     return true;
 }
 
-bool OcppConnection::sendCallAction(const ICall &call, time_t timestamp)
+bool OcppConnection::sendCallAction(const ICall &call, time_t timestamp, int32_t connectorId)
 {
     // Not transaction-related messages are allowed to be dropped.
     // This means that we can just enforce a queue depth of 5.
@@ -236,7 +236,7 @@ bool OcppConnection::sendCallAction(const ICall &call, time_t timestamp)
                     break;
             transaction_messages.erase(transaction_messages.begin() + i);
         }
-        transaction_messages.emplace_back(call, timestamp);
+        transaction_messages.emplace_back(call, timestamp, connectorId);
         return true;
     }
 
@@ -248,12 +248,12 @@ bool OcppConnection::sendCallAction(const ICall &call, time_t timestamp)
     if (call.action == CallAction::STATUS_NOTIFICATION) {
         if (status_notifications.size() > 5)
             status_notifications.pop_front();
-        status_notifications.emplace_back(call, timestamp);
+        status_notifications.emplace_back(call, timestamp, connectorId);
     }
     else {
         if (messages.size() > 5)
             messages.pop_front();
-        messages.emplace_back(call, timestamp);
+        messages.emplace_back(call, timestamp, connectorId);
     }
 
     return true;
@@ -284,7 +284,7 @@ void OcppConnection::tick() {
             // Don't drop transaction related messages. Push to front to keep in order.
             transaction_messages.push_front(std::move(message_in_flight));
         } else {
-            cp->onTimeout(message_in_flight.action, message_in_flight.message_id);
+            cp->onTimeout(message_in_flight.action, message_in_flight.message_id, message_in_flight.connector_id);
             message_in_flight = QueueItem{};
         }
     }

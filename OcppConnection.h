@@ -15,15 +15,17 @@ public:
     CallAction action;
     std::unique_ptr<char[]> buf;
     uint32_t message_id;
+    int32_t connector_id;
     size_t len;
     time_t timestamp;
 
     QueueItem() : action(CallAction::AUTHORIZE), buf(nullptr), message_id(0), len(0) {}
 
-    QueueItem(const ICall &call, time_t timestamp) :
+    QueueItem(const ICall &call, time_t timestamp, int32_t connector_id) :
         action(call.action),
         buf(nullptr),
         message_id(call.ocppJmessageId),
+        connector_id(connector_id),
         len(0),
         timestamp(timestamp)
     {
@@ -63,7 +65,7 @@ public:
 
     void sendCallError(const char *uid, CallErrorCode code, const char *desc);
 
-    bool sendCallAction(const ICall &call, time_t timestamp = 0);
+    bool sendCallAction(const ICall &call, time_t timestamp = 0, int32_t connectorId = 0);
     bool sendCallResponse(const ICall &call);
 
     void *platform_ctx;

@@ -85,9 +85,6 @@ struct Connector {
 
     StopTransactionReason next_stop_reason = StopTransactionReason::NONE;
 
-
-    uint32_t waiting_for_message_id = 0;
-
     void deauth();
     void setTagDeadline();
     void clearTagDeadline();

@@ -314,8 +314,7 @@ void Connector::forceSendStatus()
 
 void Connector::sendCallAction(const ICall &call, time_t timestamp)
 {
-    this->waiting_for_message_id = call.ocppJmessageId;
-    cp->sendCallAction(call, timestamp);
+    cp->sendCallAction(call, timestamp, this->connectorId);
 }
 
 bool Connector::isSelectableForRemoteStartTxn()

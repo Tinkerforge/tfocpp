@@ -241,7 +241,7 @@ void OcppChargePoint::forceSendStatus()
     last_sent_status = newStatus;
 }
 
-bool OcppChargePoint::sendCallAction(const ICall &call, time_t timestamp)
+bool OcppChargePoint::sendCallAction(const ICall &call, time_t timestamp, int32_t connectorId)
 {
     switch (state) {
         case OcppState::PowerOn:
@@ -259,21 +259,16 @@ bool OcppChargePoint::sendCallAction(const ICall &call, time_t timestamp)
             break;
     }
 
-    connection.sendCallAction(call, timestamp);
+    connection.sendCallAction(call, timestamp, connectorId);
     return true;
 }
 
-void OcppChargePoint::onTimeout(CallAction action, uint32_t messageId)
+void OcppChargePoint::onTimeout(CallAction action, uint32_t messageId, int32_t connectorId)
 {
     switch (action) {
         case CallAction::AUTHORIZE:
-            // notify connector
-            for(int32_t i = 0; i < NUM_CONNECTORS; ++i) {
-                if (connectors[i].waiting_for_message_id != messageId)
-                    continue;
-                connectors[i].waiting_for_message_id = 0;
-                connectors[i].onAuthorizeError();
-            }
+            if (connectorId > 0 && connectorId <= NUM_CONNECTORS)
+                connectors[connectorId].onAuthorizeError();
             break;
 
         // Transaction related messages only trigger the timeout
@@ -347,24 +342,19 @@ void OcppChargePoint::onTimeout(CallAction action, uint32_t messageId)
     }
 }
 
-CallResponse OcppChargePoint::handleAuthorizeResponse(uint32_t messageId, AuthorizeResponseView conf)
+CallResponse OcppChargePoint::handleAuthorizeResponse(int32_t connectorId, AuthorizeResponseView conf)
 {
     IdTagInfo info;
     info.updateFromIdTagInfo(conf.idTagInfo());
 
-    for(int32_t i = 0; i < NUM_CONNECTORS; ++i) {
-        if (connectors[i].waiting_for_message_id != messageId)
-            continue;
-        connectors[i].waiting_for_message_id = 0;
-        connectors[i].onAuthorizeConf(info);
-        break;
-    }
+    if (connectorId > 0 && connectorId <= NUM_CONNECTORS)
+        connectors[connectorId - 1].onAuthorizeConf(info);
 
     return CallResponse{CallErrorCode::OK, ""};
 }
 
-CallResponse OcppChargePoint::handleBootNotificationResponse(uint32_t messageId, BootNotificationResponseView conf) {
-    (void) messageId;
+CallResponse OcppChargePoint::handleBootNotificationResponse(int32_t connectorId, BootNotificationResponseView conf) {
+    (void) connectorId;
 
     if ((state != OcppState::PowerOn) &&
         (state != OcppState::Pending) &&
@@ -485,9 +475,9 @@ CallResponse OcppChargePoint::handleDataTransfer(const char *uid, DataTransferVi
     return CallResponse{CallErrorCode::OK, ""};
 }
 
-CallResponse OcppChargePoint::handleDataTransferResponse(uint32_t messageId, DataTransferResponseView conf)
+CallResponse OcppChargePoint::handleDataTransferResponse(int32_t connectorId, DataTransferResponseView conf)
 {
-    (void) messageId;
+    (void) connectorId;
     (void) conf;
 
     return CallResponse{CallErrorCode::OK, ""};
@@ -606,18 +596,19 @@ CallResponse OcppChargePoint::handleGetConfiguration(const char *uid, GetConfigu
     return CallResponse{CallErrorCode::OK, ""};
 }
 
-CallResponse OcppChargePoint::handleHeartbeatResponse(uint32_t messageId, HeartbeatResponseView conf)
+CallResponse OcppChargePoint::handleHeartbeatResponse(int32_t connectorId, HeartbeatResponseView conf)
 {
-    (void)messageId;
+    (void)connectorId;
     platform_set_system_time(platform_ctx, conf.currentTime());
     return CallResponse{CallErrorCode::OK, ""};
+
 }
 
-CallResponse OcppChargePoint::handleMeterValuesResponse(uint32_t messageId, MeterValuesResponseView conf)
+CallResponse OcppChargePoint::handleMeterValuesResponse(int32_t connectorId, MeterValuesResponseView conf)
 {
-    (void) messageId;
+    (void) connectorId;
     (void) conf;
-    return CallResponse{CallErrorCode::InternalError, "not implemented yet!"};
+    return CallResponse{CallErrorCode::OK, ""};
 }
 
 CallResponse OcppChargePoint::handleRemoteStartTransaction(const char *uid, RemoteStartTransactionView req)
@@ -699,33 +690,28 @@ CallResponse OcppChargePoint::handleReset(const char *uid, ResetView req)
     return CallResponse{CallErrorCode::OK, ""};
 }
 
-CallResponse OcppChargePoint::handleStartTransactionResponse(uint32_t messageId, StartTransactionResponseView conf)
+CallResponse OcppChargePoint::handleStartTransactionResponse(int32_t connectorId, StartTransactionResponseView conf)
 {
     IdTagInfo info;
     info.updateFromIdTagInfo(conf.idTagInfo());
 
-    for(size_t i = 0; i < NUM_CONNECTORS; ++i) {
-        if (connectors[i].waiting_for_message_id != messageId)
-            continue;
-        connectors[i].waiting_for_message_id = 0;
-        connectors[i].onStartTransactionConf(info, conf.transactionId());
-        break;
-    }
+    if (connectorId > 0 && connectorId <= NUM_CONNECTORS)
+        connectors[connectorId - 1].onStartTransactionConf(info, conf.transactionId());
 
     return CallResponse{CallErrorCode::OK, ""};
 }
 
-CallResponse OcppChargePoint::handleStatusNotificationResponse(uint32_t messageId, StatusNotificationResponseView conf)
+CallResponse OcppChargePoint::handleStatusNotificationResponse(int32_t connectorId, StatusNotificationResponseView conf)
 {
-    (void) messageId;
+    (void) connectorId;
     (void) conf;
 
     return CallResponse{CallErrorCode::OK, ""};
 }
 
-CallResponse OcppChargePoint::handleStopTransactionResponse(uint32_t messageId, StopTransactionResponseView conf)
+CallResponse OcppChargePoint::handleStopTransactionResponse(int32_t connectorId, StopTransactionResponseView conf)
 {
-    (void) messageId;
+    (void) connectorId;
     (void) conf;
 
     // conf only contains a idTagInfo for updating the authorization cache. We don't implement that yet.

@@ -1031,7 +1031,7 @@ CallResponse parseStopTransactionResponse(JsonObject obj);
 
 CallResponse parseUnlockConnector(JsonObject obj);
 
-CallResponse callResultHandler(uint32_t message_id, CallAction resultTo, JsonObject obj, OcppChargePoint *cp);
+CallResponse callResultHandler(int32_t connectorId, CallAction resultTo, JsonObject obj, OcppChargePoint *cp);
 
 
 struct IdTagInfo {
