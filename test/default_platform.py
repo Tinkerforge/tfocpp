@@ -167,8 +167,8 @@ def platform_read_file(name, buf, len_):
 
 @ctypes.CFUNCTYPE(ctypes.c_bool, ctypes.c_char_p, ctypes.POINTER(ctypes.c_char), ctypes.c_size_t)
 def platform_write_file(name, buf, len_):
-    b = (ctypes.c_char_p * len_).from_address(buf)
-    files[name] = b.value
+    b = (ctypes.c_char * len_).from_address(ctypes.addressof(buf))
+    files[name] = list(b)
     return True
 
 def register_default_functions(libocpp):
