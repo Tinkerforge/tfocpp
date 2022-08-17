@@ -396,7 +396,7 @@ size_t ChangeAvailabilityResponse::serializeJson(char *buf, size_t buf_len) cons
     json.addArray();
         json.add((int32_t)OcppRpcMessageType::CALLRESULT);
         json.add(this->ocppJcallId);
-        
+
         json.addObject();
             if (status != ChangeAvailabilityResponseStatus::NONE) json.add("status",ChangeAvailabilityResponseStatusStrings[(size_t)status]);
         json.endObject();
@@ -416,7 +416,7 @@ size_t ChangeConfigurationResponse::serializeJson(char *buf, size_t buf_len) con
     json.addArray();
         json.add((int32_t)OcppRpcMessageType::CALLRESULT);
         json.add(this->ocppJcallId);
-        
+
         json.addObject();
             if (status != ChangeConfigurationResponseStatus::NONE) json.add("status",ChangeConfigurationResponseStatusStrings[(size_t)status]);
         json.endObject();
@@ -436,7 +436,7 @@ size_t ClearCacheResponse::serializeJson(char *buf, size_t buf_len) const {
     json.addArray();
         json.add((int32_t)OcppRpcMessageType::CALLRESULT);
         json.add(this->ocppJcallId);
-        
+
         json.addObject();
             if (status != ResponseStatus::NONE) json.add("status",ResponseStatusStrings[(size_t)status]);
         json.endObject();
@@ -483,7 +483,7 @@ size_t DataTransferResponse::serializeJson(char *buf, size_t buf_len) const {
     json.addArray();
         json.add((int32_t)OcppRpcMessageType::CALLRESULT);
         json.add(this->ocppJcallId);
-        
+
         json.addObject();
             if (status != DataTransferResponseStatus::NONE) json.add("status",DataTransferResponseStatusStrings[(size_t)status]);
             if (data != nullptr) json.add("data", data);
@@ -508,7 +508,7 @@ size_t GetConfigurationResponse::serializeJson(char *buf, size_t buf_len) const 
     json.addArray();
         json.add((int32_t)OcppRpcMessageType::CALLRESULT);
         json.add(this->ocppJcallId);
-        
+
         json.addObject();
             if (configurationKey != nullptr) { json.addArray("configurationKey"); for(size_t i = 0; i < configurationKey_length; ++i) { json.addObject(); configurationKey[i].serializeInto(json); json.endObject(); } json.endArray(); }
             if (unknownKey != nullptr) { json.addArray("unknownKey"); for(size_t i = 0; i < unknownKey_length; ++i) { json.add(unknownKey[i]); } json.endArray(); }
@@ -529,7 +529,7 @@ size_t Heartbeat::serializeJson(char *buf, size_t buf_len) const {
         json.add(this->ocppJmessageId, true);
         json.add(CallActionStrings[(size_t)this->action]);
         json.addObject();
-            
+
         json.endObject();
     json.endArray();
 
@@ -573,7 +573,7 @@ size_t RemoteStartTransactionResponse::serializeJson(char *buf, size_t buf_len) 
     json.addArray();
         json.add((int32_t)OcppRpcMessageType::CALLRESULT);
         json.add(this->ocppJcallId);
-        
+
         json.addObject();
             if (status != ResponseStatus::NONE) json.add("status",ResponseStatusStrings[(size_t)status]);
         json.endObject();
@@ -593,7 +593,7 @@ size_t RemoteStopTransactionResponse::serializeJson(char *buf, size_t buf_len) c
     json.addArray();
         json.add((int32_t)OcppRpcMessageType::CALLRESULT);
         json.add(this->ocppJcallId);
-        
+
         json.addObject();
             if (status != ResponseStatus::NONE) json.add("status",ResponseStatusStrings[(size_t)status]);
         json.endObject();
@@ -613,7 +613,7 @@ size_t ResetResponse::serializeJson(char *buf, size_t buf_len) const {
     json.addArray();
         json.add((int32_t)OcppRpcMessageType::CALLRESULT);
         json.add(this->ocppJcallId);
-        
+
         json.addObject();
             if (status != ResponseStatus::NONE) json.add("status",ResponseStatusStrings[(size_t)status]);
         json.endObject();
@@ -736,7 +736,7 @@ size_t UnlockConnectorResponse::serializeJson(char *buf, size_t buf_len) const {
     json.addArray();
         json.add((int32_t)OcppRpcMessageType::CALLRESULT);
         json.add(this->ocppJcallId);
-        
+
         json.addObject();
             if (status != UnlockConnectorResponseStatus::NONE) json.add("status",UnlockConnectorResponseStatusStrings[(size_t)status]);
         json.endObject();
@@ -746,7 +746,7 @@ size_t UnlockConnectorResponse::serializeJson(char *buf, size_t buf_len) const {
 }
 
 static CallResponse parseAuthorizeResponseIdTagInfoEntriesExpiryDate(JsonVariant var) {
-    
+
     if (!var.is<const char *>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "expiryDate: wrong type"};
 
@@ -762,7 +762,7 @@ static CallResponse parseAuthorizeResponseIdTagInfoEntriesExpiryDate(JsonVariant
 }
 
 static CallResponse parseAuthorizeResponseIdTagInfoEntriesParentIdTag(JsonVariant var) {
-    
+
     if (!var.is<const char *>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "parentIdTag: wrong type"};
 
@@ -773,7 +773,7 @@ static CallResponse parseAuthorizeResponseIdTagInfoEntriesParentIdTag(JsonVarian
 }
 
 static CallResponse parseAuthorizeResponseIdTagInfoEntriesStatus(JsonVariant var) {
-    
+
     if (!var.is<const char *>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "status: wrong type"};
 
@@ -813,7 +813,7 @@ static CallResponse parseAuthorizeResponseIdTagInfoEntries(JsonObject obj) {
     }
     ++keys_handled;
     }
-    
+
     if (!obj.containsKey("status"))
         return CallResponse{CallErrorCode::OccurenceConstraintViolation, "status: required, but missing"};
 
@@ -831,7 +831,7 @@ static CallResponse parseAuthorizeResponseIdTagInfoEntries(JsonObject obj) {
     return CallResponse{CallErrorCode::OK, nullptr};
 }
 static CallResponse parseAuthorizeResponseIdTagInfo(JsonVariant var) {
-    
+
     if (!var.is<JsonObject>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "idTagInfo: wrong type"};
 
@@ -864,7 +864,7 @@ CallResponse parseAuthorizeResponse(JsonObject obj) {
 }
 
 static CallResponse parseBootNotificationResponseStatus(JsonVariant var) {
-    
+
     if (!var.is<const char *>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "status: wrong type"};
 
@@ -887,7 +887,7 @@ static CallResponse parseBootNotificationResponseStatus(JsonVariant var) {
 }
 
 static CallResponse parseBootNotificationResponseCurrentTime(JsonVariant var) {
-    
+
     if (!var.is<const char *>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "currentTime: wrong type"};
 
@@ -903,7 +903,7 @@ static CallResponse parseBootNotificationResponseCurrentTime(JsonVariant var) {
 }
 
 static CallResponse parseBootNotificationResponseInterval(JsonVariant var) {
-    
+
     if (!var.is<int32_t>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "interval: wrong type"};
 
@@ -921,7 +921,7 @@ CallResponse parseBootNotificationResponse(JsonObject obj) {
             return inner_result;
     }
     ++keys_handled;
-    
+
     if (!obj.containsKey("currentTime"))
         return CallResponse{CallErrorCode::OccurenceConstraintViolation, "currentTime: required, but missing"};
 
@@ -931,7 +931,7 @@ CallResponse parseBootNotificationResponse(JsonObject obj) {
             return inner_result;
     }
     ++keys_handled;
-    
+
     if (!obj.containsKey("interval"))
         return CallResponse{CallErrorCode::OccurenceConstraintViolation, "interval: required, but missing"};
 
@@ -950,7 +950,7 @@ CallResponse parseBootNotificationResponse(JsonObject obj) {
 }
 
 static CallResponse parseChangeAvailabilityConnectorId(JsonVariant var) {
-    
+
     if (!var.is<int32_t>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "connectorId: wrong type"};
 
@@ -958,7 +958,7 @@ static CallResponse parseChangeAvailabilityConnectorId(JsonVariant var) {
 }
 
 static CallResponse parseChangeAvailabilityType(JsonVariant var) {
-    
+
     if (!var.is<const char *>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "type: wrong type"};
 
@@ -991,7 +991,7 @@ CallResponse parseChangeAvailability(JsonObject obj) {
             return inner_result;
     }
     ++keys_handled;
-    
+
     if (!obj.containsKey("type"))
         return CallResponse{CallErrorCode::OccurenceConstraintViolation, "type: required, but missing"};
 
@@ -1010,7 +1010,7 @@ CallResponse parseChangeAvailability(JsonObject obj) {
 }
 
 static CallResponse parseChangeConfigurationKey(JsonVariant var) {
-    
+
     if (!var.is<const char *>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "key: wrong type"};
 
@@ -1021,7 +1021,7 @@ static CallResponse parseChangeConfigurationKey(JsonVariant var) {
 }
 
 static CallResponse parseChangeConfigurationValue(JsonVariant var) {
-    
+
     if (!var.is<const char *>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "value: wrong type"};
 
@@ -1042,7 +1042,7 @@ CallResponse parseChangeConfiguration(JsonObject obj) {
             return inner_result;
     }
     ++keys_handled;
-    
+
     if (!obj.containsKey("value"))
         return CallResponse{CallErrorCode::OccurenceConstraintViolation, "value: required, but missing"};
 
@@ -1071,7 +1071,7 @@ CallResponse parseClearCache(JsonObject obj) {
 }
 
 static CallResponse parseDataTransferVendorId(JsonVariant var) {
-    
+
     if (!var.is<const char *>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "vendorId: wrong type"};
 
@@ -1082,7 +1082,7 @@ static CallResponse parseDataTransferVendorId(JsonVariant var) {
 }
 
 static CallResponse parseDataTransferMessageId(JsonVariant var) {
-    
+
     if (!var.is<const char *>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "messageId: wrong type"};
 
@@ -1093,7 +1093,7 @@ static CallResponse parseDataTransferMessageId(JsonVariant var) {
 }
 
 static CallResponse parseDataTransferData(JsonVariant var) {
-    
+
     if (!var.is<const char *>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "data: wrong type"};
 
@@ -1136,7 +1136,7 @@ CallResponse parseDataTransfer(JsonObject obj) {
 }
 
 static CallResponse parseDataTransferResponseStatus(JsonVariant var) {
-    
+
     if (!var.is<const char *>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "status: wrong type"};
 
@@ -1159,7 +1159,7 @@ static CallResponse parseDataTransferResponseStatus(JsonVariant var) {
 }
 
 static CallResponse parseDataTransferResponseData(JsonVariant var) {
-    
+
     if (!var.is<const char *>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "data: wrong type"};
 
@@ -1194,7 +1194,7 @@ CallResponse parseDataTransferResponse(JsonObject obj) {
 }
 
 static CallResponse parseGetConfigurationKeyEntry(JsonVariant var) {
-    
+
     if (!var.is<const char *>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "keyEntry: wrong type"};
 
@@ -1204,7 +1204,7 @@ static CallResponse parseGetConfigurationKeyEntry(JsonVariant var) {
     return CallResponse{CallErrorCode::OK, nullptr};
 }
 static CallResponse parseGetConfigurationKey(JsonVariant var) {
-    
+
     if (!var.is<JsonArray>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "key: wrong type"};
 
@@ -1238,7 +1238,7 @@ CallResponse parseGetConfiguration(JsonObject obj) {
 }
 
 static CallResponse parseHeartbeatResponseCurrentTime(JsonVariant var) {
-    
+
     if (!var.is<const char *>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "currentTime: wrong type"};
 
@@ -1283,7 +1283,7 @@ CallResponse parseMeterValuesResponse(JsonObject obj) {
 }
 
 static CallResponse parseRemoteStartTransactionConnectorId(JsonVariant var) {
-    
+
     if (!var.is<int32_t>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "connectorId: wrong type"};
 
@@ -1291,7 +1291,7 @@ static CallResponse parseRemoteStartTransactionConnectorId(JsonVariant var) {
 }
 
 static CallResponse parseRemoteStartTransactionIdTag(JsonVariant var) {
-    
+
     if (!var.is<const char *>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "idTag: wrong type"};
 
@@ -1302,7 +1302,7 @@ static CallResponse parseRemoteStartTransactionIdTag(JsonVariant var) {
 }
 
 static CallResponse parseRemoteStartTransactionChargingProfileEntriesChargingProfileId(JsonVariant var) {
-    
+
     if (!var.is<int32_t>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "chargingProfileId: wrong type"};
 
@@ -1310,7 +1310,7 @@ static CallResponse parseRemoteStartTransactionChargingProfileEntriesChargingPro
 }
 
 static CallResponse parseRemoteStartTransactionChargingProfileEntriesTransactionId(JsonVariant var) {
-    
+
     if (!var.is<int32_t>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "transactionId: wrong type"};
 
@@ -1318,7 +1318,7 @@ static CallResponse parseRemoteStartTransactionChargingProfileEntriesTransaction
 }
 
 static CallResponse parseRemoteStartTransactionChargingProfileEntriesStackLevel(JsonVariant var) {
-    
+
     if (!var.is<int32_t>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "stackLevel: wrong type"};
 
@@ -1326,7 +1326,7 @@ static CallResponse parseRemoteStartTransactionChargingProfileEntriesStackLevel(
 }
 
 static CallResponse parseRemoteStartTransactionChargingProfileEntriesChargingProfilePurpose(JsonVariant var) {
-    
+
     if (!var.is<const char *>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "chargingProfilePurpose: wrong type"};
 
@@ -1349,7 +1349,7 @@ static CallResponse parseRemoteStartTransactionChargingProfileEntriesChargingPro
 }
 
 static CallResponse parseRemoteStartTransactionChargingProfileEntriesChargingProfileKind(JsonVariant var) {
-    
+
     if (!var.is<const char *>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "chargingProfileKind: wrong type"};
 
@@ -1372,7 +1372,7 @@ static CallResponse parseRemoteStartTransactionChargingProfileEntriesChargingPro
 }
 
 static CallResponse parseRemoteStartTransactionChargingProfileEntriesRecurrencyKind(JsonVariant var) {
-    
+
     if (!var.is<const char *>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "recurrencyKind: wrong type"};
 
@@ -1395,7 +1395,7 @@ static CallResponse parseRemoteStartTransactionChargingProfileEntriesRecurrencyK
 }
 
 static CallResponse parseRemoteStartTransactionChargingProfileEntriesValidFrom(JsonVariant var) {
-    
+
     if (!var.is<const char *>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "validFrom: wrong type"};
 
@@ -1411,7 +1411,7 @@ static CallResponse parseRemoteStartTransactionChargingProfileEntriesValidFrom(J
 }
 
 static CallResponse parseRemoteStartTransactionChargingProfileEntriesValidTo(JsonVariant var) {
-    
+
     if (!var.is<const char *>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "validTo: wrong type"};
 
@@ -1427,7 +1427,7 @@ static CallResponse parseRemoteStartTransactionChargingProfileEntriesValidTo(Jso
 }
 
 static CallResponse parseRemoteStartTransactionChargingProfileEntriesChargingScheduleEntriesDuration(JsonVariant var) {
-    
+
     if (!var.is<int32_t>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "duration: wrong type"};
 
@@ -1435,7 +1435,7 @@ static CallResponse parseRemoteStartTransactionChargingProfileEntriesChargingSch
 }
 
 static CallResponse parseRemoteStartTransactionChargingProfileEntriesChargingScheduleEntriesStartSchedule(JsonVariant var) {
-    
+
     if (!var.is<const char *>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "startSchedule: wrong type"};
 
@@ -1451,7 +1451,7 @@ static CallResponse parseRemoteStartTransactionChargingProfileEntriesChargingSch
 }
 
 static CallResponse parseRemoteStartTransactionChargingProfileEntriesChargingScheduleEntriesChargingRateUnit(JsonVariant var) {
-    
+
     if (!var.is<const char *>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "chargingRateUnit: wrong type"};
 
@@ -1474,7 +1474,7 @@ static CallResponse parseRemoteStartTransactionChargingProfileEntriesChargingSch
 }
 
 static CallResponse parseRemoteStartTransactionChargingProfileEntriesChargingScheduleEntriesChargingSchedulePeriodEntryEntriesStartPeriod(JsonVariant var) {
-    
+
     if (!var.is<int32_t>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "startPeriod: wrong type"};
 
@@ -1482,7 +1482,7 @@ static CallResponse parseRemoteStartTransactionChargingProfileEntriesChargingSch
 }
 
 static CallResponse parseRemoteStartTransactionChargingProfileEntriesChargingScheduleEntriesChargingSchedulePeriodEntryEntriesLimit(JsonVariant var) {
-    
+
     if (!var.is<float>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "limit: wrong type"};
 
@@ -1490,7 +1490,7 @@ static CallResponse parseRemoteStartTransactionChargingProfileEntriesChargingSch
 }
 
 static CallResponse parseRemoteStartTransactionChargingProfileEntriesChargingScheduleEntriesChargingSchedulePeriodEntryEntriesNumberPhases(JsonVariant var) {
-    
+
     if (!var.is<int32_t>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "numberPhases: wrong type"};
 
@@ -1508,7 +1508,7 @@ static CallResponse parseRemoteStartTransactionChargingProfileEntriesChargingSch
             return inner_result;
     }
     ++keys_handled;
-    
+
     if (!obj.containsKey("limit"))
         return CallResponse{CallErrorCode::OccurenceConstraintViolation, "limit: required, but missing"};
 
@@ -1534,7 +1534,7 @@ static CallResponse parseRemoteStartTransactionChargingProfileEntriesChargingSch
     return CallResponse{CallErrorCode::OK, nullptr};
 }
 static CallResponse parseRemoteStartTransactionChargingProfileEntriesChargingScheduleEntriesChargingSchedulePeriodEntry(JsonVariant var) {
-    
+
     if (!var.is<JsonObject>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "chargingSchedulePeriodEntry: wrong type"};
 
@@ -1547,7 +1547,7 @@ static CallResponse parseRemoteStartTransactionChargingProfileEntriesChargingSch
     return CallResponse{CallErrorCode::OK, nullptr};
 }
 static CallResponse parseRemoteStartTransactionChargingProfileEntriesChargingScheduleEntriesChargingSchedulePeriod(JsonVariant var) {
-    
+
     if (!var.is<JsonArray>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "chargingSchedulePeriod: wrong type"};
 
@@ -1563,7 +1563,7 @@ static CallResponse parseRemoteStartTransactionChargingProfileEntriesChargingSch
 }
 
 static CallResponse parseRemoteStartTransactionChargingProfileEntriesChargingScheduleEntriesMinChargingRate(JsonVariant var) {
-    
+
     if (!var.is<float>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "minChargingRate: wrong type"};
 
@@ -1588,7 +1588,7 @@ static CallResponse parseRemoteStartTransactionChargingProfileEntriesChargingSch
     }
     ++keys_handled;
     }
-    
+
     if (!obj.containsKey("chargingRateUnit"))
         return CallResponse{CallErrorCode::OccurenceConstraintViolation, "chargingRateUnit: required, but missing"};
 
@@ -1598,7 +1598,7 @@ static CallResponse parseRemoteStartTransactionChargingProfileEntriesChargingSch
             return inner_result;
     }
     ++keys_handled;
-    
+
     if (!obj.containsKey("chargingSchedulePeriod"))
         return CallResponse{CallErrorCode::OccurenceConstraintViolation, "chargingSchedulePeriod: required, but missing"};
 
@@ -1624,7 +1624,7 @@ static CallResponse parseRemoteStartTransactionChargingProfileEntriesChargingSch
     return CallResponse{CallErrorCode::OK, nullptr};
 }
 static CallResponse parseRemoteStartTransactionChargingProfileEntriesChargingSchedule(JsonVariant var) {
-    
+
     if (!var.is<JsonObject>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "chargingSchedule: wrong type"};
 
@@ -1656,7 +1656,7 @@ static CallResponse parseRemoteStartTransactionChargingProfileEntries(JsonObject
     }
     ++keys_handled;
     }
-    
+
     if (!obj.containsKey("stackLevel"))
         return CallResponse{CallErrorCode::OccurenceConstraintViolation, "stackLevel: required, but missing"};
 
@@ -1666,7 +1666,7 @@ static CallResponse parseRemoteStartTransactionChargingProfileEntries(JsonObject
             return inner_result;
     }
     ++keys_handled;
-    
+
     if (!obj.containsKey("chargingProfilePurpose"))
         return CallResponse{CallErrorCode::OccurenceConstraintViolation, "chargingProfilePurpose: required, but missing"};
 
@@ -1676,7 +1676,7 @@ static CallResponse parseRemoteStartTransactionChargingProfileEntries(JsonObject
             return inner_result;
     }
     ++keys_handled;
-    
+
     if (!obj.containsKey("chargingProfileKind"))
         return CallResponse{CallErrorCode::OccurenceConstraintViolation, "chargingProfileKind: required, but missing"};
 
@@ -1710,7 +1710,7 @@ static CallResponse parseRemoteStartTransactionChargingProfileEntries(JsonObject
     }
     ++keys_handled;
     }
-    
+
     if (!obj.containsKey("chargingSchedule"))
         return CallResponse{CallErrorCode::OccurenceConstraintViolation, "chargingSchedule: required, but missing"};
 
@@ -1728,7 +1728,7 @@ static CallResponse parseRemoteStartTransactionChargingProfileEntries(JsonObject
     return CallResponse{CallErrorCode::OK, nullptr};
 }
 static CallResponse parseRemoteStartTransactionChargingProfile(JsonVariant var) {
-    
+
     if (!var.is<JsonObject>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "chargingProfile: wrong type"};
 
@@ -1751,7 +1751,7 @@ CallResponse parseRemoteStartTransaction(JsonObject obj) {
     }
     ++keys_handled;
     }
-    
+
     if (!obj.containsKey("idTag"))
         return CallResponse{CallErrorCode::OccurenceConstraintViolation, "idTag: required, but missing"};
 
@@ -1778,7 +1778,7 @@ CallResponse parseRemoteStartTransaction(JsonObject obj) {
 }
 
 static CallResponse parseRemoteStopTransactionTransactionId(JsonVariant var) {
-    
+
     if (!var.is<int32_t>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "transactionId: wrong type"};
 
@@ -1805,7 +1805,7 @@ CallResponse parseRemoteStopTransaction(JsonObject obj) {
 }
 
 static CallResponse parseResetType(JsonVariant var) {
-    
+
     if (!var.is<const char *>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "type: wrong type"};
 
@@ -1847,7 +1847,7 @@ CallResponse parseReset(JsonObject obj) {
 }
 
 static CallResponse parseStartTransactionResponseIdTagInfoEntriesExpiryDate(JsonVariant var) {
-    
+
     if (!var.is<const char *>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "expiryDate: wrong type"};
 
@@ -1863,7 +1863,7 @@ static CallResponse parseStartTransactionResponseIdTagInfoEntriesExpiryDate(Json
 }
 
 static CallResponse parseStartTransactionResponseIdTagInfoEntriesParentIdTag(JsonVariant var) {
-    
+
     if (!var.is<const char *>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "parentIdTag: wrong type"};
 
@@ -1874,7 +1874,7 @@ static CallResponse parseStartTransactionResponseIdTagInfoEntriesParentIdTag(Jso
 }
 
 static CallResponse parseStartTransactionResponseIdTagInfoEntriesStatus(JsonVariant var) {
-    
+
     if (!var.is<const char *>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "status: wrong type"};
 
@@ -1914,7 +1914,7 @@ static CallResponse parseStartTransactionResponseIdTagInfoEntries(JsonObject obj
     }
     ++keys_handled;
     }
-    
+
     if (!obj.containsKey("status"))
         return CallResponse{CallErrorCode::OccurenceConstraintViolation, "status: required, but missing"};
 
@@ -1932,7 +1932,7 @@ static CallResponse parseStartTransactionResponseIdTagInfoEntries(JsonObject obj
     return CallResponse{CallErrorCode::OK, nullptr};
 }
 static CallResponse parseStartTransactionResponseIdTagInfo(JsonVariant var) {
-    
+
     if (!var.is<JsonObject>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "idTagInfo: wrong type"};
 
@@ -1946,7 +1946,7 @@ static CallResponse parseStartTransactionResponseIdTagInfo(JsonVariant var) {
 }
 
 static CallResponse parseStartTransactionResponseTransactionId(JsonVariant var) {
-    
+
     if (!var.is<int32_t>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "transactionId: wrong type"};
 
@@ -1964,7 +1964,7 @@ CallResponse parseStartTransactionResponse(JsonObject obj) {
             return inner_result;
     }
     ++keys_handled;
-    
+
     if (!obj.containsKey("transactionId"))
         return CallResponse{CallErrorCode::OccurenceConstraintViolation, "transactionId: required, but missing"};
 
@@ -1993,7 +1993,7 @@ CallResponse parseStatusNotificationResponse(JsonObject obj) {
 }
 
 static CallResponse parseStopTransactionResponseIdTagInfoEntriesExpiryDate(JsonVariant var) {
-    
+
     if (!var.is<const char *>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "expiryDate: wrong type"};
 
@@ -2009,7 +2009,7 @@ static CallResponse parseStopTransactionResponseIdTagInfoEntriesExpiryDate(JsonV
 }
 
 static CallResponse parseStopTransactionResponseIdTagInfoEntriesParentIdTag(JsonVariant var) {
-    
+
     if (!var.is<const char *>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "parentIdTag: wrong type"};
 
@@ -2020,7 +2020,7 @@ static CallResponse parseStopTransactionResponseIdTagInfoEntriesParentIdTag(Json
 }
 
 static CallResponse parseStopTransactionResponseIdTagInfoEntriesStatus(JsonVariant var) {
-    
+
     if (!var.is<const char *>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "status: wrong type"};
 
@@ -2060,7 +2060,7 @@ static CallResponse parseStopTransactionResponseIdTagInfoEntries(JsonObject obj)
     }
     ++keys_handled;
     }
-    
+
     if (!obj.containsKey("status"))
         return CallResponse{CallErrorCode::OccurenceConstraintViolation, "status: required, but missing"};
 
@@ -2078,7 +2078,7 @@ static CallResponse parseStopTransactionResponseIdTagInfoEntries(JsonObject obj)
     return CallResponse{CallErrorCode::OK, nullptr};
 }
 static CallResponse parseStopTransactionResponseIdTagInfo(JsonVariant var) {
-    
+
     if (!var.is<JsonObject>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "idTagInfo: wrong type"};
 
@@ -2110,7 +2110,7 @@ CallResponse parseStopTransactionResponse(JsonObject obj) {
 }
 
 static CallResponse parseUnlockConnectorConnectorId(JsonVariant var) {
-    
+
     if (!var.is<int32_t>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "connectorId: wrong type"};
 
