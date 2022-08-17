@@ -263,3 +263,21 @@ bool platform_get_signed_meter_value(int32_t connectorId, SampledValueMeasurand 
 float platform_get_raw_meter_value(int32_t connectorId, SampledValueMeasurand measurant, SampledValuePhase phase, SampledValueLocation location) {
     return platform_get_raw_meter_value_cb(connectorId, measurant, phase, location);
 }
+
+
+// return nullptr if name does not exist or is not a directory
+void *platform_open_dir(const char *name){
+    return nullptr;
+}
+
+// return nullptr if no more files
+OcppDirEnt *platform_read_dir(void *dir_fd){
+    return nullptr;
+}
+void platform_close_dir(void *dir_fd){
+    return;
+}
+
+void platform_remove_file(const char *name){
+    return;
+}
