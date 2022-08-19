@@ -99,10 +99,10 @@ taken from the main energy meter.
 // Only REGISTER values are allowed to be signed?
 // We must calculate the average over all non-energy values
 // this cannot be done if they are signed (intransparent) binary blobs.
-bool platform_get_signed_meter_value(int32_t connectorId, SampledValueMeasurand measurant, SampledValuePhase phase, SampledValueLocation location, char buf[PLATFORM_MEASURAND_MAX_DATA_LEN]);
-float platform_get_raw_meter_value(int32_t connectorId, SampledValueMeasurand measurant, SampledValuePhase phase, SampledValueLocation location);
+bool platform_get_signed_meter_value(int32_t connectorId, SampledValueMeasurand measurand, SampledValuePhase phase, SampledValueLocation location, char buf[PLATFORM_MEASURAND_MAX_DATA_LEN]);
+float platform_get_raw_meter_value(int32_t connectorId, SampledValueMeasurand measurand, SampledValuePhase phase, SampledValueLocation location);
 
-// This is the Energy.Active.Import.Register measurant in Wh
+// This is the Energy.Active.Import.Register measurand in Wh
 int32_t platform_get_energy(int32_t connectorId);
 
 void platform_reset();

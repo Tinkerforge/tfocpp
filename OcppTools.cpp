@@ -3,7 +3,7 @@
 #include "OcppPlatform.h"
 
 #include "string.h"
-#include "lib/ArduinoJson/ArduinoJson-v6.19.4.h"
+#include <ArduinoJson.h>
 
 bool deadline_elapsed(uint32_t deadline_ms)
 {

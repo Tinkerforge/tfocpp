@@ -344,7 +344,7 @@ size_t platform_get_supported_measurand_count(int32_t connector_id, SampledValue
     return supported_measurand_offsets[(size_t)measurand + 1] - supported_measurand_offsets[(size_t)measurand];
 }
 
-SupportedMeasurand *platform_get_supported_measurands(int32_t connector_id, SampledValueMeasurand measurand) {
+const SupportedMeasurand *platform_get_supported_measurands(int32_t connector_id, SampledValueMeasurand measurand) {
     if (connector_id == 0)
         return nullptr;
     if (measurand == SampledValueMeasurand::NONE)

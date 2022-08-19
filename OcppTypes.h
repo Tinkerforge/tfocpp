@@ -2,7 +2,7 @@
 #include "stdint.h"
 #include "stddef.h"
 #include "time.h"
-#include "lib/ArduinoJson/ArduinoJson-v6.19.4.h"
+#include <ArduinoJson.h>
 
 #define OCPP_INTEGER_NOT_PASSED INT32_MAX
 #define OCPP_DATETIME_NOT_PASSED 0
@@ -30,8 +30,6 @@ struct CallResponse {
     //JsonObject details;
 };
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wpadded"
 template<typename T>
 struct Opt {
 public:
@@ -54,8 +52,6 @@ private:
     T val;
     bool have_val;
 };
-
-#pragma clang diagnostic pop
 
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
 

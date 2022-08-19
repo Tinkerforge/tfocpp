@@ -3,7 +3,7 @@
 #pragma once
 
 #include "OcppTypes.h"
-#include "lib/TFJson/TFJson.h"
+#include <TFJson.h>
 
 class OcppChargePoint;
 

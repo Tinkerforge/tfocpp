@@ -2,7 +2,7 @@
 
 #include "OcppChargePoint.h"
 #include "OcppPersistency.h"
-#include "lib/TFJson/TFJson.h"
+#include <TFJson.h>
 
 static bool is_transaction_related(CallAction action) {
      // TODO: only "periodic or clock-aligned MeterValues.req messages" are transaction related. Are those all MeterValues messages?
@@ -209,7 +209,6 @@ bool OcppConnection::sendCallResponse(const ICall &call)
     auto buf = heap_alloc_array<char>(len);
     call.serializeJson(buf.get(), len);
 
-    platform_printfln("Written %lu", len);
     platform_ws_send(platform_ctx, buf.get(), len);
     return true;
 }

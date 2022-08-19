@@ -251,7 +251,7 @@ bool platform_write_file(const char *name, char *buf, size_t len) {
 size_t platform_get_supported_measurand_count(int32_t connector_id, SampledValueMeasurand measurand) {
     return platform_get_supported_measurand_count_cb(connector_id, measurand);
 }
-SupportedMeasurand *platform_get_supported_measurands(int32_t connector_id, SampledValueMeasurand measurand) {
+const SupportedMeasurand *platform_get_supported_measurands(int32_t connector_id, SampledValueMeasurand measurand) {
     return platform_get_supported_measurands_cb(connector_id, measurand);
 }
 

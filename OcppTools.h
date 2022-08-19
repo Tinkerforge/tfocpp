@@ -2,6 +2,7 @@
 
 #include "stdint.h"
 #include "OcppTypes.h"
+#include "OcppPlatform.h"
 
 #include <memory>
 

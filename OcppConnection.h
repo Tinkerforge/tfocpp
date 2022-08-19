@@ -7,6 +7,7 @@
 
 #include "OcppMessages.h"
 #include "OcppPlatform.h"
+#include "OcppTools.h"
 
 class OcppChargePoint;
 
@@ -19,7 +20,7 @@ public:
     size_t len;
     time_t timestamp;
 
-    QueueItem() : action(CallAction::AUTHORIZE), buf(nullptr), message_id(0), len(0) {}
+    QueueItem() : action(CallAction::AUTHORIZE), buf(nullptr), message_id(0), connector_id(0), len(0), timestamp(0) {}
 
     QueueItem(const ICall &call, time_t timestamp, int32_t connector_id) :
         action(call.action),
@@ -31,7 +32,6 @@ public:
     {
         auto length = call.measureJson();
         this->buf = heap_alloc_array<char>(length);
-        this->buf.reset(new char[length]);
         call.serializeJson(this->buf.get(), length);
         this->len = length;
     }
