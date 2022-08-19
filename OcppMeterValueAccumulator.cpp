@@ -103,8 +103,8 @@ void MeterValueAccumulator::tick()
 ValueToSend MeterValueAccumulator::get(SampledValueContext context)
 {
     // Sample a value per connector and phase.
-    auto sampled_values = std::unique_ptr<MeterValueSampledValue[]>(new MeterValueSampledValue[supported_measurand_count]);
-    auto sampled_value_content = std::unique_ptr<char[]>(new char[supported_measurand_count * PLATFORM_MEASURAND_MAX_DATA_LEN]);
+    auto sampled_values = heap_alloc_array<MeterValueSampledValue>(supported_measurand_count);
+    auto sampled_value_content = heap_alloc_array<char>(supported_measurand_count * PLATFORM_MEASURAND_MAX_DATA_LEN);
     size_t sampled_value_idx = 0;
     size_t value_offset = 0;
 
@@ -168,7 +168,7 @@ void MeterValueAccumulator::init(int32_t connId, OcppChargePoint *chargePoint, C
     supported_measurand_count = 0;
     size_t *measurands_configured = getCSLConfig(dataToSample);
 
-    measurands = std::unique_ptr<SampledValueMeasurand[]>(new SampledValueMeasurand[measurand_count]);
+    measurands = heap_alloc_array<SampledValueMeasurand>(measurand_count);
     for(size_t i = 0; i < measurand_count; ++i) {
         auto m = (SampledValueMeasurand)measurands_configured[i];
         measurands[i] = m; // Store the unmodified measurand to be able to disambiguate between _INTERVAL and _REGISTER later.
@@ -184,6 +184,6 @@ void MeterValueAccumulator::init(int32_t connId, OcppChargePoint *chargePoint, C
         meter_values_len += supported_count * (type == MeasurandType::Interval ? 2 : 1);
     }
 
-    meter_values = std::unique_ptr<float[]>(new float[meter_values_len]);
+    meter_values = heap_alloc_array<float>(meter_values_len);
     reset();
 }

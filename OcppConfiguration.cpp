@@ -103,8 +103,8 @@ ChangeConfigurationResponseStatus OcppConfiguration::setValue(const char *newVal
                 if (len > 0 && newValue[len - 1] == ',') // Don't allow "SoC,"
                     return ChangeConfigurationResponseStatus::REJECTED;
 
-                std::unique_ptr<char[]> buf{new char[value.csl.len]};
-                std::unique_ptr<size_t[]> parsed_buf{new size_t[value.csl.allowed_values_len]};
+                auto buf = heap_alloc_array<char>(value.csl.len);
+                auto parsed_buf = heap_alloc_array<size_t>(value.csl.allowed_values_len);
 
                 memset(buf.get(), 0, value.csl.len);
                 memcpy(buf.get(), newValue, len);
@@ -359,7 +359,7 @@ bool setBoolConfig(ConfigKey key, bool b) {
 
 void loadConfig()
 {
-    auto buf = std::unique_ptr<char[]>(new char[8192]);
+    auto buf = heap_alloc_array<char>(8192);
     size_t len = platform_read_file("config", buf.get(), 8192);
     StaticJsonDocument<JSON_OBJECT_SIZE(MAX_SPECIFIED_CONFIGS)> doc;
     if (deserializeJson(doc, buf.get(), len) != DeserializationError::Ok)
@@ -386,7 +386,7 @@ void saveConfig()
 
     size_t scratch_buf_size = CONFIG_COUNT * 20;
     size_t scratch_buf_idx = 0;
-    auto scratch_buf = std::unique_ptr<char[]>(new char[scratch_buf_size]);
+    auto scratch_buf = heap_alloc_array<char>(scratch_buf_size);
 
     for(size_t i = 0; i < CONFIG_COUNT; ++i) {
         auto &cfg = getConfig(i);
@@ -416,7 +416,7 @@ void saveConfig()
 
     auto buf_size = measureJson(doc);
 
-    auto buf = std::unique_ptr<char[]>(new char[buf_size]);
+    auto buf = heap_alloc_array<char>(buf_size);
     size_t written = serializeJson(doc, buf.get(), buf_size);
     platform_write_file("config", buf.get(), written);
 }

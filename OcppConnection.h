@@ -30,7 +30,7 @@ public:
         timestamp(timestamp)
     {
         auto length = call.measureJson();
-        platform_printfln("Len: %lu", length);
+        this->buf = heap_alloc_array<char>(length);
         this->buf.reset(new char[length]);
         call.serializeJson(this->buf.get(), length);
         this->len = length;

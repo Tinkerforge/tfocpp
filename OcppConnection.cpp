@@ -196,7 +196,7 @@ void OcppConnection::sendCallError(const char *uid, CallErrorCode code, const ch
 
         len = buildCallError(json, uid, code, desc);
     }
-    auto buf = std::unique_ptr<char[]>(new char[len]);
+    auto buf = heap_alloc_array<char>(len);
     TFJsonSerializer json{buf.get(), len};
     buildCallError(json, uid, code, desc);
 
@@ -206,7 +206,7 @@ void OcppConnection::sendCallError(const char *uid, CallErrorCode code, const ch
 bool OcppConnection::sendCallResponse(const ICall &call)
 {
     auto len = call.measureJson();
-    auto buf = std::unique_ptr<char[]>(new char[len]);
+    auto buf = heap_alloc_array<char>(len);
     call.serializeJson(buf.get(), len);
 
     platform_printfln("Written %lu", len);

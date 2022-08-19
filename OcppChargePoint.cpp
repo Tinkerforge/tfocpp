@@ -178,7 +178,7 @@ void OcppChargePoint::saveAvailability()
         doc.add(!connectors[i].willBeUnavailable());
     }
 
-    auto buf = std::unique_ptr<char[]>(new char[AVAILABLE_STRING_BUF_SIZE]);
+    auto buf = heap_alloc_array<char>(AVAILABLE_STRING_BUF_SIZE);
 
     size_t written = serializeJson(doc, buf.get(), AVAILABLE_STRING_BUF_SIZE);
     platform_write_file("avail", buf.get(), written);
@@ -187,7 +187,7 @@ void OcppChargePoint::saveAvailability()
 
 void OcppChargePoint::loadAvailability()
 {
-    auto buf = std::unique_ptr<char[]>(new char[AVAILABLE_STRING_BUF_SIZE]);
+    auto buf = heap_alloc_array<char>(AVAILABLE_STRING_BUF_SIZE);
     size_t len = platform_read_file("avail", buf.get(), AVAILABLE_STRING_BUF_SIZE);
 
     StaticJsonDocument<JSON_ARRAY_SIZE(NUM_CONNECTORS + 1)> doc;
@@ -516,14 +516,14 @@ CallResponse OcppChargePoint::handleGetConfiguration(const char *uid, GetConfigu
         }
     }
 
-    auto known = std::unique_ptr<GetConfigurationResponseConfigurationKey[]>(new GetConfigurationResponseConfigurationKey[known_keys]());
+    auto known = heap_alloc_array<GetConfigurationResponseConfigurationKey>(known_keys);
     size_t known_idx = 0;
 
-    auto unknown = std::unique_ptr<const char *[]>(new const char *[unknown_keys]);
+    auto unknown = heap_alloc_array<const char *>(unknown_keys);
     size_t unknown_idx = 0;
 
     // Scratch buffer used for strings created from int config values.
-    auto scratch_buf = std::unique_ptr<char[]>(new char[scratch_buf_size]);
+    auto scratch_buf = heap_alloc_array<char>(scratch_buf_size);
     size_t scratch_buf_idx = 0;
 
     if (dump_all) {
