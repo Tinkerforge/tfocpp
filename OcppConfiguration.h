@@ -33,6 +33,9 @@ struct OcppConfiguration {
             // parsed enum indices. buffer has to have size max_num_allowed_values
             size_t *parsed;
             size_t parsed_len;
+            /* Where applicable, the Measurand is combined with the optional phase; for instance: Voltage.L1 */
+            // For MeterValuesSampledData. Has length of parsed_len (one phase per parsed value, SampledValuePhase::NONE if no phase was passed)
+            size_t *phases;
 
             // valid enum value strings
             const char * const *allowed_values;
@@ -66,7 +69,8 @@ struct OcppConfiguration {
                                  bool requires_reboot,
                                  const char * const *allowed_values,
                                  size_t allowed_values_len,
-                                 bool prefix_index = false);
+                                 bool prefix_index = false,
+                                 bool suffix_phase = false);
 
     ChangeConfigurationResponseStatus setValue(const char *newValue);
 };

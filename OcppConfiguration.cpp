@@ -43,7 +43,8 @@ OcppConfiguration OcppConfiguration::csl(const char *value,
                                  bool requires_reboot,
                                  const char * const *allowed_values,
                                  size_t allowed_values_len,
-                                 bool prefix_index) {
+                                 bool prefix_index,
+                                 bool suffix_phase) {
     size_t len = sizeof(char) * max_len;
 
     OcppConfiguration result;
@@ -52,6 +53,9 @@ OcppConfiguration OcppConfiguration::csl(const char *value,
     result.value.csl.len = max_len;
     result.value.csl.parsed = (size_t*)malloc(sizeof(size_t) * max_elements);
     result.value.csl.parsed_len = 0;
+    if (suffix_phase)
+        result.value.csl.phases = (size_t*)malloc(sizeof(size_t) * max_elements);
+
     result.value.csl.allowed_values = allowed_values;
     result.value.csl.allowed_values_len = allowed_values_len;
     result.value.csl.prefix_index = prefix_index;
@@ -105,6 +109,8 @@ ChangeConfigurationResponseStatus OcppConfiguration::setValue(const char *newVal
 
                 auto buf = heap_alloc_array<char>(value.csl.len);
                 auto parsed_buf = heap_alloc_array<size_t>(value.csl.allowed_values_len);
+                bool phase_suffix_allowed = value.csl.phases != nullptr;
+                auto phases_buf = phase_suffix_allowed ? heap_alloc_array<size_t>(value.csl.allowed_values_len) : std::unique_ptr<size_t[]>();
 
                 memset(buf.get(), 0, value.csl.len);
                 memcpy(buf.get(), newValue, len);
@@ -123,6 +129,8 @@ ChangeConfigurationResponseStatus OcppConfiguration::setValue(const char *newVal
                         while(isspace(*token))
                             ++token;
 
+                        // Prefix indices are used for ConnectorPhaseRotation.
+                        /* Values are reported in CSL, formatted: 0.RST, 1.RST, 2.RTS */
                         if (value.csl.prefix_index) {
                             char *num = strtok(token, "."); // This inserts a null terminator. undo later
                             Opt<int32_t> opt = parse_int(num);
@@ -135,6 +143,19 @@ ChangeConfigurationResponseStatus OcppConfiguration::setValue(const char *newVal
                             next_parsed_buf_insert = (size_t)opt.get();
                             token += strlen(num) + 1; // Skip over number and .
                             num[strlen(num)] = '.'; // Reinsert . so that the next strtok_r call does not trip over the null terminator.
+                        }
+
+                        // Suffix phases are used for MeterValuesSampledData:
+                        /* Where applicable, the Measurand is combined with the optional phase; for instance: Voltage.L1 */
+                        if (phase_suffix_allowed) {
+                            char *last_dot = strrchr(token, '.');
+                            if (last_dot != nullptr) {
+                                size_t phase_idx = 0;
+                                if (lookup_key(&phase_idx, last_dot + 1, SampledValuePhaseStrings, (size_t) SampledValuePhase::NONE)) {
+                                    *last_dot = '\0'; // terminate string here so that lookup of the allowed value below does ignore the phase
+                                    phases_buf[next_parsed_buf_insert] = phase_idx;
+                                }
+                            }
                         }
 
                         size_t idx;
@@ -160,6 +181,8 @@ ChangeConfigurationResponseStatus OcppConfiguration::setValue(const char *newVal
                 memcpy(value.csl.c, buf.get(), len + 1);
 
                 memcpy(value.csl.parsed, parsed_buf.get(), sizeof(size_t) * new_parsed_len);
+                if (phase_suffix_allowed)
+                    memcpy(value.csl.phases, phases_buf.get(), sizeof(size_t) * new_parsed_len);
                 value.csl.parsed_len = new_parsed_len;
                 return requires_reboot ? ChangeConfigurationResponseStatus::REBOOT_REQUIRED : ChangeConfigurationResponseStatus::ACCEPTED;
             }
@@ -251,7 +274,7 @@ static OcppConfiguration config[CONFIG_COUNT] = {
     /*MeterValuesAlignedDataMaxLength*/   OcppConfiguration::integer(5, true, false, 0),
 
     // Same reasoning as with MeterValuesAlignedData.
-    /*MeterValuesSampledData*/            OcppConfiguration::csl("", MAX_CONFIG_LENGTH, 5, false, false, SampledValueMeasurandStrings, (size_t)SampledValueMeasurand::NONE),
+    /*MeterValuesSampledData*/            OcppConfiguration::csl("", MAX_CONFIG_LENGTH, 5, false, false, SampledValueMeasurandStrings, (size_t)SampledValueMeasurand::NONE, false, true),
     /*MeterValuesSampledDataMaxLength*/   OcppConfiguration::integer(5, true, false, 0),
 
     /*MeterValueSampleInterval*/          OcppConfiguration::integer(0, false, false, 0),
