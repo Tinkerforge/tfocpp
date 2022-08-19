@@ -10,7 +10,7 @@ class OcppChargePoint;
 #define OCPP_INTEGER_NOT_PASSED INT32_MAX
 #define OCPP_DATETIME_NOT_PASSED 0
 
-extern const char *ChangeAvailabilityResponseStatusStrings[];
+extern const char * const ChangeAvailabilityResponseStatusStrings[];
 
 enum class ChangeAvailabilityResponseStatus {
     ACCEPTED,
@@ -19,7 +19,7 @@ enum class ChangeAvailabilityResponseStatus {
     NONE
 };
 
-extern const char *ChangeConfigurationResponseStatusStrings[];
+extern const char * const ChangeConfigurationResponseStatusStrings[];
 
 enum class ChangeConfigurationResponseStatus {
     ACCEPTED,
@@ -29,7 +29,7 @@ enum class ChangeConfigurationResponseStatus {
     NONE
 };
 
-extern const char *ResponseStatusStrings[];
+extern const char * const ResponseStatusStrings[];
 
 enum class ResponseStatus {
     ACCEPTED,
@@ -37,7 +37,7 @@ enum class ResponseStatus {
     NONE
 };
 
-extern const char *DataTransferResponseStatusStrings[];
+extern const char * const DataTransferResponseStatusStrings[];
 
 enum class DataTransferResponseStatus {
     ACCEPTED,
@@ -47,7 +47,7 @@ enum class DataTransferResponseStatus {
     NONE
 };
 
-extern const char *StatusNotificationErrorCodeStrings[];
+extern const char * const StatusNotificationErrorCodeStrings[];
 
 enum class StatusNotificationErrorCode {
     CONNECTOR_LOCK_FAILURE,
@@ -69,7 +69,7 @@ enum class StatusNotificationErrorCode {
     NONE
 };
 
-extern const char *StatusNotificationStatusStrings[];
+extern const char * const StatusNotificationStatusStrings[];
 
 enum class StatusNotificationStatus {
     AVAILABLE,
@@ -84,7 +84,7 @@ enum class StatusNotificationStatus {
     NONE
 };
 
-extern const char *StopTransactionReasonStrings[];
+extern const char * const StopTransactionReasonStrings[];
 
 enum class StopTransactionReason {
     EMERGENCY_STOP,
@@ -101,7 +101,7 @@ enum class StopTransactionReason {
     NONE
 };
 
-extern const char *UnlockConnectorResponseStatusStrings[];
+extern const char * const UnlockConnectorResponseStatusStrings[];
 
 enum class UnlockConnectorResponseStatus {
     UNLOCKED,
@@ -110,7 +110,7 @@ enum class UnlockConnectorResponseStatus {
     NONE
 };
 
-extern const char *ResponseIdTagInfoEntriesStatusStrings[];
+extern const char * const ResponseIdTagInfoEntriesStatusStrings[];
 
 enum class ResponseIdTagInfoEntriesStatus {
     ACCEPTED,
@@ -120,7 +120,7 @@ enum class ResponseIdTagInfoEntriesStatus {
     CONCURRENT_TX
 };
 
-extern const char *BootNotificationResponseStatusStrings[];
+extern const char * const BootNotificationResponseStatusStrings[];
 
 enum class BootNotificationResponseStatus {
     ACCEPTED,
@@ -128,14 +128,14 @@ enum class BootNotificationResponseStatus {
     REJECTED
 };
 
-extern const char *ChangeAvailabilityTypeStrings[];
+extern const char * const ChangeAvailabilityTypeStrings[];
 
 enum class ChangeAvailabilityType {
     INOPERATIVE,
     OPERATIVE
 };
 
-extern const char *RemoteStartTransactionChargingProfileEntriesChargingProfilePurposeStrings[];
+extern const char * const RemoteStartTransactionChargingProfileEntriesChargingProfilePurposeStrings[];
 
 enum class RemoteStartTransactionChargingProfileEntriesChargingProfilePurpose {
     CHARGE_POINT_MAX_PROFILE,
@@ -143,7 +143,7 @@ enum class RemoteStartTransactionChargingProfileEntriesChargingProfilePurpose {
     TX_PROFILE
 };
 
-extern const char *RemoteStartTransactionChargingProfileEntriesChargingProfileKindStrings[];
+extern const char * const RemoteStartTransactionChargingProfileEntriesChargingProfileKindStrings[];
 
 enum class RemoteStartTransactionChargingProfileEntriesChargingProfileKind {
     ABSOLUTE,
@@ -151,28 +151,28 @@ enum class RemoteStartTransactionChargingProfileEntriesChargingProfileKind {
     RELATIVE
 };
 
-extern const char *RemoteStartTransactionChargingProfileEntriesRecurrencyKindStrings[];
+extern const char * const RemoteStartTransactionChargingProfileEntriesRecurrencyKindStrings[];
 
 enum class RemoteStartTransactionChargingProfileEntriesRecurrencyKind {
     DAILY,
     WEEKLY
 };
 
-extern const char *RemoteStartTransactionChargingProfileEntriesChargingScheduleEntriesChargingRateUnitStrings[];
+extern const char * const RemoteStartTransactionChargingProfileEntriesChargingScheduleEntriesChargingRateUnitStrings[];
 
 enum class RemoteStartTransactionChargingProfileEntriesChargingScheduleEntriesChargingRateUnit {
     A,
     W
 };
 
-extern const char *ResetTypeStrings[];
+extern const char * const ResetTypeStrings[];
 
 enum class ResetType {
     HARD,
     SOFT
 };
 
-extern const char *SampledValueContextStrings[];
+extern const char * const SampledValueContextStrings[];
 
 enum class SampledValueContext {
     INTERRUPTION_BEGIN,
@@ -186,7 +186,7 @@ enum class SampledValueContext {
     NONE
 };
 
-extern const char *SampledValueFormatStrings[];
+extern const char * const SampledValueFormatStrings[];
 
 enum class SampledValueFormat {
     RAW,
@@ -194,7 +194,7 @@ enum class SampledValueFormat {
     NONE
 };
 
-extern const char *SampledValueMeasurandStrings[];
+extern const char * const SampledValueMeasurandStrings[];
 
 enum class SampledValueMeasurand {
     ENERGY_ACTIVE_EXPORT_REGISTER,
@@ -222,7 +222,7 @@ enum class SampledValueMeasurand {
     NONE
 };
 
-extern const char *SampledValuePhaseStrings[];
+extern const char * const SampledValuePhaseStrings[];
 
 enum class SampledValuePhase {
     L1,
@@ -238,7 +238,7 @@ enum class SampledValuePhase {
     NONE
 };
 
-extern const char *SampledValueLocationStrings[];
+extern const char * const SampledValueLocationStrings[];
 
 enum class SampledValueLocation {
     CABLE,
@@ -249,7 +249,7 @@ enum class SampledValueLocation {
     NONE
 };
 
-extern const char *SampledValueUnitStrings[];
+extern const char * const SampledValueUnitStrings[];
 
 enum class SampledValueUnit {
     WH,
@@ -271,7 +271,7 @@ enum class SampledValueUnit {
     NONE
 };
 
-extern const char *CallActionStrings[];
+extern const char * const CallActionStrings[];
 
 enum class CallAction {
     AUTHORIZE,

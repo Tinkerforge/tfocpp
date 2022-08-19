@@ -7,7 +7,7 @@
 #define OCPP_INTEGER_NOT_PASSED INT32_MAX
 #define OCPP_DATETIME_NOT_PASSED 0
 
-extern const char *CallErrorCodeStrings[];
+extern const char * const CallErrorCodeStrings[];
 
 enum class CallErrorCode {
     NotImplemented = 0, // handled when parsing the outer call

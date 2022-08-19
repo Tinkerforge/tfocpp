@@ -41,7 +41,7 @@ OcppConfiguration OcppConfiguration::csl(const char *value,
                                  size_t max_elements,
                                  bool readonly,
                                  bool requires_reboot,
-                                 const char **allowed_values,
+                                 const char * const *allowed_values,
                                  size_t allowed_values_len,
                                  bool prefix_index) {
     size_t len = sizeof(char) * max_len;
@@ -178,7 +178,7 @@ static const char *connectorPhaseRotationStrings[] = {
     "TSR",
 };
 
-const char *config_keys[CONFIG_COUNT] {
+const char * const config_keys[CONFIG_COUNT] {
     //"AllowOfflineTxForUnknownId",
     //"AuthorizationCacheEnabled",
     "AuthorizeRemoteTxRequests",

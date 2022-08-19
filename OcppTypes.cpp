@@ -1,6 +1,6 @@
 #include "OcppTypes.h"
 
-const char *CallErrorCodeStrings[] {
+const char * const CallErrorCodeStrings[] {
     "NotImplemented",
     "NotSupported",
     "InternalError",

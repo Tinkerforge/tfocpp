@@ -63,7 +63,7 @@ void MeterValueAccumulator::tick()
             measurand = (SampledValueMeasurand)((size_t)measurand - 4);
 
         size_t supported_count = platform_get_supported_measurand_count(this->connectorId, measurand);
-        SupportedMeasurand *supported = platform_get_supported_measurands(this->connectorId, measurand);
+        auto *supported = platform_get_supported_measurands(this->connectorId, measurand);
 
         for(size_t supported_idx = 0; supported_idx < supported_count; ++supported_idx) {
             auto s = supported[supported_idx];
@@ -115,7 +115,7 @@ ValueToSend MeterValueAccumulator::get(SampledValueContext context)
             measurand = (SampledValueMeasurand)((size_t)measurand - 4);
 
         size_t count = platform_get_supported_measurand_count(this->connectorId, measurand);
-        SupportedMeasurand *sup = platform_get_supported_measurands(this->connectorId, measurand);
+        auto *sup = platform_get_supported_measurands(this->connectorId, measurand);
 
         for(size_t supported_idx = 0; supported_idx < count; ++supported_idx) {
             auto m = sup[supported_idx];

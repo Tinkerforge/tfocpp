@@ -12,7 +12,7 @@ bool deadline_elapsed(uint32_t deadline_ms)
     return ((uint32_t)(now - deadline_ms)) < (UINT32_MAX / 2);
 }
 
-bool lookup_key(size_t *result, const char *key, const char **array, size_t items_in_array) {
+bool lookup_key(size_t *result, const char *key, const char * const *array, size_t items_in_array) {
     for(size_t i = 0; i < items_in_array; ++i) {
         if (strcmp(key, array[i]) != 0)
             continue;

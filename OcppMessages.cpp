@@ -37,32 +37,32 @@ size_t ICall::measureJson() const {
 
 static uint32_t next_call_id = 0;
 
-const char *ChangeAvailabilityResponseStatusStrings[] = {
+const char * const ChangeAvailabilityResponseStatusStrings[] = {
     "Accepted",
     "Rejected",
     "Scheduled"
 };
 
-const char *ChangeConfigurationResponseStatusStrings[] = {
+const char * const ChangeConfigurationResponseStatusStrings[] = {
     "Accepted",
     "Rejected",
     "RebootRequired",
     "NotSupported"
 };
 
-const char *ResponseStatusStrings[] = {
+const char * const ResponseStatusStrings[] = {
     "Accepted",
     "Rejected"
 };
 
-const char *DataTransferResponseStatusStrings[] = {
+const char * const DataTransferResponseStatusStrings[] = {
     "Accepted",
     "Rejected",
     "UnknownMessageId",
     "UnknownVendorId"
 };
 
-const char *StatusNotificationErrorCodeStrings[] = {
+const char * const StatusNotificationErrorCodeStrings[] = {
     "ConnectorLockFailure",
     "EVCommunicationError",
     "GroundFailure",
@@ -81,7 +81,7 @@ const char *StatusNotificationErrorCodeStrings[] = {
     "WeakSignal"
 };
 
-const char *StatusNotificationStatusStrings[] = {
+const char * const StatusNotificationStatusStrings[] = {
     "Available",
     "Preparing",
     "Charging",
@@ -93,7 +93,7 @@ const char *StatusNotificationStatusStrings[] = {
     "Faulted"
 };
 
-const char *StopTransactionReasonStrings[] = {
+const char * const StopTransactionReasonStrings[] = {
     "EmergencyStop",
     "EVDisconnected",
     "HardReset",
@@ -107,13 +107,13 @@ const char *StopTransactionReasonStrings[] = {
     "DeAuthorized"
 };
 
-const char *UnlockConnectorResponseStatusStrings[] = {
+const char * const UnlockConnectorResponseStatusStrings[] = {
     "Unlocked",
     "UnlockFailed",
     "NotSupported"
 };
 
-const char *ResponseIdTagInfoEntriesStatusStrings[] = {
+const char * const ResponseIdTagInfoEntriesStatusStrings[] = {
     "Accepted",
     "Blocked",
     "Expired",
@@ -121,45 +121,45 @@ const char *ResponseIdTagInfoEntriesStatusStrings[] = {
     "ConcurrentTx"
 };
 
-const char *BootNotificationResponseStatusStrings[] = {
+const char * const BootNotificationResponseStatusStrings[] = {
     "Accepted",
     "Pending",
     "Rejected"
 };
 
-const char *ChangeAvailabilityTypeStrings[] = {
+const char * const ChangeAvailabilityTypeStrings[] = {
     "Inoperative",
     "Operative"
 };
 
-const char *RemoteStartTransactionChargingProfileEntriesChargingProfilePurposeStrings[] = {
+const char * const RemoteStartTransactionChargingProfileEntriesChargingProfilePurposeStrings[] = {
     "ChargePointMaxProfile",
     "TxDefaultProfile",
     "TxProfile"
 };
 
-const char *RemoteStartTransactionChargingProfileEntriesChargingProfileKindStrings[] = {
+const char * const RemoteStartTransactionChargingProfileEntriesChargingProfileKindStrings[] = {
     "Absolute",
     "Recurring",
     "Relative"
 };
 
-const char *RemoteStartTransactionChargingProfileEntriesRecurrencyKindStrings[] = {
+const char * const RemoteStartTransactionChargingProfileEntriesRecurrencyKindStrings[] = {
     "Daily",
     "Weekly"
 };
 
-const char *RemoteStartTransactionChargingProfileEntriesChargingScheduleEntriesChargingRateUnitStrings[] = {
+const char * const RemoteStartTransactionChargingProfileEntriesChargingScheduleEntriesChargingRateUnitStrings[] = {
     "A",
     "W"
 };
 
-const char *ResetTypeStrings[] = {
+const char * const ResetTypeStrings[] = {
     "Hard",
     "Soft"
 };
 
-const char *SampledValueContextStrings[] = {
+const char * const SampledValueContextStrings[] = {
     "Interruption.Begin",
     "Interruption.End",
     "Sample.Clock",
@@ -170,12 +170,12 @@ const char *SampledValueContextStrings[] = {
     "Other"
 };
 
-const char *SampledValueFormatStrings[] = {
+const char * const SampledValueFormatStrings[] = {
     "Raw",
     "SignedData"
 };
 
-const char *SampledValueMeasurandStrings[] = {
+const char * const SampledValueMeasurandStrings[] = {
     "Energy.Active.Export.Register",
     "Energy.Active.Import.Register",
     "Energy.Reactive.Export.Register",
@@ -200,7 +200,7 @@ const char *SampledValueMeasurandStrings[] = {
     "RPM"
 };
 
-const char *SampledValuePhaseStrings[] = {
+const char * const SampledValuePhaseStrings[] = {
     "L1",
     "L2",
     "L3",
@@ -213,7 +213,7 @@ const char *SampledValuePhaseStrings[] = {
     "L3-L1"
 };
 
-const char *SampledValueLocationStrings[] = {
+const char * const SampledValueLocationStrings[] = {
     "Cable",
     "EV",
     "Inlet",
@@ -221,7 +221,7 @@ const char *SampledValueLocationStrings[] = {
     "Body"
 };
 
-const char *SampledValueUnitStrings[] = {
+const char * const SampledValueUnitStrings[] = {
     "Wh",
     "kWh",
     "varh",
@@ -240,7 +240,7 @@ const char *SampledValueUnitStrings[] = {
     "Percent"
 };
 
-const char *CallActionStrings[] = {
+const char * const CallActionStrings[] = {
     "Authorize",
     "BootNotification",
     "ChangeAvailabilityResponse",

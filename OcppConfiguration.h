@@ -35,7 +35,7 @@ struct OcppConfiguration {
             size_t parsed_len;
 
             // valid enum value strings
-            const char **allowed_values;
+            const char * const *allowed_values;
             size_t allowed_values_len;
 
             // maximum number of allowed values. this is what gets reported as for example ConnectorPhaseRotationMaxLength
@@ -64,7 +64,7 @@ struct OcppConfiguration {
                                  size_t max_elements,
                                  bool readonly,
                                  bool requires_reboot,
-                                 const char **allowed_values,
+                                 const char * const *allowed_values,
                                  size_t allowed_values_len,
                                  bool prefix_index = false);
 
@@ -128,7 +128,7 @@ enum class ConfigKey {
 
 #define CONFIG_COUNT ((size_t)ConfigKey::CONFIG_KEY_MAX)
 
-extern const char *config_keys[CONFIG_COUNT];
+extern const char * const config_keys[CONFIG_COUNT];
 
 OcppConfiguration& getConfig(size_t key);
 OcppConfiguration& getConfig(ConfigKey key);

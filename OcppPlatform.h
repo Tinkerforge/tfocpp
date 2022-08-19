@@ -108,16 +108,16 @@ int32_t platform_get_energy(int32_t connectorId);
 void platform_reset();
 
 struct SupportedMeasurand {
-    SampledValuePhase phase;
-    SampledValueLocation location;
-    SampledValueUnit unit;
-    bool is_signed;
+    const SampledValuePhase phase;
+    const SampledValueLocation location;
+    const SampledValueUnit unit;
+    const bool is_signed;
 };
 
 // Return number of ALL supported measurands if measurand == NONE
 size_t platform_get_supported_measurand_count(int32_t connector_id, SampledValueMeasurand measurand);
 // Return ALL supported measurands if measurand == NONE
-SupportedMeasurand *platform_get_supported_measurands(int32_t connector_id, SampledValueMeasurand measurand = SampledValueMeasurand::NONE);
+const SupportedMeasurand *platform_get_supported_measurands(int32_t connector_id, SampledValueMeasurand measurand = SampledValueMeasurand::NONE);
 
 size_t platform_read_file(const char *name, char *buf, size_t len);
 bool platform_write_file(const char *name, char *buf, size_t len);
