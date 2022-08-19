@@ -13,6 +13,5 @@ Opt<int32_t> parse_int(const char *c);
 
 template <typename T>
 std::unique_ptr<T[]> heap_alloc_array(size_t n) {
-    platform_printfln("Allocating array of %u bytes (%u elements). Free heap %u", n, n * sizeof(T), ESP.getFreeHeap());
     return std::unique_ptr<T[]>{new T[n]};
 }
