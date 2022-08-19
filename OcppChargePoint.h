@@ -22,16 +22,6 @@ enum class OcppState {
     HardReset
 };
 
-struct IdleInfo {
-    IdTagInfo lastSeenTag;
-    int32_t lastTagForConnector;
-};
-
-struct WaitStartTransConfInfo {
-    IdTagInfo lastSeenTag;
-    int32_t connectorId;
-};
-
 class OcppChargePoint {
 public:
     OcppChargePoint() {
@@ -96,9 +86,6 @@ public:
     CallResponse handleStatusNotificationResponse(int32_t connectorId, StatusNotificationResponseView conf);
     CallResponse handleStopTransactionResponse(int32_t connectorId, StopTransactionResponseView conf);
     CallResponse handleUnlockConnector(const char *uid, UnlockConnectorView req);
-
-    IdleInfo idle_info;
-    WaitStartTransConfInfo wstc_info;
 
     OcppState state = OcppState::PowerOn;
 
