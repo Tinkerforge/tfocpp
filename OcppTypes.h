@@ -8,6 +8,9 @@
 #define OCPP_DATETIME_NOT_PASSED 0
 
 extern const char * const CallErrorCodeStrings[];
+extern const char * const CallErrorCodeStringAliases[];
+extern const size_t CallErrorCodeStringAliasIndices[];
+extern const size_t CallErrorCodeStringAliasLength;
 
 enum class CallErrorCode {
     NotImplemented = 0, // handled when parsing the outer call

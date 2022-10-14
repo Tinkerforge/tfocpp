@@ -146,8 +146,11 @@ void OcppConnection::handleMessage(char *message, size_t message_len)
             return;
         }
 
-        size_t cec;
-        lookup_key(&cec, doc[2], CallErrorCodeStrings, (size_t)CallErrorCode::NONE);
+        size_t cec = (size_t) CallErrorCode::GenericError;
+        if (!lookup_key(&cec, doc[2], CallErrorCodeStrings, (size_t)CallErrorCode::OK, CallErrorCodeStringAliases, CallErrorCodeStringAliasIndices, CallErrorCodeStringAliasLength)) {
+            platform_printfln("received call error with unknown error code '%s'! Replacing with GenericError.", doc[2].as<const char *>());
+        }
+
         handleCallError((CallErrorCode)cec, doc[3], doc[4]);
         return;
     }

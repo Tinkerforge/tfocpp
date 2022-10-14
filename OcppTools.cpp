@@ -12,13 +12,25 @@ bool deadline_elapsed(uint32_t deadline_ms)
     return ((uint32_t)(now - deadline_ms)) < (UINT32_MAX / 2);
 }
 
-bool lookup_key(size_t *result, const char *key, const char * const *array, size_t items_in_array) {
-    for(size_t i = 0; i < items_in_array; ++i) {
+bool lookup_key(size_t *result, const char *key, const char * const *array, size_t array_length, const char * const *aliases, const size_t * const alias_indices, size_t alias_length) {
+    for(size_t i = 0; i < array_length; ++i) {
         if (strcmp(key, array[i]) != 0)
             continue;
 
         if (result != nullptr)
             *result = i;
+        return true;
+    }
+
+    if (aliases == nullptr || alias_length == 0)
+        return false;
+
+    for(size_t i = 0; i < alias_length; ++i) {
+        if (strcmp(key, aliases[i]) != 0)
+            continue;
+
+        if (result != nullptr)
+            *result = alias_indices[i];
         return true;
     }
 
