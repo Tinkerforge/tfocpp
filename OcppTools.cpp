@@ -31,6 +31,7 @@ bool lookup_key(size_t *result, const char *key, const char * const *array, size
 
         if (result != nullptr)
             *result = alias_indices[i];
+        log_warn("Alias %s used to look up key %s", aliases[i], key);
         return true;
     }
 

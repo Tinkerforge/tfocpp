@@ -158,7 +158,7 @@ void Connector::applyState() {
 }
 
 void Connector::setState(ConnectorState newState) {
-    platform_printfln("%s -> %s", ConnectorState_Strings[(int)state], ConnectorState_Strings[(int)newState]);
+    log_debug("%s -> %s", ConnectorState_Strings[(int)state], ConnectorState_Strings[(int)newState]);
     ConnectorState oldState = state;
     state = newState;
 
@@ -172,6 +172,7 @@ void Connector::setState(ConnectorState newState) {
                 case ConnectorState::NO_TAG:
                 case ConnectorState::FINISHING_UNLOCKED:
                 case ConnectorState::FINISHING_NO_CABLE_UNLOCKED:
+                    log_info("Sending Authorize.req connector %d for tag %s (Authorizing for start)", this->connectorId, authorized_for.tagId);
                     this->sendCallAction(Authorize(authorized_for.tagId));
                     break;
                 case ConnectorState::TRANSACTION:
@@ -207,6 +208,7 @@ void Connector::setState(ConnectorState newState) {
                     auto timestamp = platform_get_system_time(cp->platform_ctx);
                     auto energy = platform_get_energy(connectorId);
                     persistStartTxn(connectorId, authorized_for.tagId, energy, OCPP_INTEGER_NOT_PASSED, timestamp);
+                    log_info("Sending StartTransaction.req at connector %d for tag %s at %.3f kWh.", this->connectorId, authorized_for.tagId, energy / 1000.0f);
                     this->sendCallAction(StartTransaction(connectorId, authorized_for.tagId, energy, timestamp), timestamp);
                     break;
                 }
@@ -233,13 +235,14 @@ void Connector::setState(ConnectorState newState) {
                 case ConnectorState::TRANSACTION:
                 case ConnectorState::AUTH_STOP: {
                     if (this->next_stop_reason == StopTransactionReason::NONE) {
-                        platform_printfln("Attempting to send stop transaction but next stop reason is none!");
+                        log_warn("Attempting to send stop transaction but next stop reason is none!");
                     }
                     auto timestamp = platform_get_system_time(cp->platform_ctx);
                     auto energy = platform_get_energy(connectorId);
 
                     onTxnMsgResponseReceived(this->transaction_confirmed_timestamp);
                     persistStopTxn((uint8_t)this->next_stop_reason, energy, transaction_id, authorized_for.tagId, timestamp);
+                    log_info("Sending StopTransaction.req at connector %d for tag %s at %.3f kWh. StopReason %d", this->connectorId, authorized_for.tagId, energy / 1000.0f, this->next_stop_reason);
                     this->sendCallAction(StopTransaction(energy, timestamp, transaction_id, authorized_for.tagId, this->next_stop_reason), timestamp);
                     break;
                 }
@@ -306,7 +309,7 @@ void Connector::sendStatus() {
 void Connector::forceSendStatus()
 {
     StatusNotificationStatus newStatus = getStatus();
-    platform_printfln("Sending status %s for connector %d", StatusNotificationStatusStrings[(size_t)newStatus], connectorId);
+    log_info("Sending StatusNotification.req: Status %s for connector %d", StatusNotificationStatusStrings[(size_t)newStatus], connectorId);
 
     this->sendCallAction(StatusNotification(connectorId, StatusNotificationErrorCode::NO_ERROR, newStatus, nullptr, platform_get_system_time(cp->platform_ctx)));
     last_sent_status = newStatus;
@@ -419,7 +422,7 @@ StatusNotificationStatus Connector::getStatus() {
                     break;
             }
 
-            // transaction_with_invalid_tag_id is set if StartTransaction.Conf returns not accepted.
+            // transaction_with_invalid_tag_id is set if StartTransaction.conf returns not accepted.
             // In this case report SuspendedEVSE as it has precedence over SuspendedEV or Charging
             if ((result == StatusNotificationStatus::SUSPENDED_EV || result == StatusNotificationStatus::CHARGING) && transaction_with_invalid_tag_id)
                 return StatusNotificationStatus::SUSPENDED_EVSE;
@@ -456,7 +459,7 @@ void Connector::tick() {
                 case EVSEState::ReadyToCharge:
                 case EVSEState::Charging:
                 case EVSEState::Faulted:
-                    platform_printfln("Unexpected EVSEState %d while Connector is in state %d", (int)evse_state, (int)state);
+                    log_warn("Unexpected EVSEState %d while Connector is in state %d", (int)evse_state, (int)state);
                     break;
             }
             break;
@@ -473,7 +476,7 @@ void Connector::tick() {
                 case EVSEState::ReadyToCharge:
                 case EVSEState::Charging:
                 case EVSEState::Faulted:
-                    platform_printfln("Unexpected EVSEState %d while Connector is in state %d", (int)evse_state, (int)state);
+                    log_warn("Unexpected EVSEState %d while Connector is in state %d", (int)evse_state, (int)state);
                     break;
             }
             break;
@@ -491,7 +494,7 @@ void Connector::tick() {
                 case EVSEState::ReadyToCharge:
                 case EVSEState::Charging:
                 case EVSEState::Faulted:
-                    platform_printfln("Unexpected EVSEState %d while Connector is in state %d", (int)evse_state, (int)state);
+                    log_warn("Unexpected EVSEState %d while Connector is in state %d", (int)evse_state, (int)state);
                     break;
             }
             break;
@@ -509,7 +512,7 @@ void Connector::tick() {
                 case EVSEState::ReadyToCharge:
                 case EVSEState::Charging:
                 case EVSEState::Faulted:
-                    platform_printfln("Unexpected EVSEState %d while Connector is in state %d", (int)evse_state, (int)state);
+                    log_warn("Unexpected EVSEState %d while Connector is in state %d", (int)evse_state, (int)state);
                     break;
             }
             break;
@@ -527,7 +530,7 @@ void Connector::tick() {
                 case EVSEState::ReadyToCharge:
                 case EVSEState::Charging:
                 case EVSEState::Faulted:
-                    platform_printfln("Unexpected EVSEState %d while Connector is in state %d", (int)evse_state, (int)state);
+                    log_warn("Unexpected EVSEState %d while Connector is in state %d", (int)evse_state, (int)state);
                     break;
             }
             break;
@@ -545,7 +548,7 @@ void Connector::tick() {
                 case EVSEState::ReadyToCharge:
                 case EVSEState::Charging:
                 case EVSEState::Faulted:
-                    platform_printfln("Unexpected EVSEState %d while Connector is in state %d", (int)evse_state, (int)state);
+                    log_warn("Unexpected EVSEState %d while Connector is in state %d", (int)evse_state, (int)state);
                     break;
             }
             break;
@@ -563,7 +566,7 @@ void Connector::tick() {
                 case EVSEState::ReadyToCharge:
                 case EVSEState::Charging:
                 case EVSEState::Faulted:
-                    platform_printfln("Unexpected EVSEState %d while Connector is in state %d", (int)evse_state, (int)state);
+                    log_warn("Unexpected EVSEState %d while Connector is in state %d", (int)evse_state, (int)state);
                     break;
             }
             break;
@@ -581,7 +584,7 @@ void Connector::tick() {
                 case EVSEState::ReadyToCharge:
                 case EVSEState::Charging:
                 case EVSEState::Faulted:
-                    platform_printfln("Unexpected EVSEState %d while Connector is in state %d", (int)evse_state, (int)state);
+                    log_warn("Unexpected EVSEState %d while Connector is in state %d", (int)evse_state, (int)state);
                     break;
             }
             break;
@@ -589,8 +592,7 @@ void Connector::tick() {
         case ConnectorState::TRANSACTION:
             switch (evse_state) {
                 case EVSEState::NotConnected:
-                    platform_printfln("Unexpected EVSEState %d while Connector is in state %d", (int)evse_state, (int)state);
-                    platform_printfln("Aborting transaction!");
+                    log_error("Unexpected EVSEState %d while Connector is in state %d. Aborting transaction!", (int)evse_state, (int)state);
                     setState(ConnectorState::IDLE);
                     break;
                 case EVSEState::PlugDetected:
@@ -603,7 +605,7 @@ void Connector::tick() {
                 case EVSEState::Charging:
                     break;
                 case EVSEState::Faulted:
-                    platform_printfln("Unexpected EVSEState %d while Connector is in state %d", (int)evse_state, (int)state);
+                    log_warn("Unexpected EVSEState %d while Connector is in state %d", (int)evse_state, (int)state);
                     break;
             }
             break;
@@ -611,8 +613,7 @@ void Connector::tick() {
         case ConnectorState::AUTH_STOP:
             switch (evse_state) {
                 case EVSEState::NotConnected:
-                    platform_printfln("Unexpected EVSEState %d while Connector is in state %d", (int)evse_state, (int)state);
-                    platform_printfln("Aborting transaction!");
+                    log_error("Unexpected EVSEState %d while Connector is in state %d. Aborting transaction!", (int)evse_state, (int)state);
                     setState(ConnectorState::IDLE);
                     break;
                 case EVSEState::PlugDetected:
@@ -625,7 +626,7 @@ void Connector::tick() {
                 case EVSEState::Charging:
                     break;
                 case EVSEState::Faulted:
-                    platform_printfln("Unexpected EVSEState %d while Connector is in state %d", (int)evse_state, (int)state);
+                    log_warn("Unexpected EVSEState %d while Connector is in state %d", (int)evse_state, (int)state);
                     break;
             }
             break;
@@ -643,7 +644,7 @@ void Connector::tick() {
                 case EVSEState::ReadyToCharge:
                 case EVSEState::Charging:
                 case EVSEState::Faulted:
-                    platform_printfln("Unexpected EVSEState %d while Connector is in state %d", (int)evse_state, (int)state);
+                    log_warn("Unexpected EVSEState %d while Connector is in state %d", (int)evse_state, (int)state);
                     break;
             }
             break;
@@ -661,7 +662,7 @@ void Connector::tick() {
                 case EVSEState::ReadyToCharge:
                 case EVSEState::Charging:
                 case EVSEState::Faulted:
-                    platform_printfln("Unexpected EVSEState %d while Connector is in state %d", (int)evse_state, (int)state);
+                    log_warn("Unexpected EVSEState %d while Connector is in state %d", (int)evse_state, (int)state);
                     break;
             }
             break;
@@ -679,7 +680,7 @@ void Connector::tick() {
                 case EVSEState::ReadyToCharge:
                 case EVSEState::Charging:
                 case EVSEState::Faulted:
-                    platform_printfln("Unexpected EVSEState %d while Connector is in state %d", (int)evse_state, (int)state);
+                    log_warn("Unexpected EVSEState %d while Connector is in state %d", (int)evse_state, (int)state);
                     break;
             }
             break;
@@ -697,7 +698,7 @@ void Connector::tick() {
                 case EVSEState::ReadyToCharge:
                 case EVSEState::Charging:
                 case EVSEState::Faulted:
-                    platform_printfln("Unexpected EVSEState %d while Connector is in state %d", (int)evse_state, (int)state);
+                    log_warn("Unexpected EVSEState %d while Connector is in state %d", (int)evse_state, (int)state);
                     break;
             }
             break;
@@ -714,7 +715,7 @@ void Connector::tick() {
                 case EVSEState::ReadyToCharge:
                 case EVSEState::Charging:
                 case EVSEState::Faulted:
-                    platform_printfln("Unexpected EVSEState %d while Connector is in state %d", (int)evse_state, (int)state);
+                    log_warn("Unexpected EVSEState %d while Connector is in state %d", (int)evse_state, (int)state);
                     break;
             }
             break;
@@ -749,7 +750,7 @@ void Connector::tick() {
             case ConnectorState::FINISHING_NO_CABLE_LOCKED:
             case ConnectorState::FINISHING_NO_SAME_TAG:
             case ConnectorState::UNAVAILABLE:
-                platform_printfln("Unexpected tag deadline elapsed while Connector is in state %d. Was deadline not cleared?", (int)state);
+                log_warn("Unexpected tag deadline elapsed while Connector is in state %d. Was deadline not cleared?", (int)state);
             break;
         }
     }
@@ -783,7 +784,7 @@ void Connector::tick() {
             case ConnectorState::NO_TAG:
             case ConnectorState::AUTH_START:
             case ConnectorState::UNAVAILABLE:
-                platform_printfln("Unexpected tag deadline elapsed while Connector is in state %d. Was deadline not cleared?", (int)state);
+                log_warn("Unexpected tag deadline elapsed while Connector is in state %d. Was deadline not cleared?", (int)state);
             break;
         }
     }
@@ -827,7 +828,7 @@ void Connector::onTagSeen(const char *tag_id) {
             case ConnectorState::FINISHING_UNLOCKED:
             case ConnectorState::FINISHING_NO_CABLE_UNLOCKED:
             case ConnectorState::UNAVAILABLE:
-                platform_printfln("Unexpected same tag in state %s. Was auth not cleared?", ConnectorState_Strings[(size_t)state]);
+                log_warn("Unexpected same tag in state %s. Was auth not cleared?", ConnectorState_Strings[(size_t)state]);
                 break;
         }
         return;
@@ -853,6 +854,7 @@ void Connector::onTagSeen(const char *tag_id) {
 
         case ConnectorState::TRANSACTION:
             // We still need the tag ID that started the transaction, so don't override authorized_for here, but send the AUTH request immediately.
+            log_info("Sending Authorize.req connector %d for tag %s (Authorizing for stop)", this->connectorId, authorized_for.tagId);
             this->sendCallAction(Authorize(tag_id));
             setState(ConnectorState::AUTH_STOP);
             break;
@@ -867,7 +869,7 @@ void Connector::onTagSeen(const char *tag_id) {
         case ConnectorState::FINISHING_NO_CABLE_LOCKED:
         case ConnectorState::FINISHING_NO_SAME_TAG:
         case ConnectorState::UNAVAILABLE:
-            platform_printfln("Ignoring other tag in state %s", ConnectorState_Strings[(size_t)state]);
+            log_debug("Ignoring other tag in state %s", ConnectorState_Strings[(size_t)state]);
             break;
     }
 }
@@ -879,7 +881,7 @@ void Connector::onAuthorizeError() {
 // Handles AuthSuccess, AuthFail
 void Connector::onAuthorizeConf(IdTagInfo info) {
     bool auth_success = info.status == ResponseIdTagInfoEntriesStatus::ACCEPTED;
-    platform_printfln("%successful auth", auth_success ? "S" : "Uns");
+    log_info("%successful auth", auth_success ? "S" : "Uns");
 
     if (auth_success)
         authorized_for.updateFromIdTagInfo(info);
@@ -912,7 +914,7 @@ void Connector::onAuthorizeConf(IdTagInfo info) {
         case ConnectorState::FINISHING_NO_CABLE_LOCKED:
         case ConnectorState::FINISHING_NO_SAME_TAG:
         case ConnectorState::UNAVAILABLE:
-            platform_printfln("Ignoring Authorize.conf in state %s", ConnectorState_Strings[(size_t)state]);
+            log_debug("Ignoring Authorize.conf in state %s", ConnectorState_Strings[(size_t)state]);
             return;
     }
 }
@@ -920,7 +922,7 @@ void Connector::onAuthorizeConf(IdTagInfo info) {
 // Handles StartTxnNotAccepted
 void Connector::onStartTransactionConf(IdTagInfo info, int32_t txn_id) {
     if (state != ConnectorState::TRANSACTION && state != ConnectorState::AUTH_STOP) {
-        platform_printfln("Ignoring StartTransaction.conf in state %s", ConnectorState_Strings[(size_t)state]);
+        log_debug("Ignoring StartTransaction.conf in state %s", ConnectorState_Strings[(size_t)state]);
         return;
     }
 
@@ -983,7 +985,7 @@ void Connector::onRemoteStartTransaction(const char *tag_id)
         case ConnectorState::TRANSACTION:
         case ConnectorState::AUTH_STOP:
         case ConnectorState::UNAVAILABLE:
-            platform_printfln("Ignoring remote start transaction in state %s", ConnectorState_Strings[(size_t)state]);
+            log_debug("Ignoring remote start transaction in state %s", ConnectorState_Strings[(size_t)state]);
             break;
     }
 }

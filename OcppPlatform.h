@@ -34,7 +34,37 @@ uint32_t platform_now_ms();
 void platform_set_system_time(void *ctx, time_t t);
 time_t platform_get_system_time(void *ctx);
 
-void platform_printfln(const char *fmt, ...) __attribute__((__format__(__printf__, 1, 2)));
+#define LOG_LEVEL_NONE 0
+#define LOG_LEVEL_ERROR 1
+#define LOG_LEVEL_WARN 2
+#define LOG_LEVEL_INFO 3
+#define LOG_LEVEL_DEBUG 4
+
+#if LOG_LEVEL >= LOG_LEVEL_ERROR
+#define log_error(...) platform_printfln(LOG_LEVEL_ERROR, __VA_ARGS__)
+#else
+#define log_error(...)
+#endif
+
+#if LOG_LEVEL >= LOG_LEVEL_WARN
+#define log_warn(...) platform_printfln(LOG_LEVEL_WARN, __VA_ARGS__)
+#else
+#define log_warn(...)
+#endif
+
+#if LOG_LEVEL >= LOG_LEVEL_INFO
+#define log_info(...) platform_printfln(LOG_LEVEL_INFO, __VA_ARGS__)
+#else
+#define log_info(...)
+#endif
+
+#if LOG_LEVEL >= LOG_LEVEL_DEBUG
+#define log_debug(...) platform_printfln(LOG_LEVEL_DEBUG, __VA_ARGS__)
+#else
+#define log_debug(...)
+#endif
+
+void platform_printfln(int level, const char *fmt, ...) __attribute__((__format__(__printf__, 2, 3)));
 
 void platform_register_tag_seen_callback(void *ctx, void(*cb)(int32_t, const char *, void *), void *user_data);
 

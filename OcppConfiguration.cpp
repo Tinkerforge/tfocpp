@@ -326,7 +326,7 @@ OcppConfiguration& getConfig(size_t key) {
 int32_t getIntConfig(ConfigKey key) {
     OcppConfiguration &cfg = config[(size_t)key];
     if (cfg.type != OcppConfigurationValueType::Integer) {
-        platform_printfln("Tried to read config %s (%d) as int, but it is of type %s", config_keys[(size_t) key], (int)key, cfg.type == OcppConfigurationValueType::CSL ? "CSL" : "boolean");
+        log_error("Tried to read config %s (%d) as int, but it is of type %s", config_keys[(size_t) key], (int)key, cfg.type == OcppConfigurationValueType::CSL ? "CSL" : "boolean");
         return -1;
     }
     return cfg.value.integer.i;
@@ -335,7 +335,7 @@ int32_t getIntConfig(ConfigKey key) {
 bool getBoolConfig(ConfigKey key) {
     OcppConfiguration &cfg = config[(size_t)key];
     if (cfg.type != OcppConfigurationValueType::Boolean) {
-        platform_printfln("Tried to read config %s (%d) as bool, but it is of type %s", config_keys[(size_t) key], (int)key, cfg.type == OcppConfigurationValueType::CSL ? "CSL" : "integer");
+        log_error("Tried to read config %s (%d) as bool, but it is of type %s", config_keys[(size_t) key], (int)key, cfg.type == OcppConfigurationValueType::CSL ? "CSL" : "integer");
         return false;
     }
     return cfg.value.boolean.b;
@@ -344,7 +344,7 @@ bool getBoolConfig(ConfigKey key) {
 size_t getCSLConfigLen(ConfigKey key) {
     OcppConfiguration &cfg = config[(size_t)key];
     if (cfg.type != OcppConfigurationValueType::CSL) {
-        platform_printfln("Tried to read config %s (%d) as csl, but it is of type %s", config_keys[(size_t) key], (int)key, cfg.type == OcppConfigurationValueType::Integer ? "integer" : "boolean");
+        log_error("Tried to read config %s (%d) as csl, but it is of type %s", config_keys[(size_t) key], (int)key, cfg.type == OcppConfigurationValueType::Integer ? "integer" : "boolean");
         return 0;
     }
     return cfg.value.csl.parsed_len;
@@ -353,7 +353,7 @@ size_t getCSLConfigLen(ConfigKey key) {
 size_t *getCSLConfig(ConfigKey key) {
     OcppConfiguration &cfg = config[(size_t)key];
     if (cfg.type != OcppConfigurationValueType::CSL) {
-        platform_printfln("Tried to read config %s (%d) as csl, but it is of type %s", config_keys[(size_t) key], (int)key, cfg.type == OcppConfigurationValueType::Integer ? "integer" : "boolean");
+        log_error("Tried to read config %s (%d) as csl, but it is of type %s", config_keys[(size_t) key], (int)key, cfg.type == OcppConfigurationValueType::Integer ? "integer" : "boolean");
         return nullptr;
     }
     return cfg.value.csl.parsed;
@@ -362,7 +362,7 @@ size_t *getCSLConfig(ConfigKey key) {
 bool setIntConfig(ConfigKey key, int32_t i) {
     OcppConfiguration &cfg = config[(size_t)key];
     if (cfg.type != OcppConfigurationValueType::Integer) {
-        platform_printfln("Tried to write config %s (%d) as int, but it is of type %s", config_keys[(size_t) key], (int)key, cfg.type == OcppConfigurationValueType::CSL ? "CSL" : "boolean");
+        log_error("Tried to write config %s (%d) as int, but it is of type %s", config_keys[(size_t) key], (int)key, cfg.type == OcppConfigurationValueType::CSL ? "CSL" : "boolean");
         return false;
     }
 
@@ -373,7 +373,7 @@ bool setIntConfig(ConfigKey key, int32_t i) {
 bool setBoolConfig(ConfigKey key, bool b) {
     OcppConfiguration &cfg = config[(size_t)key];
     if (cfg.type != OcppConfigurationValueType::Boolean) {
-        platform_printfln("Tried to write config %s (%d) as bool, but it is of type %s", config_keys[(size_t) key], (int)key, cfg.type == OcppConfigurationValueType::CSL ? "CSL" : "integer");
+        log_error("Tried to write config %s (%d) as bool, but it is of type %s", config_keys[(size_t) key], (int)key, cfg.type == OcppConfigurationValueType::CSL ? "CSL" : "integer");
         return false;
     }
     cfg.value.boolean.b = b;
@@ -425,7 +425,7 @@ void saveConfig()
 
                 int written = snprintf(val, scratch_buf_size - scratch_buf_idx, "%d", cfg.value.integer.i);
                 if (written < 0) {
-                    platform_printfln("Failed to save config: %d", written);
+                    log_error("Failed to save config: %d", written);
                     break; //TODO: what to do if this happens?
                 }
 

@@ -20,7 +20,7 @@ void OcppChargePoint::tick_power_on() {
     if (last_bn_send_ms != 0 && !deadline_elapsed(last_bn_send_ms + 1000 * getIntConfig(ConfigKey::HeartbeatInterval)))
         return;
 
-    platform_printfln("Sending boot notification. %u %u %u %u", platform_now_ms(), last_bn_send_ms, last_bn_send_ms + 1000 * getIntConfig(ConfigKey::HeartbeatInterval), 1000 * getIntConfig(ConfigKey::HeartbeatInterval));
+    log_info("Sending BootNotification.req. %u %u %u %u", platform_now_ms(), last_bn_send_ms, last_bn_send_ms + 1000 * getIntConfig(ConfigKey::HeartbeatInterval), 1000 * getIntConfig(ConfigKey::HeartbeatInterval));
 
     last_bn_send_ms = platform_now_ms();
 
@@ -35,7 +35,7 @@ void OcppChargePoint::tick_idle() {
 
     last_bn_send_ms = platform_now_ms();
 
-    platform_printfln("Sending heartbeat. %u %u %u %u", platform_now_ms(), last_bn_send_ms, last_bn_send_ms + 1000 * getIntConfig(ConfigKey::HeartbeatInterval), 1000 * getIntConfig(ConfigKey::HeartbeatInterval));
+    log_info("Sending Heartbeat.req. %u %u %u %u", platform_now_ms(), last_bn_send_ms, last_bn_send_ms + 1000 * getIntConfig(ConfigKey::HeartbeatInterval), 1000 * getIntConfig(ConfigKey::HeartbeatInterval));
 
     this->sendCallAction(Heartbeat());
 }
@@ -235,7 +235,7 @@ void OcppChargePoint::sendStatus()
 void OcppChargePoint::forceSendStatus()
 {
     StatusNotificationStatus newStatus = getStatus();
-    platform_printfln("Sending status %s for charge point", StatusNotificationStatusStrings[(size_t)newStatus]);
+    log_info("Sending StatusNotification.req: Status %s for charge point", StatusNotificationStatusStrings[(size_t)newStatus]);
 
     this->sendCallAction(StatusNotification(0, StatusNotificationErrorCode::NO_ERROR, newStatus, nullptr, platform_get_system_time(this->platform_ctx)));
     last_sent_status = newStatus;
@@ -344,6 +344,7 @@ void OcppChargePoint::onTimeout(CallAction action, uint32_t messageId, int32_t c
 
 CallResponse OcppChargePoint::handleAuthorizeResponse(int32_t connectorId, AuthorizeResponseView conf)
 {
+    log_info("Received Authorize.conf for connector %d\n", connectorId);
     IdTagInfo info;
     info.updateFromIdTagInfo(conf.idTagInfo());
 
@@ -355,6 +356,7 @@ CallResponse OcppChargePoint::handleAuthorizeResponse(int32_t connectorId, Autho
 
 CallResponse OcppChargePoint::handleBootNotificationResponse(int32_t connectorId, BootNotificationResponseView conf) {
     (void) connectorId;
+    log_info("Received BootNotification.conf for connector %d\n", connectorId);
 
     if ((state != OcppState::PowerOn) &&
         (state != OcppState::Pending) &&
@@ -400,6 +402,7 @@ CallResponse OcppChargePoint::handleBootNotificationResponse(int32_t connectorId
 
 CallResponse OcppChargePoint::handleChangeAvailability(const char *uid, ChangeAvailabilityView req)
 {
+    log_info("Received ChangeAvilability.req connector %d to %s", req.connectorId(), ChangeAvailabilityTypeStrings[(size_t)req.type()]);
     int conn_id = req.connectorId();
     auto resp = ChangeAvailabilityResponseStatus::NONE;
 
@@ -410,7 +413,7 @@ CallResponse OcppChargePoint::handleChangeAvailability(const char *uid, ChangeAv
             for(size_t i = 0; i < NUM_CONNECTORS; ++i) {
                 auto conn_resp = connectors[i].onChangeAvailability(req.type());
                 if (conn_resp == ChangeAvailabilityResponseStatus::REJECTED)
-                    platform_printfln("Connectors rejecting the change availability request is not supported yet!");
+                    log_warn("Connectors rejecting the change availability request is not supported yet!");
                 else if (conn_resp == ChangeAvailabilityResponseStatus::SCHEDULED)
                     resp = conn_resp;
             }
@@ -420,6 +423,7 @@ CallResponse OcppChargePoint::handleChangeAvailability(const char *uid, ChangeAv
     else
         resp = connectors[conn_id - 1].onChangeAvailability(req.type());
 
+    log_info("Sending ChangeAvailablility.conf %s\n", ChangeAvailabilityResponseStatusStrings[(size_t)resp]);
     connection.sendCallResponse(ChangeAvailabilityResponse(uid, resp));
 
     if (resp != ChangeAvailabilityResponseStatus::REJECTED)
@@ -430,6 +434,7 @@ CallResponse OcppChargePoint::handleChangeAvailability(const char *uid, ChangeAv
 
 CallResponse OcppChargePoint::handleChangeConfiguration(const char *uid, ChangeConfigurationView req)
 {
+    log_info("Received ChangeConfiguration.req %s to %s", req.key(), req.value());
     size_t key_idx;
     ChangeConfigurationResponseStatus status = ChangeConfigurationResponseStatus::ACCEPTED;
     if (!lookup_key(&key_idx, req.key(), config_keys, CONFIG_COUNT)) {
@@ -443,6 +448,7 @@ CallResponse OcppChargePoint::handleChangeConfiguration(const char *uid, ChangeC
     if (status == ChangeConfigurationResponseStatus::ACCEPTED || status == ChangeConfigurationResponseStatus::REBOOT_REQUIRED)
         saveConfig();
 
+    log_info("Sending ChangeConfiguration.conf %s\n", ChangeConfigurationResponseStatusStrings[(size_t)status]);
     connection.sendCallResponse(ChangeConfigurationResponse(uid, status));
 
     return CallResponse{CallErrorCode::OK, ""};
@@ -450,6 +456,7 @@ CallResponse OcppChargePoint::handleChangeConfiguration(const char *uid, ChangeC
 
 CallResponse OcppChargePoint::handleClearCache(const char *uid, ClearCacheView req)
 {
+    log_info("Received ClearCache.req");
     (void) req;
     /* Errata 4.0 3.23:
     In OCPP 1.6, the Cache is not required, but the message: ClearCache.req is required to be implemented. OCPP
@@ -458,6 +465,7 @@ CallResponse OcppChargePoint::handleClearCache(const char *uid, ClearCacheView r
     When the Authorization Cache is not implemented and the Charge Point receives a ClearCache.req message. The Charge Point
     SHALL response with ClearCache.conf with the status: Rejected.
     */
+    log_info("Sending ClearCache.conf Rejected\n");
     connection.sendCallResponse(ClearCacheResponse(uid, ResponseStatus::REJECTED));
 
     return CallResponse{CallErrorCode::OK, ""};
@@ -465,11 +473,13 @@ CallResponse OcppChargePoint::handleClearCache(const char *uid, ClearCacheView r
 
 CallResponse OcppChargePoint::handleDataTransfer(const char *uid, DataTransferView req)
 {
+    log_info("Received DataTransfer.req vendorId %s messageId %s", req.vendorId(), req.messageId().is_set() ? req.messageId().get() : "[NOT SET]");
     (void) req;
     /*
     If the recipient of the request has no implementation for the specific vendorId it SHALL return a status
     ‘UnknownVendor’ and the data element SHALL not be present.
     */
+    log_info("Sending DataTransfer.conf UnknownVendorId\n");
     connection.sendCallResponse(DataTransferResponse(uid, DataTransferResponseStatus::UNKNOWN_VENDOR_ID));
 
     return CallResponse{CallErrorCode::OK, ""};
@@ -477,6 +487,7 @@ CallResponse OcppChargePoint::handleDataTransfer(const char *uid, DataTransferVi
 
 CallResponse OcppChargePoint::handleDataTransferResponse(int32_t connectorId, DataTransferResponseView conf)
 {
+    log_info("Received DataTransfer.conf for connector %d. Status %s\n", connectorId, DataTransferResponseStatusStrings[(size_t)conf.status()]);
     (void) connectorId;
     (void) conf;
 
@@ -485,6 +496,7 @@ CallResponse OcppChargePoint::handleDataTransferResponse(int32_t connectorId, Da
 
 CallResponse OcppChargePoint::handleGetConfiguration(const char *uid, GetConfigurationView req)
 {
+    log_info("Received GetConfiguration.req with %lu keys", req.key_count());
     size_t known_keys = 0;
     size_t scratch_buf_size = 0;
     size_t unknown_keys = 0;
@@ -538,7 +550,7 @@ CallResponse OcppChargePoint::handleGetConfiguration(const char *uid, GetConfigu
                         config_value = (const char *)&scratch_buf[scratch_buf_idx];
                         int written = snprintf(&scratch_buf[scratch_buf_idx], scratch_buf_size - scratch_buf_idx, "%d", config.value.integer.i);
                         if (written < 0) {
-                            platform_printfln("Failed to dump all configuration: %d", written);
+                            log_error("Failed to dump all configuration: %d", written);
                             break; //TODO: what to do if this happens?
                         }
                         scratch_buf_idx += (size_t)written;
@@ -553,6 +565,7 @@ CallResponse OcppChargePoint::handleGetConfiguration(const char *uid, GetConfigu
             known[known_idx].readonly = config.readonly;
             known[known_idx].value = config_value;
             ++known_idx;
+            log_info("    %s: %s", config_keys[i], config_value);
         }
     } else {
         for(size_t i = 0; i < req.key_count(); ++i) {
@@ -568,7 +581,7 @@ CallResponse OcppChargePoint::handleGetConfiguration(const char *uid, GetConfigu
                             config_value = (const char *)&scratch_buf[scratch_buf_idx];
                             int written = snprintf(&scratch_buf[scratch_buf_idx], scratch_buf_size - scratch_buf_idx, "%d", config.value.integer.i);
                             if (written < 0) {
-                                platform_printfln("Failed to write int config value: %d", written);
+                                log_error("Failed to write int config value: %d", written);
                                 continue; //TODO: what to do if this happens?
                             }
                             scratch_buf_idx += (size_t)written;
@@ -582,15 +595,18 @@ CallResponse OcppChargePoint::handleGetConfiguration(const char *uid, GetConfigu
                 known[known_idx].key = config_keys[result];
                 known[known_idx].readonly = config.readonly;
                 known[known_idx].value = config_value;
+                log_info("    %s: %s", config_keys[i], config_value);
                 ++known_idx;
             }
             else {
                 unknown[unknown_idx] = req.key(i).get();
                 ++unknown_idx;
+                log_info("    %s: [UNKNOWN KEY]", req.key(i).get());
             }
         }
     }
 
+    log_info("Sending GetConfiguration.conf with %lu known and %lu unknown keys\n", known_keys, unknown_keys);
     connection.sendCallResponse(GetConfigurationResponse(uid, known.get(), known_keys, unknown.get(), unknown_keys));
 
     return CallResponse{CallErrorCode::OK, ""};
@@ -598,6 +614,7 @@ CallResponse OcppChargePoint::handleGetConfiguration(const char *uid, GetConfigu
 
 CallResponse OcppChargePoint::handleHeartbeatResponse(int32_t connectorId, HeartbeatResponseView conf)
 {
+    log_info("Received Heartbeat.conf for connector %d\n", connectorId);
     (void)connectorId;
     platform_set_system_time(platform_ctx, conf.currentTime());
     return CallResponse{CallErrorCode::OK, ""};
@@ -606,6 +623,7 @@ CallResponse OcppChargePoint::handleHeartbeatResponse(int32_t connectorId, Heart
 
 CallResponse OcppChargePoint::handleMeterValuesResponse(int32_t connectorId, MeterValuesResponseView conf)
 {
+    log_info("Received MeterValues.conf for connector %d\n", connectorId);
     (void) connectorId;
     (void) conf;
     return CallResponse{CallErrorCode::OK, ""};
@@ -613,6 +631,7 @@ CallResponse OcppChargePoint::handleMeterValuesResponse(int32_t connectorId, Met
 
 CallResponse OcppChargePoint::handleRemoteStartTransaction(const char *uid, RemoteStartTransactionView req)
 {
+    log_info("Received RemoteStartTransaction.req for connector %d%s and tag %s", req.connectorId().is_set() ? req.connectorId() : 0, req.connectorId().is_set() ? "" : "[ANY CONNECTOR]", req.idTag());
     int conn_id = -1;
 
     if (!req.connectorId().is_set()) {
@@ -623,6 +642,7 @@ CallResponse OcppChargePoint::handleRemoteStartTransaction(const char *uid, Remo
             if (conn_id != -1) {
                 // We already have another selectable connector.
                 // -> Reject the request as it is ambiguous which connector to start.
+                log_info("Sending RemoteStartTransaction.conf Rejected (ambiguous)\n");
                 connection.sendCallResponse(RemoteStartTransactionResponse(uid, ResponseStatus::REJECTED));
                 return CallResponse{CallErrorCode::OK, ""};
             }
@@ -633,6 +653,7 @@ CallResponse OcppChargePoint::handleRemoteStartTransaction(const char *uid, Remo
         conn_id = req.connectorId().get() - 1;
 
     if (conn_id < 0 || conn_id >= NUM_CONNECTORS) {
+        log_info("Sending RemoteStartTransaction.conf Rejected (unknown connector id)\n");
         connection.sendCallResponse(RemoteStartTransactionResponse(uid, ResponseStatus::REJECTED));
         return CallResponse{CallErrorCode::OK, ""};
     }
@@ -643,6 +664,7 @@ CallResponse OcppChargePoint::handleRemoteStartTransaction(const char *uid, Remo
     // can handle the request just as if the user starts interacting with the connector with a tag (i.e.
     // the IDLE -> AUTH_START_NO_PLUG transistion)
 
+    log_info("Sending RemoteStartTransaction.conf Accepted\n");
     connection.sendCallResponse(RemoteStartTransactionResponse(uid, ResponseStatus::ACCEPTED));
 
     if (getBoolConfig(ConfigKey::AuthorizeRemoteTxRequests)) {
@@ -656,24 +678,29 @@ CallResponse OcppChargePoint::handleRemoteStartTransaction(const char *uid, Remo
 
 CallResponse OcppChargePoint::handleRemoteStopTransaction(const char *uid, RemoteStopTransactionView req)
 {
+    log_info("Received RemoteStopTransaction.req");
     for(int i = 0; i < NUM_CONNECTORS; ++i) {
         if (!connectors[i].canHandleRemoteStopTxn(req.transactionId()))
             continue;
 
         connectors[i].onRemoteStopTransaction();
+        log_info("Sending RemoteStopTransaction.conf Accepted\n");
         connection.sendCallResponse(RemoteStopTransactionResponse(uid, ResponseStatus::ACCEPTED));
         return CallResponse{CallErrorCode::OK, ""};
     }
 
+    log_info("Sending RemoteStopTransaction.conf Rejected (unknown connector id)\n");
     connection.sendCallResponse(RemoteStopTransactionResponse(uid, ResponseStatus::REJECTED));
     return CallResponse{CallErrorCode::OK, ""};
 }
 
 CallResponse OcppChargePoint::handleReset(const char *uid, ResetView req)
 {
+    log_info("Received Reset.req");
     (void) uid;
     (void) req;
 
+    log_info("Sending Request.conf Accepted\n");
     connection.sendCallResponse(ResetResponse(uid, ResponseStatus::ACCEPTED));
 
     for(size_t i = 0; i < NUM_CONNECTORS; ++i) {
@@ -692,6 +719,7 @@ CallResponse OcppChargePoint::handleReset(const char *uid, ResetView req)
 
 CallResponse OcppChargePoint::handleStartTransactionResponse(int32_t connectorId, StartTransactionResponseView conf)
 {
+    log_info("Received StartTransaction.conf for connector %d\n", connectorId);
     IdTagInfo info;
     info.updateFromIdTagInfo(conf.idTagInfo());
 
@@ -703,6 +731,7 @@ CallResponse OcppChargePoint::handleStartTransactionResponse(int32_t connectorId
 
 CallResponse OcppChargePoint::handleStatusNotificationResponse(int32_t connectorId, StatusNotificationResponseView conf)
 {
+    log_info("Received StatusNotification.conf for connector %d\n", connectorId);
     (void) connectorId;
     (void) conf;
 
@@ -711,6 +740,7 @@ CallResponse OcppChargePoint::handleStatusNotificationResponse(int32_t connector
 
 CallResponse OcppChargePoint::handleStopTransactionResponse(int32_t connectorId, StopTransactionResponseView conf)
 {
+    log_info("Received StopTransaction.conf for connector %d\n", connectorId);
     (void) connectorId;
     (void) conf;
 
@@ -720,6 +750,7 @@ CallResponse OcppChargePoint::handleStopTransactionResponse(int32_t connectorId,
 
 CallResponse OcppChargePoint::handleUnlockConnector(const char *uid, UnlockConnectorView req)
 {
+    log_info("Received UnlockConnector.req");
     int32_t conn_id = req.connectorId() - 1;
 
     if (conn_id < 0 || conn_id >= NUM_CONNECTORS) {
@@ -729,13 +760,14 @@ CallResponse OcppChargePoint::handleUnlockConnector(const char *uid, UnlockConne
 
     auto result = connectors[conn_id].onUnlockConnector();
 
+    log_info("Sending UnlockConnector.conf %s\n", UnlockConnectorResponseStatusStrings[(size_t)result]);
     connection.sendCallResponse(UnlockConnectorResponse(uid, result));
     return CallResponse{CallErrorCode::OK, ""};
 }
 
 void OcppChargePoint::handleTagSeen(int32_t connectorId, const char *tagId)
 {
-    platform_printfln("Seen tag %s at connector %d. State is %d", tagId, connectorId, (int)this->state);
+    log_info("Seen tag %s at connector %d. State is %d", tagId, connectorId, (int)this->state);
 
     // Don't allow tags at connector 0 (i.e. the charge point itself)
     if (connectorId <= 0)
@@ -749,7 +781,7 @@ void OcppChargePoint::handleTagSeen(int32_t connectorId, const char *tagId)
 }
 
 void OcppChargePoint::handleStop(int32_t connectorId, StopReason reason) {
-    platform_printfln("connector %d wants to stop with reason %d", connectorId, (int)reason);
+    log_info("connector %d wants to stop with reason %d", connectorId, (int)reason);
 
     // Don't allow tags at connector 0 (i.e. the charge point itself)
     if (connectorId <= 0)

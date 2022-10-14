@@ -14,7 +14,7 @@ static bool is_transaction_related(CallAction action) {
 
 void OcppConnection::handleMessage(char *message, size_t message_len)
 {
-    platform_printfln("Received message %.*s", (int)std::min(message_len, (size_t)40), message);
+    log_debug("Received message %.*s (len %lu)", (int)std::min(message_len, (size_t)40), message, message_len);
     DynamicJsonDocument doc{4096};
     // TODO: we should use
     // https://arduinojson.org/v6/how-to/deserialize-a-very-large-document/#deserialization-in-chunks
@@ -24,23 +24,23 @@ void OcppConnection::handleMessage(char *message, size_t message_len)
     // parsed as JSON.
     DeserializationError error = deserializeJson(doc, message);
     if (error) {
-        platform_printfln("deserializeJson() failed: %s", error.c_str());
+        log_error("deserializeJson() failed: %s", error.c_str());
         return;
     }
     doc.shrinkToFit();
 
     if (!doc.is<JsonArray>()) {
-        platform_printfln("deserialized JSON is not an array at top level");
+        log_error("deserialized JSON is not an array at top level");
         return;
     }
 
     if (!doc[0].is<int32_t>()) {
-        platform_printfln("deserialized JSON array does not start with message type ID");
+        log_error("deserialized JSON array does not start with message type ID");
         return;
     }
 
     if (!doc[1].is<const char *>()) {
-        platform_printfln("deserialized JSON array does not contain unique ID as second member ");
+        log_error("deserialized JSON array does not contain unique ID as second member ");
         return;
     }
 
@@ -49,23 +49,23 @@ void OcppConnection::handleMessage(char *message, size_t message_len)
 
     if (messageType == (int32_t)OcppRpcMessageType::CALL) {
         if (doc.size() != 4) {
-            platform_printfln("received call with %d members, but expected 4.", (int)doc.size());
+            log_error("received call with %d members, but expected 4.", (int)doc.size());
             return;
         }
 
         if (!doc[2].is<const char *>()) {
-            platform_printfln("received call with action not being a string.");
+            log_error("received call with action not being a string.");
             return;
         }
 
         if (doc[3].isNull() || !doc[3].is<JsonObject>()) {
-            platform_printfln("received call with payload being neither an object nor null.");
+            log_error("received call with payload being neither an object nor null.");
             return;
         }
 
         if (cp->state == OcppState::Rejected) {
             // "While Rejected, the Charge Point SHALL NOT respond to any Central System initiated message. the Central System SHOULD NOT initiate any."
-            platform_printfln("received call while being rejected. Ignoring call.");
+            log_warn("received call while being rejected. Ignoring call.");
             return;
         }
 
@@ -77,36 +77,37 @@ void OcppConnection::handleMessage(char *message, size_t message_len)
     }
 
     if (messageType != (int32_t)OcppRpcMessageType::CALLRESULT && messageType != (int32_t)OcppRpcMessageType::CALLERROR) {
-        platform_printfln("received unknown message type %d", messageType);
+        log_error("received unknown message type %d", messageType);
         return;
     }
 
     long uid_long = atol(uniqueID);
     if (uid_long < 0) {
-        platform_printfln("received %s with invalid message ID %ld. ", messageType == 3 ? "call result" : "call error", uid_long);
+        log_error("received %s with invalid message ID %ld. ", messageType == 3 ? "call result" : "call error", uid_long);
         return;
     }
     uint32_t uid = (uint32_t) uid_long;
 
     if (!message_in_flight.is_valid()) {
-        platform_printfln("received %s with message ID %u, but no call is in flight", messageType == 3 ? "call result" : "call error", uid);
+        log_warn("received %s with message ID %u, but no call is in flight", messageType == 3 ? "call result" : "call error", uid);
+        return;
     }
 
     uint32_t last_call_message_id = message_in_flight.message_id;
 
     if (uid != last_call_message_id) {
-        platform_printfln("received %s with message ID %u. expected was %u ", messageType == 3 ? "call result" : "call error", uid, last_call_message_id);
+        log_error("received %s with message ID %u. expected was %u ", messageType == 3 ? "call result" : "call error", uid, last_call_message_id);
         return;
     }
 
     if (messageType == (int32_t)OcppRpcMessageType::CALLRESULT) {
         if (doc.size() != 3) {
-            platform_printfln("received call result with %d members, but expected 3.", (int)doc.size());
+            log_error("received call result with %d members, but expected 3.", (int)doc.size());
             return;
         }
 
         if (doc[2].isNull() || !doc[2].is<JsonObject>()) {
-            platform_printfln("received call result with payload being neither an object nor null.");
+            log_error("received call result with payload being neither an object nor null.");
             return;
         }
 
@@ -127,28 +128,28 @@ void OcppConnection::handleMessage(char *message, size_t message_len)
 
     if (messageType == (int32_t)OcppRpcMessageType::CALLERROR) {
         if (doc.size() != 5) {
-            platform_printfln("received call error with %d members, but expected 5.", (int)doc.size());
+            log_error("received call error with %d members, but expected 5.", (int)doc.size());
             return;
         }
 
         if (!doc[2].is<const char *>()) {
-            platform_printfln("received call error with error code not being a string!.");
+            log_error("received call error with error code not being a string!.");
             return;
         }
 
         if (!doc[3].is<const char *>()) {
-            platform_printfln("received call error with error description not being a string!.");
+            log_error("received call error with error description not being a string!.");
             return;
         }
 
         if (!doc[4].is<JsonObject>()) {
-            platform_printfln("received call error with error details not being an object!.");
+            log_error("received call error with error details not being an object!.");
             return;
         }
 
         size_t cec = (size_t) CallErrorCode::GenericError;
         if (!lookup_key(&cec, doc[2], CallErrorCodeStrings, (size_t)CallErrorCode::OK, CallErrorCodeStringAliases, CallErrorCodeStringAliasIndices, CallErrorCodeStringAliasLength)) {
-            platform_printfln("received call error with unknown error code '%s'! Replacing with GenericError.", doc[2].as<const char *>());
+            log_error("received call error with unknown error code '%s'! Replacing with GenericError.", doc[2].as<const char *>());
         }
 
         handleCallError((CallErrorCode)cec, doc[3], doc[4]);
@@ -160,7 +161,7 @@ void OcppConnection::handleCallError(CallErrorCode code, const char *desc, JsonO
 {
     std::string details_string;
     serializeJsonPretty(details, details_string);
-    platform_printfln("Received call error %s %s: %s", CallErrorCodeStrings[(size_t)code], desc, details_string.c_str());
+    log_warn("Received call error %s %s:\n %s\n-----end of received call error-----", CallErrorCodeStrings[(size_t)code], desc, details_string.c_str());
 
     if (!is_transaction_related(message_in_flight.action)) {
         cp->onTimeout(message_in_flight.action, message_in_flight.message_id, message_in_flight.connector_id);
@@ -227,7 +228,7 @@ bool OcppConnection::sendCallAction(const ICall &call, time_t timestamp, int32_t
     // We then have enqueued at most two messages, one StartTxn and one StopTxn.
     if (is_transaction_related(call.action)) {
         if (timestamp == 0) {
-            platform_printfln("Attempted to send transaction related call action without valid timestamp!");
+            log_error("Attempted to send transaction related call action without valid timestamp!");
             return false;
         }
         if (transaction_messages.size() >= 5) {

@@ -71,7 +71,7 @@ void MeterValueAccumulator::tick()
             switch (measurand_type) {
                 case MeasurandType::Register:
                     if (s.is_signed) {
-                        platform_printfln("Signed values not supported yet!");
+                        log_warn("Signed values not supported yet!");
                         continue;
                     }
 

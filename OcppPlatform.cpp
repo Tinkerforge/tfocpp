@@ -129,8 +129,24 @@ time_t platform_get_system_time(void *ctx) {
     return last_system_time + (platform_now_ms() - last_system_time_set_at) / 1000;
 }
 
-void platform_printfln(const char *fmt, ...)
+void platform_printfln(int level, const char *fmt, ...)
 {
+    switch (level) {
+        case LOG_LEVEL_ERROR:
+            fputs("[ERROR]   ", stdout);
+            break;
+        case LOG_LEVEL_WARN:
+            fputs("[WARNING] ", stdout);
+            break;
+        case LOG_LEVEL_INFO:
+            fputs("[INFO]    ", stdout);
+            break;
+        case LOG_LEVEL_DEBUG:
+            fputs("[DEBUG]   ", stdout);
+            break;
+        default:
+            break;
+    }
     va_list args;
     va_start(args, fmt);
     vprintf(fmt, args);
@@ -353,7 +369,7 @@ const SupportedMeasurand *platform_get_supported_measurands(int32_t connector_id
 }
 
 bool platform_get_signed_meter_value(int32_t connectorId, SampledValueMeasurand measurant, SampledValuePhase phase, SampledValueLocation location, char buf[PLATFORM_MEASURAND_MAX_DATA_LEN]) {
-    platform_printfln("signed values not supported yet!");
+    log_warn("signed values not supported yet!");
 }
 
 float platform_get_raw_meter_value(int32_t connectorId, SampledValueMeasurand measurant, SampledValuePhase phase, SampledValueLocation location) {
