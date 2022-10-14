@@ -4,6 +4,7 @@
 
 #include "OcppChargePoint.h"
 #include "OcppPlatform.h"
+#include "OcppTypes.h"
 
 extern "C" {
 #include "lib/libiso8601/iso8601.h"

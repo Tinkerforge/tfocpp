@@ -2,6 +2,7 @@
 
 #include "OcppChargePoint.h"
 #include "OcppPersistency.h"
+#include "OcppTypes.h"
 #include <TFJson.h>
 
 static bool is_transaction_related(CallAction action) {
