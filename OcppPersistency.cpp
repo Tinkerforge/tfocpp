@@ -108,7 +108,8 @@ bool startRestore() {
     if (dir_fd == nullptr)
         return false;
 
-    names = std::unique_ptr<std::vector<time_t>>(new std::vector<time_t>(OCPP_MAX_PERSISTENT_MESSAGES));
+    names = std::unique_ptr<std::vector<time_t>>(new std::vector<time_t>());
+    names->reserve(OCPP_MAX_PERSISTENT_MESSAGES);
 
     OcppDirEnt *dirent = nullptr;
     while ((dirent = platform_read_dir(dir_fd)) != nullptr) {
