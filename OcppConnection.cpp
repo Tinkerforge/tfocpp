@@ -193,13 +193,11 @@ void OcppConnection::sendCallError(const char *uid, CallErrorCode code, const ch
     size_t len = 0;
     {
         TFJsonSerializer json{nullptr, 0};
-        buildCallError(json, uid, code, desc);
-
         len = buildCallError(json, uid, code, desc);
     }
     auto buf = heap_alloc_array<char>(len);
     TFJsonSerializer json{buf.get(), len};
-    buildCallError(json, uid, code, desc);
+    len = buildCallError(json, uid, code, desc);
 
     platform_ws_send(platform_ctx, buf.get(), len);
 }
