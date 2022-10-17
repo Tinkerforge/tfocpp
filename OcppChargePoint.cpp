@@ -765,6 +765,24 @@ CallResponse OcppChargePoint::handleUnlockConnector(const char *uid, UnlockConne
     return CallResponse{CallErrorCode::OK, ""};
 }
 
+CallResponse OcppChargePoint::handleClearChargingProfile(const char *uid, ClearChargingProfileView req)
+{
+    log_info("Received ClearChargingProfile.req");
+    return CallResponse{CallErrorCode::NotImplemented, ""};
+}
+
+CallResponse OcppChargePoint::handleGetCompositeSchedule(const char *uid, GetCompositeScheduleView req)
+{
+    log_info("Received GetCompositeSchedule.req");
+    return CallResponse{CallErrorCode::NotImplemented, ""};
+}
+
+CallResponse OcppChargePoint::handleSetChargingProfile(const char *uid, SetChargingProfileView req)
+{
+    log_info("Received SetChargingProfile.req");
+    return CallResponse{CallErrorCode::NotImplemented, ""};
+}
+
 void OcppChargePoint::handleTagSeen(int32_t connectorId, const char *tagId)
 {
     log_info("Seen tag %s at connector %d. State is %d", tagId, connectorId, (int)this->state);

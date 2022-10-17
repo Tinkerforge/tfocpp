@@ -69,6 +69,7 @@ public:
     bool sendCallAction(const ICall &call, time_t timestamp = 0, int32_t connectorId = 0);
     void onTimeout(CallAction action, uint32_t messageId, int32_t connectorId);
 
+    // Core Profile
     CallResponse handleAuthorizeResponse(int32_t connectorId, AuthorizeResponseView conf);
     CallResponse handleBootNotificationResponse(int32_t connectorId, BootNotificationResponseView conf);
     CallResponse handleChangeAvailability(const char *uid, ChangeAvailabilityView req);
@@ -86,6 +87,11 @@ public:
     CallResponse handleStatusNotificationResponse(int32_t connectorId, StatusNotificationResponseView conf);
     CallResponse handleStopTransactionResponse(int32_t connectorId, StopTransactionResponseView conf);
     CallResponse handleUnlockConnector(const char *uid, UnlockConnectorView req);
+
+    // Smart Charging Profile
+    CallResponse handleClearChargingProfile(const char *uid, ClearChargingProfileView req);
+    CallResponse handleGetCompositeSchedule(const char *uid, GetCompositeScheduleView req);
+    CallResponse handleSetChargingProfile(const char *uid, SetChargingProfileView req);
 
     OcppState state = OcppState::PowerOn;
 

@@ -133,24 +133,24 @@ const char * const ChangeAvailabilityTypeStrings[] = {
     "Operative"
 };
 
-const char * const RemoteStartTransactionChargingProfileEntriesChargingProfilePurposeStrings[] = {
+const char * const ChargingProfilePurposeStrings[] = {
     "ChargePointMaxProfile",
     "TxDefaultProfile",
     "TxProfile"
 };
 
-const char * const RemoteStartTransactionChargingProfileEntriesChargingProfileKindStrings[] = {
+const char * const ChargingProfileKindStrings[] = {
     "Absolute",
     "Recurring",
     "Relative"
 };
 
-const char * const RemoteStartTransactionChargingProfileEntriesRecurrencyKindStrings[] = {
+const char * const RecurrencyKindStrings[] = {
     "Daily",
     "Weekly"
 };
 
-const char * const RemoteStartTransactionChargingProfileEntriesChargingScheduleEntriesChargingRateUnitStrings[] = {
+const char * const ChargingRateUnitStrings[] = {
     "A",
     "W"
 };
@@ -158,6 +158,22 @@ const char * const RemoteStartTransactionChargingProfileEntriesChargingScheduleE
 const char * const ResetTypeStrings[] = {
     "Hard",
     "Soft"
+};
+
+const char * const ClearChargingProfileResponseStatusStrings[] = {
+    "Accepted",
+    "Unknown"
+};
+
+const char * const SetChargingProfileResponseStatusStrings[] = {
+    "Accepted",
+    "Rejected",
+    "NotSupported"
+};
+
+const char * const GetCompositeScheduleResponseChargingScheduleChargingRateUnitStrings[] = {
+    "A",
+    "W"
 };
 
 const char * const SampledValueContextStrings[] = {
@@ -312,6 +328,14 @@ void MeterValue::serializeInto(TFJsonSerializer &json) {
         if (sampledValue != nullptr) { json.addArray("sampledValue"); for(size_t i = 0; i < sampledValue_length; ++i) { json.addObject(); sampledValue[i].serializeInto(json); json.endObject(); } json.endArray(); }
     }
 
+void GetCompositeScheduleResponseChargingSchedule::serializeInto(TFJsonSerializer &json) {
+        if (duration != OCPP_INTEGER_NOT_PASSED) json.add("duration", duration);
+        if (startSchedule != OCPP_DATETIME_NOT_PASSED) unix_timestamp_to_iso_string(startSchedule, json, "startSchedule");
+        if (chargingRateUnit != GetCompositeScheduleResponseChargingScheduleChargingRateUnit::NONE) json.add("chargingRateUnit",GetCompositeScheduleResponseChargingScheduleChargingRateUnitStrings[(size_t)chargingRateUnit]);
+        if (chargingSchedulePeriod != nullptr) { json.addArray("chargingSchedulePeriod"); for(size_t i = 0; i < chargingSchedulePeriod_length; ++i) { json.addObject(); chargingSchedulePeriod[i].serializeInto(json); json.endObject(); } json.endArray(); }
+        if (minChargingRate != OCPP_DECIMAL_NOT_PASSED) json.add("minChargingRate", minChargingRate);
+    }
+
 void MeterValueSampledValue::serializeInto(TFJsonSerializer &json) {
         if (value != nullptr) json.add("value", value);
         if (context != SampledValueContext::NONE) json.add("context",SampledValueContextStrings[(size_t)context]);
@@ -320,6 +344,12 @@ void MeterValueSampledValue::serializeInto(TFJsonSerializer &json) {
         if (phase != SampledValuePhase::NONE) json.add("phase",SampledValuePhaseStrings[(size_t)phase]);
         if (location != SampledValueLocation::NONE) json.add("location",SampledValueLocationStrings[(size_t)location]);
         if (unit != SampledValueUnit::NONE) json.add("unit",SampledValueUnitStrings[(size_t)unit]);
+    }
+
+void GetCompositeScheduleResponseChargingScheduleChargingSchedulePeriod::serializeInto(TFJsonSerializer &json) {
+        if (startPeriod != OCPP_INTEGER_NOT_PASSED) json.add("startPeriod", startPeriod);
+        if (limit != OCPP_DECIMAL_NOT_PASSED) json.add("limit", limit);
+        if (numberPhases != OCPP_INTEGER_NOT_PASSED) json.add("numberPhases", numberPhases);
     }
 
 
@@ -740,6 +770,75 @@ size_t UnlockConnectorResponse::serializeJson(char *buf, size_t buf_len) const {
 
         json.addObject();
             if (status != UnlockConnectorResponseStatus::NONE) json.add("status",UnlockConnectorResponseStatusStrings[(size_t)status]);
+        json.endObject();
+    json.endArray();
+
+    return json.end();
+}
+
+ClearChargingProfileResponse::ClearChargingProfileResponse(const char *call_id,
+        ClearChargingProfileResponseStatus status) :
+    ICall(CallAction::CLEAR_CHARGING_PROFILE_RESPONSE, call_id),
+    status(status)
+{}
+
+size_t ClearChargingProfileResponse::serializeJson(char *buf, size_t buf_len) const {
+    TFJsonSerializer json{buf, buf_len};
+    json.addArray();
+        json.add((int32_t)OcppRpcMessageType::CALLRESULT);
+        json.add(this->ocppJcallId);
+
+        json.addObject();
+            if (status != ClearChargingProfileResponseStatus::NONE) json.add("status",ClearChargingProfileResponseStatusStrings[(size_t)status]);
+        json.endObject();
+    json.endArray();
+
+    return json.end();
+}
+
+GetCompositeScheduleResponse::GetCompositeScheduleResponse(const char *call_id,
+        ResponseStatus status,
+        int32_t connectorId,
+        time_t scheduleStart,
+        GetCompositeScheduleResponseChargingSchedule *chargingSchedule) :
+    ICall(CallAction::GET_COMPOSITE_SCHEDULE_RESPONSE, call_id),
+    status(status),
+    connectorId(connectorId),
+    scheduleStart(scheduleStart),
+    chargingSchedule(chargingSchedule)
+{}
+
+size_t GetCompositeScheduleResponse::serializeJson(char *buf, size_t buf_len) const {
+    TFJsonSerializer json{buf, buf_len};
+    json.addArray();
+        json.add((int32_t)OcppRpcMessageType::CALLRESULT);
+        json.add(this->ocppJcallId);
+
+        json.addObject();
+            if (status != ResponseStatus::NONE) json.add("status",ResponseStatusStrings[(size_t)status]);
+            if (connectorId != OCPP_INTEGER_NOT_PASSED) json.add("connectorId", connectorId);
+            if (scheduleStart != OCPP_DATETIME_NOT_PASSED) unix_timestamp_to_iso_string(scheduleStart, json, "scheduleStart");
+            if (chargingSchedule != nullptr) { json.addObject(); chargingSchedule->serializeInto(json); json.endObject(); }
+        json.endObject();
+    json.endArray();
+
+    return json.end();
+}
+
+SetChargingProfileResponse::SetChargingProfileResponse(const char *call_id,
+        SetChargingProfileResponseStatus status) :
+    ICall(CallAction::SET_CHARGING_PROFILE_RESPONSE, call_id),
+    status(status)
+{}
+
+size_t SetChargingProfileResponse::serializeJson(char *buf, size_t buf_len) const {
+    TFJsonSerializer json{buf, buf_len};
+    json.addArray();
+        json.add((int32_t)OcppRpcMessageType::CALLRESULT);
+        json.add(this->ocppJcallId);
+
+        json.addObject();
+            if (status != SetChargingProfileResponseStatus::NONE) json.add("status",SetChargingProfileResponseStatusStrings[(size_t)status]);
         json.endObject();
     json.endArray();
 
@@ -1333,8 +1432,8 @@ static CallResponse parseRemoteStartTransactionChargingProfileEntriesChargingPro
 
     {
         bool found = false;
-        for(size_t i = 0; i < ARRAY_SIZE(RemoteStartTransactionChargingProfileEntriesChargingProfilePurposeStrings); ++i) {
-            if (strcmp(var.as<const char *>(), RemoteStartTransactionChargingProfileEntriesChargingProfilePurposeStrings[i]) != 0)
+        for(size_t i = 0; i < ARRAY_SIZE(ChargingProfilePurposeStrings); ++i) {
+            if (strcmp(var.as<const char *>(), ChargingProfilePurposeStrings[i]) != 0)
                 continue;
 
             var.set(i);
@@ -1349,15 +1448,15 @@ static CallResponse parseRemoteStartTransactionChargingProfileEntriesChargingPro
     return CallResponse{CallErrorCode::OK, nullptr};
 }
 
-static CallResponse parseRemoteStartTransactionChargingProfileEntriesChargingProfileKind(JsonVariant var) {
+static CallResponse parseRemoteStartTransactionChargingProfileChargingProfileKind(JsonVariant var) {
 
     if (!var.is<const char *>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "chargingProfileKind: wrong type"};
 
     {
         bool found = false;
-        for(size_t i = 0; i < ARRAY_SIZE(RemoteStartTransactionChargingProfileEntriesChargingProfileKindStrings); ++i) {
-            if (strcmp(var.as<const char *>(), RemoteStartTransactionChargingProfileEntriesChargingProfileKindStrings[i]) != 0)
+        for(size_t i = 0; i < ARRAY_SIZE(ChargingProfileKindStrings); ++i) {
+            if (strcmp(var.as<const char *>(), ChargingProfileKindStrings[i]) != 0)
                 continue;
 
             var.set(i);
@@ -1372,15 +1471,15 @@ static CallResponse parseRemoteStartTransactionChargingProfileEntriesChargingPro
     return CallResponse{CallErrorCode::OK, nullptr};
 }
 
-static CallResponse parseRemoteStartTransactionChargingProfileEntriesRecurrencyKind(JsonVariant var) {
+static CallResponse parseRemoteStartTransactionChargingProfileRecurrencyKind(JsonVariant var) {
 
     if (!var.is<const char *>())
         return CallResponse{CallErrorCode::TypeConstraintViolation, "recurrencyKind: wrong type"};
 
     {
         bool found = false;
-        for(size_t i = 0; i < ARRAY_SIZE(RemoteStartTransactionChargingProfileEntriesRecurrencyKindStrings); ++i) {
-            if (strcmp(var.as<const char *>(), RemoteStartTransactionChargingProfileEntriesRecurrencyKindStrings[i]) != 0)
+        for(size_t i = 0; i < ARRAY_SIZE(RecurrencyKindStrings); ++i) {
+            if (strcmp(var.as<const char *>(), RecurrencyKindStrings[i]) != 0)
                 continue;
 
             var.set(i);
@@ -1458,8 +1557,8 @@ static CallResponse parseRemoteStartTransactionChargingProfileEntriesChargingSch
 
     {
         bool found = false;
-        for(size_t i = 0; i < ARRAY_SIZE(RemoteStartTransactionChargingProfileEntriesChargingScheduleEntriesChargingRateUnitStrings); ++i) {
-            if (strcmp(var.as<const char *>(), RemoteStartTransactionChargingProfileEntriesChargingScheduleEntriesChargingRateUnitStrings[i]) != 0)
+        for(size_t i = 0; i < ARRAY_SIZE(ChargingRateUnitStrings); ++i) {
+            if (strcmp(var.as<const char *>(), ChargingRateUnitStrings[i]) != 0)
                 continue;
 
             var.set(i);
@@ -1682,14 +1781,14 @@ static CallResponse parseRemoteStartTransactionChargingProfileEntries(JsonObject
         return CallResponse{CallErrorCode::OccurenceConstraintViolation, "chargingProfileKind: required, but missing"};
 
     {
-        CallResponse inner_result = parseRemoteStartTransactionChargingProfileEntriesChargingProfileKind(obj["chargingProfileKind"]);
+        CallResponse inner_result = parseRemoteStartTransactionChargingProfileChargingProfileKind(obj["chargingProfileKind"]);
         if (inner_result.result != CallErrorCode::OK)
             return inner_result;
     }
     ++keys_handled;
     if (obj.containsKey("recurrencyKind")) {
     {
-        CallResponse inner_result = parseRemoteStartTransactionChargingProfileEntriesRecurrencyKind(obj["recurrencyKind"]);
+        CallResponse inner_result = parseRemoteStartTransactionChargingProfileRecurrencyKind(obj["recurrencyKind"]);
         if (inner_result.result != CallErrorCode::OK)
             return inner_result;
     }
@@ -2137,6 +2236,648 @@ CallResponse parseUnlockConnector(JsonObject obj) {
     return CallResponse{CallErrorCode::OK, nullptr};
 }
 
+static CallResponse parseClearChargingProfileId(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "id: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseClearChargingProfileConnectorId(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "connectorId: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseClearChargingProfileChargingProfilePurpose(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "chargingProfilePurpose: wrong type"};
+
+    {
+        bool found = false;
+        for(size_t i = 0; i < ARRAY_SIZE(ChargingProfilePurposeStrings); ++i) {
+            if (strcmp(var.as<const char *>(), ChargingProfilePurposeStrings[i]) != 0)
+                continue;
+
+            var.set(i);
+            found = true;
+            break;
+        }
+
+        if (!found)
+            return CallResponse{CallErrorCode::PropertyConstraintViolation, "chargingProfilePurpose: unknown enum value received"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseClearChargingProfileStackLevel(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "stackLevel: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+CallResponse parseClearChargingProfile(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (obj.containsKey("id")) {
+    {
+        CallResponse inner_result = parseClearChargingProfileId(obj["id"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("connectorId")) {
+    {
+        CallResponse inner_result = parseClearChargingProfileConnectorId(obj["connectorId"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("chargingProfilePurpose")) {
+    {
+        CallResponse inner_result = parseClearChargingProfileChargingProfilePurpose(obj["chargingProfilePurpose"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("stackLevel")) {
+    {
+        CallResponse inner_result = parseClearChargingProfileStackLevel(obj["stackLevel"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormationViolation, "ClearChargingProfile: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseGetCompositeScheduleConnectorId(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "connectorId: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseGetCompositeScheduleDuration(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "duration: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseGetCompositeScheduleChargingRateUnit(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "chargingRateUnit: wrong type"};
+
+    {
+        bool found = false;
+        for(size_t i = 0; i < ARRAY_SIZE(ChargingRateUnitStrings); ++i) {
+            if (strcmp(var.as<const char *>(), ChargingRateUnitStrings[i]) != 0)
+                continue;
+
+            var.set(i);
+            found = true;
+            break;
+        }
+
+        if (!found)
+            return CallResponse{CallErrorCode::PropertyConstraintViolation, "chargingRateUnit: unknown enum value received"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+CallResponse parseGetCompositeSchedule(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (!obj.containsKey("connectorId"))
+        return CallResponse{CallErrorCode::OccurenceConstraintViolation, "connectorId: required, but missing"};
+
+    {
+        CallResponse inner_result = parseGetCompositeScheduleConnectorId(obj["connectorId"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+
+    if (!obj.containsKey("duration"))
+        return CallResponse{CallErrorCode::OccurenceConstraintViolation, "duration: required, but missing"};
+
+    {
+        CallResponse inner_result = parseGetCompositeScheduleDuration(obj["duration"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("chargingRateUnit")) {
+    {
+        CallResponse inner_result = parseGetCompositeScheduleChargingRateUnit(obj["chargingRateUnit"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormationViolation, "GetCompositeSchedule: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseSetChargingProfileConnectorId(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "connectorId: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseSetChargingProfileCsChargingProfilesEntriesChargingProfileId(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "chargingProfileId: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseSetChargingProfileCsChargingProfilesEntriesTransactionId(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "transactionId: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseSetChargingProfileCsChargingProfilesEntriesStackLevel(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "stackLevel: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseSetChargingProfileCsChargingProfilesEntriesChargingProfilePurpose(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "chargingProfilePurpose: wrong type"};
+
+    {
+        bool found = false;
+        for(size_t i = 0; i < ARRAY_SIZE(ChargingProfilePurposeStrings); ++i) {
+            if (strcmp(var.as<const char *>(), ChargingProfilePurposeStrings[i]) != 0)
+                continue;
+
+            var.set(i);
+            found = true;
+            break;
+        }
+
+        if (!found)
+            return CallResponse{CallErrorCode::PropertyConstraintViolation, "chargingProfilePurpose: unknown enum value received"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseSetChargingProfileCsChargingProfilesChargingProfileKind(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "chargingProfileKind: wrong type"};
+
+    {
+        bool found = false;
+        for(size_t i = 0; i < ARRAY_SIZE(ChargingProfileKindStrings); ++i) {
+            if (strcmp(var.as<const char *>(), ChargingProfileKindStrings[i]) != 0)
+                continue;
+
+            var.set(i);
+            found = true;
+            break;
+        }
+
+        if (!found)
+            return CallResponse{CallErrorCode::PropertyConstraintViolation, "chargingProfileKind: unknown enum value received"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseSetChargingProfileCsChargingProfilesRecurrencyKind(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "recurrencyKind: wrong type"};
+
+    {
+        bool found = false;
+        for(size_t i = 0; i < ARRAY_SIZE(RecurrencyKindStrings); ++i) {
+            if (strcmp(var.as<const char *>(), RecurrencyKindStrings[i]) != 0)
+                continue;
+
+            var.set(i);
+            found = true;
+            break;
+        }
+
+        if (!found)
+            return CallResponse{CallErrorCode::PropertyConstraintViolation, "recurrencyKind: unknown enum value received"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseSetChargingProfileCsChargingProfilesEntriesValidFrom(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "validFrom: wrong type"};
+
+    {
+        time_t result;
+        if (!iso_string_to_unix_timestamp(var.as<const char *>(), &result))
+            return CallResponse{CallErrorCode::TypeConstraintViolation, "validFrom: failed to parse as ISO 8601 date-time string"};
+
+        var.set(result);
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseSetChargingProfileCsChargingProfilesEntriesValidTo(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "validTo: wrong type"};
+
+    {
+        time_t result;
+        if (!iso_string_to_unix_timestamp(var.as<const char *>(), &result))
+            return CallResponse{CallErrorCode::TypeConstraintViolation, "validTo: failed to parse as ISO 8601 date-time string"};
+
+        var.set(result);
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseSetChargingProfileCsChargingProfilesEntriesChargingScheduleEntriesDuration(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "duration: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseSetChargingProfileCsChargingProfilesEntriesChargingScheduleEntriesStartSchedule(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "startSchedule: wrong type"};
+
+    {
+        time_t result;
+        if (!iso_string_to_unix_timestamp(var.as<const char *>(), &result))
+            return CallResponse{CallErrorCode::TypeConstraintViolation, "startSchedule: failed to parse as ISO 8601 date-time string"};
+
+        var.set(result);
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseSetChargingProfileCsChargingProfilesEntriesChargingScheduleEntriesChargingRateUnit(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "chargingRateUnit: wrong type"};
+
+    {
+        bool found = false;
+        for(size_t i = 0; i < ARRAY_SIZE(ChargingRateUnitStrings); ++i) {
+            if (strcmp(var.as<const char *>(), ChargingRateUnitStrings[i]) != 0)
+                continue;
+
+            var.set(i);
+            found = true;
+            break;
+        }
+
+        if (!found)
+            return CallResponse{CallErrorCode::PropertyConstraintViolation, "chargingRateUnit: unknown enum value received"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseSetChargingProfileCsChargingProfilesEntriesChargingScheduleEntriesChargingSchedulePeriodEntryEntriesStartPeriod(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "startPeriod: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseSetChargingProfileCsChargingProfilesEntriesChargingScheduleEntriesChargingSchedulePeriodEntryEntriesLimit(JsonVariant var) {
+
+    if (!var.is<float>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "limit: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseSetChargingProfileCsChargingProfilesEntriesChargingScheduleEntriesChargingSchedulePeriodEntryEntriesNumberPhases(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "numberPhases: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseSetChargingProfileCsChargingProfilesEntriesChargingScheduleEntriesChargingSchedulePeriodEntryEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (!obj.containsKey("startPeriod"))
+        return CallResponse{CallErrorCode::OccurenceConstraintViolation, "startPeriod: required, but missing"};
+
+    {
+        CallResponse inner_result = parseSetChargingProfileCsChargingProfilesEntriesChargingScheduleEntriesChargingSchedulePeriodEntryEntriesStartPeriod(obj["startPeriod"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+
+    if (!obj.containsKey("limit"))
+        return CallResponse{CallErrorCode::OccurenceConstraintViolation, "limit: required, but missing"};
+
+    {
+        CallResponse inner_result = parseSetChargingProfileCsChargingProfilesEntriesChargingScheduleEntriesChargingSchedulePeriodEntryEntriesLimit(obj["limit"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("numberPhases")) {
+    {
+        CallResponse inner_result = parseSetChargingProfileCsChargingProfilesEntriesChargingScheduleEntriesChargingSchedulePeriodEntryEntriesNumberPhases(obj["numberPhases"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormationViolation, "SetChargingProfileCsChargingProfilesEntriesChargingScheduleEntriesChargingSchedulePeriodEntryEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseSetChargingProfileCsChargingProfilesEntriesChargingScheduleEntriesChargingSchedulePeriodEntry(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "chargingSchedulePeriodEntry: wrong type"};
+
+    {
+        CallResponse inner_result = parseSetChargingProfileCsChargingProfilesEntriesChargingScheduleEntriesChargingSchedulePeriodEntryEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseSetChargingProfileCsChargingProfilesEntriesChargingScheduleEntriesChargingSchedulePeriod(JsonVariant var) {
+
+    if (!var.is<JsonArray>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "chargingSchedulePeriod: wrong type"};
+
+    {
+        for(size_t i = 0; i < var.as<JsonArray>().size(); ++i) {
+            CallResponse inner_result = parseSetChargingProfileCsChargingProfilesEntriesChargingScheduleEntriesChargingSchedulePeriodEntry(var[i]);
+            if (inner_result.result != CallErrorCode::OK)
+                return inner_result;
+        }
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseSetChargingProfileCsChargingProfilesEntriesChargingScheduleEntriesMinChargingRate(JsonVariant var) {
+
+    if (!var.is<float>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "minChargingRate: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseSetChargingProfileCsChargingProfilesEntriesChargingScheduleEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (obj.containsKey("duration")) {
+    {
+        CallResponse inner_result = parseSetChargingProfileCsChargingProfilesEntriesChargingScheduleEntriesDuration(obj["duration"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("startSchedule")) {
+    {
+        CallResponse inner_result = parseSetChargingProfileCsChargingProfilesEntriesChargingScheduleEntriesStartSchedule(obj["startSchedule"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+
+    if (!obj.containsKey("chargingRateUnit"))
+        return CallResponse{CallErrorCode::OccurenceConstraintViolation, "chargingRateUnit: required, but missing"};
+
+    {
+        CallResponse inner_result = parseSetChargingProfileCsChargingProfilesEntriesChargingScheduleEntriesChargingRateUnit(obj["chargingRateUnit"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+
+    if (!obj.containsKey("chargingSchedulePeriod"))
+        return CallResponse{CallErrorCode::OccurenceConstraintViolation, "chargingSchedulePeriod: required, but missing"};
+
+    {
+        CallResponse inner_result = parseSetChargingProfileCsChargingProfilesEntriesChargingScheduleEntriesChargingSchedulePeriod(obj["chargingSchedulePeriod"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("minChargingRate")) {
+    {
+        CallResponse inner_result = parseSetChargingProfileCsChargingProfilesEntriesChargingScheduleEntriesMinChargingRate(obj["minChargingRate"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormationViolation, "SetChargingProfileCsChargingProfilesEntriesChargingScheduleEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseSetChargingProfileCsChargingProfilesEntriesChargingSchedule(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "chargingSchedule: wrong type"};
+
+    {
+        CallResponse inner_result = parseSetChargingProfileCsChargingProfilesEntriesChargingScheduleEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseSetChargingProfileCsChargingProfilesEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (!obj.containsKey("chargingProfileId"))
+        return CallResponse{CallErrorCode::OccurenceConstraintViolation, "chargingProfileId: required, but missing"};
+
+    {
+        CallResponse inner_result = parseSetChargingProfileCsChargingProfilesEntriesChargingProfileId(obj["chargingProfileId"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("transactionId")) {
+    {
+        CallResponse inner_result = parseSetChargingProfileCsChargingProfilesEntriesTransactionId(obj["transactionId"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+
+    if (!obj.containsKey("stackLevel"))
+        return CallResponse{CallErrorCode::OccurenceConstraintViolation, "stackLevel: required, but missing"};
+
+    {
+        CallResponse inner_result = parseSetChargingProfileCsChargingProfilesEntriesStackLevel(obj["stackLevel"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+
+    if (!obj.containsKey("chargingProfilePurpose"))
+        return CallResponse{CallErrorCode::OccurenceConstraintViolation, "chargingProfilePurpose: required, but missing"};
+
+    {
+        CallResponse inner_result = parseSetChargingProfileCsChargingProfilesEntriesChargingProfilePurpose(obj["chargingProfilePurpose"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+
+    if (!obj.containsKey("chargingProfileKind"))
+        return CallResponse{CallErrorCode::OccurenceConstraintViolation, "chargingProfileKind: required, but missing"};
+
+    {
+        CallResponse inner_result = parseSetChargingProfileCsChargingProfilesChargingProfileKind(obj["chargingProfileKind"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("recurrencyKind")) {
+    {
+        CallResponse inner_result = parseSetChargingProfileCsChargingProfilesRecurrencyKind(obj["recurrencyKind"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("validFrom")) {
+    {
+        CallResponse inner_result = parseSetChargingProfileCsChargingProfilesEntriesValidFrom(obj["validFrom"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("validTo")) {
+    {
+        CallResponse inner_result = parseSetChargingProfileCsChargingProfilesEntriesValidTo(obj["validTo"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+
+    if (!obj.containsKey("chargingSchedule"))
+        return CallResponse{CallErrorCode::OccurenceConstraintViolation, "chargingSchedule: required, but missing"};
+
+    {
+        CallResponse inner_result = parseSetChargingProfileCsChargingProfilesEntriesChargingSchedule(obj["chargingSchedule"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormationViolation, "SetChargingProfileCsChargingProfilesEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseSetChargingProfileCsChargingProfiles(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "csChargingProfiles: wrong type"};
+
+    {
+        CallResponse inner_result = parseSetChargingProfileCsChargingProfilesEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+CallResponse parseSetChargingProfile(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (!obj.containsKey("connectorId"))
+        return CallResponse{CallErrorCode::OccurenceConstraintViolation, "connectorId: required, but missing"};
+
+    {
+        CallResponse inner_result = parseSetChargingProfileConnectorId(obj["connectorId"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+
+    if (!obj.containsKey("csChargingProfiles"))
+        return CallResponse{CallErrorCode::OccurenceConstraintViolation, "csChargingProfiles: required, but missing"};
+
+    {
+        CallResponse inner_result = parseSetChargingProfileCsChargingProfiles(obj["csChargingProfiles"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormationViolation, "SetChargingProfile: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
 CallResponse callHandler(const char *uid, const char *action_string, JsonObject obj, OcppChargePoint *cp) {
     size_t action_idx = 0;
     if (!lookup_key(&action_idx, action_string, CallActionStrings, ARRAY_SIZE(CallActionStrings)))
@@ -2217,6 +2958,30 @@ CallResponse callHandler(const char *uid, const char *action_string, JsonObject 
             return cp->handleUnlockConnector(uid, UnlockConnectorView{obj});
         }
 
+        case CallAction::CLEAR_CHARGING_PROFILE: {
+            CallResponse res = parseClearChargingProfile(obj);
+            if (res.result != CallErrorCode::OK)
+                return res;
+
+            return cp->handleClearChargingProfile(uid, ClearChargingProfileView{obj});
+        }
+
+        case CallAction::GET_COMPOSITE_SCHEDULE: {
+            CallResponse res = parseGetCompositeSchedule(obj);
+            if (res.result != CallErrorCode::OK)
+                return res;
+
+            return cp->handleGetCompositeSchedule(uid, GetCompositeScheduleView{obj});
+        }
+
+        case CallAction::SET_CHARGING_PROFILE: {
+            CallResponse res = parseSetChargingProfile(obj);
+            if (res.result != CallErrorCode::OK)
+                return res;
+
+            return cp->handleSetChargingProfile(uid, SetChargingProfileView{obj});
+        }
+
         case CallAction::AUTHORIZE:
         case CallAction::BOOT_NOTIFICATION:
         case CallAction::CHANGE_AVAILABILITY_RESPONSE:
@@ -2259,9 +3024,6 @@ CallResponse callHandler(const char *uid, const char *action_string, JsonObject 
         case CallAction::CLEAR_CHARGING_PROFILE_RESPONSE:
         case CallAction::GET_COMPOSITE_SCHEDULE_RESPONSE:
         case CallAction::SET_CHARGING_PROFILE_RESPONSE:
-        case CallAction::CLEAR_CHARGING_PROFILE:
-        case CallAction::GET_COMPOSITE_SCHEDULE:
-        case CallAction::SET_CHARGING_PROFILE:
         case CallAction::TRIGGER_MESSAGE_RESPONSE:
         case CallAction::TRIGGER_MESSAGE:
             return CallResponse{CallErrorCode::NotSupported, "action not supported"};

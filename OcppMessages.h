@@ -5,9 +5,12 @@
 #include "OcppTypes.h"
 #include <TFJson.h>
 
+#include <math.h>
+
 class OcppChargePoint;
 
 #define OCPP_INTEGER_NOT_PASSED INT32_MAX
+#define OCPP_DECIMAL_NOT_PASSED NAN
 #define OCPP_DATETIME_NOT_PASSED 0
 
 extern const char * const ChangeAvailabilityResponseStatusStrings[];
@@ -135,32 +138,32 @@ enum class ChangeAvailabilityType {
     OPERATIVE
 };
 
-extern const char * const RemoteStartTransactionChargingProfileEntriesChargingProfilePurposeStrings[];
+extern const char * const ChargingProfilePurposeStrings[];
 
-enum class RemoteStartTransactionChargingProfileEntriesChargingProfilePurpose {
+enum class ChargingProfilePurpose {
     CHARGE_POINT_MAX_PROFILE,
     TX_DEFAULT_PROFILE,
     TX_PROFILE
 };
 
-extern const char * const RemoteStartTransactionChargingProfileEntriesChargingProfileKindStrings[];
+extern const char * const ChargingProfileKindStrings[];
 
-enum class RemoteStartTransactionChargingProfileEntriesChargingProfileKind {
+enum class ChargingProfileKind {
     ABSOLUTE,
     RECURRING,
     RELATIVE
 };
 
-extern const char * const RemoteStartTransactionChargingProfileEntriesRecurrencyKindStrings[];
+extern const char * const RecurrencyKindStrings[];
 
-enum class RemoteStartTransactionChargingProfileEntriesRecurrencyKind {
+enum class RecurrencyKind {
     DAILY,
     WEEKLY
 };
 
-extern const char * const RemoteStartTransactionChargingProfileEntriesChargingScheduleEntriesChargingRateUnitStrings[];
+extern const char * const ChargingRateUnitStrings[];
 
-enum class RemoteStartTransactionChargingProfileEntriesChargingScheduleEntriesChargingRateUnit {
+enum class ChargingRateUnit {
     A,
     W
 };
@@ -170,6 +173,31 @@ extern const char * const ResetTypeStrings[];
 enum class ResetType {
     HARD,
     SOFT
+};
+
+extern const char * const ClearChargingProfileResponseStatusStrings[];
+
+enum class ClearChargingProfileResponseStatus {
+    ACCEPTED,
+    UNKNOWN,
+    NONE
+};
+
+extern const char * const SetChargingProfileResponseStatusStrings[];
+
+enum class SetChargingProfileResponseStatus {
+    ACCEPTED,
+    REJECTED,
+    NOT_SUPPORTED,
+    NONE
+};
+
+extern const char * const GetCompositeScheduleResponseChargingScheduleChargingRateUnitStrings[];
+
+enum class GetCompositeScheduleResponseChargingScheduleChargingRateUnit {
+    A,
+    W,
+    NONE
 };
 
 extern const char * const SampledValueContextStrings[];
@@ -348,6 +376,197 @@ struct ICall {
     const char *ocppJcallId;
 };
 
+struct SetChargingProfileCsChargingProfilesEntriesChargingScheduleEntriesChargingSchedulePeriodEntryEntriesView {
+    JsonObject _obj;
+
+    int32_t startPeriod() {
+
+        return _obj["startPeriod"].as<int32_t>();
+    }
+
+    float limit() {
+
+        return _obj["limit"].as<float>();
+    }
+
+    Opt<int32_t> numberPhases() {
+        if (!_obj.containsKey("numberPhases"))
+                return {false};
+
+        return _obj["numberPhases"].as<int32_t>();
+    }
+
+};
+
+struct SetChargingProfileCsChargingProfilesEntriesChargingScheduleEntriesView {
+    JsonObject _obj;
+
+    Opt<int32_t> duration() {
+        if (!_obj.containsKey("duration"))
+                return {false};
+
+        return _obj["duration"].as<int32_t>();
+    }
+
+    Opt<time_t> startSchedule() {
+        if (!_obj.containsKey("startSchedule"))
+                return {false};
+
+        return _obj["startSchedule"].as<time_t>();
+    }
+
+    ChargingRateUnit chargingRateUnit() {
+
+        return (ChargingRateUnit)_obj["chargingRateUnit"].as<size_t>();
+    }
+
+    size_t chargingSchedulePeriod_count() {
+
+        return _obj["chargingSchedulePeriod"].size();
+    }
+
+    SetChargingProfileCsChargingProfilesEntriesChargingScheduleEntriesChargingSchedulePeriodEntryEntriesView chargingSchedulePeriod(size_t i) {
+
+        return SetChargingProfileCsChargingProfilesEntriesChargingScheduleEntriesChargingSchedulePeriodEntryEntriesView{_obj["chargingSchedulePeriod"][i]};
+    }
+
+    Opt<float> minChargingRate() {
+        if (!_obj.containsKey("minChargingRate"))
+                return {false};
+
+        return _obj["minChargingRate"].as<float>();
+    }
+
+};
+
+struct SetChargingProfileCsChargingProfilesEntriesView {
+    JsonObject _obj;
+
+    int32_t chargingProfileId() {
+
+        return _obj["chargingProfileId"].as<int32_t>();
+    }
+
+    Opt<int32_t> transactionId() {
+        if (!_obj.containsKey("transactionId"))
+                return {false};
+
+        return _obj["transactionId"].as<int32_t>();
+    }
+
+    int32_t stackLevel() {
+
+        return _obj["stackLevel"].as<int32_t>();
+    }
+
+    ChargingProfilePurpose chargingProfilePurpose() {
+
+        return (ChargingProfilePurpose)_obj["chargingProfilePurpose"].as<size_t>();
+    }
+
+    ChargingProfileKind chargingProfileKind() {
+
+        return (ChargingProfileKind)_obj["chargingProfileKind"].as<size_t>();
+    }
+
+    Opt<RecurrencyKind> recurrencyKind() {
+        if (!_obj.containsKey("recurrencyKind"))
+                return {false};
+
+        return (Opt<RecurrencyKind>)_obj["recurrencyKind"].as<size_t>();
+    }
+
+    Opt<time_t> validFrom() {
+        if (!_obj.containsKey("validFrom"))
+                return {false};
+
+        return _obj["validFrom"].as<time_t>();
+    }
+
+    Opt<time_t> validTo() {
+        if (!_obj.containsKey("validTo"))
+                return {false};
+
+        return _obj["validTo"].as<time_t>();
+    }
+
+    SetChargingProfileCsChargingProfilesEntriesChargingScheduleEntriesView chargingSchedule() {
+
+        return SetChargingProfileCsChargingProfilesEntriesChargingScheduleEntriesView{_obj["chargingSchedule"].as<JsonObject>()};
+    }
+
+};
+
+struct SetChargingProfileView {
+    JsonObject _obj;
+
+    int32_t connectorId() {
+
+        return _obj["connectorId"].as<int32_t>();
+    }
+
+    SetChargingProfileCsChargingProfilesEntriesView csChargingProfiles() {
+
+        return SetChargingProfileCsChargingProfilesEntriesView{_obj["csChargingProfiles"].as<JsonObject>()};
+    }
+
+};
+
+struct GetCompositeScheduleView {
+    JsonObject _obj;
+
+    int32_t connectorId() {
+
+        return _obj["connectorId"].as<int32_t>();
+    }
+
+    int32_t duration() {
+
+        return _obj["duration"].as<int32_t>();
+    }
+
+    Opt<ChargingRateUnit> chargingRateUnit() {
+        if (!_obj.containsKey("chargingRateUnit"))
+                return {false};
+
+        return (Opt<ChargingRateUnit>)_obj["chargingRateUnit"].as<size_t>();
+    }
+
+};
+
+struct ClearChargingProfileView {
+    JsonObject _obj;
+
+    Opt<int32_t> id() {
+        if (!_obj.containsKey("id"))
+                return {false};
+
+        return _obj["id"].as<int32_t>();
+    }
+
+    Opt<int32_t> connectorId() {
+        if (!_obj.containsKey("connectorId"))
+                return {false};
+
+        return _obj["connectorId"].as<int32_t>();
+    }
+
+    Opt<ChargingProfilePurpose> chargingProfilePurpose() {
+        if (!_obj.containsKey("chargingProfilePurpose"))
+                return {false};
+
+        return (Opt<ChargingProfilePurpose>)_obj["chargingProfilePurpose"].as<size_t>();
+    }
+
+    Opt<int32_t> stackLevel() {
+        if (!_obj.containsKey("stackLevel"))
+                return {false};
+
+        return _obj["stackLevel"].as<int32_t>();
+    }
+
+};
+
 struct UnlockConnectorView {
     JsonObject _obj;
 
@@ -497,9 +716,9 @@ struct RemoteStartTransactionChargingProfileEntriesChargingScheduleEntriesView {
         return _obj["startSchedule"].as<time_t>();
     }
 
-    RemoteStartTransactionChargingProfileEntriesChargingScheduleEntriesChargingRateUnit chargingRateUnit() {
+    ChargingRateUnit chargingRateUnit() {
 
-        return (RemoteStartTransactionChargingProfileEntriesChargingScheduleEntriesChargingRateUnit)_obj["chargingRateUnit"].as<size_t>();
+        return (ChargingRateUnit)_obj["chargingRateUnit"].as<size_t>();
     }
 
     size_t chargingSchedulePeriod_count() {
@@ -541,21 +760,21 @@ struct RemoteStartTransactionChargingProfileEntriesView {
         return _obj["stackLevel"].as<int32_t>();
     }
 
-    RemoteStartTransactionChargingProfileEntriesChargingProfilePurpose chargingProfilePurpose() {
+    ChargingProfilePurpose chargingProfilePurpose() {
 
-        return (RemoteStartTransactionChargingProfileEntriesChargingProfilePurpose)_obj["chargingProfilePurpose"].as<size_t>();
+        return (ChargingProfilePurpose)_obj["chargingProfilePurpose"].as<size_t>();
     }
 
-    RemoteStartTransactionChargingProfileEntriesChargingProfileKind chargingProfileKind() {
+    ChargingProfileKind chargingProfileKind() {
 
-        return (RemoteStartTransactionChargingProfileEntriesChargingProfileKind)_obj["chargingProfileKind"].as<size_t>();
+        return (ChargingProfileKind)_obj["chargingProfileKind"].as<size_t>();
     }
 
-    Opt<RemoteStartTransactionChargingProfileEntriesRecurrencyKind> recurrencyKind() {
+    Opt<RecurrencyKind> recurrencyKind() {
         if (!_obj.containsKey("recurrencyKind"))
                 return {false};
 
-        return (Opt<RemoteStartTransactionChargingProfileEntriesRecurrencyKind>)_obj["recurrencyKind"].as<size_t>();
+        return (Opt<RecurrencyKind>)_obj["recurrencyKind"].as<size_t>();
     }
 
     Opt<time_t> validFrom() {
@@ -765,6 +984,14 @@ struct AuthorizeResponseView {
 
 };
 
+struct GetCompositeScheduleResponseChargingScheduleChargingSchedulePeriod {
+    int32_t startPeriod;
+    float limit;
+    int32_t numberPhases = OCPP_INTEGER_NOT_PASSED;
+
+    void serializeInto(TFJsonSerializer &json);
+};
+
 struct MeterValueSampledValue {
     const char *value;
     SampledValueContext context = SampledValueContext::NONE;
@@ -773,6 +1000,16 @@ struct MeterValueSampledValue {
     SampledValuePhase phase = SampledValuePhase::NONE;
     SampledValueLocation location = SampledValueLocation::NONE;
     SampledValueUnit unit = SampledValueUnit::NONE;
+
+    void serializeInto(TFJsonSerializer &json);
+};
+
+struct GetCompositeScheduleResponseChargingSchedule {
+    int32_t duration = OCPP_INTEGER_NOT_PASSED;
+    time_t startSchedule = OCPP_DATETIME_NOT_PASSED;
+    GetCompositeScheduleResponseChargingScheduleChargingRateUnit chargingRateUnit;
+    GetCompositeScheduleResponseChargingScheduleChargingSchedulePeriod *chargingSchedulePeriod; size_t chargingSchedulePeriod_length;
+    float minChargingRate = OCPP_DECIMAL_NOT_PASSED;
 
     void serializeInto(TFJsonSerializer &json);
 };
@@ -997,6 +1234,39 @@ struct UnlockConnectorResponse final : public ICall {
     size_t serializeJson(char *buf, size_t buf_len) const override;
 };
 
+struct ClearChargingProfileResponse final : public ICall {
+    ClearChargingProfileResponseStatus status;
+
+    ClearChargingProfileResponse(const char *call_id,
+        ClearChargingProfileResponseStatus status);
+
+    size_t serializeJson(char *buf, size_t buf_len) const override;
+};
+
+struct GetCompositeScheduleResponse final : public ICall {
+    ResponseStatus status;
+    int32_t connectorId;
+    time_t scheduleStart;
+    GetCompositeScheduleResponseChargingSchedule *chargingSchedule;
+
+    GetCompositeScheduleResponse(const char *call_id,
+        ResponseStatus status,
+        int32_t connectorId = OCPP_INTEGER_NOT_PASSED,
+        time_t scheduleStart = OCPP_DATETIME_NOT_PASSED,
+        GetCompositeScheduleResponseChargingSchedule *chargingSchedule = nullptr);
+
+    size_t serializeJson(char *buf, size_t buf_len) const override;
+};
+
+struct SetChargingProfileResponse final : public ICall {
+    SetChargingProfileResponseStatus status;
+
+    SetChargingProfileResponse(const char *call_id,
+        SetChargingProfileResponseStatus status);
+
+    size_t serializeJson(char *buf, size_t buf_len) const override;
+};
+
 CallResponse parseAuthorizeResponse(JsonObject obj);
 
 CallResponse parseBootNotificationResponse(JsonObject obj);
@@ -1030,6 +1300,12 @@ CallResponse parseStatusNotificationResponse(JsonObject obj);
 CallResponse parseStopTransactionResponse(JsonObject obj);
 
 CallResponse parseUnlockConnector(JsonObject obj);
+
+CallResponse parseClearChargingProfile(JsonObject obj);
+
+CallResponse parseGetCompositeSchedule(JsonObject obj);
+
+CallResponse parseSetChargingProfile(JsonObject obj);
 
 CallResponse callResultHandler(int32_t connectorId, CallAction resultTo, JsonObject obj, OcppChargePoint *cp);
 
