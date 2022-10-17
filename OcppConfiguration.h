@@ -91,6 +91,7 @@ enum class ConnectorPhaseRotation {
 };
 
 enum class ConfigKey {
+    // CORE PROFILE
     //AllowOfflineTxForUnknownId,
     //AuthorizationCacheEnabled,
     AuthorizeRemoteTxRequests,
@@ -127,6 +128,22 @@ enum class ConfigKey {
     TransactionMessageRetryInterval,
     UnlockConnectorOnEVSideDisconnect,
     WebSocketPingInterval,
+
+    // // LOCAL AUTH LIST MANAGEMENT PROFILE
+    // LocalAuthListEnabled,
+    // LocalAuthListMaxLength,
+    // SendLocalListMaxLength,
+
+    // // RESERVATION PROFILE
+    // ReserveConnectorZeroSupported,
+
+    // SMART CHARGING PROFILE
+    ChargeProfileMaxStackLevel,
+    ChargingScheduleAllowedChargingRateUnit,
+    ChargingScheduleMaxPeriods,
+    ConnectorSwitch3to1PhaseSupported,
+    MaxChargingProfilesInstalled,
+
     CONFIG_KEY_MAX
 };
 

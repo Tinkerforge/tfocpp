@@ -369,7 +369,7 @@ CallResponse OcppChargePoint::handleBootNotificationResponse(int32_t connectorId
     if (conf.interval() > 0)
         setIntConfig(ConfigKey::HeartbeatInterval, conf.interval());
     else
-        setIntConfig(ConfigKey::HeartbeatInterval, DEFAULT_BOOT_NOTIFICATION_RESEND_INTERVAL_S);
+        setIntConfig(ConfigKey::HeartbeatInterval, DEFAULT_HEARTBEAT_INTERVAL_S);
 
     switch (conf.status()) {
         case BootNotificationResponseStatus::ACCEPTED: {
