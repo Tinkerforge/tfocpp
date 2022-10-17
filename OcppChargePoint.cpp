@@ -595,7 +595,7 @@ CallResponse OcppChargePoint::handleGetConfiguration(const char *uid, GetConfigu
                 known[known_idx].key = config_keys[result];
                 known[known_idx].readonly = config.readonly;
                 known[known_idx].value = config_value;
-                log_info("    %s: %s", config_keys[i], config_value);
+                log_info("    %s: %s", config_keys[result], config_value);
                 ++known_idx;
             }
             else {
