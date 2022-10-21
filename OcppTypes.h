@@ -37,7 +37,7 @@ template<typename T>
 struct Opt {
 public:
     Opt(T t): val(t), have_val(true) {}
-    Opt(bool have): val(), have_val(have) {}
+    Opt() : val(), have_val(false) {}
 
     T &get() {
         return val;
