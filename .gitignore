@@ -2,5 +2,5 @@
 .vscode
 todo
 __pycache__
-ocpp
+ocpp_linux
 libocpp.so

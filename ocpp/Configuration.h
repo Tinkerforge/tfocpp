@@ -6,7 +6,7 @@
 #include <memory>
 #include <limits>
 
-#include "OcppMessages.h"
+#include "Messages.h"
 
 enum class OcppConfigurationValueType {
     Integer,

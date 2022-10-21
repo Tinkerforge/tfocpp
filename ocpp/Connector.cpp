@@ -1,8 +1,8 @@
-#include "OcppConnector.h"
+#include "Connector.h"
 
-#include "OcppTools.h"
-#include "OcppChargePoint.h"
-#include "OcppPersistency.h"
+#include "Tools.h"
+#include "ChargePoint.h"
+#include "Persistency.h"
 
 void Connector::deauth() {
     authorized_for = IdTagInfo{};

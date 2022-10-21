@@ -1,4 +1,4 @@
-#include "OcppTypes.h"
+#include "Types.h"
 
 const char * const CallErrorCodeStrings[] {
     "NotImplemented",

@@ -2,7 +2,7 @@
 
 #include <stdint.h>
 #include <time.h>
-#include "OcppConnection.h"
+#include "Connection.h"
 
 #define OCPP_MAX_PERSISTENT_MESSAGES 100
 

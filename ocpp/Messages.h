@@ -2,8 +2,8 @@
 
 #pragma once
 
-#include "OcppTypes.h"
-#include <TFJson.h>
+#include "Types.h"
+#include "TFJson.h"
 
 #include <math.h>
 

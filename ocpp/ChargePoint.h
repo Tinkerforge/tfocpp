@@ -2,14 +2,14 @@
 
 #include <limits>
 
-#include "OcppConnection.h"
-#include "OcppConfiguration.h"
-#include "OcppMessages.h"
-#include "OcppPlatform.h"
-#include "OcppTools.h"
-#include "OcppDefines.h"
-#include "OcppConnector.h"
-#include "OcppChargingProfile.h"
+#include "Connection.h"
+#include "Configuration.h"
+#include "Messages.h"
+#include "Platform.h"
+#include "Tools.h"
+#include "Defines.h"
+#include "Connector.h"
+#include "ChargingProfile.h"
 
 enum class OcppState {
     PowerOn, // send boot notification, wait for boot notification conf, don't do anything else

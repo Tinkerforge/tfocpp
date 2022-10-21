@@ -2,8 +2,8 @@
 
 #include <stdint.h>
 
-#include "OcppDefines.h"
-#include "OcppTools.h"
+#include "Defines.h"
+#include "Tools.h"
 
 class PeriodItem {
 public:

@@ -1,11 +1,11 @@
-#include "OcppChargePoint.h"
+#include "ChargePoint.h"
 
-#include "OcppDefines.h"
-#include "OcppTypes.h"
-#include "OcppConfiguration.h"
-#include "OcppConnector.h"
+#include "Defines.h"
+#include "Types.h"
+#include "Configuration.h"
+#include "Connector.h"
 
-#include "OcppPersistency.h"
+#include "Persistency.h"
 
 #include <limits>
 #include <array>
@@ -13,7 +13,7 @@
 #include <numeric>
 
 extern "C" {
-    #include "lib/libiso8601/iso8601.h"
+    #include "iso8601.h"
 }
 
 

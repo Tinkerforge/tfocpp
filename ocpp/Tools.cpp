@@ -1,6 +1,6 @@
-#include "OcppTools.h"
+#include "Tools.h"
 
-#include "OcppPlatform.h"
+#include "Platform.h"
 
 #include "string.h"
 #include <ArduinoJson.h>

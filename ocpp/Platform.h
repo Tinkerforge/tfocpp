@@ -6,7 +6,7 @@
 
 #include <functional>
 
-#include "OcppMessages.h"
+#include "Messages.h"
 
 struct PlatformResponse {
     uint8_t seq_num;

@@ -2,7 +2,7 @@
 #include "stdint.h"
 #include "stddef.h"
 #include "time.h"
-#include <ArduinoJson.h>
+#include "ArduinoJson.h"
 
 #define OCPP_INTEGER_NOT_PASSED INT32_MAX
 #define OCPP_DATETIME_NOT_PASSED 0
@@ -15,9 +15,9 @@ extern const size_t CallErrorCodeStringAliasLength;
 enum class CallErrorCode {
     NotImplemented = 0, // handled when parsing the outer call
     NotSupported, // handled when parsing the outer call
-    InternalError, // ?
-    ProtocolError, // parsing error
-    SecurityError, // eeh
+    InternalError,
+    ProtocolError, // For example incomplete payload
+    SecurityError,
     FormationViolation, // unknown member, syntax error
     PropertyConstraintViolation, // constraints such as connectorId >= 0 -> seems to be incomplete in schema
     OccurenceConstraintViolation, // member is there, but cardinality is wrong

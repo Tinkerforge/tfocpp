@@ -1,7 +1,7 @@
-#include "OcppMeterValueAccumulator.h"
-#include "OcppTools.h"
-#include "OcppConfiguration.h"
-#include "OcppChargePoint.h"
+#include "MeterValueAccumulator.h"
+#include "Tools.h"
+#include "Configuration.h"
+#include "ChargePoint.h"
 
 enum class MeasurandType {
     Register,

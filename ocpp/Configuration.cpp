@@ -1,8 +1,8 @@
-#include "OcppConfiguration.h"
+#include "Configuration.h"
 
-#include "OcppDefines.h"
-#include "OcppPlatform.h"
-#include "OcppTools.h"
+#include "Defines.h"
+#include "Platform.h"
+#include "Tools.h"
 
 #include <string.h>
 

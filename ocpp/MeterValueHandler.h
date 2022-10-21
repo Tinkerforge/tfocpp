@@ -1,7 +1,7 @@
 #pragma once
 
-#include "OcppMeterValueAccumulator.h"
-#include "OcppTools.h"
+#include "MeterValueAccumulator.h"
+#include "Tools.h"
 
 class OcppChargePoint;
 

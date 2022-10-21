@@ -1,8 +1,8 @@
-#include "OcppPersistency.h"
+#include "Persistency.h"
 
-#include "OcppTypes.h"
-#include "OcppPlatform.h"
-#include "OcppChargePoint.h"
+#include "Types.h"
+#include "Platform.h"
+#include "ChargePoint.h"
 
 #include <string.h>
 

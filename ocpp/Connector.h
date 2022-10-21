@@ -2,13 +2,13 @@
 
 #include <stdint.h>
 
-#include "OcppConfiguration.h"
-#include "OcppPlatform.h"
-#include "OcppMessages.h"
-#include "OcppConnection.h"
-#include "OcppMeterValueHandler.h"
-#include "OcppChargingProfile.h"
-#include "OcppDefines.h"
+#include "Configuration.h"
+#include "Platform.h"
+#include "Messages.h"
+#include "Connection.h"
+#include "MeterValueHandler.h"
+#include "ChargingProfile.h"
+#include "Defines.h"
 
 enum class ConnectorState {
     IDLE,

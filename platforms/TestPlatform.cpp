@@ -1,6 +1,6 @@
-#include "TestOcppPlatform.h"
+#include "TestPlatform.h"
 
-#include "OcppChargePoint.h"
+#include "ocpp/ChargePoint.h"
 #include "time.h"
 
 #define URL_PARSER_IMPLEMENTATION

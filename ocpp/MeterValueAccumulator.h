@@ -1,7 +1,7 @@
 #pragma once
 
-#include "OcppPlatform.h"
-#include "OcppConfiguration.h"
+#include "Platform.h"
+#include "Configuration.h"
 
 #include <memory>
 

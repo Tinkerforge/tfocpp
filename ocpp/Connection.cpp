@@ -1,9 +1,9 @@
-#include "OcppConnection.h"
+#include "Connection.h"
 
-#include "OcppChargePoint.h"
-#include "OcppPersistency.h"
-#include "OcppTypes.h"
-#include <TFJson.h>
+#include "ChargePoint.h"
+#include "Persistency.h"
+#include "Types.h"
+#include "TFJson.h"
 
 static bool is_transaction_related(CallAction action) {
      // TODO: only "periodic or clock-aligned MeterValues.req messages" are transaction related. Are those all MeterValues messages?

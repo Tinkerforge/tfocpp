@@ -1,16 +1,16 @@
 // THIS FILE IS AUTO-GENERATED. DO NOT EDIT.
 
-#include "OcppMessages.h"
+#include "Messages.h"
 
-#include "OcppChargePoint.h"
-#include "OcppPlatform.h"
-#include "OcppTypes.h"
+#include "ChargePoint.h"
+#include "Platform.h"
+#include "Types.h"
 
 extern "C" {
-#include "lib/libiso8601/iso8601.h"
+#include "iso8601.h"
 }
 
-#include <TFJson.h>
+#include "TFJson.h"
 
 static bool iso_string_to_unix_timestamp(const char *iso_string, time_t *t) {
     iso8601_time time;

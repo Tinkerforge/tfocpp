@@ -5,9 +5,9 @@
 #include <deque>
 #include <memory>
 
-#include "OcppMessages.h"
-#include "OcppPlatform.h"
-#include "OcppTools.h"
+#include "Messages.h"
+#include "Platform.h"
+#include "Tools.h"
 
 class OcppChargePoint;
 
