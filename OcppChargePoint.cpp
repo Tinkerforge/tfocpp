@@ -24,7 +24,17 @@ void OcppChargePoint::tick_power_on() {
 
     last_bn_send_ms = platform_now_ms();
 
-    this->sendCallAction(BootNotification("Warp 2 Charger Pro", "Tinkerforge GmbH", "warp2-X8A"));
+    this->sendCallAction(BootNotification(
+        platform_get_charge_point_vendor(),
+        platform_get_charge_point_model(),
+        platform_get_charge_point_serial_number(),
+        nullptr,
+        platform_get_firmware_version(),
+        platform_get_iccid(),
+        platform_get_imsi(),
+        platform_get_meter_type(),
+        platform_get_meter_serial_number()
+    ));
 }
 
 void OcppChargePoint::tick_idle() {

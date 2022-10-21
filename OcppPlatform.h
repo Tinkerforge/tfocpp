@@ -165,3 +165,15 @@ OcppDirEnt *platform_read_dir(void *dir_fd);
 void platform_close_dir(void *dir_fd);
 
 void platform_remove_file(const char *name);
+
+// Required
+const char *platform_get_charge_point_vendor();
+const char *platform_get_charge_point_model();
+
+// Optional - Return nullptr if not to be sent.
+const char *platform_get_charge_point_serial_number();
+const char *platform_get_firmware_version();
+const char *platform_get_iccid();
+const char *platform_get_imsi();
+const char *platform_get_meter_type();
+const char *platform_get_meter_serial_number();

@@ -421,3 +421,29 @@ void platform_remove_file(const char *name)
 {
     unlink(name);
 }
+
+const char *platform_get_charge_point_vendor() {
+    return "Tinkerforge GmbH";
+}
+const char *platform_get_charge_point_model() {
+    return "WARP2 Charger Pro";
+}
+
+const char *platform_get_charge_point_serial_number() {
+    return "warp2-X8A";
+}
+const char *platform_get_firmware_version() {
+    return nullptr;
+}
+const char *platform_get_iccid() {
+    return nullptr;
+}
+const char *platform_get_imsi() {
+    return nullptr;
+}
+const char *platform_get_meter_type() {
+    return nullptr;
+}
+const char *platform_get_meter_serial_number() {
+    return nullptr;
+}
