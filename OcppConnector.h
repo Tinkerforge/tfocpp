@@ -110,6 +110,8 @@ struct Connector {
 
     void onStartTransactionConf(IdTagInfo info, int32_t txn_id);
 
+    bool isTransactionActive();
+
     void onRemoteStartTransaction(const char *tag_id);
     void onRemoteStopTransaction();
 

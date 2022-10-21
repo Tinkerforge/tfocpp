@@ -958,6 +958,30 @@ void Connector::onStartTransactionConf(IdTagInfo info, int32_t txn_id) {
     //}
 }
 
+bool Connector::isTransactionActive()
+{
+    switch (state) {
+        case ConnectorState::IDLE:
+        case ConnectorState::AUTH_START_NO_PLUG:
+        case ConnectorState::NO_CABLE_NO_TAG:
+        case ConnectorState::AUTH_START_NO_CABLE:
+        case ConnectorState::FINISHING_NO_CABLE_UNLOCKED:
+        case ConnectorState::FINISHING_NO_CABLE_LOCKED:
+        case ConnectorState::NO_TAG:
+        case ConnectorState::AUTH_START:
+        case ConnectorState::FINISHING_UNLOCKED:
+        case ConnectorState::FINISHING_NO_SAME_TAG:
+        case ConnectorState::NO_PLUG:
+        case ConnectorState::NO_CABLE:
+        case ConnectorState::UNAVAILABLE:
+            return false;
+
+        case ConnectorState::TRANSACTION:
+        case ConnectorState::AUTH_STOP:
+            return true;
+    }
+}
+
 void Connector::onRemoteStartTransaction(const char *tag_id)
 {
     switch (state) {
