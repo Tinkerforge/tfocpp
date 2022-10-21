@@ -34,32 +34,32 @@ uint32_t platform_now_ms();
 void platform_set_system_time(void *ctx, time_t t);
 time_t platform_get_system_time(void *ctx);
 
-#define LOG_LEVEL_NONE 0
-#define LOG_LEVEL_ERROR 1
-#define LOG_LEVEL_WARN 2
-#define LOG_LEVEL_INFO 3
-#define LOG_LEVEL_DEBUG 4
+#define OCPP_LOG_LEVEL_NONE 0
+#define OCPP_LOG_LEVEL_ERROR 1
+#define OCPP_LOG_LEVEL_WARN 2
+#define OCPP_LOG_LEVEL_INFO 3
+#define OCPP_LOG_LEVEL_DEBUG 4
 
-#if LOG_LEVEL >= LOG_LEVEL_ERROR
-#define log_error(...) platform_printfln(LOG_LEVEL_ERROR, __VA_ARGS__)
+#if OCPP_LOG_LEVEL >= OCPP_LOG_LEVEL_ERROR
+#define log_error(...) platform_printfln(OCPP_LOG_LEVEL_ERROR, __VA_ARGS__)
 #else
 #define log_error(...)
 #endif
 
-#if LOG_LEVEL >= LOG_LEVEL_WARN
-#define log_warn(...) platform_printfln(LOG_LEVEL_WARN, __VA_ARGS__)
+#if OCPP_LOG_LEVEL >= OCPP_LOG_LEVEL_WARN
+#define log_warn(...) platform_printfln(OCPP_LOG_LEVEL_WARN, __VA_ARGS__)
 #else
 #define log_warn(...)
 #endif
 
-#if LOG_LEVEL >= LOG_LEVEL_INFO
-#define log_info(...) platform_printfln(LOG_LEVEL_INFO, __VA_ARGS__)
+#if OCPP_LOG_LEVEL >= OCPP_LOG_LEVEL_INFO
+#define log_info(...) platform_printfln(OCPP_LOG_LEVEL_INFO, __VA_ARGS__)
 #else
 #define log_info(...)
 #endif
 
-#if LOG_LEVEL >= LOG_LEVEL_DEBUG
-#define log_debug(...) platform_printfln(LOG_LEVEL_DEBUG, __VA_ARGS__)
+#if OCPP_LOG_LEVEL >= OCPP_LOG_LEVEL_DEBUG
+#define log_debug(...) platform_printfln(OCPP_LOG_LEVEL_DEBUG, __VA_ARGS__)
 #else
 #define log_debug(...)
 #endif

@@ -132,16 +132,16 @@ time_t platform_get_system_time(void *ctx) {
 void platform_printfln(int level, const char *fmt, ...)
 {
     switch (level) {
-        case LOG_LEVEL_ERROR:
+        case OCPP_LOG_LEVEL_ERROR:
             fputs("[ERROR]   ", stdout);
             break;
-        case LOG_LEVEL_WARN:
+        case OCPP_LOG_LEVEL_WARN:
             fputs("[WARNING] ", stdout);
             break;
-        case LOG_LEVEL_INFO:
+        case OCPP_LOG_LEVEL_INFO:
             fputs("[INFO]    ", stdout);
             break;
-        case LOG_LEVEL_DEBUG:
+        case OCPP_LOG_LEVEL_DEBUG:
             fputs("[DEBUG]   ", stdout);
             break;
         default:
