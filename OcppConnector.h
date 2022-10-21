@@ -7,6 +7,8 @@
 #include "OcppMessages.h"
 #include "OcppConnection.h"
 #include "OcppMeterValueHandler.h"
+#include "OcppChargingProfile.h"
+#include "OcppDefines.h"
 
 enum class ConnectorState {
     IDLE,
@@ -56,6 +58,9 @@ struct Connector {
     time_t transaction_confirmed_timestamp;
     time_t transaction_start_time;
 
+    // +1 as stack levels 0 up to (including) CHARGE_PROFILE_MAX_STACK_LEVEL are allowed.
+    Opt<ChargingProfile> txProfiles[CHARGE_PROFILE_MAX_STACK_LEVEL + 1];
+    Opt<ChargingProfile> txDefaultProfiles[CHARGE_PROFILE_MAX_STACK_LEVEL + 1];
 
     // This is set to true if a StartTransaction.conf is received that was not accepted
     // and StopTransactionOnInvalidId is not configured to true.

@@ -2,6 +2,8 @@
 
 #define NUM_CONNECTORS 1
 
+#define CURRENT_REQUIRED_TO_START_CHARGING 6
+
 // Default configuration
 
 #define DEFAULT_ALLOW_OFFLINE_TX_FOR_UNKNOWN_ID false

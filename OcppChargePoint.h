@@ -9,6 +9,7 @@
 #include "OcppTools.h"
 #include "OcppDefines.h"
 #include "OcppConnector.h"
+#include "OcppChargingProfile.h"
 
 enum class OcppState {
     PowerOn, // send boot notification, wait for boot notification conf, don't do anything else
@@ -93,6 +94,14 @@ public:
     CallResponse handleGetCompositeSchedule(const char *uid, GetCompositeScheduleView req);
     CallResponse handleSetChargingProfile(const char *uid, SetChargingProfileView req);
 
+    struct EvalChargingProfilesResult {
+        time_t nextCheck;
+        float allocatedLimit[NUM_CONNECTORS + 1];
+        int32_t allocatedPhases[NUM_CONNECTORS + 1];
+    };
+
+    EvalChargingProfilesResult evalChargingProfiles();
+
     OcppState state = OcppState::PowerOn;
 
     void *platform_ctx;
@@ -112,4 +121,8 @@ public:
     Point main controller.
     */
     Connector connectors[NUM_CONNECTORS];
+
+    // +1 as stack levels 0 up to (including) CHARGE_PROFILE_MAX_STACK_LEVEL are allowed.
+    Opt<ChargingProfile> chargePointMaxProfiles[CHARGE_PROFILE_MAX_STACK_LEVEL + 1];
+    Opt<ChargingProfile> txDefaultProfiles[CHARGE_PROFILE_MAX_STACK_LEVEL + 1];
 };
