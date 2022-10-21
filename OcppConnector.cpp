@@ -66,6 +66,7 @@ void Connector::applyState() {
             deauth();
 
             transaction_id = INT32_MAX;
+            transaction_start_time = 0;
             transaction_with_invalid_tag_id = false;
             break;
 
@@ -79,6 +80,7 @@ void Connector::applyState() {
             deauth();
 
             transaction_id = INT32_MAX;
+            transaction_start_time = 0;
             transaction_with_invalid_tag_id = false;
             break;
 
@@ -92,6 +94,7 @@ void Connector::applyState() {
             deauth();
 
             transaction_id = INT32_MAX;
+            transaction_start_time = 0;
             transaction_with_invalid_tag_id = false;
             break;
 
@@ -107,6 +110,7 @@ void Connector::applyState() {
             setCableDeadline();
 
             transaction_id = INT32_MAX;
+            transaction_start_time = 0;
             transaction_with_invalid_tag_id = false;
             break;
 
@@ -118,6 +122,7 @@ void Connector::applyState() {
             clearCableDeadline();
 
             transaction_id = INT32_MAX;
+            transaction_start_time = 0;
             transaction_with_invalid_tag_id = false;
             break;
 
@@ -130,6 +135,7 @@ void Connector::applyState() {
             setCableDeadline();
 
             transaction_id = INT32_MAX;
+            transaction_start_time = 0;
             transaction_with_invalid_tag_id = false;
             break;
 
@@ -152,6 +158,7 @@ void Connector::applyState() {
             clearCableDeadline();
 
             transaction_id = INT32_MAX;
+            transaction_start_time = 0;
             transaction_with_invalid_tag_id = false;
             break;
     }
@@ -205,11 +212,11 @@ void Connector::setState(ConnectorState newState) {
                     this->transaction_id = -1;
                     this->meter_value_handler.onStartTransaction(this->transaction_id);
 
-                    auto timestamp = platform_get_system_time(cp->platform_ctx);
+                    this->transaction_start_time = platform_get_system_time(cp->platform_ctx);
                     auto energy = platform_get_energy(connectorId);
-                    persistStartTxn(connectorId, authorized_for.tagId, energy, OCPP_INTEGER_NOT_PASSED, timestamp);
+                    persistStartTxn(connectorId, authorized_for.tagId, energy, OCPP_INTEGER_NOT_PASSED, this->transaction_start_time);
                     log_info("Sending StartTransaction.req at connector %d for tag %s at %.3f kWh.", this->connectorId, authorized_for.tagId, energy / 1000.0f);
-                    this->sendCallAction(StartTransaction(connectorId, authorized_for.tagId, energy, timestamp), timestamp);
+                    this->sendCallAction(StartTransaction(connectorId, authorized_for.tagId, energy, this->transaction_start_time), this->transaction_start_time);
                     break;
                 }
                 case ConnectorState::IDLE:

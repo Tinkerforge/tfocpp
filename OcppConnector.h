@@ -54,6 +54,8 @@ struct Connector {
     uint32_t cable_deadline = 0;
     int32_t transaction_id = INT32_MAX;
     time_t transaction_confirmed_timestamp;
+    time_t transaction_start_time;
+
 
     // This is set to true if a StartTransaction.conf is received that was not accepted
     // and StopTransactionOnInvalidId is not configured to true.
