@@ -366,7 +366,7 @@ CallResponse OcppChargePoint::handleAuthorizeResponse(int32_t connectorId, Autho
 
 CallResponse OcppChargePoint::handleBootNotificationResponse(int32_t connectorId, BootNotificationResponseView conf) {
     (void) connectorId;
-    log_info("Received BootNotification.conf for connector %d\n", connectorId);
+    log_info("Received BootNotification.conf for connector %d. Interval %d\n", connectorId, conf.interval());
 
     if ((state != OcppState::PowerOn) &&
         (state != OcppState::Pending) &&
@@ -641,7 +641,7 @@ CallResponse OcppChargePoint::handleMeterValuesResponse(int32_t connectorId, Met
 
 CallResponse OcppChargePoint::handleRemoteStartTransaction(const char *uid, RemoteStartTransactionView req)
 {
-    log_info("Received RemoteStartTransaction.req for connector %d%s and tag %s", req.connectorId().is_set() ? req.connectorId() : 0, req.connectorId().is_set() ? "" : "[ANY CONNECTOR]", req.idTag());
+    log_info("Received RemoteStartTransaction.req for connector %d%s and tag %s", req.connectorId().is_set() ? req.connectorId().get() : 0, req.connectorId().is_set() ? "" : "[ANY CONNECTOR]", req.idTag());
     int conn_id = -1;
 
     if (!req.connectorId().is_set()) {
