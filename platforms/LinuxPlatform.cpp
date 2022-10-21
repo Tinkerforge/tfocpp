@@ -1,3 +1,5 @@
+#ifdef OCPP_PLATFORM_LINUX
+
 #include "ocpp/Platform.h"
 
 #include "ocpp/ChargePoint.h"
@@ -447,3 +449,5 @@ const char *platform_get_meter_type() {
 const char *platform_get_meter_serial_number() {
     return nullptr;
 }
+
+#endif

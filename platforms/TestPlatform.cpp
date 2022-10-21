@@ -1,3 +1,5 @@
+#ifdef OCPP_PLATFORM_TEST
+
 #include "TestPlatform.h"
 
 #include "ocpp/ChargePoint.h"
@@ -281,3 +283,5 @@ void platform_close_dir(void *dir_fd){
 void platform_remove_file(const char *name){
     return;
 }
+
+#endif

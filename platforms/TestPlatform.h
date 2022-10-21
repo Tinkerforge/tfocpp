@@ -1,3 +1,5 @@
+#ifdef OCPP_PLATFORM_TEST
+
 #include "ocpp/Platform.h"
 
 extern "C" {
@@ -25,3 +27,5 @@ void ocpp_tick();
 void ocpp_stop();
 void ocpp_destroy();
 }
+
+#endif

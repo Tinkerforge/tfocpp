@@ -28,6 +28,9 @@ SOURCES_EXEC := $(SOURCES) platforms/LinuxPlatform.cpp
 OBJECTS_LIB := ${SOURCES_LIB:.cpp=.o}
 OBJECTS_EXEC := ${SOURCES_EXEC:.cpp=.o}
 
+$(OBJECTS_LIB): CXXFLAGS := $(CXXFLAGS) -DOCPP_PLATFORM_TEST
+$(OBJECTS_EXEC): CXXFLAGS := $(CXXFLAGS) -DOCPP_PLATFORM_LINUX
+
 all: libocpp.so ocpp_linux
 
 libocpp.so: $(OBJECTS_LIB)
