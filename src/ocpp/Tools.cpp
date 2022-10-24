@@ -3,14 +3,16 @@
 #include "Platform.h"
 
 #include "string.h"
-#include <ArduinoJson.h>
+#include "ArduinoJson.h"
 
+#ifndef OCPP_PLATFORM_ESP32
 bool deadline_elapsed(uint32_t deadline_ms)
 {
     uint32_t now = platform_now_ms();
 
     return ((uint32_t)(now - deadline_ms)) < (UINT32_MAX / 2);
 }
+#endif
 
 bool lookup_key(size_t *result, const char *key, const char * const *array, size_t array_length, const char * const *aliases, const size_t * const alias_indices, size_t alias_length) {
     for(size_t i = 0; i < array_length; ++i) {

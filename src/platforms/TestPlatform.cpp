@@ -6,9 +6,12 @@
 #include "time.h"
 
 #define URL_PARSER_IMPLEMENTATION
-#include "lib/url_parse/url.h"
+#include "lib/url.h"
 
-#include "lib/mongoose/mongoose.h"
+#include "mongoose.h"
+
+#define TFJSON_IMPLEMENTATION
+#include "lib/TFJson.h"
 
 static uint32_t (*platform_now_ms_cb)() = nullptr;
 static void (*platform_set_system_time_cb)(void *ctx, time_t t) = nullptr;

@@ -167,7 +167,7 @@ void iso8601_from_tm(const struct tm *tm, uint32_t usecond, bool localtime,
 }
 
 // timegm is a nonstandard GNU extension that are also present on the BSDs.
-#if not defined(timegm)
+#if !defined(timegm)
 // From https://blog.reverberate.org/2020/05/12/optimizing-date-algorithms.html
 static int epoch_days_fast(int y, int m, int d) {
   const uint32_t year_base = 4800;    /* Before min year, multiple of 400. */

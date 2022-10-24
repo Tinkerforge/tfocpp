@@ -6,13 +6,16 @@
 #include "time.h"
 
 #define URL_PARSER_IMPLEMENTATION
-#include "lib/url_parse/url.h"
+#include "lib/url.h"
 
-#include "lib/mongoose/mongoose.h"
+#include "mongoose.h"
 
 #include <memory>
 
 #include <dirent.h>
+
+#define TFJSON_IMPLEMENTATION
+#include "lib/TFJson.h"
 
 struct mg_mgr mgr;        // Event manager
 struct mg_connection *c;  // Client connection
