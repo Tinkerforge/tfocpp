@@ -1,0 +1,91 @@
+// THIS FILE IS AUTO-GENERATED. DO NOT EDIT.
+
+#pragma once
+
+#include "Types.h"
+#include "TFJson.h"
+
+#include <math.h>
+
+class OcppChargePoint;
+
+#define OCPP_INTEGER_NOT_PASSED INT32_MAX
+#define OCPP_DECIMAL_NOT_PASSED NAN
+#define OCPP_DATETIME_NOT_PASSED 0
+
+{{{enums}}}
+
+struct ICall {
+    ICall(CallAction action, uint32_t messageId): action(action), ocppJmessageId(messageId), ocppJcallId(nullptr) {}
+    ICall(CallAction action, const char *callId): action(action), ocppJmessageId(0), ocppJcallId(callId) {}
+    ICall(const ICall &) = delete;
+
+    virtual ~ICall();
+
+    size_t measureJson() const;
+    virtual size_t serializeJson(char *buf, size_t buf_len) const = 0;
+
+    CallAction action;
+    uint32_t ocppJmessageId;
+    const char *ocppJcallId;
+};
+
+{{{structs}}}
+
+{{{messages}}}
+
+struct IdTagInfo {
+    char tagId[21] = {0};
+    char parentTagId[21] = {0};
+    ResponseIdTagInfoEntriesStatus status = ResponseIdTagInfoEntriesStatus::INVALID;
+    time_t expiryDate = 0;
+
+    void updateTagId(const char *newTagId) {
+        memset(tagId, 0, ARRAY_SIZE(tagId));
+        strncpy(tagId, newTagId, ARRAY_SIZE(tagId) - 1);
+    }
+
+     void updateFromIdTagInfo(IdTagInfo view) {
+        memset(parentTagId, 0, ARRAY_SIZE(parentTagId));
+        strncpy(parentTagId, view.parentTagId, ARRAY_SIZE(parentTagId) - 1);
+
+        expiryDate = view.expiryDate;
+        status = view.status;
+    }
+
+    void updateFromIdTagInfo(StopTransactionResponseIdTagInfoEntriesView view) {
+        memset(parentTagId, 0, ARRAY_SIZE(parentTagId));
+        if (view.parentIdTag().is_set())
+            strncpy(parentTagId, view.parentIdTag().get(), ARRAY_SIZE(parentTagId) - 1);
+
+        expiryDate = view.expiryDate().is_set() ? view.expiryDate().get() : 0;
+        status = view.status();
+    }
+
+    void updateFromIdTagInfo(StartTransactionResponseIdTagInfoEntriesView view) {
+        memset(parentTagId, 0, ARRAY_SIZE(parentTagId));
+        if (view.parentIdTag().is_set())
+            strncpy(parentTagId, view.parentIdTag().get(), ARRAY_SIZE(parentTagId) - 1);
+
+        expiryDate = view.expiryDate().is_set() ? view.expiryDate().get() : 0;
+        status = view.status();
+    }
+
+    void updateFromIdTagInfo(AuthorizeResponseIdTagInfoEntriesView view) {
+        memset(parentTagId, 0, ARRAY_SIZE(parentTagId));
+        if (view.parentIdTag().is_set())
+            strncpy(parentTagId, view.parentIdTag().get(), ARRAY_SIZE(parentTagId) - 1);
+
+        expiryDate = view.expiryDate().is_set() ? view.expiryDate().get() : 0;
+        status = view.status();
+    }
+
+    bool is_same_group(IdTagInfo *other) {
+        return (strncmp(this->tagId, other->tagId, ARRAY_SIZE(this->tagId)) == 0)
+            || (strncmp(this->parentTagId, other->parentTagId, ARRAY_SIZE(this->parentTagId)) == 0);
+    }
+
+    bool is_same_tag(const char *other_id) {
+        return (strncmp(this->tagId, other_id, ARRAY_SIZE(this->tagId)) == 0);
+    }
+};

@@ -1,0 +1,45 @@
+// THIS FILE IS AUTO-GENERATED. DO NOT EDIT.
+
+#include "Messages.h"
+
+#include "ChargePoint.h"
+#include "Platform.h"
+#include "Types.h"
+
+extern "C" {
+#include "iso8601.h"
+}
+
+#include "TFJson.h"
+
+static bool iso_string_to_unix_timestamp(const char *iso_string, time_t *t) {
+    iso8601_time time;
+    if (iso8601_parse(iso_string, &time) != 0) {
+        return false;
+    }
+    iso8601_to_time_t(&time, t);
+    return true;
+}
+
+static void unix_timestamp_to_iso_string(time_t timestamp, TFJsonSerializer &json, const char *key) {
+    char buf[OCPP_ISO_8601_MAX_LEN] = {0};
+    const tm *t = gmtime(&timestamp);
+
+    strftime(buf, ARRAY_SIZE(buf), "%FT%TZ", t);
+
+    json.add(key, buf);
+}
+
+ICall::~ICall() {}
+
+size_t ICall::measureJson() const {
+    return this->serializeJson(nullptr, 0);
+}
+
+static uint32_t next_call_id = 0;
+
+{{{enum_strings}}}
+
+{{{struct_method_impls}}}
+
+{{{message_impls}}}
