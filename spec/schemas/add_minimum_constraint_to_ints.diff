@@ -1,0 +1,117 @@
+diff -bur orig/ChangeAvailability.json mod/ChangeAvailability.json
+--- orig/ChangeAvailability.json	2019-12-04 15:28:48.000000000 +0100
++++ mod/ChangeAvailability.json	2022-05-18 08:52:42.728121308 +0200
+@@ -5,7 +5,8 @@
+     "type": "object",
+     "properties": {
+         "connectorId": {
+-            "type": "integer"
++            "type": "integer",
++            "minimum": 0
+         },
+         "type": {
+             "type": "string",
+diff -bur orig/MeterValues.json mod/MeterValues.json
+--- orig/MeterValues.json	2019-12-04 15:28:48.000000000 +0100
++++ mod/MeterValues.json	2022-05-18 08:54:18.575060818 +0200
+@@ -5,7 +5,8 @@
+     "type": "object",
+     "properties": {
+         "connectorId": {
+-            "type": "integer"
++            "type": "integer",
++             "minimum": 0
+         },
+         "transactionId": {
+             "type": "integer"
+diff -bur orig/RemoteStartTransaction.json mod/RemoteStartTransaction.json
+--- orig/RemoteStartTransaction.json	2019-12-04 15:28:48.000000000 +0100
++++ mod/RemoteStartTransaction.json	2022-05-18 08:58:14.888998419 +0200
+@@ -21,7 +21,8 @@
+                     "type": "integer"
+                 },
+                 "stackLevel": {
+-                    "type": "integer"
++                    "type": "integer",
++                     "minimum": 0
+                 },
+                 "chargingProfilePurpose": {
+                     "type": "string",
+diff -bur orig/ReserveNow.json mod/ReserveNow.json
+--- orig/ReserveNow.json	2019-12-04 15:28:48.000000000 +0100
++++ mod/ReserveNow.json	2022-05-18 08:54:16.698389013 +0200
+@@ -5,7 +5,8 @@
+     "type": "object",
+     "properties": {
+         "connectorId": {
+-            "type": "integer"
++            "type": "integer",
++             "minimum": 0
+         },
+         "expiryDate": {
+             "type": "string",
+diff -bur orig/SetChargingProfile.json mod/SetChargingProfile.json
+--- orig/SetChargingProfile.json	2019-12-04 15:28:48.000000000 +0100
++++ mod/SetChargingProfile.json	2022-05-18 08:56:27.222065279 +0200
+@@ -17,7 +17,8 @@
+                     "type": "integer"
+                 },
+                 "stackLevel": {
+-                    "type": "integer"
++                    "type": "integer",
++                     "minimum": 0
+                 },
+                 "chargingProfilePurpose": {
+                     "type": "string",
+diff -bur orig/StartTransaction.json mod/StartTransaction.json
+--- orig/StartTransaction.json	2019-12-04 15:28:48.000000000 +0100
++++ mod/StartTransaction.json	2022-05-18 08:54:14.938384187 +0200
+@@ -5,7 +5,8 @@
+     "type": "object",
+     "properties": {
+         "connectorId": {
+-            "type": "integer"
++            "type": "integer",
++             "minimum": 0
+         },
+         "idTag": {
+             "type": "string",
+diff -bur orig/StatusNotification.json mod/StatusNotification.json
+--- orig/StatusNotification.json	2019-12-04 15:28:48.000000000 +0100
++++ mod/StatusNotification.json	2022-05-18 08:54:28.101753468 +0200
+@@ -5,7 +5,8 @@
+     "type": "object",
+     "properties": {
+         "connectorId": {
+-            "type": "integer"
++            "type": "integer",
++             "minimum": 0
+         },
+         "errorCode": {
+             "type": "string",
+diff -bur orig/TriggerMessage.json mod/TriggerMessage.json
+--- orig/TriggerMessage.json	2019-12-04 15:28:48.000000000 +0100
++++ mod/TriggerMessage.json	2022-05-18 08:54:39.865118640 +0200
+@@ -17,7 +17,8 @@
+             ]
+         },
+         "connectorId": {
+-            "type": "integer"
++            "type": "integer",
++             "minimum": 0
+         }
+     },
+     "additionalProperties": false,
+diff -bur orig/UnlockConnector.json mod/UnlockConnector.json
+--- orig/UnlockConnector.json	2019-12-04 15:28:48.000000000 +0100
++++ mod/UnlockConnector.json	2022-05-18 08:56:08.655351379 +0200
+@@ -5,7 +5,8 @@
+     "type": "object",
+     "properties": {
+         "connectorId": {
+-            "type": "integer"
++            "type": "integer",
++             "minimum": 0
+         }
+     },
+     "additionalProperties": false,

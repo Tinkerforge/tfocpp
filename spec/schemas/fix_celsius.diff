@@ -1,0 +1,23 @@
+diff -bur schemas_old/json/MeterValues.json schemas/json/MeterValues.json
+--- schemas_old/json/MeterValues.json	2022-07-29 12:03:34.679305120 +0200
++++ schemas/json/MeterValues.json	2022-07-29 12:03:31.709297018 +0200
+@@ -122,7 +122,6 @@
+                                         "A",
+                                         "V",
+                                         "K",
+-                                        "Celcius",
+                                         "Celsius",
+                                         "Fahrenheit",
+                                         "Percent"
+diff -bur schemas_old/json/StopTransaction.json schemas/json/StopTransaction.json
+--- schemas_old/json/StopTransaction.json	2019-12-04 15:28:48.000000000 +0100
++++ schemas/json/StopTransaction.json	2022-07-29 12:00:39.422182442 +0200
+@@ -146,7 +146,7 @@
+                                         "A",
+                                         "V",
+                                         "K",
+-                                        "Celcius",
++                                        "Celsius",
+                                         "Fahrenheit",
+                                         "Percent"
+                                     ]

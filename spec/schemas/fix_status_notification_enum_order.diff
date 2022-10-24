@@ -1,0 +1,13 @@
+diff -bur orig/StatusNotification.json mod/StatusNotification.json
+--- orig/StatusNotification.json	2022-05-18 08:54:28.101753468 +0200
++++ mod/StatusNotification.json	2022-05-30 14:16:07.106279861 +0200
+@@ -41,8 +41,8 @@
+                 "Available",
+                 "Preparing",
+                 "Charging",
+-                "SuspendedEVSE",
+                 "SuspendedEV",
++                "SuspendedEVSE",
+                 "Finishing",
+                 "Reserved",
+                 "Unavailable",
