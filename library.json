@@ -11,7 +11,8 @@
     "export": {
         "include": [
             "src/*",
-            "lib/libiso8601/[!t]*.[ch]"
+            "lib/libiso8601/[!t]*.[ch]",
+            "lib/musl_libc_timegm.c"
         ]
     },
     "license": "LGPL-2.1",

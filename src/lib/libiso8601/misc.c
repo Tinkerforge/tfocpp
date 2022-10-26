@@ -168,27 +168,7 @@ void iso8601_from_tm(const struct tm *tm, uint32_t usecond, bool localtime,
 
 // timegm is a nonstandard GNU extension that are also present on the BSDs.
 #if !defined(timegm)
-// From https://blog.reverberate.org/2020/05/12/optimizing-date-algorithms.html
-static int epoch_days_fast(int y, int m, int d) {
-  const uint32_t year_base = 4800;    /* Before min year, multiple of 400. */
-  const uint32_t m_adj = m - 3;       /* March-based month. */
-  const uint32_t carry = m_adj > m ? 1 : 0;
-  const uint32_t adjust = carry ? 12 : 0;
-  const uint32_t y_adj = y + year_base - carry;
-  const uint32_t month_days = ((m_adj + adjust) * 62719 + 769) / 2048;
-  const uint32_t leap_days = y_adj / 4 - y_adj / 100 + y_adj / 400;
-  return y_adj * 365 + leap_days + month_days + (d - 1) - 2472632;
-}
-
-static time_t hms_to_time(int h, int m, int s) {
-  return (h * 3600) + (m * 60) + s;
-}
-
-static time_t timegm(struct tm *tm) {
-    int days = epoch_days_fast(tm->tm_year, tm->tm_mon, tm->tm_mday);
-    int secs = hms_to_time(tm->tm_hour, tm->tm_min, tm->tm_sec);
-    return days * 86400 + secs;
-}
+extern time_t timegm(struct tm *tm);
 #endif
 
 void iso8601_to_timeval(const iso8601_time *time, struct timeval *tv)
