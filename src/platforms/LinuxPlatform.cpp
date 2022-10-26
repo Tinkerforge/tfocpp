@@ -28,9 +28,19 @@ void *stop_cb_userdata = nullptr;
 bool connected = false;
 bool done = false;        // Event handler flips it to true
 
+bool is_ssl = false;
+
 // Print websocket response and signal that we're done
 static void fn(struct mg_connection *c, int ev, void *ev_data, void *fn_data) {
-  if (ev == MG_EV_OPEN) {
+    if (ev == MG_EV_CONNECT) {
+    // If this is a wss:// connection, tell client connection to use TLS
+    if (is_ssl) {
+      log_warn("Certificates are not checked yet!");
+      struct mg_tls_opts opts = {};
+      mg_tls_init(c, &opts);
+    }
+ }
+  else if (ev == MG_EV_OPEN) {
     //c->is_hexdumping = 1;
 
   } else if (ev == MG_EV_ERROR) {
@@ -74,6 +84,7 @@ void* platform_init(const char *websocket_url)
 {
     mg_mgr_init(&mgr);        // Initialise event manager
     //mg_log_set("4");
+    is_ssl = mg_url_is_ssl(websocket_url);
     c = mg_ws_connect(&mgr, websocket_url, fn, &done, "%s", "Sec-WebSocket-Protocol: ocpp1.6\r\n");     // Create client
     return &mgr;
 }
@@ -226,7 +237,7 @@ int main(int argc, char **argv) {
 
     OcppChargePoint cp;
 
-    cp.start("ws://localhost:8180/steve/websocket/CentralSystemService", "CP_1");
+    cp.start("wss://www.ecarup.com/api/Ocpp16/42F36ED689A7D586", "CP_1");
 
     addr.sin_family = AF_INET;
     addr.sin_addr.s_addr = inet_addr("127.0.0.1");
