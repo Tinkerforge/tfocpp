@@ -276,8 +276,7 @@ def param_insertion(message: str, name: str, p: Property):
         return 'json.add("{name}", {name});'.format(name=name)
     elif inspect.isclass(p.element):
         #return 'if ({name} != nullptr) {name}->serializeInto(json, "{name}");'.format(name=name)
-        return 'if ({name} != nullptr) {{ json.addObject(); {name}->serializeInto(json); json.endObject(); }}'.format(name=name)
-        raise Exception("Objects nested in objects are currently not supported.") # This branch seems to be dead at least for the core profile.
+        return 'if ({name} != nullptr) {{ json.addObject("{name}"); {name}->serializeInto(json); json.endObject(); }}'.format(name=name)
     elif isinstance(p.element, Array):
         if not isinstance(p.element.items, String):
             return 'if ({name} != nullptr) {{ json.addArray("{name}"); for(size_t i = 0; i < {name}_length; ++i) {{ json.addObject(); {name}[i].serializeInto(json); json.endObject(); }} json.endArray(); }}'.format(name=name)

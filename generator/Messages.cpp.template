@@ -7,10 +7,10 @@
 #include "Types.h"
 
 extern "C" {
-#include "iso8601.h"
+#include "lib/libiso8601/iso8601.h"
 }
 
-#include "TFJson.h"
+#include "lib/TFJson.h"
 
 static bool iso_string_to_unix_timestamp(const char *iso_string, time_t *t) {
     iso8601_time time;

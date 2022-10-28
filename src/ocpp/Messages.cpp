@@ -818,7 +818,7 @@ size_t GetCompositeScheduleResponse::serializeJson(char *buf, size_t buf_len) co
             if (status != ResponseStatus::NONE) json.add("status",ResponseStatusStrings[(size_t)status]);
             if (connectorId != OCPP_INTEGER_NOT_PASSED) json.add("connectorId", connectorId);
             if (scheduleStart != OCPP_DATETIME_NOT_PASSED) unix_timestamp_to_iso_string(scheduleStart, json, "scheduleStart");
-            if (chargingSchedule != nullptr) { json.addObject(); chargingSchedule->serializeInto(json); json.endObject(); }
+            if (chargingSchedule != nullptr) { json.addObject("chargingSchedule"); chargingSchedule->serializeInto(json); json.endObject(); }
         json.endObject();
     json.endArray();
 
