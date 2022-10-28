@@ -93,6 +93,13 @@ enum EVSEState {
 
 EVSEState platform_get_evse_state(int32_t connectorId);
 
+// Return the theoretical maximum charging current here.
+// This is typically hardware dependent, or depends on
+// software limits, that can only change with a reboot.
+// If connectorId is 0, return the maximum current draw
+// of the charge point.
+uint32_t platform_get_maximum_charging_current(int32_t connectorId);
+
 #define OCPP_PLATFORM_MAX_CHARGING_CURRENT 0xFFFFFFFF
 void platform_set_charging_current(int32_t connectorId, uint32_t milliAmps);
 
