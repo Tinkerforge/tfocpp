@@ -1033,8 +1033,8 @@ OcppChargePoint::EvalChargingProfilesResult OcppChargePoint::evalChargingProfile
 
 
     for(size_t connectorId = 1; connectorId < NUM_CONNECTORS + 1; ++connectorId) {
-        auto required = std::max(minChargingRate[0], std::max(minChargingRate[connectorId + 1], (float)CURRENT_REQUIRED_TO_START_CHARGING));
-        auto allowed = std::min(availableLimit, allowedLimit[connectorId + 1]);
+        auto required = std::max(minChargingRate[0], std::max(minChargingRate[connectorId], (float)CURRENT_REQUIRED_TO_START_CHARGING));
+        auto allowed = std::min(availableLimit, allowedLimit[connectorId]);
         if (required > allowed)
             break;
 
