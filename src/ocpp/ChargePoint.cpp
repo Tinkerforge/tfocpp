@@ -920,7 +920,7 @@ OcppChargePoint::EvalChargingProfilesResult OcppChargePoint::evalChargingProfile
     float minChargingRate[NUM_CONNECTORS + 1] = {0};
 
     for(size_t i = 0; i < NUM_CONNECTORS + 1; ++i) {
-        allowedLimit[i] = std::numeric_limits<float>::max();
+        allowedLimit[i] = platform_get_maximum_charging_current(i) / 1000.0f;
         allowedPhases[i] = 3;
     }
 
@@ -1020,15 +1020,6 @@ OcppChargePoint::EvalChargingProfilesResult OcppChargePoint::evalChargingProfile
     // - The recommended minimum current for each connector
 
     auto availableLimit = allowedLimit[0];
-
-    if (availableLimit == std::numeric_limits<float>::max()) {
-        // We don't need to distribute current between the connectors, as there is no limit set for the whole charge point.
-        EvalChargingProfilesResult result;
-        result.nextCheck = nextCheck;
-        memcpy(result.allocatedLimit, allowedLimit, ARRAY_SIZE(allowedLimit));
-        memcpy(result.allocatedPhases, allowedPhases, ARRAY_SIZE(allowedPhases));
-        return result;
-    }
 
     EvalChargingProfilesResult result;
     result.nextCheck = nextCheck;
