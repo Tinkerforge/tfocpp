@@ -840,7 +840,48 @@ CallResponse OcppChargePoint::handleClearChargingProfile(const char *uid, ClearC
 CallResponse OcppChargePoint::handleGetCompositeSchedule(const char *uid, GetCompositeScheduleView req)
 {
     log_info("Received GetCompositeSchedule.req");
-    return CallResponse{CallErrorCode::NotImplemented, ""};
+
+    int32_t conn_id = req.connectorId();
+    if (conn_id < 0 || conn_id > NUM_CONNECTORS) {
+        connection.sendCallResponse(GetCompositeScheduleResponse(uid, ResponseStatus::REJECTED));
+        return CallResponse{CallErrorCode::OK, ""};
+    }
+
+    GetCompositeScheduleResponseChargingSchedule sched;
+    GetCompositeScheduleResponseChargingScheduleChargingSchedulePeriod periods[GET_COMPOSITE_SCHEDULE_MAX_PERIODS];
+    size_t periods_used = 0;
+
+    time_t start = platform_get_system_time(platform_ctx);
+    time_t next_check = start;
+    time_t end = start + req.duration();
+
+    while (periods_used < ARRAY_SIZE(periods) && next_check < end) {
+        auto result = evalChargingProfiles(next_check);
+
+        periods[periods_used].startPeriod = next_check - start;
+
+        next_check = result.nextCheck;
+
+        periods[periods_used].limit = result.allocatedLimit[req.connectorId()];
+        periods[periods_used].numberPhases = result.allocatedPhases[req.connectorId()];
+        ++periods_used;
+    }
+
+    if (next_check < end) {
+        connection.sendCallResponse(GetCompositeScheduleResponse(uid, ResponseStatus::REJECTED));
+        return CallResponse{CallErrorCode::OK, ""};
+    }
+
+    sched.chargingSchedulePeriod = periods;
+    sched.chargingSchedulePeriod_length = periods_used;
+    sched.chargingRateUnit = GetCompositeScheduleResponseChargingScheduleChargingRateUnit::A;
+    sched.duration = req.duration();
+
+    /* Errata 4.0: When ChargingSchedule is used as part of a GetCompositeSchedule.conf message, then this field must be omitted. */
+    //sched.startSchedule = start;
+
+    connection.sendCallResponse(GetCompositeScheduleResponse(uid, ResponseStatus::ACCEPTED, req.connectorId(), start, &sched));
+    return CallResponse{CallErrorCode::OK, ""};
 }
 
 CallResponse OcppChargePoint::handleSetChargingProfile(const char *uid, SetChargingProfileView req)
