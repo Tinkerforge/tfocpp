@@ -910,7 +910,7 @@ CallResponse OcppChargePoint::handleSetChargingProfile(const char *uid, SetCharg
     return CallResponse{CallErrorCode::OK, ""};
 }
 
-OcppChargePoint::EvalChargingProfilesResult OcppChargePoint::evalChargingProfiles()
+OcppChargePoint::EvalChargingProfilesResult OcppChargePoint::evalChargingProfiles(time_t timeToEval)
 {
     time_t nextCheck = std::numeric_limits<time_t>::max();
 
@@ -928,7 +928,7 @@ OcppChargePoint::EvalChargingProfilesResult OcppChargePoint::evalChargingProfile
         if (!this->chargePointMaxProfiles[stackLevel].is_set())
             continue;
 
-        auto result = this->chargePointMaxProfiles[stackLevel].get().eval(Opt<time_t>(), platform_get_system_time(this->platform_ctx));
+        auto result = this->chargePointMaxProfiles[stackLevel].get().eval(Opt<time_t>(), timeToEval);
         nextCheck = std::min(nextCheck, result.nextCheck);
         if (!result.applied)
             continue;
@@ -962,7 +962,7 @@ OcppChargePoint::EvalChargingProfilesResult OcppChargePoint::evalChargingProfile
             if (connTxnId != profTxnId)
                 continue;
 
-            auto result = conn.txProfiles[stackLevel].get().eval(Opt<time_t>{conn.transaction_start_time}, platform_get_system_time(this->platform_ctx));
+            auto result = conn.txProfiles[stackLevel].get().eval(Opt<time_t>{conn.transaction_start_time}, timeToEval);
 
             nextCheck = std::min(nextCheck, result.nextCheck);
             if (!result.applied)
@@ -1000,7 +1000,7 @@ OcppChargePoint::EvalChargingProfilesResult OcppChargePoint::evalChargingProfile
             else
                 txnTime = Opt<time_t>{};
 
-            auto result = prof->eval(txnTime, platform_get_system_time(this->platform_ctx));
+            auto result = prof->eval(txnTime, timeToEval);
 
             nextCheck = std::min(nextCheck, result.nextCheck);
             if (!result.applied)

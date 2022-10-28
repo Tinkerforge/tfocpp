@@ -100,7 +100,7 @@ public:
         int32_t allocatedPhases[NUM_CONNECTORS + 1];
     };
 
-    EvalChargingProfilesResult evalChargingProfiles();
+    EvalChargingProfilesResult evalChargingProfiles(time_t timeToEval);
 
     OcppState state = OcppState::PowerOn;
 
