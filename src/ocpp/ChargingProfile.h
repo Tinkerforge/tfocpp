@@ -130,7 +130,7 @@ public:
         }
 
         if (sched.duration.is_set()) {
-            if (now > (schedStart + sched.duration.get()))
+            if (now >= (schedStart + sched.duration.get()))
                 return result;
 
             // We have to check again when the duration elapses.
