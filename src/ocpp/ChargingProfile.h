@@ -123,7 +123,7 @@ public:
         if (this->chargingProfileKind == ChargingProfileKind::RECURRING && this->recurrencyKind.is_set()) {
             // If this is a recurring schedule, move the schedStart forward until schedStart <= time <= schedStart + recurrenceKind is true
             auto blockSize = this->recurrencyKind.get() == RecurrencyKind::WEEKLY ? (7 * 24 * 60 * 60) : (24 * 60 * 60);
-            schedStart = now - now % blockSize;
+            schedStart = now - now % blockSize + (schedStart % blockSize);
 
             // We have to check again when the next block starts.
             result.nextCheck = std::min(result.nextCheck, schedStart + blockSize);
