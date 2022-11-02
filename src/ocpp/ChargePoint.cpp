@@ -693,18 +693,18 @@ CallResponse OcppChargePoint::handleRemoteStartTransaction(const char *uid, Remo
 
 CallResponse OcppChargePoint::handleRemoteStopTransaction(const char *uid, RemoteStopTransactionView req)
 {
-    log_info("Received RemoteStopTransaction.req");
+    log_info("Received RemoteStopTransaction.req for txn %d", req.transactionId());
     for(int i = 0; i < NUM_CONNECTORS; ++i) {
         if (!connectors[i].canHandleRemoteStopTxn(req.transactionId()))
             continue;
 
         connectors[i].onRemoteStopTransaction();
-        log_info("Sending RemoteStopTransaction.conf Accepted\n");
+        log_info("Sending RemoteStopTransaction.conf Accepted (connector %d)\n", i);
         connection.sendCallResponse(RemoteStopTransactionResponse(uid, ResponseStatus::ACCEPTED));
         return CallResponse{CallErrorCode::OK, ""};
     }
 
-    log_info("Sending RemoteStopTransaction.conf Rejected (unknown connector id)\n");
+    log_info("Sending RemoteStopTransaction.conf Rejected (unknown transaction id)\n");
     connection.sendCallResponse(RemoteStopTransactionResponse(uid, ResponseStatus::REJECTED));
     return CallResponse{CallErrorCode::OK, ""};
 }
