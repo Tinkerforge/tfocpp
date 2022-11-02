@@ -890,11 +890,13 @@ CallResponse OcppChargePoint::handleSetChargingProfile(const char *uid, SetCharg
 
     int32_t conn_id = req.connectorId();
     if (conn_id < 0 || conn_id > NUM_CONNECTORS) {
+        log_info("Rejected: connector ID %d out of range", conn_id);
         connection.sendCallResponse(SetChargingProfileResponse(uid, SetChargingProfileResponseStatus::REJECTED));
         return CallResponse{CallErrorCode::OK, ""};
     }
 
     if (req.csChargingProfiles().stackLevel() < 0 || req.csChargingProfiles().stackLevel() > CHARGE_PROFILE_MAX_STACK_LEVEL) {
+        log_info("Rejected: stack level %d out of range", req.csChargingProfiles().stackLevel());
         connection.sendCallResponse(SetChargingProfileResponse(uid, SetChargingProfileResponseStatus::REJECTED));
         return CallResponse{CallErrorCode::OK, ""};
     }
@@ -902,12 +904,14 @@ CallResponse OcppChargePoint::handleSetChargingProfile(const char *uid, SetCharg
     auto purpose = req.csChargingProfiles().chargingProfilePurpose();
     /* ChargePointMaxProfile can only be set at Charge Point ConnectorId 0.*/
     if (purpose == ChargingProfilePurpose::CHARGE_POINT_MAX_PROFILE && conn_id != 0) {
+        log_info("Rejected: CHARGE_POINT_MAX_PROFILE for connector id %d != 0 not allowed", conn_id);
         connection.sendCallResponse(SetChargingProfileResponse(uid, SetChargingProfileResponseStatus::REJECTED));
         return CallResponse{CallErrorCode::OK, ""};
     }
 
     /* TxProfile SHALL only be set at Charge Point ConnectorId >0. */
     if (purpose == ChargingProfilePurpose::TX_PROFILE && conn_id == 0) {
+        log_info("Rejected: TX_PROFILE for connector id == 0 not allowed");
         connection.sendCallResponse(SetChargingProfileResponse(uid, SetChargingProfileResponseStatus::REJECTED));
         return CallResponse{CallErrorCode::OK, ""};
     }
@@ -915,6 +919,7 @@ CallResponse OcppChargePoint::handleSetChargingProfile(const char *uid, SetCharg
     /* If there is no transaction active on the connector specified in a charging profile
        of type TxProfile, then the Charge Point SHALL discard it and return an error status in SetChargingProfile.conf. */
     if (purpose == ChargingProfilePurpose::TX_PROFILE && !connectors[conn_id - 1].isTransactionActive()) {
+        log_info("Rejected: TX_PROFILE but no transaction active on connector %d", conn_id);
         connection.sendCallResponse(SetChargingProfileResponse(uid, SetChargingProfileResponseStatus::REJECTED));
         return CallResponse{CallErrorCode::OK, ""};
     }
@@ -928,11 +933,14 @@ CallResponse OcppChargePoint::handleSetChargingProfile(const char *uid, SetCharg
 
     // reject if either recurKind is set and kind is not recurring or if it is not set and kind is recurring.
     if (req.csChargingProfiles().chargingProfileKind() == ChargingProfileKind::RECURRING != req.csChargingProfiles().recurrencyKind().is_set()) {
+        log_info("Rejected: RECURRING but recurrency set");
         connection.sendCallResponse(SetChargingProfileResponse(uid, SetChargingProfileResponseStatus::REJECTED));
         return CallResponse{CallErrorCode::OK, ""};
     }
 
     // TODO replacement via chargingProfileId
+
+    log_info("Charging profile accepted as %s level %d", ChargingProfilePurposeStrings[(size_t) purpose], req.csChargingProfiles().stackLevel());
 
     if (conn_id == 0) {
         if (purpose == ChargingProfilePurpose::CHARGE_POINT_MAX_PROFILE)
@@ -946,13 +954,24 @@ CallResponse OcppChargePoint::handleSetChargingProfile(const char *uid, SetCharg
             connectors[conn_id - 1].txDefaultProfiles[req.csChargingProfiles().stackLevel()] = {ChargingProfile(req.csChargingProfiles())};
     }
 
+    log_info("Sending SetChargingProfile.conf.");
     connection.sendCallResponse(SetChargingProfileResponse(uid, SetChargingProfileResponseStatus::ACCEPTED));
 
     return CallResponse{CallErrorCode::OK, ""};
 }
 
+void debug_print_limits(float *allowedLimit,
+                        int32_t *allowedPhases,
+                        float *minChargingRate) {
+    log_debug("    \tConnID\tAllowed\tPhases\tMinRate");
+    for(size_t i = 0; i < NUM_CONNECTORS + 1; ++i) {
+        log_debug("    \t%d\t%.3f\t%d\t%.3f", i, allowedLimit[i], allowedPhases[i], minChargingRate[i]);
+    }
+}
+
 OcppChargePoint::EvalChargingProfilesResult OcppChargePoint::evalChargingProfiles(time_t timeToEval)
 {
+    log_debug("Evaluating charging profiles");
     time_t nextCheck = std::numeric_limits<time_t>::max();
 
     // This is either a current or a power
@@ -966,30 +985,41 @@ OcppChargePoint::EvalChargingProfilesResult OcppChargePoint::evalChargingProfile
     }
 
     for(int stackLevel = CHARGE_PROFILE_MAX_STACK_LEVEL; stackLevel >= 0; --stackLevel) {
-        if (!this->chargePointMaxProfiles[stackLevel].is_set())
+        if (!this->chargePointMaxProfiles[stackLevel].is_set()) {
+            log_debug("    ChargePointMaxProfiles[%d] not set", stackLevel);
             continue;
+        }
 
         auto result = this->chargePointMaxProfiles[stackLevel].get().eval(Opt<time_t>(), timeToEval);
         nextCheck = std::min(nextCheck, result.nextCheck);
-        if (!result.applied)
+        if (!result.applied) {
+            log_debug("    ChargePointMaxProfiles[%d] did not apply", stackLevel);
             continue;
+        }
+
+        log_debug("    ChargePointMaxProfiles[%d] applied.", stackLevel);
 
         allowedLimit[0] = std::min(allowedLimit[0], result.limit);
         allowedPhases[0] = std::min(allowedPhases[0], result.numberPhases);
         minChargingRate[0] = std::max(minChargingRate[0], result.minChargingRate);
+        debug_print_limits(allowedLimit, allowedPhases, minChargingRate);
         break;
     }
 
     for(size_t connectorIdx = 0; connectorIdx < NUM_CONNECTORS; ++connectorIdx) {
         bool applied = false;
         auto &conn = connectors[connectorIdx];
+        log_debug("    Connector %d", connectorIdx + 1);
 
         for(int stackLevel = CHARGE_PROFILE_MAX_STACK_LEVEL; stackLevel >= 0; --stackLevel) {
-            if (!conn.txProfiles[stackLevel].is_set())
+            if (!conn.txProfiles[stackLevel].is_set()) {
+                log_debug("    TxProfiles[%d] not set", stackLevel);
                 continue;
-
-            if (!conn.isTransactionActive())
+            }
+            if (!conn.isTransactionActive()) {
+                log_debug("    TxProfiles[%d] no txn running", stackLevel);
                 continue;
+            }
 
             auto connTxnId = conn.transaction_id;
             // If the connector reports that a transaction is active, but it has not yet received a transactionId its transactionId is -1.
@@ -1006,14 +1036,19 @@ OcppChargePoint::EvalChargingProfilesResult OcppChargePoint::evalChargingProfile
             auto result = conn.txProfiles[stackLevel].get().eval(Opt<time_t>{conn.transaction_start_time}, timeToEval);
 
             nextCheck = std::min(nextCheck, result.nextCheck);
-            if (!result.applied)
+            if (!result.applied) {
+                log_debug("    TxProfiles[%d] not applied", stackLevel);
                 continue;
+            }
 
+            log_debug("    TxProfiles[%d] applied", stackLevel);
             applied = true;
 
             allowedLimit[connectorIdx + 1] = std::min(allowedLimit[connectorIdx + 1], result.limit);
             allowedPhases[connectorIdx + 1] = std::min(allowedPhases[connectorIdx + 1], result.numberPhases);
             minChargingRate[connectorIdx + 1] = std::max(minChargingRate[connectorIdx + 1], result.minChargingRate);
+            debug_print_limits(allowedLimit, allowedPhases, minChargingRate);
+            log_debug("    A TxProfile applied. Skipping TxDefaultProfiles");
             break;
         }
 
@@ -1027,13 +1062,19 @@ OcppChargePoint::EvalChargingProfilesResult OcppChargePoint::evalChargingProfile
         // of the whole charge point, but only for this connector.
         for(int stackLevel = CHARGE_PROFILE_MAX_STACK_LEVEL; stackLevel >= 0; --stackLevel) {
             ChargingProfile *prof = nullptr;
-            if (conn.txDefaultProfiles[stackLevel].is_set())
+            if (conn.txDefaultProfiles[stackLevel].is_set()) {
                 prof = &conn.txDefaultProfiles[stackLevel].get();
-            else if (this->txDefaultProfiles[stackLevel].is_set())
+                log_debug("    TxDefaultProfiles[%d] set at connector", stackLevel);
+            }
+            else if (this->txDefaultProfiles[stackLevel].is_set()) {
                 prof = &this->txDefaultProfiles[stackLevel].get();
+                log_debug("    TxDefaultProfiles[%d] set at charge point", stackLevel);
+            }
 
-            if (prof == nullptr)
+            if (prof == nullptr) {
+                log_debug("    TxDefaultProfiles[%d] not set", stackLevel);
                 continue;
+            }
 
             Opt<time_t> txnTime;
             if (conn.isTransactionActive())
@@ -1044,17 +1085,22 @@ OcppChargePoint::EvalChargingProfilesResult OcppChargePoint::evalChargingProfile
             auto result = prof->eval(txnTime, timeToEval);
 
             nextCheck = std::min(nextCheck, result.nextCheck);
-            if (!result.applied)
+            if (!result.applied) {
+                log_debug("    TxDefaultProfiles[%d] not applied", stackLevel);
                 continue;
+            }
 
+            log_debug("    TxDefaultProfiles[%d] applied", stackLevel);
             applied = true;
 
             allowedLimit[connectorIdx + 1] = std::min(allowedLimit[connectorIdx + 1], result.limit);
             allowedPhases[connectorIdx + 1] = std::min(allowedPhases[connectorIdx + 1], result.numberPhases);
             minChargingRate[connectorIdx + 1] = std::max(minChargingRate[connectorIdx + 1], result.minChargingRate);
+            debug_print_limits(allowedLimit, allowedPhases, minChargingRate);
         }
     }
 
+    log_debug("    Profile evaluation done. Distributing limit");
     // We now know:
     // - The maximum allowed current and phases for the charge point (and thus all connectors)
     // - The maximum allowed current and phases for each connector
@@ -1100,6 +1146,19 @@ OcppChargePoint::EvalChargingProfilesResult OcppChargePoint::evalChargingProfile
         }
     }
 
+    log_debug("    Currents distributed:");
+    debug_print_limits(result.allocatedLimit, result.allocatedPhases, minChargingRate);
+
+    if (result.nextCheck < std::numeric_limits<time_t>::max()) {
+        char buf[OCPP_ISO_8601_MAX_LEN] = {0};
+        const tm *t = gmtime(&result.nextCheck);
+        strftime(buf, ARRAY_SIZE(buf), "%FT%TZ", t);
+        log_debug("    Next check: %s", buf);
+    } else {
+        log_debug("    Next check: never");
+    }
+
+    log_debug("");
     return result;
 }
 
