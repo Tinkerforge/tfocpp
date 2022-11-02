@@ -283,6 +283,15 @@ bool OcppChargePoint::sendCallAction(const ICall &call, time_t timestamp, int32_
     if (call.action == CallAction::START_TRANSACTION || call.action == CallAction::STOP_TRANSACTION)
         this->triggerChargingProfileEval();
 
+    /*
+    If a transaction-specific profile with purpose TxProfile is present, it SHALL overrule the default charging profile
+    with purpose TxDefaultProfile for the duration of the current transaction only. After the transaction is stopped,
+    the profile SHOULD be deleted.
+    */
+    if (call.action == CallAction::STOP_TRANSACTION)
+        for(size_t stack_level = 0; stack_level <= CHARGE_PROFILE_MAX_STACK_LEVEL; ++stack_level)
+            connectors[connectorId - 1].txProfiles[stack_level].clear();
+
     return true;
 }
 
