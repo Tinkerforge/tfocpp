@@ -1024,7 +1024,6 @@ OcppChargePoint::EvalChargingProfilesResult OcppChargePoint::evalChargingProfile
     }
 
     for(size_t connectorIdx = 0; connectorIdx < NUM_CONNECTORS; ++connectorIdx) {
-        bool applied = false;
         auto &conn = connectors[connectorIdx];
         log_debug("    Connector %d", connectorIdx + 1);
 
@@ -1059,18 +1058,14 @@ OcppChargePoint::EvalChargingProfilesResult OcppChargePoint::evalChargingProfile
             }
 
             log_debug("    TxProfiles[%d] applied", stackLevel);
-            applied = true;
 
             allowedLimit[connectorIdx + 1] = std::min(allowedLimit[connectorIdx + 1], result.limit);
             allowedPhases[connectorIdx + 1] = std::min(allowedPhases[connectorIdx + 1], result.numberPhases);
             minChargingRate[connectorIdx + 1] = std::max(minChargingRate[connectorIdx + 1], result.minChargingRate);
             debug_print_limits(allowedLimit, allowedPhases, minChargingRate);
             log_debug("    A TxProfile applied. Skipping TxDefaultProfiles");
-            break;
+            goto profiles_evaluated;
         }
-
-        if (applied)
-            continue;
 
         // No TxProfile applied. Check TxDefaultProfiles.
         // no TxProfile applied, try TxDefaultProfiles
@@ -1108,15 +1103,16 @@ OcppChargePoint::EvalChargingProfilesResult OcppChargePoint::evalChargingProfile
             }
 
             log_debug("    TxDefaultProfiles[%d] applied", stackLevel);
-            applied = true;
 
             allowedLimit[connectorIdx + 1] = std::min(allowedLimit[connectorIdx + 1], result.limit);
             allowedPhases[connectorIdx + 1] = std::min(allowedPhases[connectorIdx + 1], result.numberPhases);
             minChargingRate[connectorIdx + 1] = std::max(minChargingRate[connectorIdx + 1], result.minChargingRate);
             debug_print_limits(allowedLimit, allowedPhases, minChargingRate);
+            goto profiles_evaluated;
         }
     }
 
+profiles_evaluated:
     log_debug("    Profile evaluation done. Distributing limit");
     // We now know:
     // - The maximum allowed current and phases for the charge point (and thus all connectors)
