@@ -939,13 +939,6 @@ CallResponse OcppChargePoint::handleSetChargingProfile(const char *uid, SetCharg
         return CallResponse{CallErrorCode::OK, ""};
     }
 
-    /* To prevent mismatch between transactions and a Txprofile, The Central System SHALL include
-       the transactionId in a SetChargingProfile.req if the profile applies to a specific transaction. */
-    if (purpose == ChargingProfilePurpose::TX_PROFILE && !req.csChargingProfiles().transactionId().is_set()) {
-        connection.sendCallResponse(SetChargingProfileResponse(uid, SetChargingProfileResponseStatus::REJECTED));
-        return CallResponse{CallErrorCode::OK, ""};
-    }
-
     // reject if either recurKind is set and kind is not recurring or if it is not set and kind is recurring.
     if (req.csChargingProfiles().chargingProfileKind() == ChargingProfileKind::RECURRING != req.csChargingProfiles().recurrencyKind().is_set()) {
         log_info("Rejected: RECURRING but recurrency set");
@@ -1037,17 +1030,15 @@ OcppChargePoint::EvalChargingProfilesResult OcppChargePoint::evalChargingProfile
                 continue;
             }
 
-            auto connTxnId = conn.transaction_id;
-            // If the connector reports that a transaction is active, but it has not yet received a transactionId its transactionId is -1.
-            // In this case (only!) we replace a profiles txnId with -1 (if it is not set)
-            // TxProfiles without a txnId are only allowed to be received via RemoteStartTransaction.
-            // Note that we already have checked that a transaction is active, so there is not possibility for
-            // a race condition in the case that the TxProfile was received via RemoteStartTransaction (so it does not contain a txnId)
-            // and we have to authorize first.
-            auto profTxnId = conn.txProfiles[stackLevel].get().transactionId.is_set() ? conn.txProfiles[stackLevel].get().transactionId.get() : -1;
+            if (conn.txProfiles[stackLevel].get().transactionId.is_set()) {
+                auto connTxnId = conn.transaction_id;
+                auto profTxnId = conn.txProfiles[stackLevel].get().transactionId.get();
 
-            if (connTxnId != profTxnId)
-                continue;
+                if (connTxnId != profTxnId){
+                    log_debug("    TxProfiles[%d] txn ID %d != running txn ID %d", stackLevel, profTxnId, connTxnId);
+                    continue;
+                }
+            }
 
             auto result = conn.txProfiles[stackLevel].get().eval(Opt<time_t>{conn.transaction_start_time}, timeToEval);
 
