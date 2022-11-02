@@ -143,7 +143,7 @@ void Connector::applyState() {
         case ConnectorState::AUTH_STOP:
             platform_lock_cable(connectorId);
             // TODO: implement MaxEnergyOnInvalidId here
-            platform_set_charging_current(connectorId, transaction_with_invalid_tag_id ? 0 : OCPP_PLATFORM_MAX_CHARGING_CURRENT);
+            platform_set_charging_current(connectorId, transaction_with_invalid_tag_id ? 0 : this->current_allowed);
 
             clearTagDeadline();
             clearCableDeadline();
