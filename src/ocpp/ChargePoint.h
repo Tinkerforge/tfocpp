@@ -101,6 +101,8 @@ public:
     };
 
     EvalChargingProfilesResult evalChargingProfiles(time_t timeToEval);
+    void evalAndApplyChargingProfiles();
+    void triggerChargingProfileEval();
 
     OcppState state = OcppState::PowerOn;
 
@@ -125,4 +127,6 @@ public:
     // +1 as stack levels 0 up to (including) CHARGE_PROFILE_MAX_STACK_LEVEL are allowed.
     Opt<ChargingProfile> chargePointMaxProfiles[CHARGE_PROFILE_MAX_STACK_LEVEL + 1];
     Opt<ChargingProfile> txDefaultProfiles[CHARGE_PROFILE_MAX_STACK_LEVEL + 1];
+
+    time_t next_profile_eval = 0;
 };

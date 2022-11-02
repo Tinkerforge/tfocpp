@@ -117,6 +117,10 @@ void OcppChargePoint::tick() {
         }
     }
     connection.tick();
+
+    if (platform_get_system_time(this->platform_ctx) >= next_profile_eval) {
+        evalAndApplyChargingProfiles();
+    }
 }
 
 void OcppChargePoint::onConnect()
@@ -275,6 +279,10 @@ bool OcppChargePoint::sendCallAction(const ICall &call, time_t timestamp, int32_
     }
 
     connection.sendCallAction(call, timestamp, connectorId);
+
+    if (call.action == CallAction::START_TRANSACTION || call.action == CallAction::STOP_TRANSACTION)
+        this->triggerChargingProfileEval();
+
     return true;
 }
 
@@ -741,6 +749,9 @@ CallResponse OcppChargePoint::handleStartTransactionResponse(int32_t connectorId
     if (connectorId > 0 && connectorId <= NUM_CONNECTORS)
         connectors[connectorId - 1].onStartTransactionConf(info, conf.transactionId());
 
+    // We received the txn-ID, so maybe now a TxProfile applies.
+    this->triggerChargingProfileEval();
+
     return CallResponse{CallErrorCode::OK, ""};
 }
 
@@ -834,6 +845,10 @@ CallResponse OcppChargePoint::handleClearChargingProfile(const char *uid, ClearC
     }
 
     connection.sendCallResponse(ClearChargingProfileResponse(uid, accepted ? ClearChargingProfileResponseStatus::ACCEPTED : ClearChargingProfileResponseStatus::UNKNOWN));
+
+    if (accepted)
+        this->triggerChargingProfileEval();
+
     return CallResponse{CallErrorCode::OK, ""};
 }
 
@@ -956,6 +971,8 @@ CallResponse OcppChargePoint::handleSetChargingProfile(const char *uid, SetCharg
 
     log_info("Sending SetChargingProfile.conf.");
     connection.sendCallResponse(SetChargingProfileResponse(uid, SetChargingProfileResponseStatus::ACCEPTED));
+
+    this->triggerChargingProfileEval();
 
     return CallResponse{CallErrorCode::OK, ""};
 }
@@ -1160,6 +1177,23 @@ OcppChargePoint::EvalChargingProfilesResult OcppChargePoint::evalChargingProfile
 
     log_debug("");
     return result;
+}
+
+void OcppChargePoint::evalAndApplyChargingProfiles()
+{
+    auto result = evalChargingProfiles(platform_get_system_time(this->platform_ctx));
+    this->next_profile_eval = std::min(result.nextCheck, platform_get_system_time(this->platform_ctx) + 5 * 60);
+
+    for(int32_t i = 0; i < NUM_CONNECTORS; ++i) {
+        uint32_t limit = result.allocatedLimit[i + 1] * 1000;
+        log_debug("Setting connector %d limit to %u", i + 1, limit);
+        connectors[i].current_allowed = limit;
+    }
+}
+
+void OcppChargePoint::triggerChargingProfileEval()
+{
+    this->next_profile_eval = platform_get_system_time(this->platform_ctx);
 }
 
 void OcppChargePoint::handleTagSeen(int32_t connectorId, const char *tagId)
