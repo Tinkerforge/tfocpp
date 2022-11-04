@@ -9,7 +9,7 @@ CFLAGS += -std=c99 ${COMPILE_FLAGS}
 CXXFLAGS += -std=c++11 ${COMPILE_FLAGS}
 LDFLAGS += -pthread -fsanitize=address,undefined,leak
 LIB_LD_FLAGS = -shared-libasan
-LIBS += -lssl -lcrypto -lwebsockets -lstdc++ $(wildcard src/lib/libiso8601/*.c.o)
+LIBS += -lssl -lcrypto -lwebsockets -lstdc++
 
 WITH_DEBUG ?= yes
 
@@ -20,7 +20,8 @@ endif
 SOURCES :=	$(wildcard src/ocpp/*.cpp) \
 		    lib/mongoose/mongoose.cpp \
 
-CFILES := src/lib/musl_libc_timegm.c
+CFILES := src/lib/musl_libc_timegm.c \
+		  $(wildcard src/lib/libiso8601/*.c)
 
 SOURCES_LIB := $(SOURCES) src/platforms/TestPlatform.cpp
 SOURCES_EXEC := $(SOURCES) src/platforms/LinuxPlatform.cpp

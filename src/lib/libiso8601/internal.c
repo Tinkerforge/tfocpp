@@ -16,6 +16,8 @@
  * limitations under the License.
  */
 
+#pragma clang diagnostic ignored "-Weverything"
+
 #include "internal.h"
 #include <assert.h>
 #include <string.h>

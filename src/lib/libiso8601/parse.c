@@ -16,6 +16,8 @@
  * limitations under the License.
  */
 
+#pragma clang diagnostic ignored "-Weverything"
+
 #include "iso8601.h"
 #include "internal.h"
 

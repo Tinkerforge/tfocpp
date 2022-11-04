@@ -17,6 +17,7 @@
  */
 
 #pragma once
+#pragma clang diagnostic ignored "-Weverything"
 
 #include <stdbool.h>
 #include <stdint.h>

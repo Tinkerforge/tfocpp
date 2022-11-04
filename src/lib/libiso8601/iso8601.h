@@ -17,11 +17,13 @@
  */
 
 #pragma once
+#pragma clang diagnostic ignored "-Weverything"
 
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <time.h>
+#include <sys/time.h>
 
 #define ISO8601_FLAG_NONE  (0 << 0)
 #define ISO8601_FLAG_BASIC (1 << 0)

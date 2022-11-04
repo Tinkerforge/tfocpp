@@ -16,6 +16,8 @@
  * limitations under the License.
  */
 
+#pragma clang diagnostic ignored "-Weverything"
+
 #include "iso8601.h"
 #include "internal.h"
 
@@ -23,6 +25,7 @@
 #include <errno.h>
 #include <string.h>
 #include <stdarg.h>
+#include <sys/types.h>
 
 static bool is_leap_second(const iso8601_time *in)
 {
