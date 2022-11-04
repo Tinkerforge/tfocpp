@@ -4,7 +4,7 @@ CC = clang
 CXX = clang++
 CLANG_WARNINGS = -Weverything -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-old-style-cast -Wno-shadow-field-in-constructor -Wno-padded -Wno-exit-time-destructors -Wno-sign-conversion -Wno-sign-compare -Wno-double-promotion -Wno-implicit-int-float-conversion
 
-COMPILE_FLAGS = -DMG_ENABLE_OPENSSL=1 -DOCPP_LOG_LEVEL=3 -gdwarf-4 -fPIC -O0 ${CLANG_WARNINGS} -fdiagnostics-color=always -fsanitize=address,undefined,leak -Ilib/ArduinoJson -Ilib/mongoose -Isrc
+COMPILE_FLAGS = -DMG_ENABLE_OPENSSL=1 -DOCPP_LOG_LEVEL=4 -gdwarf-4 -fPIC -O0 ${CLANG_WARNINGS} -fdiagnostics-color=always -fsanitize=address,undefined,leak -Ilib/ArduinoJson -Ilib/mongoose -Isrc
 CFLAGS += -std=c99 ${COMPILE_FLAGS}
 CXXFLAGS += -std=c++11 ${COMPILE_FLAGS}
 LDFLAGS += -pthread -fsanitize=address,undefined,leak
