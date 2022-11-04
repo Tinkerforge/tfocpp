@@ -254,7 +254,7 @@ void OcppChargePoint::sendStatus()
 void OcppChargePoint::forceSendStatus()
 {
     StatusNotificationStatus newStatus = getStatus();
-    log_info("Sending StatusNotification.req: Status %s for charge point", StatusNotificationStatusStrings[(size_t)newStatus]);
+    log_info("Sending StatusNotification.req: Status %s for connector 0", StatusNotificationStatusStrings[(size_t)newStatus]);
 
     this->sendCallAction(StatusNotification(0, StatusNotificationErrorCode::NO_ERROR, newStatus, nullptr, platform_get_system_time(this->platform_ctx)));
     last_sent_status = newStatus;
@@ -1020,10 +1020,17 @@ CallResponse OcppChargePoint::handleSetChargingProfile(const char *uid, SetCharg
 
 void debug_print_limits(float *allowedLimit,
                         int32_t *allowedPhases,
-                        float *minChargingRate) {
-    log_debug("    \tConnID\tAllowed\tPhases\tMinRate");
+                        float *minChargingRate,
+                        bool trace) {
+    if (trace)
+        log_trace("    \tConnID\tAllowed\tPhases\tMinRate");
+    else
+        log_debug("    \tConnID\tAllowed\tPhases\tMinRate");
     for(size_t i = 0; i < NUM_CONNECTORS + 1; ++i) {
-        log_debug("    \t%d\t%.3f\t%d\t%.3f", i, allowedLimit[i], allowedPhases[i], minChargingRate[i]);
+        if (trace)
+            log_trace("    \t%d\t%.3f\t%d\t%.3f", i, allowedLimit[i], allowedPhases[i], minChargingRate[i]);
+        else
+            log_debug("    \t%d\t%.3f\t%d\t%.3f", i, allowedLimit[i], allowedPhases[i], minChargingRate[i]);
     }
 }
 
@@ -1044,14 +1051,14 @@ OcppChargePoint::EvalChargingProfilesResult OcppChargePoint::evalChargingProfile
 
     for(int stackLevel = CHARGE_PROFILE_MAX_STACK_LEVEL; stackLevel >= 0; --stackLevel) {
         if (!this->chargePointMaxProfiles[stackLevel].is_set()) {
-            log_debug("    ChargePointMaxProfiles[%d] not set", stackLevel);
+            log_trace("    ChargePointMaxProfiles[%d] not set", stackLevel);
             continue;
         }
 
         auto result = this->chargePointMaxProfiles[stackLevel].get().eval(Opt<time_t>(), timeToEval);
         nextCheck = std::min(nextCheck, result.nextCheck);
         if (!result.applied) {
-            log_debug("    ChargePointMaxProfiles[%d] did not apply", stackLevel);
+            log_trace("    ChargePointMaxProfiles[%d] did not apply", stackLevel);
             continue;
         }
 
@@ -1060,7 +1067,7 @@ OcppChargePoint::EvalChargingProfilesResult OcppChargePoint::evalChargingProfile
         allowedLimit[0] = std::min(allowedLimit[0], result.limit);
         allowedPhases[0] = std::min(allowedPhases[0], result.numberPhases);
         minChargingRate[0] = std::max(minChargingRate[0], result.minChargingRate);
-        debug_print_limits(allowedLimit, allowedPhases, minChargingRate);
+        debug_print_limits(allowedLimit, allowedPhases, minChargingRate, true);
         break;
     }
 
@@ -1070,11 +1077,11 @@ OcppChargePoint::EvalChargingProfilesResult OcppChargePoint::evalChargingProfile
 
         for(int stackLevel = CHARGE_PROFILE_MAX_STACK_LEVEL; stackLevel >= 0; --stackLevel) {
             if (!conn.txProfiles[stackLevel].is_set()) {
-                log_debug("    TxProfiles[%d] not set", stackLevel);
+                log_trace("    TxProfiles[%d] not set", stackLevel);
                 continue;
             }
             if (!conn.isTransactionActive()) {
-                log_debug("    TxProfiles[%d] no txn running", stackLevel);
+                log_trace("    TxProfiles[%d] no txn running", stackLevel);
                 continue;
             }
 
@@ -1083,7 +1090,7 @@ OcppChargePoint::EvalChargingProfilesResult OcppChargePoint::evalChargingProfile
                 auto profTxnId = conn.txProfiles[stackLevel].get().transactionId.get();
 
                 if (connTxnId != profTxnId){
-                    log_debug("    TxProfiles[%d] txn ID %d != running txn ID %d", stackLevel, profTxnId, connTxnId);
+                    log_trace("    TxProfiles[%d] txn ID %d != running txn ID %d", stackLevel, profTxnId, connTxnId);
                     continue;
                 }
             }
@@ -1092,7 +1099,7 @@ OcppChargePoint::EvalChargingProfilesResult OcppChargePoint::evalChargingProfile
 
             nextCheck = std::min(nextCheck, result.nextCheck);
             if (!result.applied) {
-                log_debug("    TxProfiles[%d] not applied", stackLevel);
+                log_trace("    TxProfiles[%d] not applied", stackLevel);
                 continue;
             }
 
@@ -1101,8 +1108,8 @@ OcppChargePoint::EvalChargingProfilesResult OcppChargePoint::evalChargingProfile
             allowedLimit[connectorIdx + 1] = std::min(allowedLimit[connectorIdx + 1], result.limit);
             allowedPhases[connectorIdx + 1] = std::min(allowedPhases[connectorIdx + 1], result.numberPhases);
             minChargingRate[connectorIdx + 1] = std::max(minChargingRate[connectorIdx + 1], result.minChargingRate);
-            debug_print_limits(allowedLimit, allowedPhases, minChargingRate);
-            log_debug("    A TxProfile applied. Skipping TxDefaultProfiles");
+            debug_print_limits(allowedLimit, allowedPhases, minChargingRate, true);
+            log_trace("    A TxProfile applied. Skipping TxDefaultProfiles");
             goto profiles_evaluated;
         }
 
@@ -1115,15 +1122,15 @@ OcppChargePoint::EvalChargingProfilesResult OcppChargePoint::evalChargingProfile
             ChargingProfile *prof = nullptr;
             if (conn.txDefaultProfiles[stackLevel].is_set()) {
                 prof = &conn.txDefaultProfiles[stackLevel].get();
-                log_debug("    TxDefaultProfiles[%d] set at connector", stackLevel);
+                log_trace("    TxDefaultProfiles[%d] set at connector", stackLevel);
             }
             else if (this->txDefaultProfiles[stackLevel].is_set()) {
                 prof = &this->txDefaultProfiles[stackLevel].get();
-                log_debug("    TxDefaultProfiles[%d] set at charge point", stackLevel);
+                log_trace("    TxDefaultProfiles[%d] set at charge point", stackLevel);
             }
 
             if (prof == nullptr) {
-                log_debug("    TxDefaultProfiles[%d] not set", stackLevel);
+                log_trace("    TxDefaultProfiles[%d] not set", stackLevel);
                 continue;
             }
 
@@ -1137,7 +1144,7 @@ OcppChargePoint::EvalChargingProfilesResult OcppChargePoint::evalChargingProfile
 
             nextCheck = std::min(nextCheck, result.nextCheck);
             if (!result.applied) {
-                log_debug("    TxDefaultProfiles[%d] not applied", stackLevel);
+                log_trace("    TxDefaultProfiles[%d] not applied", stackLevel);
                 continue;
             }
 
@@ -1146,7 +1153,7 @@ OcppChargePoint::EvalChargingProfilesResult OcppChargePoint::evalChargingProfile
             allowedLimit[connectorIdx + 1] = std::min(allowedLimit[connectorIdx + 1], result.limit);
             allowedPhases[connectorIdx + 1] = std::min(allowedPhases[connectorIdx + 1], result.numberPhases);
             minChargingRate[connectorIdx + 1] = std::max(minChargingRate[connectorIdx + 1], result.minChargingRate);
-            debug_print_limits(allowedLimit, allowedPhases, minChargingRate);
+            debug_print_limits(allowedLimit, allowedPhases, minChargingRate, true);
             goto profiles_evaluated;
         }
     }
@@ -1199,7 +1206,7 @@ profiles_evaluated:
     }
 
     log_debug("    Currents distributed:");
-    debug_print_limits(result.allocatedLimit, result.allocatedPhases, minChargingRate);
+    debug_print_limits(result.allocatedLimit, result.allocatedPhases, minChargingRate, false);
 
     if (result.nextCheck < std::numeric_limits<time_t>::max()) {
         char buf[OCPP_ISO_8601_MAX_LEN] = {0};

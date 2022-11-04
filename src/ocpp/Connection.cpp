@@ -15,7 +15,7 @@ static bool is_transaction_related(CallAction action) {
 
 void OcppConnection::handleMessage(char *message, size_t message_len)
 {
-    log_debug("Received message %.*s (len %lu)", (int)std::min(message_len, (size_t)40), message, message_len);
+    log_trace("Received message %.*s (len %lu)", (int)std::min(message_len, (size_t)40), message, message_len);
     DynamicJsonDocument doc{4096};
     // TODO: we should use
     // https://arduinojson.org/v6/how-to/deserialize-a-very-large-document/#deserialization-in-chunks
