@@ -919,13 +919,15 @@ CallResponse OcppChargePoint::handleSetChargingProfile(const char *uid, SetCharg
         return CallResponse{CallErrorCode::OK, ""};
     }
 
-    if (req.csChargingProfiles().stackLevel() < 0 || req.csChargingProfiles().stackLevel() > CHARGE_PROFILE_MAX_STACK_LEVEL) {
-        log_info("Rejected: stack level %d out of range", req.csChargingProfiles().stackLevel());
+    auto prof = req.csChargingProfiles();
+
+    if (prof.stackLevel() < 0 || prof.stackLevel() > CHARGE_PROFILE_MAX_STACK_LEVEL) {
+        log_info("Rejected: stack level %d out of range", prof.stackLevel());
         connection.sendCallResponse(SetChargingProfileResponse(uid, SetChargingProfileResponseStatus::REJECTED));
         return CallResponse{CallErrorCode::OK, ""};
     }
 
-    auto purpose = req.csChargingProfiles().chargingProfilePurpose();
+    auto purpose = prof.chargingProfilePurpose();
     /* ChargePointMaxProfile can only be set at Charge Point ConnectorId 0.*/
     if (purpose == ChargingProfilePurpose::CHARGE_POINT_MAX_PROFILE && conn_id != 0) {
         log_info("Rejected: CHARGE_POINT_MAX_PROFILE for connector id %d != 0 not allowed", conn_id);
@@ -949,7 +951,7 @@ CallResponse OcppChargePoint::handleSetChargingProfile(const char *uid, SetCharg
     }
 
     // reject if either recurKind is set and kind is not recurring or if it is not set and kind is recurring.
-    if (req.csChargingProfiles().chargingProfileKind() == ChargingProfileKind::RECURRING != req.csChargingProfiles().recurrencyKind().is_set()) {
+    if (prof.chargingProfileKind() == ChargingProfileKind::RECURRING != prof.recurrencyKind().is_set()) {
         log_info("Rejected: RECURRING but recurrency set");
         connection.sendCallResponse(SetChargingProfileResponse(uid, SetChargingProfileResponseStatus::REJECTED));
         return CallResponse{CallErrorCode::OK, ""};
@@ -957,18 +959,18 @@ CallResponse OcppChargePoint::handleSetChargingProfile(const char *uid, SetCharg
 
     // TODO replacement via chargingProfileId
 
-    log_info("Charging profile accepted as %s level %d", ChargingProfilePurposeStrings[(size_t) purpose], req.csChargingProfiles().stackLevel());
+    log_info("Charging profile accepted as %s level %d", ChargingProfilePurposeStrings[(size_t) purpose], prof.stackLevel());
 
     if (conn_id == 0) {
         if (purpose == ChargingProfilePurpose::CHARGE_POINT_MAX_PROFILE)
-            this->chargePointMaxProfiles[req.csChargingProfiles().stackLevel()] = {ChargingProfile(req.csChargingProfiles())};
+            this->chargePointMaxProfiles[prof.stackLevel()] = {ChargingProfile(prof)};
         else if (purpose == ChargingProfilePurpose::TX_DEFAULT_PROFILE)
-            this->txDefaultProfiles[req.csChargingProfiles().stackLevel()] = {ChargingProfile(req.csChargingProfiles())};
+            this->txDefaultProfiles[prof.stackLevel()] = {ChargingProfile(prof)};
     } else {
         if (purpose == ChargingProfilePurpose::TX_PROFILE)
-            connectors[conn_id - 1].txProfiles[req.csChargingProfiles().stackLevel()] = {ChargingProfile(req.csChargingProfiles())};
+            connectors[conn_id - 1].txProfiles[prof.stackLevel()] = {ChargingProfile(prof)};
         else if (purpose == ChargingProfilePurpose::TX_DEFAULT_PROFILE)
-            connectors[conn_id - 1].txDefaultProfiles[req.csChargingProfiles().stackLevel()] = {ChargingProfile(req.csChargingProfiles())};
+            connectors[conn_id - 1].txDefaultProfiles[prof.stackLevel()] = {ChargingProfile(prof)};
     }
 
     log_info("Sending SetChargingProfile.conf.");
