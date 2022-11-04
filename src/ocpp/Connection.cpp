@@ -233,13 +233,14 @@ bool OcppConnection::sendCallAction(const ICall &call, time_t timestamp, int32_t
             log_error("Attempted to send transaction related call action without valid timestamp!");
             return false;
         }
-        if (transaction_messages.size() >= 5) {
+        // TODO: as long as we don't implement any way of authenticating offline, this is not necessary.
+        /*if (transaction_messages.size() >= 5) {
             size_t i;
             for(i = 0; i < transaction_messages.size(); ++i)
                 if (transaction_messages[i].action == CallAction::METER_VALUES)
                     break;
             transaction_messages.erase(transaction_messages.begin() + i);
-        }
+        }*/
         transaction_messages.emplace_back(call, timestamp, connectorId);
         return true;
     }
