@@ -565,7 +565,7 @@ void Connector::tick() {
                 case EVSEState::NotConnected:
                     break;
                 case EVSEState::PlugDetected:
-                    setState(ConnectorState::AUTH_START_NO_CABLE);
+                    setState(ConnectorState::NO_CABLE);
                     break;
                 case EVSEState::Connected:
                     setState(ConnectorState::TRANSACTION);
