@@ -65,6 +65,27 @@ public:
         this->chargingSchedule.minChargingRate = view.chargingSchedule().minChargingRate();
     }
 
+    ChargingProfile(RemoteStartTransactionChargingProfileEntriesView view) {
+        this->id = view.chargingProfileId();
+        this->transactionId = view.transactionId();
+        this->stackLevel = view.stackLevel();
+        this->chargingProfilePurpose = view.chargingProfilePurpose();
+        this->chargingProfileKind = view.chargingProfileKind();
+        this->recurrencyKind = view.recurrencyKind();
+        this->validFrom = view.validFrom();
+        this->validTo = view.validTo();
+        this->chargingSchedule.duration = view.chargingSchedule().duration();
+        this->chargingSchedule.startSchedule = view.chargingSchedule().startSchedule();
+        this->chargingSchedule.unit = view.chargingSchedule().chargingRateUnit();
+        this->chargingSchedule.chargingSchedulePeriodCount = view.chargingSchedule().chargingSchedulePeriod_count();
+        for (int i = 0; i < view.chargingSchedule().chargingSchedulePeriod_count(); ++i) {
+            this->chargingSchedule.chargingSchedulePeriod[i].startPeriod = view.chargingSchedule().chargingSchedulePeriod(i).startPeriod();
+            this->chargingSchedule.chargingSchedulePeriod[i].limit = view.chargingSchedule().chargingSchedulePeriod(i).limit();
+            this->chargingSchedule.chargingSchedulePeriod[i].numberPhases = view.chargingSchedule().chargingSchedulePeriod(i).numberPhases();
+        }
+        this->chargingSchedule.minChargingRate = view.chargingSchedule().minChargingRate();
+    }
+
     EvalChargingProfileResult eval(Opt<time_t> startTxnTime, time_t now) {
         EvalChargingProfileResult result;
 

@@ -664,14 +664,14 @@ CallResponse OcppChargePoint::handleMeterValuesResponse(int32_t connectorId, Met
 CallResponse OcppChargePoint::handleRemoteStartTransaction(const char *uid, RemoteStartTransactionView req)
 {
     log_info("Received RemoteStartTransaction.req for connector %d%s and tag %s", req.connectorId().is_set() ? req.connectorId().get() : 0, req.connectorId().is_set() ? "" : "[ANY CONNECTOR]", req.idTag());
-    int conn_id = -1;
+    int conn_idx = -1;
 
     if (!req.connectorId().is_set()) {
         for(int i = 0; i < NUM_CONNECTORS; ++i) {
             if (!connectors[i].isSelectableForRemoteStartTxn())
                 continue;
 
-            if (conn_id != -1) {
+            if (conn_idx != -1) {
                 // We already have another selectable connector.
                 // -> Reject the request as it is ambiguous which connector to start.
                 log_info("Sending RemoteStartTransaction.conf Rejected (ambiguous)\n");
@@ -679,15 +679,52 @@ CallResponse OcppChargePoint::handleRemoteStartTransaction(const char *uid, Remo
                 return CallResponse{CallErrorCode::OK, ""};
             }
 
-            conn_id = i;
+            conn_idx = i;
         }
     } else
-        conn_id = req.connectorId().get() - 1;
+        conn_idx = req.connectorId().get() - 1;
 
-    if (conn_id < 0 || conn_id >= NUM_CONNECTORS) {
+    if (conn_idx < 0 || conn_idx >= NUM_CONNECTORS) {
         log_info("Sending RemoteStartTransaction.conf Rejected (unknown connector id)\n");
         connection.sendCallResponse(RemoteStartTransactionResponse(uid, ResponseStatus::REJECTED));
         return CallResponse{CallErrorCode::OK, ""};
+    }
+
+    if (req.chargingProfile().is_set()) {
+        log_info("RemoteStartTransaction.req contains charging profile");
+
+        auto prof = req.chargingProfile().get();
+
+        if (prof.stackLevel() < 0 || prof.stackLevel() > CHARGE_PROFILE_MAX_STACK_LEVEL) {
+            log_info("Rejected: stack level %d out of range", prof.stackLevel());
+            connection.sendCallResponse(RemoteStartTransactionResponse(uid, ResponseStatus::REJECTED));
+            return CallResponse{CallErrorCode::OK, ""};
+        }
+
+        if(prof.chargingProfilePurpose() != ChargingProfilePurpose::TX_PROFILE)  {
+            log_info("Rejected: Purpose of RemoteStartTransaction.req must be TxProfile; was %s", ChargingProfilePurposeStrings[(size_t)prof.chargingProfilePurpose()]);
+            connection.sendCallResponse(RemoteStartTransactionResponse(uid, ResponseStatus::REJECTED));
+            return CallResponse{CallErrorCode::OK, ""};
+        }
+
+        /*
+        If the Central System includes a ChargingProfile, the ChargingProfilePurpose MUST be set to TxProfile and the
+        transactionId SHALL NOT be set.
+        */
+        if(prof.transactionId().is_set())  {
+            log_info("Rejected: Transaction ID of charging profile in RemoteStartTransaction.req shall not be set.", ChargingProfilePurposeStrings[(size_t)prof.chargingProfilePurpose()]);
+            connection.sendCallResponse(RemoteStartTransactionResponse(uid, ResponseStatus::REJECTED));
+            return CallResponse{CallErrorCode::OK, ""};
+        }
+
+        /*
+        The Charge Point SHALL apply the given profile to the newly started transaction.
+        */
+        // but we don't have to do any special handling here:
+        // TxDefaultProfiles are never used if we have a TxProfile of any stack level.
+        // Also there should not be other TxProfiles, as those are cleared when stopping a transaction,
+        // and are only accepted in RemoteStartTransaction.reqs and if there is a transaction already running.
+        connectors[conn_idx].txProfiles[prof.stackLevel()] = {ChargingProfile(prof)};
     }
 
     // TODO: We could also reject here if the selected connector is faulted, unavailable or in an transaction.
@@ -700,9 +737,9 @@ CallResponse OcppChargePoint::handleRemoteStartTransaction(const char *uid, Remo
     connection.sendCallResponse(RemoteStartTransactionResponse(uid, ResponseStatus::ACCEPTED));
 
     if (getBoolConfig(ConfigKey::AuthorizeRemoteTxRequests)) {
-        connectors[conn_id].onTagSeen(req.idTag());
+        connectors[conn_idx].onTagSeen(req.idTag());
     } else {
-        connectors[conn_id].onRemoteStartTransaction(req.idTag());
+        connectors[conn_idx].onRemoteStartTransaction(req.idTag());
     }
 
     return CallResponse{CallErrorCode::OK, ""};
