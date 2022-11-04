@@ -147,6 +147,12 @@ time_t platform_get_system_time(void *ctx) {
 
 void platform_printfln(int level, const char *fmt, ...)
 {
+    auto timestamp = platform_get_system_time(nullptr);
+    char buf[OCPP_ISO_8601_MAX_LEN] = {0};
+    const tm *t = localtime(&timestamp);
+
+    strftime(buf, ARRAY_SIZE(buf), "%F %T ", t);
+
     switch (level) {
         case OCPP_LOG_LEVEL_ERROR:
             fputs("[ERROR]   ", stdout);
@@ -160,9 +166,15 @@ void platform_printfln(int level, const char *fmt, ...)
         case OCPP_LOG_LEVEL_DEBUG:
             fputs("[DEBUG]   ", stdout);
             break;
+        case OCPP_LOG_LEVEL_TRACE:
+            fputs("[TRACE]   ", stdout);
+            break;
         default:
             break;
     }
+
+    fputs(buf, stdout);
+
     va_list args;
     va_start(args, fmt);
     vprintf(fmt, args);

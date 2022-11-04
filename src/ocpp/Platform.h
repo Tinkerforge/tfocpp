@@ -39,6 +39,7 @@ time_t platform_get_system_time(void *ctx);
 #define OCPP_LOG_LEVEL_WARN 2
 #define OCPP_LOG_LEVEL_INFO 3
 #define OCPP_LOG_LEVEL_DEBUG 4
+#define OCPP_LOG_LEVEL_TRACE 5
 
 #if OCPP_LOG_LEVEL >= OCPP_LOG_LEVEL_ERROR
 #define log_error(...) platform_printfln(OCPP_LOG_LEVEL_ERROR, __VA_ARGS__)
@@ -62,6 +63,12 @@ time_t platform_get_system_time(void *ctx);
 #define log_debug(...) platform_printfln(OCPP_LOG_LEVEL_DEBUG, __VA_ARGS__)
 #else
 #define log_debug(...)
+#endif
+
+#if OCPP_LOG_LEVEL >= OCPP_LOG_LEVEL_TRACE
+#define log_trace(...) platform_printfln(OCPP_LOG_LEVEL_TRACE, __VA_ARGS__)
+#else
+#define log_trace(...)
 #endif
 
 void platform_printfln(int level, const char *fmt, ...) __attribute__((__format__(__printf__, 2, 3)));
