@@ -600,7 +600,7 @@ void Connector::tick() {
             switch (evse_state) {
                 case EVSEState::NotConnected:
                     log_error("Unexpected EVSEState %d while Connector is in state %d. Aborting transaction!", (int)evse_state, (int)state);
-                    setState(ConnectorState::IDLE);
+                    setState(ConnectorState::FINISHING_NO_CABLE_UNLOCKED);
                     break;
                 case EVSEState::PlugDetected:
                     this->next_stop_reason = StopTransactionReason::EV_DISCONNECTED;
@@ -621,7 +621,7 @@ void Connector::tick() {
             switch (evse_state) {
                 case EVSEState::NotConnected:
                     log_error("Unexpected EVSEState %d while Connector is in state %d. Aborting transaction!", (int)evse_state, (int)state);
-                    setState(ConnectorState::IDLE);
+                    setState(ConnectorState::FINISHING_NO_CABLE_UNLOCKED);
                     break;
                 case EVSEState::PlugDetected:
                     this->next_stop_reason = StopTransactionReason::EV_DISCONNECTED;
