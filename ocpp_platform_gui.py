@@ -61,20 +61,20 @@ layout.addRow(QLabel("Response"))
 resp_seq_num = QLabel("no packet sent yet")
 layout.addRow("Sequence number", resp_seq_num)
 
-resp_block_seq_num = QCheckBox("Block sequence number")
-layout.addRow("", resp_block_seq_num)
+# resp_block_seq_num = QCheckBox("Block sequence number")
+# layout.addRow("", resp_block_seq_num)
 
-resp_tag_at_connector = QComboBox()
-resp_tag_at_connector.addItem("1")
-resp_tag_at_connector.addItem("2")
-resp_tag_at_connector.addItem("3")
-resp_tag_at_connector.addItem("4")
-resp_tag_at_connector.addItem("5")
-resp_tag_at_connector.addItem("6")
-resp_tag_at_connector.addItem("7")
-resp_tag_at_connector.addItem("8")
-resp_tag_at_connector.addItem("9")
-layout.addRow("Show Tag at connector", resp_tag_at_connector)
+# resp_tag_at_connector = QComboBox()
+# resp_tag_at_connector.addItem("1")
+# resp_tag_at_connector.addItem("2")
+# resp_tag_at_connector.addItem("3")
+# resp_tag_at_connector.addItem("4")
+# resp_tag_at_connector.addItem("5")
+# resp_tag_at_connector.addItem("6")
+# resp_tag_at_connector.addItem("7")
+# resp_tag_at_connector.addItem("8")
+# resp_tag_at_connector.addItem("9")
+# layout.addRow("Show Tag at connector", resp_tag_at_connector)
 
 resp_tag_id = QLineEdit("")
 resp_tag_id.setPlaceholderText("Type Tag ID to show")
@@ -88,10 +88,11 @@ resp_tag_id.returnPressed.connect(lambda: resp_send_tag_id.setChecked(True))
 
 resp_evse_state = QComboBox()
 resp_evse_state.addItem("0: NotConnected")
-resp_evse_state.addItem("1: Connected")
-resp_evse_state.addItem("2: ReadyToCharge")
-resp_evse_state.addItem("3: Charging")
-resp_evse_state.addItem("4: Faulte")
+resp_evse_state.addItem("1: PlugDetected")
+resp_evse_state.addItem("2: Connected")
+resp_evse_state.addItem("3: ReadyToCharge")
+resp_evse_state.addItem("4: Charging")
+resp_evse_state.addItem("5: Faulte")
 layout.addRow("EVSE State", resp_evse_state)
 """
     resp_charger_state = QComboBox()
@@ -161,8 +162,8 @@ def receive():
 
     message = message.decode("utf-8").replace("\0", "")
 
-    req_charge_current.setText(", ".join(["{:3.3f} A".format(cc / 1000.0) for cc in charge_current]))
-    req_locked.setText(", ".join("Locked" if (connector_locked & (1 << i)) else "Unlocked" for i in range(8)))
+    req_charge_current.setText(", ".join(["{:3.3f} A".format(cc / 1000.0) for cc in charge_current[:1]]))
+    req_locked.setText(", ".join("Locked" if (connector_locked & (1 << i)) else "Unlocked" for i in range(1)))
 
     req_seq_num.setText(str(seq_num))
     if (message != "POLL"):
@@ -171,14 +172,16 @@ def receive():
 
     b = struct.pack(response_format,
                     next_seq_num,
-                    (bytearray([resp_tag_at_connector.currentIndex() + 1]) + resp_tag_id.text().encode("utf-8")) if resp_send_tag_id.isChecked() else "".encode("utf-8"),
+                    (bytearray([1]) + resp_tag_id.text().encode("utf-8")) if resp_send_tag_id.isChecked() else "".encode("utf-8"),
                     resp_evse_state.currentIndex(),
                     *([0] * 7),
                     *([0] * 8))
 
-    if not resp_block_seq_num.isChecked():
-        next_seq_num += 1
-        next_seq_num %= 256
+    resp_seq_num.setText(str(next_seq_num))
+
+    #if not resp_block_seq_num.isChecked():
+    next_seq_num += 1
+    next_seq_num %= 256
 
     sock.sendto(b, addr)
     resp_send_tag_id.setChecked(False)
