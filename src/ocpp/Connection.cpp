@@ -15,6 +15,7 @@ static bool is_transaction_related(CallAction action) {
 
 void OcppConnection::handleMessage(char *message, size_t message_len)
 {
+    (void) message_len;
     log_trace("Received message %.*s (len %lu)", (int)std::min(message_len, (size_t)40), message, message_len);
     DynamicJsonDocument doc{4096};
     // TODO: we should use
@@ -172,13 +173,13 @@ void OcppConnection::handleCallError(CallErrorCode code, const char *desc, JsonO
 
     transaction_messages.push_front(std::move(message_in_flight));
     ++transaction_message_attempts;
-    if (transaction_message_attempts >= getIntConfig(ConfigKey::TransactionMessageAttempts)) {
+    if (transaction_message_attempts >= getIntConfigUnsigned(ConfigKey::TransactionMessageAttempts)) {
         cp->onTimeout(message_in_flight.action, message_in_flight.message_id, message_in_flight.connector_id);
         message_in_flight = QueueItem{};
         return;
     }
 
-    transaction_message_retry_deadline = platform_now_ms() + transaction_message_attempts * getIntConfig(ConfigKey::TransactionMessageRetryInterval) * 1000;
+    transaction_message_retry_deadline = platform_now_ms() + transaction_message_attempts * getIntConfigUnsigned(ConfigKey::TransactionMessageRetryInterval) * 1000;
 }
 
 static size_t buildCallError(TFJsonSerializer &json, const char *uid, CallErrorCode code, const char *desc) {
@@ -309,7 +310,7 @@ void OcppConnection::tick() {
     } else
         return;
 
-    message_timeout_deadline = platform_now_ms() + getIntConfig(ConfigKey::MessageTimeout) * 1000;
+    message_timeout_deadline = platform_now_ms() + getIntConfigUnsigned(ConfigKey::MessageTimeout) * 1000;
 
     platform_ws_send(platform_ctx, message_in_flight.buf.get(), message_in_flight.len);
 }

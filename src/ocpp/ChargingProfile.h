@@ -57,7 +57,7 @@ public:
         this->chargingSchedule.startSchedule = view.chargingSchedule().startSchedule();
         this->chargingSchedule.unit = view.chargingSchedule().chargingRateUnit();
         this->chargingSchedule.chargingSchedulePeriodCount = view.chargingSchedule().chargingSchedulePeriod_count();
-        for (int i = 0; i < view.chargingSchedule().chargingSchedulePeriod_count(); ++i) {
+        for (size_t i = 0; i < view.chargingSchedule().chargingSchedulePeriod_count(); ++i) {
             this->chargingSchedule.chargingSchedulePeriod[i].startPeriod = view.chargingSchedule().chargingSchedulePeriod(i).startPeriod();
             this->chargingSchedule.chargingSchedulePeriod[i].limit = view.chargingSchedule().chargingSchedulePeriod(i).limit();
             this->chargingSchedule.chargingSchedulePeriod[i].numberPhases = view.chargingSchedule().chargingSchedulePeriod(i).numberPhases();
@@ -78,7 +78,7 @@ public:
         this->chargingSchedule.startSchedule = view.chargingSchedule().startSchedule();
         this->chargingSchedule.unit = view.chargingSchedule().chargingRateUnit();
         this->chargingSchedule.chargingSchedulePeriodCount = view.chargingSchedule().chargingSchedulePeriod_count();
-        for (int i = 0; i < view.chargingSchedule().chargingSchedulePeriod_count(); ++i) {
+        for (size_t i = 0; i < view.chargingSchedule().chargingSchedulePeriod_count(); ++i) {
             this->chargingSchedule.chargingSchedulePeriod[i].startPeriod = view.chargingSchedule().chargingSchedulePeriod(i).startPeriod();
             this->chargingSchedule.chargingSchedulePeriod[i].limit = view.chargingSchedule().chargingSchedulePeriod(i).limit();
             this->chargingSchedule.chargingSchedulePeriod[i].numberPhases = view.chargingSchedule().chargingSchedulePeriod(i).numberPhases();

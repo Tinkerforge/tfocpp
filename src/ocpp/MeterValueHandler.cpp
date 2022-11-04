@@ -44,7 +44,7 @@ void OcppMeterValueHandler::tick() {
 }
 
 bool OcppMeterValueHandler::clock_aligned_interval_crossed() {
-    int32_t interval = getIntConfig(ConfigKey::ClockAlignedDataInterval);
+    uint32_t interval = getIntConfigUnsigned(ConfigKey::ClockAlignedDataInterval);
 
     /*
     A value of "0" (numeric zero), by convention, is to be interpreted to mean that no clock-aligned data should be
@@ -62,8 +62,8 @@ bool OcppMeterValueHandler::clock_aligned_interval_crossed() {
 
     // If !=, we just crossed midnight. This is an interval start in any case, as the intervals are aligned at midnight.
     if (last_send_tm.tm_yday == now_tm.tm_yday){
-        uint32_t last_send_seconds_since_midnight = last_send_tm.tm_hour * 3600 + last_send_tm.tm_min * 60 + last_send_tm.tm_sec;
-        uint32_t now_seconds_since_midnight = now_tm.tm_hour * 3600 + now_tm.tm_min * 60 + now_tm.tm_sec;
+        uint32_t last_send_seconds_since_midnight = (uint32_t)(last_send_tm.tm_hour * 3600 + last_send_tm.tm_min * 60 + last_send_tm.tm_sec);
+        uint32_t now_seconds_since_midnight = (uint32_t)(now_tm.tm_hour * 3600 + now_tm.tm_min * 60 + now_tm.tm_sec);
 
         uint32_t last_send_interval = last_send_seconds_since_midnight / interval;
         uint32_t now_interval = now_seconds_since_midnight / interval;
@@ -78,7 +78,7 @@ bool OcppMeterValueHandler::clock_aligned_interval_crossed() {
 
 bool OcppMeterValueHandler::charging_session_interval_crossed()
 {
-    int32_t interval = getIntConfig(ConfigKey::MeterValueSampleInterval);
+    uint32_t interval = getIntConfigUnsigned(ConfigKey::MeterValueSampleInterval);
     if (interval == 0)
         return false;
 

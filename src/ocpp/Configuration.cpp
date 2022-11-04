@@ -356,6 +356,19 @@ OcppConfiguration& getConfig(size_t key) {
     return config[key];
 }
 
+uint32_t getIntConfigUnsigned(ConfigKey key) {
+    OcppConfiguration &cfg = config[(size_t)key];
+    if (cfg.type != OcppConfigurationValueType::Integer) {
+        log_error("Tried to read config %s (%d) as int, but it is of type %s", config_keys[(size_t) key], (int)key, cfg.type == OcppConfigurationValueType::CSL ? "CSL" : "boolean");
+        return 0xFFFFFFFF;
+    }
+    if (cfg.value.integer.min_ < 0)  {
+        log_error("Tried to read config %s (%d) as unsigned int, but its allowed minimum is < 0", config_keys[(size_t) key], (int)key);
+        return 0xFFFFFFFF;
+    }
+    return (uint32_t)cfg.value.integer.i;
+}
+
 int32_t getIntConfig(ConfigKey key) {
     OcppConfiguration &cfg = config[(size_t)key];
     if (cfg.type != OcppConfigurationValueType::Integer) {
@@ -463,7 +476,7 @@ void saveConfig()
                 }
 
                 doc[config_keys[i]] = (const char *)val;
-                scratch_buf_idx += written;
+                scratch_buf_idx += (size_t)written;
                 ++scratch_buf_idx; // for null terminator
                 break;
 
