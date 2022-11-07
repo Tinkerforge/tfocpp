@@ -9,6 +9,9 @@
 #define CURRENT_REQUIRED_TO_START_CHARGING 6
 #endif
 
+#ifndef LINE_VOLTAGE
+#define LINE_VOLTAGE 230
+#endif
 
 // Default configuration
 

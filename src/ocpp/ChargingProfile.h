@@ -25,8 +25,8 @@ public:
 struct EvalChargingProfileResult {
     bool applied = false;
     time_t nextCheck = std::numeric_limits<time_t>::max();
-    float limit = std::numeric_limits<float>::max();
-    float minChargingRate = 0;
+    float currentLimit = std::numeric_limits<float>::max();
+    float minChargingCurrent = 0;
     int32_t numberPhases = 3;
 };
 
@@ -172,11 +172,14 @@ public:
         }
 
         result.applied = true;
-        result.limit = period.limit;
+
         if (period.numberPhases.is_set())
             result.numberPhases = period.numberPhases.get();
+
+        result.currentLimit = period.limit / (sched.unit == ChargingRateUnit::A ? 1 : (LINE_VOLTAGE * result.numberPhases));
+
         if (sched.minChargingRate.is_set())
-            result.minChargingRate = sched.minChargingRate.get();
+            result.minChargingCurrent = sched.minChargingRate.get() / (sched.unit == ChargingRateUnit::A ? 1 : (LINE_VOLTAGE * result.numberPhases));
 
         return result;
     }

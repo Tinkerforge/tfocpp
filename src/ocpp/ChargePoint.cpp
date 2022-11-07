@@ -928,8 +928,12 @@ CallResponse OcppChargePoint::handleGetCompositeSchedule(const char *uid, GetCom
 
         next_check = result.nextCheck;
 
-        periods[periods_used].limit = result.allocatedLimit[req.connectorId()];
         periods[periods_used].numberPhases = result.allocatedPhases[req.connectorId()];
+
+        periods[periods_used].limit = result.allocatedLimit[req.connectorId()];
+        if (req.chargingRateUnit().is_set() && req.chargingRateUnit().get() == ChargingRateUnit::W)
+            periods[periods_used].limit *= LINE_VOLTAGE * periods[periods_used].numberPhases;
+
         ++periods_used;
     }
 
@@ -940,7 +944,9 @@ CallResponse OcppChargePoint::handleGetCompositeSchedule(const char *uid, GetCom
 
     sched.chargingSchedulePeriod = periods;
     sched.chargingSchedulePeriod_length = periods_used;
-    sched.chargingRateUnit = GetCompositeScheduleResponseChargingScheduleChargingRateUnit::A;
+    sched.chargingRateUnit = (req.chargingRateUnit().is_set() && req.chargingRateUnit().get() == ChargingRateUnit::W) ?
+                             GetCompositeScheduleResponseChargingScheduleChargingRateUnit::W :
+                             GetCompositeScheduleResponseChargingScheduleChargingRateUnit::A;
     sched.duration = req.duration();
 
     /* Errata 4.0: When ChargingSchedule is used as part of a GetCompositeSchedule.conf message, then this field must be omitted. */
@@ -1044,13 +1050,14 @@ OcppChargePoint::EvalChargingProfilesResult OcppChargePoint::evalChargingProfile
     log_debug("Evaluating charging profiles");
     time_t nextCheck = std::numeric_limits<time_t>::max();
 
-    // This is either a current or a power
-    float allowedLimit[NUM_CONNECTORS + 1];
+    // This is always a current. Charging profiles can contain current or power limits,
+    // but power limits are converted to current limits when calling eval().
+    float allowedCurrent[NUM_CONNECTORS + 1];
     int32_t allowedPhases[NUM_CONNECTORS + 1];
-    float minChargingRate[NUM_CONNECTORS + 1] = {0};
+    float minChargingCurrent[NUM_CONNECTORS + 1] = {0};
 
     for(int32_t i = 0; i < NUM_CONNECTORS + 1; ++i) {
-        allowedLimit[i] = platform_get_maximum_charging_current(i) / 1000.0f;
+        allowedCurrent[i] = platform_get_maximum_charging_current(i) / 1000.0f;
         allowedPhases[i] = 3;
     }
 
@@ -1069,10 +1076,10 @@ OcppChargePoint::EvalChargingProfilesResult OcppChargePoint::evalChargingProfile
 
         log_debug("    ChargePointMaxProfiles[%d] applied.", stackLevel);
 
-        allowedLimit[0] = std::min(allowedLimit[0], result.limit);
+        allowedCurrent[0] = std::min(allowedCurrent[0], result.currentLimit);
         allowedPhases[0] = std::min(allowedPhases[0], result.numberPhases);
-        minChargingRate[0] = std::max(minChargingRate[0], result.minChargingRate);
-        debug_print_limits(allowedLimit, allowedPhases, minChargingRate, true);
+        minChargingCurrent[0] = std::max(minChargingCurrent[0], result.minChargingCurrent);
+        debug_print_limits(allowedCurrent, allowedPhases, minChargingCurrent, true);
         break;
     }
 
@@ -1110,10 +1117,10 @@ OcppChargePoint::EvalChargingProfilesResult OcppChargePoint::evalChargingProfile
 
             log_debug("    TxProfiles[%d] applied", stackLevel);
 
-            allowedLimit[connectorIdx + 1] = std::min(allowedLimit[connectorIdx + 1], result.limit);
+            allowedCurrent[connectorIdx + 1] = std::min(allowedCurrent[connectorIdx + 1], result.currentLimit);
             allowedPhases[connectorIdx + 1] = std::min(allowedPhases[connectorIdx + 1], result.numberPhases);
-            minChargingRate[connectorIdx + 1] = std::max(minChargingRate[connectorIdx + 1], result.minChargingRate);
-            debug_print_limits(allowedLimit, allowedPhases, minChargingRate, true);
+            minChargingCurrent[connectorIdx + 1] = std::max(minChargingCurrent[connectorIdx + 1], result.minChargingCurrent);
+            debug_print_limits(allowedCurrent, allowedPhases, minChargingCurrent, true);
             log_trace("    A TxProfile applied. Skipping TxDefaultProfiles");
             goto profiles_evaluated;
         }
@@ -1155,10 +1162,10 @@ OcppChargePoint::EvalChargingProfilesResult OcppChargePoint::evalChargingProfile
 
             log_debug("    TxDefaultProfiles[%d] applied", stackLevel);
 
-            allowedLimit[connectorIdx + 1] = std::min(allowedLimit[connectorIdx + 1], result.limit);
+            allowedCurrent[connectorIdx + 1] = std::min(allowedCurrent[connectorIdx + 1], result.currentLimit);
             allowedPhases[connectorIdx + 1] = std::min(allowedPhases[connectorIdx + 1], result.numberPhases);
-            minChargingRate[connectorIdx + 1] = std::max(minChargingRate[connectorIdx + 1], result.minChargingRate);
-            debug_print_limits(allowedLimit, allowedPhases, minChargingRate, true);
+            minChargingCurrent[connectorIdx + 1] = std::max(minChargingCurrent[connectorIdx + 1], result.minChargingCurrent);
+            debug_print_limits(allowedCurrent, allowedPhases, minChargingCurrent, true);
             goto profiles_evaluated;
         }
     }
@@ -1170,11 +1177,11 @@ profiles_evaluated:
     // - The maximum allowed current and phases for each connector
     // - The recommended minimum current for each connector
 
-    auto availableLimit = allowedLimit[0];
+    auto availableLimit = allowedCurrent[0];
 
     EvalChargingProfilesResult result;
     result.nextCheck = nextCheck;
-    result.allocatedLimit[0] = allowedLimit[0];
+    result.allocatedLimit[0] = allowedCurrent[0];
     result.allocatedPhases[0] = allowedPhases[0];
 
     for(int32_t i = 1; i < NUM_CONNECTORS + 1; ++i) {
@@ -1184,8 +1191,8 @@ profiles_evaluated:
 
 
     for(int32_t connectorId = 1; connectorId < NUM_CONNECTORS + 1; ++connectorId) {
-        auto required = std::max(minChargingRate[0], std::max(minChargingRate[connectorId], (float)CURRENT_REQUIRED_TO_START_CHARGING));
-        auto allowed = std::min(availableLimit, allowedLimit[connectorId]);
+        auto required = std::max(minChargingCurrent[0], std::max(minChargingCurrent[connectorId], (float)CURRENT_REQUIRED_TO_START_CHARGING));
+        auto allowed = std::min(availableLimit, allowedCurrent[connectorId]);
         if (required > allowed)
             break;
 
@@ -1198,20 +1205,20 @@ profiles_evaluated:
     if (availableLimit > 0) {
         std::array<int32_t, NUM_CONNECTORS> indices = {};
         std::iota(indices.begin(), indices.end(), 1);
-        std::sort(indices.begin(), indices.end(), [allowedLimit](int32_t a, int32_t b) {
-            return allowedLimit[a] > allowedLimit[b];
+        std::sort(indices.begin(), indices.end(), [allowedCurrent](int32_t a, int32_t b) {
+            return allowedCurrent[a] > allowedCurrent[b];
         });
 
         for(size_t i = 0; i < indices.size(); ++i) {
             auto connId = indices[i];
-            auto limit = std::min(availableLimit / (indices.size() - i), allowedLimit[connId] - result.allocatedLimit[connId]);
+            auto limit = std::min(availableLimit / (indices.size() - i), allowedCurrent[connId] - result.allocatedLimit[connId]);
             result.allocatedLimit[connId] += limit;
             availableLimit -= limit;
         }
     }
 
     log_debug("    Currents distributed:");
-    debug_print_limits(result.allocatedLimit, result.allocatedPhases, minChargingRate, false);
+    debug_print_limits(result.allocatedLimit, result.allocatedPhases, minChargingCurrent, false);
 
     if (result.nextCheck < std::numeric_limits<time_t>::max()) {
         char buf[OCPP_ISO_8601_MAX_LEN] = {0};
