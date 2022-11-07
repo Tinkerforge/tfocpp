@@ -956,6 +956,13 @@ CallResponse OcppChargePoint::handleGetCompositeSchedule(const char *uid, GetCom
     return CallResponse{CallErrorCode::OK, ""};
 }
 
+static void clearProfileById(int32_t id, Opt<ChargingProfile> *opt) {
+    if (opt->is_set() && opt->get().id == id) {
+        log_info("New profile replaces %s level %u", ChargingProfilePurposeStrings[(size_t)opt->get().chargingProfilePurpose], opt->get().stackLevel);
+        opt->clear();
+    }
+}
+
 CallResponse OcppChargePoint::handleSetChargingProfile(const char *uid, SetChargingProfileView req)
 {
     log_info("Received SetChargingProfile.req stacklevel %d", req.csChargingProfiles().stackLevel());
@@ -1005,9 +1012,22 @@ CallResponse OcppChargePoint::handleSetChargingProfile(const char *uid, SetCharg
         return CallResponse{CallErrorCode::OK, ""};
     }
 
-    // TODO replacement via chargingProfileId
-
     log_info("Charging profile accepted as %s level %d", ChargingProfilePurposeStrings[(size_t) purpose], prof.stackLevel());
+
+    /*
+    If a charging profile
+    with the same chargingProfileId, or the same combination of stackLevel / ChargingProfilePurpose, exists on the
+    Charge Point, the new charging profile SHALL replace the existing charging profile, otherwise it SHALL be added.
+    */
+    for(size_t stackLevel = 0; stackLevel < CHARGE_PROFILE_MAX_STACK_LEVEL; ++stackLevel) {
+        clearProfileById(prof.chargingProfileId(), &this->chargePointMaxProfiles[stackLevel]);
+        clearProfileById(prof.chargingProfileId(), &this->txDefaultProfiles[stackLevel]);
+
+        for(size_t connectorIdx = 0; connectorIdx < NUM_CONNECTORS; ++connectorIdx) {
+            clearProfileById(prof.chargingProfileId(), &connectors[connectorIdx].txProfiles[stackLevel]);
+            clearProfileById(prof.chargingProfileId(), &connectors[connectorIdx].txDefaultProfiles[stackLevel]);
+        }
+    }
 
     if (conn_id == 0) {
         if (purpose == ChargingProfilePurpose::CHARGE_POINT_MAX_PROFILE)
