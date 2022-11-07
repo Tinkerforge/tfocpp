@@ -247,9 +247,14 @@ int main(int argc, char **argv) {
     argc_ = argc;
     argv_ = argv;
 
+    if (argc < 2) {
+        printf("Usage %s ws[s]://central-host-or-ip:port/central/path\n", argv[0]);
+        return;
+    }
+
     OcppChargePoint cp;
 
-    cp.start("wss://www.ecarup.com/api/Ocpp16/42F36ED689A7D586", "CP_1");
+    cp.start(argv[1], "CP_1");
 
     addr.sin_family = AF_INET;
     addr.sin_addr.s_addr = inet_addr("127.0.0.1");
