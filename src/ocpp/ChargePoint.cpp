@@ -59,7 +59,6 @@ void OcppChargePoint::tick_idle() {
 }
 
 void OcppChargePoint::tick_hard_reset() {
-    // TODO: if persistence is implemented: Write all txn messages to flash and reboot instantly.
     platform_reset();
 }
 

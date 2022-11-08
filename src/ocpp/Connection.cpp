@@ -72,9 +72,10 @@ void OcppConnection::handleMessage(char *message, size_t message_len)
         }
 
         CallResponse res = callHandler(uniqueID, doc[2].as<const char *>(), doc[3].as<JsonObject>(), cp);
+
         if (res.result != CallErrorCode::OK)
             sendCallError(uniqueID, res.result, res.error_description);
-        // TODO handle responses here?
+
         return;
     }
 
