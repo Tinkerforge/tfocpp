@@ -589,7 +589,7 @@ CallResponse OcppChargePoint::handleGetConfiguration(const char *uid, GetConfigu
                         config_value = (const char *)&scratch_buf[scratch_buf_idx];
                         int written = snprintf(&scratch_buf[scratch_buf_idx], scratch_buf_size - scratch_buf_idx, "%d", config.value.integer.i);
                         if (written < 0) {
-                            log_error("Failed to dump all configuration: %d", written);
+                            log_error("Failed to dump all configuration: value of key %s: Error %d", config_keys[i], written);
                             return CallResponse{CallErrorCode::InternalError, "Failed to dump all configuration."};
                         }
                         scratch_buf_idx += (size_t)written;
@@ -620,7 +620,7 @@ CallResponse OcppChargePoint::handleGetConfiguration(const char *uid, GetConfigu
                             config_value = (const char *)&scratch_buf[scratch_buf_idx];
                             int written = snprintf(&scratch_buf[scratch_buf_idx], scratch_buf_size - scratch_buf_idx, "%d", config.value.integer.i);
                             if (written < 0) {
-                                log_error("Failed to write int config value: %d", written);
+                                log_error("Failed to write int config %s: %d", config_keys[result], written);
                                 return CallResponse{CallErrorCode::InternalError, "Failed to write int config value."};
                             }
                             scratch_buf_idx += (size_t)written;
