@@ -5,6 +5,8 @@
 #include "Defines.h"
 #include "Tools.h"
 
+#include <limits>
+
 class PeriodItem {
 public:
     int32_t startPeriod;
