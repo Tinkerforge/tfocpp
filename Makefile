@@ -1,20 +1,58 @@
 .SILENT:
 
+WITH_DEBUG ?= yes
+WITH_SANITIZERS ?= yes
+WITH_TLS ?= yes
+STATIC ?= no
+
 CC = clang
 CXX = clang++
-CLANG_WARNINGS = -Weverything -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-old-style-cast -Wno-shadow-field-in-constructor -Wno-padded -Wno-exit-time-destructors -Wno-double-promotion -Wno-implicit-int-float-conversion
 
-COMPILE_FLAGS = -DMG_ENABLE_OPENSSL=1 -DOCPP_LOG_LEVEL=4 -gdwarf-4 -fPIC -O0 ${CLANG_WARNINGS} -fdiagnostics-color=always -fsanitize=address,undefined,leak -Ilib/ArduinoJson -Ilib/mongoose -Isrc
-CFLAGS += -std=c99 ${COMPILE_FLAGS}
-CXXFLAGS += -std=c++11 ${COMPILE_FLAGS}
-LDFLAGS += -pthread -fsanitize=address,undefined,leak
-LIB_LD_FLAGS = -shared-libasan
-LIBS += -lssl -lcrypto -lwebsockets -lstdc++
+CLANG_WARNINGS = -Weverything \
+				 -Wno-c++98-compat \
+				 -Wno-c++98-compat-pedantic \
+				 -Wno-old-style-cast \
+				 -Wno-shadow-field-in-constructor \
+				 -Wno-padded \
+				 -Wno-exit-time-destructors \
+				 -Wno-double-promotion \
+				 -Wno-implicit-int-float-conversion
 
-WITH_DEBUG ?= yes
+COMPILE_FLAGS = -DOCPP_LOG_LEVEL=4 \
+			    -gdwarf-4 \
+			    -fPIC \
+			    -O0 \
+			    ${CLANG_WARNINGS} \
+			    -fdiagnostics-color=always \
+			    -Ilib/ArduinoJson \
+			    -Ilib/mongoose -Isrc
+
+ifeq ($(WITH_SANITIZERS),yes)
+	COMPILE_FLAGS += -fsanitize=address,undefined,leak
+	LDFLAGS += -fsanitize=address,undefined,leak
+	LIB_LD_FLAGS = -shared-libasan
+endif
 
 ifeq ($(WITH_DEBUG),yes)
 	COMPILE_FLAGS += -g -ggdb
+endif
+
+ifeq ($(WITH_TLS),yes)
+	LIBS += -lssl -lcrypto
+	COMPILE_FLAGS += -DMG_ENABLE_OPENSSL=1
+endif
+
+CFLAGS += -std=c99 ${COMPILE_FLAGS}
+CXXFLAGS += -std=c++11 ${COMPILE_FLAGS}
+LDFLAGS += -pthread
+
+STATIC_FLAG =
+
+ifeq ($(STATIC),yes)
+	LIBS += ./libwebsockets.a
+	STATIC_FLAG += -static
+else
+	LIBS += -lwebsockets -lstdc++
 endif
 
 SOURCES :=	$(wildcard src/ocpp/*.cpp) \
@@ -38,7 +76,7 @@ libocpp.so: $(OBJECTS_LIB)
 	$(CXX) $(OBJECTS_LIB) $(LIBS) $(LDFLAGS) $(LIB_LD_FLAGS) -shared -o $@
 
 ocpp_linux: $(OBJECTS_EXEC)
-	$(CXX) $(OBJECTS_EXEC) $(LIBS) $(LDFLAGS) -o $@
+	$(CXX) $(OBJECTS_EXEC) $(LIBS) $(LDFLAGS) -o $@ $(STATIC_FLAG)
 
 .PHONY: all clean
 
