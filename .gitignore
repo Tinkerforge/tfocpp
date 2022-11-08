@@ -4,3 +4,7 @@ todo
 __pycache__
 ocpp_linux
 libocpp.so
+avail
+config
+txn_msg/
+profiles/
