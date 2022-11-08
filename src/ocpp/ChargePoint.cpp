@@ -291,9 +291,12 @@ bool OcppChargePoint::sendCallAction(const ICall &call, time_t timestamp, int32_
     with purpose TxDefaultProfile for the duration of the current transaction only. After the transaction is stopped,
     the profile SHOULD be deleted.
     */
-    if (call.action == CallAction::STOP_TRANSACTION)
-        for(size_t stack_level = 0; stack_level <= CHARGE_PROFILE_MAX_STACK_LEVEL; ++stack_level)
+    if (call.action == CallAction::STOP_TRANSACTION) {
+        for(size_t stack_level = 0; stack_level <= CHARGE_PROFILE_MAX_STACK_LEVEL; ++stack_level) {
+            removeChargingProfile(connectorId, ChargingProfilePurpose::TX_PROFILE, stack_level);
             connectors[connectorId - 1].txProfiles[stack_level].clear();
+        }
+    }
 
     return true;
 }
@@ -730,6 +733,11 @@ CallResponse OcppChargePoint::handleRemoteStartTransaction(const char *uid, Remo
         // Also there should not be other TxProfiles, as those are cleared when stopping a transaction,
         // and are only accepted in RemoteStartTransaction.reqs and if there is a transaction already running.
         connectors[conn_idx].txProfiles[prof.stackLevel()] = {ChargingProfile(prof)};
+
+        // This is probably not necessary, as there should not be another (older) TxProfile.
+        removeChargingProfile(conn_idx + 1, ChargingProfilePurpose::TX_PROFILE, prof.stackLevel());
+
+        persistChargingProfile(conn_idx + 1, &connectors[conn_idx].txProfiles[prof.stackLevel()].get());
     }
 
     // TODO: We could also reject here if the selected connector is faulted, unavailable or in an transaction.
@@ -853,6 +861,7 @@ static bool handleClearProfile(ClearChargingProfileView req, Opt<ChargingProfile
     */
     if (req.id().is_set()) {
         if (req.id().get() == prof.id) {
+            removeChargingProfile(connector_id, &prof);
             opt.clear();
             return true;
         }
@@ -873,8 +882,10 @@ static bool handleClearProfile(ClearChargingProfileView req, Opt<ChargingProfile
     clear &= (!req.stackLevel().is_set() || req.stackLevel().get() == prof.stackLevel);
     clear &= (!req.chargingProfilePurpose().is_set() || req.chargingProfilePurpose().get() == prof.chargingProfilePurpose);
 
-    if (clear)
+    if (clear) {
+        removeChargingProfile(connector_id, &prof);
         opt.clear();
+    }
 
     return clear;
 }
@@ -956,9 +967,10 @@ CallResponse OcppChargePoint::handleGetCompositeSchedule(const char *uid, GetCom
     return CallResponse{CallErrorCode::OK, ""};
 }
 
-static void clearProfileById(int32_t id, Opt<ChargingProfile> *opt) {
+static void clearProfileById(int32_t connectorId, int32_t id, Opt<ChargingProfile> *opt) {
     if (opt->is_set() && opt->get().id == id) {
         log_info("New profile replaces %s level %u", ChargingProfilePurposeStrings[(size_t)opt->get().chargingProfilePurpose], opt->get().stackLevel);
+        removeChargingProfile(connectorId, &opt->get());
         opt->clear();
     }
 }
@@ -1020,26 +1032,38 @@ CallResponse OcppChargePoint::handleSetChargingProfile(const char *uid, SetCharg
     Charge Point, the new charging profile SHALL replace the existing charging profile, otherwise it SHALL be added.
     */
     for(size_t stackLevel = 0; stackLevel < CHARGE_PROFILE_MAX_STACK_LEVEL; ++stackLevel) {
-        clearProfileById(prof.chargingProfileId(), &this->chargePointMaxProfiles[stackLevel]);
-        clearProfileById(prof.chargingProfileId(), &this->txDefaultProfiles[stackLevel]);
+        clearProfileById(0, prof.chargingProfileId(), &this->chargePointMaxProfiles[stackLevel]);
+        clearProfileById(0, prof.chargingProfileId(), &this->txDefaultProfiles[stackLevel]);
 
         for(size_t connectorIdx = 0; connectorIdx < NUM_CONNECTORS; ++connectorIdx) {
-            clearProfileById(prof.chargingProfileId(), &connectors[connectorIdx].txProfiles[stackLevel]);
-            clearProfileById(prof.chargingProfileId(), &connectors[connectorIdx].txDefaultProfiles[stackLevel]);
+            clearProfileById(connectorIdx + 1, prof.chargingProfileId(), &connectors[connectorIdx].txProfiles[stackLevel]);
+            clearProfileById(connectorIdx + 1, prof.chargingProfileId(), &connectors[connectorIdx].txDefaultProfiles[stackLevel]);
         }
     }
 
+    removeChargingProfile(conn_id, purpose, prof.stackLevel());
+
+    Opt<ChargingProfile> *target = nullptr;
+
     if (conn_id == 0) {
         if (purpose == ChargingProfilePurpose::CHARGE_POINT_MAX_PROFILE)
-            this->chargePointMaxProfiles[prof.stackLevel()] = {ChargingProfile(prof)};
+            target = &this->chargePointMaxProfiles[prof.stackLevel()];
         else if (purpose == ChargingProfilePurpose::TX_DEFAULT_PROFILE)
-            this->txDefaultProfiles[prof.stackLevel()] = {ChargingProfile(prof)};
+            target = &this->txDefaultProfiles[prof.stackLevel()];
     } else {
         if (purpose == ChargingProfilePurpose::TX_PROFILE)
-            connectors[conn_id - 1].txProfiles[prof.stackLevel()] = {ChargingProfile(prof)};
+            target = &connectors[conn_id - 1].txProfiles[prof.stackLevel()];
         else if (purpose == ChargingProfilePurpose::TX_DEFAULT_PROFILE)
-            connectors[conn_id - 1].txDefaultProfiles[prof.stackLevel()] = {ChargingProfile(prof)};
+            target = &connectors[conn_id - 1].txDefaultProfiles[prof.stackLevel()];
     }
+
+    if (target == nullptr) {
+        log_error("Failed to find charging profile slot. This should never happen!");
+        return CallResponse{CallErrorCode::InternalError, "Failed to find charging profile slot. This should never happen!"};
+    }
+
+    *target = {ChargingProfile(prof)};
+    persistChargingProfile(conn_id, &target->get());
 
     log_info("Sending SetChargingProfile.conf.");
     connection.sendCallResponse(SetChargingProfileResponse(uid, SetChargingProfileResponseStatus::ACCEPTED));
@@ -1270,6 +1294,19 @@ void OcppChargePoint::triggerChargingProfileEval()
     this->next_profile_eval = platform_get_system_time(this->platform_ctx);
 }
 
+void OcppChargePoint::loadProfiles()
+{
+    for(size_t stackLevel = 0; stackLevel < CHARGE_PROFILE_MAX_STACK_LEVEL; ++stackLevel) {
+        restoreChargingProfile(0, ChargingProfilePurpose::CHARGE_POINT_MAX_PROFILE, stackLevel, &this->chargePointMaxProfiles[stackLevel]);
+        restoreChargingProfile(0, ChargingProfilePurpose::TX_DEFAULT_PROFILE, stackLevel, &this->chargePointMaxProfiles[stackLevel]);
+
+        for(size_t connectorIdx = 0; connectorIdx < NUM_CONNECTORS; ++connectorIdx) {
+            restoreChargingProfile(connectorIdx + 1, ChargingProfilePurpose::TX_PROFILE, stackLevel, &connectors[connectorIdx].txProfiles[stackLevel]);
+            restoreChargingProfile(connectorIdx + 1, ChargingProfilePurpose::TX_DEFAULT_PROFILE, stackLevel, &connectors[connectorIdx].txDefaultProfiles[stackLevel]);
+        }
+    }
+}
+
 void OcppChargePoint::handleTagSeen(int32_t connectorId, const char *tagId)
 {
     log_info("Seen tag %s at connector %d. State is %d", tagId, connectorId, (int)this->state);
@@ -1302,6 +1339,7 @@ void OcppChargePoint::handleStop(int32_t connectorId, StopReason reason) {
 void OcppChargePoint::start(const char *websocket_endpoint_url, const char *charge_point_name_percent_encoded) {
     loadConfig();
     loadAvailability();
+    loadProfiles();
     platform_ctx = connection.start(websocket_endpoint_url, charge_point_name_percent_encoded, this);
     for(int32_t i = 0; i < NUM_CONNECTORS; ++i) {
         connectors[i].init(i + 1, this);

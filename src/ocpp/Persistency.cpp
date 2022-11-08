@@ -208,3 +208,43 @@ bool restoreNextTxnMessage(OcppConnection *conn) {
     }
     return false;
 }
+
+
+void persistChargingProfile(int32_t connectorId, ChargingProfile *profile) {
+    char name_buf[64] = {0};
+    snprintf(name_buf, sizeof(name_buf), "profiles/%d-%d-%d", connectorId, (int32_t)profile->chargingProfilePurpose, profile->stackLevel);
+
+    char buf[sizeof(ChargingProfile)] = {0};
+    memcpy(buf, profile, sizeof(ChargingProfile));
+
+    platform_write_file(name_buf, buf, sizeof(buf));
+}
+
+void restoreChargingProfile(int32_t connectorId, ChargingProfilePurpose purpose, int32_t stackLevel, Opt<ChargingProfile> *profile) {
+    char name_buf[64] = {0};
+    snprintf(name_buf, sizeof(name_buf), "profiles/%d-%d-%d", connectorId, (int32_t)purpose, stackLevel);
+
+    char buf[sizeof(ChargingProfile)] = {0};
+    int len = platform_read_file(name_buf, buf, sizeof(ChargingProfile));
+    if (len != sizeof(ChargingProfile)) {
+        platform_remove_file(name_buf);
+        profile->clear();
+        return;
+    }
+
+    ChargingProfile cpy;
+    memcpy(&cpy, buf, sizeof(cpy));
+
+    *profile = {cpy};
+}
+
+void removeChargingProfile(int32_t connectorId, ChargingProfile *profile) {
+    removeChargingProfile(connectorId, profile->chargingProfilePurpose, profile->stackLevel);
+}
+
+void removeChargingProfile(int32_t connectorId, ChargingProfilePurpose purpose, int32_t stackLevel) {
+    char name_buf[64] = {0};
+    snprintf(name_buf, sizeof(name_buf), "profiles/%d-%d-%d", connectorId, (int32_t)purpose, stackLevel);
+
+    platform_remove_file(name_buf);
+}
