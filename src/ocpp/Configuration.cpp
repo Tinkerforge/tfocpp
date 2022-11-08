@@ -472,7 +472,7 @@ void saveConfig()
                 int written = snprintf(val, scratch_buf_size - scratch_buf_idx, "%d", cfg.value.integer.i);
                 if (written < 0) {
                     log_error("Failed to save config: %d", written);
-                    break; //TODO: what to do if this happens?
+                    break; //If this fails, we restore the default configuration of this key by not saving it.
                 }
 
                 doc[config_keys[i]] = (const char *)val;
