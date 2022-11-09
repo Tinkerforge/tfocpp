@@ -3,7 +3,6 @@
 #include <stdint.h>
 
 #include "Configuration.h"
-#include "Platform.h"
 #include "Messages.h"
 #include "Connection.h"
 #include "MeterValueHandler.h"
@@ -58,7 +57,7 @@ struct Connector {
     time_t transaction_confirmed_timestamp;
     time_t transaction_start_time;
 
-    uint32_t current_allowed = OCPP_PLATFORM_MAX_CHARGING_CURRENT;
+    uint32_t current_allowed = OCPP_MAX_CHARGING_CURRENT;
 
     // +1 as stack levels 0 up to (including) CHARGE_PROFILE_MAX_STACK_LEVEL are allowed.
     Opt<ChargingProfile> txProfiles[CHARGE_PROFILE_MAX_STACK_LEVEL + 1];

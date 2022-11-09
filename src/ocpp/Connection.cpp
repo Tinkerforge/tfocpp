@@ -3,6 +3,7 @@
 #include "ChargePoint.h"
 #include "Persistency.h"
 #include "Types.h"
+#include "Platform.h"
 
 #include "lib/TFJson.h"
 
@@ -315,4 +316,37 @@ void OcppConnection::tick() {
     message_timeout_deadline = platform_now_ms() + getIntConfigUnsigned(ConfigKey::MessageTimeout) * 1000;
 
     platform_ws_send(platform_ctx, message_in_flight.buf.get(), message_in_flight.len);
+}
+
+
+QueueItem::QueueItem(const ICall &call, time_t timestamp, int32_t connector_id) :
+        action(call.action),
+        buf(nullptr),
+        message_id(call.ocppJmessageId),
+        connector_id(connector_id),
+        len(0),
+        timestamp(timestamp) {
+    auto length = call.measureJson();
+    this->buf = heap_alloc_array<char>(length);
+    call.serializeJson(this->buf.get(), length);
+    this->len = length;
+}
+
+bool QueueItem::is_valid()
+{
+    return buf != nullptr;
+}
+
+void* OcppConnection::start(const char *websocket_endpoint_url, const char *charge_point_name_percent_encoded, OcppChargePoint *ocpp_handle) {
+    this->cp = ocpp_handle;
+    std::string ws_url;
+    ws_url.reserve(strlen(websocket_endpoint_url) + 1 + strlen(charge_point_name_percent_encoded));
+    ws_url += websocket_endpoint_url;
+    ws_url += '/';
+    ws_url += charge_point_name_percent_encoded;
+
+    platform_ctx = platform_init(ws_url.c_str());
+    platform_ws_register_receive_callback(platform_ctx, [](char *c, size_t s, void *user_data){((OcppConnection*)user_data)->handleMessage(c, s);}, this);
+
+    return platform_ctx;
 }

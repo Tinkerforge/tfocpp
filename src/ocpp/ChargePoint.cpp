@@ -4,6 +4,7 @@
 #include "Types.h"
 #include "Configuration.h"
 #include "Connector.h"
+#include "Platform.h"
 
 #include "Persistency.h"
 
@@ -1346,4 +1347,8 @@ void OcppChargePoint::start(const char *websocket_endpoint_url, const char *char
 
     platform_register_tag_seen_callback(platform_ctx, [](int32_t connectorId, const char *tagId, void *user_data){((OcppChargePoint*)user_data)->handleTagSeen(connectorId, tagId);}, this);
     platform_register_stop_callback(platform_ctx, [](int32_t connectorId, StopReason reason, void *user_data){((OcppChargePoint*)user_data)->handleStop(connectorId, reason);}, this);
+}
+
+void OcppChargePoint::stop() {
+    platform_disconnect(platform_ctx);
 }

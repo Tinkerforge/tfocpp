@@ -1,6 +1,7 @@
 #include "MeterValueHandler.h"
 
 #include "ChargePoint.h"
+#include "Platform.h"
 
 void OcppMeterValueHandler::tick() {
     // TODO: let the platform trigger when new values are available instead of polling.

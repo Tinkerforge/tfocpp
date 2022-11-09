@@ -2,7 +2,6 @@
 
 #include "stdint.h"
 #include "Types.h"
-#include "Platform.h"
 
 #include <memory>
 

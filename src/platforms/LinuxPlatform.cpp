@@ -17,6 +17,22 @@
 #define TFJSON_IMPLEMENTATION
 #include "lib/TFJson.h"
 
+
+struct PlatformResponse {
+    uint8_t seq_num;
+    char tag_id_seen[22];
+    uint8_t evse_state[8];
+    uint32_t energy[8];
+}  __attribute__((__packed__));
+
+struct PlatformMessage {
+    uint8_t seq_num = 0;
+    char message[63] = "";
+    uint32_t charge_current[8] = {0};
+    uint8_t connector_locked = 0;
+}  __attribute__((__packed__));
+
+
 struct mg_mgr mgr;        // Event manager
 struct mg_connection *c;  // Client connection
 void(*recv_cb)(char *, size_t, void *) = nullptr;

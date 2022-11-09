@@ -7,20 +7,7 @@
 #include <functional>
 
 #include "Messages.h"
-
-struct PlatformResponse {
-    uint8_t seq_num;
-    char tag_id_seen[22];
-    uint8_t evse_state[8];
-    uint32_t energy[8];
-}  __attribute__((__packed__));
-
-struct PlatformMessage {
-    uint8_t seq_num = 0;
-    char message[63] = "";
-    uint32_t charge_current[8] = {0};
-    uint8_t connector_locked = 0;
-}  __attribute__((__packed__));
+#include "ChargePoint.h"
 
 void *platform_init(const char *websocket_url);
 void platform_disconnect(void *ctx);
@@ -107,22 +94,8 @@ EVSEState platform_get_evse_state(int32_t connectorId);
 // of the charge point.
 uint32_t platform_get_maximum_charging_current(int32_t connectorId);
 
-#define OCPP_PLATFORM_MAX_CHARGING_CURRENT 0xFFFFFFFF
 void platform_set_charging_current(int32_t connectorId, uint32_t milliAmps);
 
-enum StopReason {
-    //DeAuthorized, // handled by OCPP
-    EmergencyStop, // if EVSE emergency stop button is pressed
-    //EVDisconnected, detected via platform_get_evse_state
-    //HardReset, // handled by OCPP
-    Local, // "normal" EVSE stop button
-    Other,
-    PowerLoss, // "Complete loss of power." maybe use this if contactor check fails (before contactor)
-    Reboot, // "A locally initiated reset/reboot occurred. (for instance watchdog kicked in)"
-    Remote, // "Stopped remotely on request of the user." maybe use this when stopping over the web interface?
-    // SoftReset, // handled by OCPP
-    // UnlockCommand, // handled by OCPP
-};
 // Calling the stop callback will _never_ unlock the cable if it is currently locked. The same tag (or one in the same group) is required to unlock the cable.
 // For example to implement a remote stop that unlocks immediately, use platform_unlock_cable.
 void platform_register_stop_callback(void *ctx, void (*cb)(int32_t, StopReason, void *), void *user_data);

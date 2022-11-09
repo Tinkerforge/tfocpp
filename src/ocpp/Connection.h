@@ -6,8 +6,6 @@
 #include <memory>
 
 #include "Messages.h"
-#include "Platform.h"
-#include "Tools.h"
 
 class OcppChargePoint;
 
@@ -22,40 +20,14 @@ public:
 
     QueueItem() : action(CallAction::AUTHORIZE), buf(nullptr), message_id(0), connector_id(0), len(0), timestamp(0) {}
 
-    QueueItem(const ICall &call, time_t timestamp, int32_t connector_id) :
-        action(call.action),
-        buf(nullptr),
-        message_id(call.ocppJmessageId),
-        connector_id(connector_id),
-        len(0),
-        timestamp(timestamp)
-    {
-        auto length = call.measureJson();
-        this->buf = heap_alloc_array<char>(length);
-        call.serializeJson(this->buf.get(), length);
-        this->len = length;
-    }
+    QueueItem(const ICall &call, time_t timestamp, int32_t connector_id);
 
-    bool is_valid() {
-        return buf != nullptr;
-    }
+    bool is_valid();
 };
 
 class OcppConnection {
 public:
-    void* start(const char *websocket_endpoint_url, const char *charge_point_name_percent_encoded, OcppChargePoint *ocpp_handle) {
-        this->cp = ocpp_handle;
-        std::string ws_url;
-        ws_url.reserve(strlen(websocket_endpoint_url) + 1 + strlen(charge_point_name_percent_encoded));
-        ws_url += websocket_endpoint_url;
-        ws_url += '/';
-        ws_url += charge_point_name_percent_encoded;
-
-        platform_ctx = platform_init(ws_url.c_str());
-        platform_ws_register_receive_callback(platform_ctx, [](char *c, size_t s, void *user_data){((OcppConnection*)user_data)->handleMessage(c, s);}, this);
-
-        return platform_ctx;
-    }
+    void* start(const char *websocket_endpoint_url, const char *charge_point_name_percent_encoded, OcppChargePoint *ocpp_handle);
 
     void tick();
 

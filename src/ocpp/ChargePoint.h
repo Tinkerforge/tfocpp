@@ -5,11 +5,11 @@
 #include "Connection.h"
 #include "Configuration.h"
 #include "Messages.h"
-#include "Platform.h"
 #include "Tools.h"
 #include "Defines.h"
 #include "Connector.h"
 #include "ChargingProfile.h"
+#include "Types.h"
 
 enum class OcppState {
     PowerOn, // send boot notification, wait for boot notification conf, don't do anything else
@@ -23,19 +23,16 @@ enum class OcppState {
     HardReset
 };
 
+
 class OcppChargePoint {
 public:
-    OcppChargePoint() {
-
-    }
+    OcppChargePoint() {}
 
     OcppChargePoint (const OcppChargePoint&) = delete;
 
     void start(const char *websocket_endpoint_url, const char *charge_point_name_percent_encoded);
 
-    void stop() {
-        platform_disconnect(platform_ctx);
-    }
+    void stop();
 
     void handleTagSeen(int32_t connectorId, const char *tagId);
     void handleStop(int32_t connectorId, StopReason reason);

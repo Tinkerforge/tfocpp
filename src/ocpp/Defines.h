@@ -13,6 +13,10 @@
 #define LINE_VOLTAGE 230
 #endif
 
+#ifndef OCPP_MAX_CHARGING_CURRENT
+#define OCPP_MAX_CHARGING_CURRENT 0xFFFFFFFF
+#endif
+
 // Default configuration
 
 #ifndef DEFAULT_ALLOW_OFFLINE_TX_FOR_UNKNOWN_ID

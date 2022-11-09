@@ -2,6 +2,7 @@
 #include "Tools.h"
 #include "Configuration.h"
 #include "ChargePoint.h"
+#include "Platform.h"
 
 enum class MeasurandType {
     Register,

@@ -3,6 +3,7 @@
 #include "Tools.h"
 #include "ChargePoint.h"
 #include "Persistency.h"
+#include "Platform.h"
 
 void Connector::deauth() {
     authorized_for = IdTagInfo{};
