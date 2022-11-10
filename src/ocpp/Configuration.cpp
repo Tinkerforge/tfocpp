@@ -265,7 +265,7 @@ static OcppConfiguration config[CONFIG_COUNT] = {
     /*AuthorizeRemoteTxRequests*/         OcppConfiguration::boolean(DEFAULT_AUTHORIZE_REMOTE_TX_REQUESTS, false, false),
     /*BlinkRepeat*/                       //OcppConfiguration::integer(DEFAULT_BLINK_REPEAT, false, false),
     /*ClockAlignedDataInterval*/          OcppConfiguration::integer(DEFAULT_CLOCK_ALIGNED_DATA_INTERVAL, false, false, 0),
-    /*ConnectionTimeOut*/                 OcppConfiguration::integer(DEFAULT_CONNECTION_TIME_OUT, false, false, 0),
+    /*ConnectionTimeOut*/                 OcppConfiguration::integer(DEFAULT_CONNECTION_TIME_OUT, false, false, 0, (UINT32_MAX / 2 - 1) / 1000),
 
                                           // +1 for index 0: "the phase rotation between
                                           //    the grid connection and the main energymeter"
@@ -276,13 +276,13 @@ static OcppConfiguration config[CONFIG_COUNT] = {
     /*ConnectorPhaseRotationMaxLength*/   OcppConfiguration::integer(NUM_CONNECTORS + 1, true, false, 0),
 
     /*GetConfigurationMaxKeys*/           OcppConfiguration::integer(CONFIG_COUNT, true, false, 0),
-    /*HeartbeatInterval*/                 OcppConfiguration::integer(DEFAULT_HEARTBEAT_INTERVAL_S, false, false, 0),
+    /*HeartbeatInterval*/                 OcppConfiguration::integer(DEFAULT_HEARTBEAT_INTERVAL_S, false, false, 0, (UINT32_MAX / 2 - 1) / 1000),
     /*LightIntensity*/                    //OcppConfiguration::integer(DEFAULT_LIGHT_INTENSITY, false, false, 0),
     /*LocalAuthorizeOffline*/             OcppConfiguration::boolean(DEFAULT_LOCAL_AUTHORIZE_OFFLINE, false, false),
     /*LocalPreAuthorize*/                 OcppConfiguration::boolean(DEFAULT_LOCAL_PRE_AUTHORIZE, false, false),
     /*MaxEnergyOnInvalidId*/              //OcppConfiguration::integer(DEFAULT_MAX_ENERGY_ON_INVALID_ID, false, false, 0),
 
-    /*MessageTimeout*/                    OcppConfiguration::integer(DEFAULT_MESSAGE_TIMEOUT, false, false, 1),
+    /*MessageTimeout*/                    OcppConfiguration::integer(DEFAULT_MESSAGE_TIMEOUT, false, false, 1, (UINT32_MAX / 2 - 1) / 1000),
 
     // Its save to use the number of possible measurands as limit in elements,
     // because the complete list has a length of 465.
@@ -327,9 +327,9 @@ static OcppConfiguration config[CONFIG_COUNT] = {
     /*SupportedFeatureProfiles*/          OcppConfiguration::csl(SUPPORTED_FEATURE_PROFILES, strlen(SUPPORTED_FEATURE_PROFILES) + 1, 2, true, false, nullptr, 0, false),
     /*SupportedFeatureProfilesMaxLength*/ //OcppConfiguration::integer(1, true), //errata 4.0: "This configuration key does not have to be implemented. It should not have been part of OCPP 1.6, "SupportedFeatureProfiles" is a readonly configuration key, false, 0."
     /*TransactionMessageAttempts*/        OcppConfiguration::integer(DEFAULT_TRANSACTION_MESSAGE_ATTEMPTS, false, false, 0),
-    /*TransactionMessageRetryInterval*/   OcppConfiguration::integer(DEFAULT_TRANSACTION_MESSAGE_RETRY_INTERVAL, false, false, 0),
+    /*TransactionMessageRetryInterval*/   OcppConfiguration::integer(DEFAULT_TRANSACTION_MESSAGE_RETRY_INTERVAL, false, false, 0, (UINT32_MAX / 2 - 1) / 1000),
     /*UnlockConnectorOnEVSideDisconnect*/ OcppConfiguration::boolean(DEFAULT_UNLOCK_CONNECTOR_ON_EV_SIDE_DISCONNECT, false, false),
-    /*WebSocketPingInterval*/             OcppConfiguration::integer(DEFAULT_WEB_SOCKET_PING_INTERVAL, false, false, 0),
+    /*WebSocketPingInterval*/             OcppConfiguration::integer(DEFAULT_WEB_SOCKET_PING_INTERVAL, false, false, 0, (UINT32_MAX / 2 - 1) / 1000),
 
 
     // // LOCAL AUTH LIST MANAGEMENT PROFILE
