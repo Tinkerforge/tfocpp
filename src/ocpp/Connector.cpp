@@ -800,6 +800,9 @@ void Connector::tick() {
     this->applyState();
     this->sendStatus();
     this->meter_value_handler.tick();
+#ifdef OCPP_STATE_CALLBACKS
+    platform_update_connector_state(connectorId, state, last_sent_status, authorized_for, tag_deadline, cable_deadline, transaction_id, transaction_confirmed_timestamp, transaction_start_time, current_allowed, transaction_with_invalid_tag_id, unavailable_requested);
+#endif
 }
 
 // Handles TagSeen, SameTagSeen

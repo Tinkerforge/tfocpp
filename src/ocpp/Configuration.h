@@ -163,3 +163,7 @@ bool setBoolConfig(ConfigKey key, bool b);
 
 void loadConfig();
 void saveConfig();
+
+#ifdef OCPP_STATE_CALLBACKS
+void debugDumpConfig();
+#endif

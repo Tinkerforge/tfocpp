@@ -267,6 +267,18 @@ bool OcppConnection::sendCallAction(const ICall &call, time_t timestamp, int32_t
 }
 
 void OcppConnection::tick() {
+#ifdef OCPP_STATE_CALLBACKS
+    platform_update_connection_state(
+        message_in_flight.action,
+        message_in_flight.message_id,
+        message_in_flight.len,
+        message_timeout_deadline,
+        transaction_message_retry_deadline,
+        (uint8_t)messages.size(),
+        (uint8_t)status_notifications.size(),
+        (uint8_t)transaction_messages.size());
+#endif
+
     static bool was_connected = false;
     bool connected = platform_ws_connected(platform_ctx);
     if (!connected && was_connected)

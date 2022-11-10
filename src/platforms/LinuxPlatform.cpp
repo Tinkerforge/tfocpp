@@ -21,17 +21,51 @@
 struct PlatformResponse {
     uint8_t seq_num;
     char tag_id_seen[22];
-    uint8_t evse_state[8];
-    uint32_t energy[8];
+    uint8_t evse_state[NUM_CONNECTORS];
+    uint32_t energy[NUM_CONNECTORS];
+}  __attribute__((__packed__));
+
+struct ConnectorMessage {
+    uint8_t state;
+    uint8_t last_sent_status;
+    char tag_id[21];
+    char parent_tag_id[21];
+    uint8_t tag_status;
+    time_t tag_expiry_date;
+    uint32_t tag_deadline;
+    uint32_t cable_deadline;
+    int32_t txn_id;
+    time_t transaction_confirmed_timestamp;
+    time_t transaction_start_time;
+    uint32_t current_allowed;
+    bool txn_with_invalid_id;
+    bool unavailable_requested;
 }  __attribute__((__packed__));
 
 struct PlatformMessage {
     uint8_t seq_num = 0;
     char message[63] = "";
-    uint32_t charge_current[8] = {0};
+    uint32_t charge_current[NUM_CONNECTORS] = {0};
     uint8_t connector_locked = 0;
-}  __attribute__((__packed__));
 
+    uint8_t charge_point_state;
+    uint8_t charge_point_last_sent_status;
+    time_t next_profile_eval;
+
+    uint8_t message_in_flight_type;
+    int32_t message_in_flight_id;
+    size_t message_in_flight_len;
+    uint32_t message_timeout_deadline;
+    uint32_t txn_msg_retry_deadline;
+    uint8_t message_queue_depth;
+    uint8_t status_notification_queue_depth;
+    uint8_t transaction_message_queue_depth;
+
+    uint8_t config_key;
+    char config_value[500];
+
+    ConnectorMessage connector_messages[NUM_CONNECTORS];
+}  __attribute__((__packed__));
 
 struct mg_mgr mgr;        // Event manager
 struct mg_connection *c;  // Client connection
@@ -255,6 +289,72 @@ void platform_set_charging_current(int32_t connectorId, uint32_t milliAmps)
     pm.charge_current[connectorId - 1] = milliAmps;
     send_message("Set charge current");
 }
+
+#ifdef OCPP_STATE_CALLBACKS
+void platform_update_chargepoint_state(OcppState state,
+                                       StatusNotificationStatus last_sent_status,
+                                       time_t next_profile_eval) {
+    pm.charge_point_state = (uint8_t) state;
+    pm.charge_point_last_sent_status = (uint8_t) last_sent_status;
+    pm.next_profile_eval = next_profile_eval;
+    send_message("debug chargepoint");
+}
+
+void platform_update_connector_state(int32_t connector_id,
+                                     ConnectorState state,
+                                     StatusNotificationStatus last_sent_status,
+                                     IdTagInfo auth_for,
+                                     uint32_t tag_deadline,
+                                     uint32_t cable_deadline,
+                                     int32_t txn_id,
+                                     time_t transaction_confirmed_timestamp,
+                                     time_t transaction_start_time,
+                                     uint32_t current_allowed,
+                                     bool txn_with_invalid_id,
+                                     bool unavailable_requested) {
+    auto &cm = pm.connector_messages[connector_id - 1];
+    cm.state = (uint8_t) state;
+    cm.last_sent_status = (uint8_t) last_sent_status;
+    memcpy(cm.tag_id, auth_for.tagId, sizeof(cm.tag_id));
+    memcpy(cm.parent_tag_id, auth_for.parentTagId, sizeof(cm.parent_tag_id));
+    cm.tag_status = (uint8_t) auth_for.status;
+    cm.tag_expiry_date = auth_for.expiryDate;
+    cm.tag_deadline = tag_deadline;
+    cm.cable_deadline = cable_deadline;
+    cm.txn_id = txn_id;
+    cm.transaction_confirmed_timestamp = transaction_confirmed_timestamp;
+    cm.transaction_start_time = transaction_start_time;
+    cm.current_allowed = current_allowed;
+    cm.txn_with_invalid_id = txn_with_invalid_id;
+    cm.unavailable_requested = unavailable_requested;
+}
+
+void platform_update_connection_state(CallAction message_in_flight_type,
+                                      int32_t message_in_flight_id,
+                                      size_t message_in_flight_len,
+                                      uint32_t message_timeout_deadline,
+                                      uint32_t txn_msg_retry_deadline,
+                                      uint8_t message_queue_depth,
+                                      uint8_t status_notification_queue_depth,
+                                      uint8_t transaction_message_queue_depth) {
+    pm.message_in_flight_type = (uint8_t) message_in_flight_type;
+    pm.message_in_flight_id = message_in_flight_id;
+    pm.message_in_flight_len = message_in_flight_len;
+    pm.message_timeout_deadline = message_timeout_deadline;
+    pm.txn_msg_retry_deadline = txn_msg_retry_deadline;
+    pm.message_queue_depth = message_queue_depth;
+    pm.status_notification_queue_depth = status_notification_queue_depth;
+    pm.transaction_message_queue_depth = transaction_message_queue_depth;
+    send_message("debug connection");
+}
+
+void platform_update_config_state(ConfigKey key,
+                                  const char *value) {
+    pm.config_key = (uint8_t) key;
+    strncpy(pm.config_value, value, sizeof(pm.config_value));
+    send_message("debug config");
+}
+#endif
 
 int argc_;
 char **argv_;

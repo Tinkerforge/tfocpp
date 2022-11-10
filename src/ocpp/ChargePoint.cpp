@@ -124,6 +124,9 @@ void OcppChargePoint::tick() {
     if (platform_get_system_time(this->platform_ctx) >= next_profile_eval) {
         evalAndApplyChargingProfiles();
     }
+#ifdef OCPP_STATE_CALLBACKS
+    platform_update_chargepoint_state(state, last_sent_status, next_profile_eval);
+#endif
 }
 
 void OcppChargePoint::onConnect()
@@ -485,8 +488,12 @@ CallResponse OcppChargePoint::handleChangeConfiguration(const char *uid, ChangeC
         status = getConfig(key_idx).setValue(req.value());
     }
 
-    if (status == ChangeConfigurationResponseStatus::ACCEPTED || status == ChangeConfigurationResponseStatus::REBOOT_REQUIRED)
+    if (status == ChangeConfigurationResponseStatus::ACCEPTED || status == ChangeConfigurationResponseStatus::REBOOT_REQUIRED) {
+#ifdef OCPP_STATE_CALLBACKS
+        platform_update_config_state((ConfigKey) key_idx, req.value());
+#endif
         saveConfig();
+    }
 
     log_info("Sending ChangeConfiguration.conf %s\n", ChangeConfigurationResponseStatusStrings[(size_t)status]);
     connection.sendCallResponse(ChangeConfigurationResponse(uid, status));
@@ -1338,6 +1345,9 @@ void OcppChargePoint::handleStop(int32_t connectorId, StopReason reason) {
 
 void OcppChargePoint::start(const char *websocket_endpoint_url, const char *charge_point_name_percent_encoded) {
     loadConfig();
+#ifdef OCPP_STATE_CALLBACKS
+    debugDumpConfig();
+#endif
     loadAvailability();
     loadProfiles();
     platform_ctx = connection.start(websocket_endpoint_url, charge_point_name_percent_encoded, this);

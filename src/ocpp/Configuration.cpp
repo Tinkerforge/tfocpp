@@ -449,6 +449,40 @@ void loadConfig()
     }
 }
 
+#ifdef OCPP_STATE_CALLBACKS
+void debugDumpConfig() {
+    size_t scratch_buf_size = CONFIG_COUNT * 20;
+    size_t scratch_buf_idx = 0;
+    auto scratch_buf = heap_alloc_array<char>(scratch_buf_size);
+
+    for(size_t i = 0; i < CONFIG_COUNT; ++i) {
+        auto &cfg = getConfig(i);
+        switch(cfg.type) {
+            case OcppConfigurationValueType::Boolean:
+                platform_update_config_state((ConfigKey)i, cfg.value.boolean.b ? "true" : "false");
+                break;
+            case OcppConfigurationValueType::CSL:
+                platform_update_config_state((ConfigKey)i, (const char *)cfg.value.csl.c);
+                break;
+            case OcppConfigurationValueType::Integer:
+                char *val = scratch_buf.get() + scratch_buf_idx;
+
+                int written = snprintf(val, scratch_buf_size - scratch_buf_idx, "%d", cfg.value.integer.i);
+                if (written < 0) {
+                    log_error("Failed to debug config %s: %d", config_keys[i], written);
+                    break; //If this fails, we restore the default configuration of this key by not saving it.
+                }
+
+                platform_update_config_state((ConfigKey)i, (const char *)val);
+                scratch_buf_idx += (size_t)written;
+                ++scratch_buf_idx; // for null terminator
+                break;
+
+        }
+    }
+}
+#endif
+
 void saveConfig()
 {
     StaticJsonDocument<JSON_OBJECT_SIZE(CONFIG_COUNT)> doc;

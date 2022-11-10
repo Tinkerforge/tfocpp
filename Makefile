@@ -19,6 +19,7 @@ CLANG_WARNINGS = -Weverything \
 				 -Wno-implicit-int-float-conversion
 
 COMPILE_FLAGS = -DOCPP_LOG_LEVEL=4 \
+			    -DOCPP_STATE_CALLBACKS \
 			    -gdwarf-4 \
 			    -fPIC \
 			    -O0 \

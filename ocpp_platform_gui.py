@@ -3,25 +3,97 @@ import struct
 import sys
 import time
 
-"""
-struct PlatformMessage {
-    uint8_t seq_num = 0;
-    char message[63] = "";
-    uint32_t charge_current[8];
-    uint8_t connector_locked;
-}  __attribute__((__packed__));
+NUM_CONNECTORS = 1
 
+"""
 struct PlatformResponse {
     uint8_t seq_num;
     char tag_id_seen[22];
-    uint8_t evse_state[8];
-    uint32_t energy[8];
+    uint8_t evse_state[NUM_CONNECTORS];
+    uint32_t energy[NUM_CONNECTORS];
+}  __attribute__((__packed__));
+
+struct ConnectorMessage {
+    uint8_t state;
+    uint8_t last_sent_status;
+    char tag_id[21];
+    char parent_tag_id[21];
+    uint8_t tag_status;
+    time_t tag_expiry_date;
+    uint32_t tag_deadline;
+    uint32_t cable_deadline;
+    int32_t txn_id;
+    time_t transaction_confirmed_timestamp;
+    time_t transaction_start_time;
+    uint32_t current_allowed;
+    bool txn_with_invalid_id;
+    bool unavailable_requested;
+}  __attribute__((__packed__));
+
+struct PlatformMessage {
+    uint8_t seq_num = 0;
+    char message[63] = "";
+    uint32_t charge_current[NUM_CONNECTORS] = {0};
+    uint8_t connector_locked = 0;
+
+    uint8_t charge_point_state;
+    uint8_t charge_point_last_sent_status;
+    time_t next_profile_eval;
+
+    uint8_t message_in_flight_type;
+    int32_t message_in_flight_id;
+    size_t message_in_flight_len;
+    uint32_t message_timeout_deadline;
+    uint32_t txn_msg_retry_deadline;
+    uint8_t queue_depths[3];
+
+    uint8_t config_key;
+    char config_value[500];
+
+    ConnectorMessage connector_messages[NUM_CONNECTORS];
 }  __attribute__((__packed__));
 """
 
-header_format = "<B"
-request_format = header_format + "63s8IB"
-response_format = header_format + "22s8B8I"
+header_format = "<B" # uint8_t seq_num = 0;
+
+connector_format = \
+"B"     + \
+"B"     + \
+"21s"   + \
+"21s"   + \
+"B"     + \
+"q"     + \
+"I"     + \
+"I"     + \
+"i"     + \
+"q"     + \
+"q"     + \
+"I"     + \
+"?"     + \
+"?"
+
+
+request_format = header_format + \
+"63s"           + \
+"{num_conn}I"   + \
+"B"             + \
+"B"             + \
+"B"             + \
+"q"             + \
+"B"             + \
+"i"             + \
+"Q"             + \
+"I"             + \
+"I"             + \
+"B"             + \
+"B"             + \
+"B"             + \
+"B"             + \
+"500s"
+request_format += connector_format * NUM_CONNECTORS
+request_format = request_format.format(num_conn=NUM_CONNECTORS)
+
+response_format = header_format + "22s{num_conn}B{num_conn}I".format(num_conn=NUM_CONNECTORS)
 
 request_len = struct.calcsize(request_format)
 response_len = struct.calcsize(response_format)
@@ -37,7 +109,7 @@ sock.setblocking(False)
 addr = None
 
 from PyQt5.QtWidgets import *
-from PyQt5.QtCore import QTimer
+from PyQt5.QtCore import QTimer, Qt
 
 app = QApplication([])
 window = QWidget()
@@ -50,11 +122,88 @@ layout.addRow("Sequence number", req_seq_num)
 req_message = QLabel("no packet received yet")
 layout.addRow("Message", req_message)
 
+lbl = QLabel("--------------------------------------------------Charge point--------------------------------------------------")
+lbl.setAlignment(Qt.AlignCenter)
+layout.addRow(lbl)
+
 req_charge_current = QLabel("no packet received yet")
 layout.addRow("Charge current", req_charge_current)
 
 req_locked = QLabel("no packet received yet")
 layout.addRow("Cable locked", req_locked)
+
+req_charge_point_state = QLabel("no packet received yet")
+layout.addRow("State", req_charge_point_state)
+
+req_charge_point_last_sent_status = QLabel("no packet received yet")
+layout.addRow("Last sent status", req_charge_point_last_sent_status)
+
+req_next_profile_eval = QLabel("no packet received yet")
+layout.addRow("Next profile eval", req_next_profile_eval)
+
+req_message_in_flight_type = QLabel("no packet received yet")
+layout.addRow("Message in flight type", req_message_in_flight_type)
+
+req_message_in_flight_id = QLabel("no packet received yet")
+layout.addRow("MsgIF ID", req_message_in_flight_id)
+
+req_message_in_flight_len = QLabel("no packet received yet")
+layout.addRow("MsgIF len", req_message_in_flight_len)
+
+req_message_timeout_deadline = QLabel("no packet received yet")
+layout.addRow("MsgIf timeout", req_message_timeout_deadline)
+
+req_txn_msg_retry_deadline = QLabel("no packet received yet")
+layout.addRow("MsgId timeout", req_txn_msg_retry_deadline)
+
+req_message_queue_depth = QLabel("no packet received yet")
+layout.addRow("Message queue depth", req_message_queue_depth)
+
+req_status_notification_queue_depth = QLabel("no packet received yet")
+layout.addRow("StatusNotification queue depth", req_status_notification_queue_depth)
+
+req_transaction_message_queue_depth = QLabel("no packet received yet")
+layout.addRow("Transaction message queue depth", req_transaction_message_queue_depth)
+
+lbl = QLabel("--------------------------------------------------Connector--------------------------------------------------")
+lbl.setAlignment(Qt.AlignCenter)
+layout.addRow(lbl)
+
+req_state = QLabel("no packet received yet")
+layout.addRow("Connector state", req_state)
+req_last_sent_status = QLabel("no packet received yet")
+layout.addRow("Last sent status", req_last_sent_status)
+req_tag_id = QLabel("no packet received yet")
+layout.addRow("Tag ID", req_tag_id)
+req_parent_tag_id = QLabel("no packet received yet")
+layout.addRow("Parent tag ID", req_parent_tag_id)
+req_tag_status = QLabel("no packet received yet")
+layout.addRow("Tag status", req_tag_status)
+req_tag_expiry_date = QLabel("no packet received yet")
+layout.addRow("Tag expiry date", req_tag_expiry_date)
+req_tag_deadline = QLabel("no packet received yet")
+layout.addRow("Tag deadline", req_tag_deadline)
+req_cable_deadline = QLabel("no packet received yet")
+layout.addRow("Cable deadline", req_cable_deadline)
+req_txn_id = QLabel("no packet received yet")
+layout.addRow("Transaction ID", req_txn_id)
+req_transaction_confirmed_timestamp = QLabel("no packet received yet")
+layout.addRow("Transaction confirmed timestamp", req_transaction_confirmed_timestamp)
+req_transaction_start_time = QLabel("no packet received yet")
+layout.addRow("Transaction start time", req_transaction_start_time)
+req_current_allowed = QLabel("no packet received yet")
+layout.addRow("Current allowed", req_current_allowed)
+req_txn_with_invalid_id = QLabel("no packet received yet")
+layout.addRow("Txn with invalid id", req_txn_with_invalid_id)
+req_unavailable_requested = QLabel("no packet received yet")
+layout.addRow("Unavailable requested", req_unavailable_requested)
+
+lbl = QLabel("--------------------------------------------------Configuration--------------------------------------------------")
+lbl.setAlignment(Qt.AlignCenter)
+layout.addRow(lbl)
+
+req_config = QListWidget()
+layout.addRow("Configuration", req_config)
 
 layout.addRow(QLabel("Response"))
 
@@ -151,19 +300,88 @@ def receive():
         data, addr = sock.recvfrom(request_len)
     except BlockingIOError:
         return
-    if len(data) != request_len:
+    if len(data) < request_len:
+        print("malformed request {} < {}".format(len(data), request_len))
         return
 
     charge_current = []
-    seq_num, message, *charge_current, connector_locked = struct.unpack(request_format, data)
+    seq_num, \
+    message, \
+    charge_current, \
+    connector_locked, \
+    charge_point_state, \
+    charge_point_last_sent_status, \
+    next_profile_eval, \
+    message_in_flight_type, \
+    message_in_flight_id, \
+    message_in_flight_len, \
+    message_timeout_deadline, \
+    txn_msg_retry_deadline, \
+    message_queue_depth, \
+    status_notification_queue_depth, \
+    transaction_message_queue_depth, \
+    config_key, \
+    config_value, \
+    state, \
+    last_sent_status, \
+    tag_id, \
+    parent_tag_id, \
+    tag_status, \
+    tag_expiry_date, \
+    tag_deadline, \
+    cable_deadline, \
+    txn_id, \
+    transaction_confirmed_timestamp, \
+    transaction_start_time, \
+    current_allowed, \
+    txn_with_invalid_id, \
+    unavailable_requested \
+        = struct.unpack(request_format, data)
     if seq_num == last_seen_seq_num:
         return
     last_seen_seq_num = seq_num
 
     message = message.decode("utf-8").replace("\0", "")
+    config_value = config_value.decode("utf-8").replace("\0", "")
+    tag_id = tag_id.decode("utf-8").replace("\0", "")
+    parent_tag_id = parent_tag_id.decode("utf-8").replace("\0", "")
 
-    req_charge_current.setText(", ".join(["{:3.3f} A".format(cc / 1000.0) for cc in charge_current[:1]]))
+    req_charge_current.setText("{:3.3f} A".format(charge_current / 1000.0))
     req_locked.setText(", ".join("Locked" if (connector_locked & (1 << i)) else "Unlocked" for i in range(1)))
+
+    req_charge_point_state.setText(str(charge_point_state))
+    req_charge_point_last_sent_status.setText(str(charge_point_last_sent_status))
+    req_next_profile_eval.setText(str(next_profile_eval))
+    req_message_in_flight_type.setText(str(message_in_flight_type))
+    req_message_in_flight_id.setText(str(message_in_flight_id))
+    req_message_in_flight_len.setText(str(message_in_flight_len))
+    req_message_timeout_deadline.setText(str(message_timeout_deadline))
+    req_txn_msg_retry_deadline.setText(str(txn_msg_retry_deadline))
+    req_message_queue_depth.setText(str(message_queue_depth))
+    req_status_notification_queue_depth.setText(str(status_notification_queue_depth))
+    req_transaction_message_queue_depth.setText(str(transaction_message_queue_depth))
+
+    req_state.setText(str(state))
+    req_last_sent_status.setText(str(last_sent_status))
+    req_tag_id.setText(str(tag_id))
+    req_parent_tag_id.setText(str(parent_tag_id))
+    req_tag_status.setText(str(tag_status))
+    req_tag_expiry_date.setText(str(tag_expiry_date))
+    req_tag_deadline.setText(str(tag_deadline))
+    req_cable_deadline.setText(str(cable_deadline))
+    req_txn_id.setText(str(txn_id))
+    req_transaction_confirmed_timestamp.setText(str(transaction_confirmed_timestamp))
+    req_transaction_start_time.setText(str(transaction_start_time))
+    req_current_allowed.setText(str(current_allowed))
+    req_txn_with_invalid_id.setText(str(txn_with_invalid_id))
+    req_unavailable_requested.setText(str(unavailable_requested))
+
+    for i in range(req_config.count()):
+        if req_config.item(i).text().startswith("{}: ".format(config_key)):
+            req_config.item(i).setText("{}: {}".format(config_key, config_value))
+            break
+    else:
+        req_config.addItem("{}: {}".format(config_key, config_value))
 
     req_seq_num.setText(str(seq_num))
     if (message != "POLL"):
@@ -174,8 +392,8 @@ def receive():
                     next_seq_num,
                     (bytearray([1]) + resp_tag_id.text().encode("utf-8")) if resp_send_tag_id.isChecked() else "".encode("utf-8"),
                     resp_evse_state.currentIndex(),
-                    *([0] * 7),
-                    *([0] * 8))
+                    *([0] * (NUM_CONNECTORS - 1)),
+                    *([0] * NUM_CONNECTORS))
 
     resp_seq_num.setText(str(next_seq_num))
 
@@ -188,7 +406,7 @@ def receive():
 
 recv_timer = QTimer()
 recv_timer.timeout.connect(receive)
-recv_timer.start(100)
+recv_timer.start(10)
 
 # send_timer = QTimer()
 # send_timer.timeout.connect(send)

@@ -8,6 +8,7 @@
 
 #include "Messages.h"
 #include "ChargePoint.h"
+#include "Types.h"
 
 void *platform_init(const char *websocket_url);
 void platform_disconnect(void *ctx);
@@ -164,3 +165,31 @@ const char *platform_get_iccid();
 const char *platform_get_imsi();
 const char *platform_get_meter_type();
 const char *platform_get_meter_serial_number();
+
+#ifdef OCPP_STATE_CALLBACKS
+void platform_update_chargepoint_state(OcppState state,
+                                       StatusNotificationStatus last_sent_status,
+                                       time_t next_profile_eval);
+void platform_update_connector_state(int32_t connector_id,
+                                     ConnectorState state,
+                                     StatusNotificationStatus last_sent_status,
+                                     IdTagInfo auth_for,
+                                     uint32_t tag_deadline,
+                                     uint32_t cable_deadline,
+                                     int32_t txn_id,
+                                     time_t transaction_confirmed_timestamp,
+                                     time_t transaction_start_time,
+                                     uint32_t current_allowed,
+                                     bool txn_with_invalid_id,
+                                     bool unavailable_requested);
+void platform_update_connection_state(CallAction message_in_flight_type,
+                                      int32_t message_in_flight_id,
+                                      size_t message_in_flight_len,
+                                      uint32_t message_timeout_deadline,
+                                      uint32_t txn_msg_retry_deadline,
+                                      uint8_t message_queue_depth,
+                                      uint8_t status_notification_queue_depth,
+                                      uint8_t transaction_message_queue_depth);
+void platform_update_config_state(ConfigKey key,
+                                  const char *value);
+#endif
