@@ -225,7 +225,7 @@ void restoreChargingProfile(int32_t connectorId, ChargingProfilePurpose purpose,
     snprintf(name_buf, sizeof(name_buf), "profiles/%d-%d-%d", connectorId, (int32_t)purpose, stackLevel);
 
     char buf[sizeof(ChargingProfile)] = {0};
-    int len = platform_read_file(name_buf, buf, sizeof(ChargingProfile));
+    auto len = platform_read_file(name_buf, buf, sizeof(ChargingProfile));
     if (len != sizeof(ChargingProfile)) {
         platform_remove_file(name_buf);
         profile->clear();
