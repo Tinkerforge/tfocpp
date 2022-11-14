@@ -866,7 +866,7 @@ void Connector::onTagSeen(const char *tag_id) {
 
         case ConnectorState::TRANSACTION:
             // We still need the tag ID that started the transaction, so don't override authorized_for here, but send the AUTH request immediately.
-            log_info("Sending Authorize.req connector %d for tag %s (Authorizing for stop)", this->connectorId, authorized_for.tagId);
+            log_info("Sending Authorize.req connector %d for tag %s (Authorizing for stop)", this->connectorId, tag_id);
             this->sendCallAction(Authorize(tag_id));
             setState(ConnectorState::AUTH_STOP);
             break;
