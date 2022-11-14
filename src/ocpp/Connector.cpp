@@ -602,7 +602,9 @@ void Connector::tick() {
             switch (evse_state) {
                 case EVSEState::NotConnected:
                     log_error("Unexpected EVSEState %d while Connector is in state %d. Aborting transaction!", (int)evse_state, (int)state);
+                    this->next_stop_reason = StopTransactionReason::EV_DISCONNECTED;
                     setState(ConnectorState::FINISHING_NO_CABLE_UNLOCKED);
+                    this->next_stop_reason = StopTransactionReason::NONE;
                     break;
                 case EVSEState::PlugDetected:
                     this->next_stop_reason = StopTransactionReason::EV_DISCONNECTED;
@@ -623,7 +625,9 @@ void Connector::tick() {
             switch (evse_state) {
                 case EVSEState::NotConnected:
                     log_error("Unexpected EVSEState %d while Connector is in state %d. Aborting transaction!", (int)evse_state, (int)state);
+                    this->next_stop_reason = StopTransactionReason::EV_DISCONNECTED;
                     setState(ConnectorState::FINISHING_NO_CABLE_UNLOCKED);
+                    this->next_stop_reason = StopTransactionReason::NONE;
                     break;
                 case EVSEState::PlugDetected:
                     this->next_stop_reason = StopTransactionReason::EV_DISCONNECTED;
@@ -832,6 +836,7 @@ void Connector::onTagSeen(const char *tag_id) {
             case ConnectorState::FINISHING_NO_SAME_TAG:
                 this->next_stop_reason = StopTransactionReason::LOCAL;
                 setState(ConnectorState::FINISHING_UNLOCKED);
+                this->next_stop_reason = StopTransactionReason::NONE;
                 break;
 
             case ConnectorState::IDLE:
@@ -1046,7 +1051,9 @@ void Connector::onRemoteStopTransaction()
 
         case ConnectorState::TRANSACTION:
         case ConnectorState::AUTH_STOP:
+            this->next_stop_reason = StopTransactionReason::REMOTE;
             setState(ConnectorState::FINISHING_UNLOCKED);
+            this->next_stop_reason = StopTransactionReason::NONE;
     }
 }
 
@@ -1073,7 +1080,9 @@ UnlockConnectorResponseStatus Connector::onUnlockConnector()
         case ConnectorState::TRANSACTION:
         case ConnectorState::AUTH_STOP:
         case ConnectorState::FINISHING_NO_SAME_TAG:
+            this->next_stop_reason = StopTransactionReason::UNLOCK_COMMAND;
             setState(ConnectorState::FINISHING_UNLOCKED);
+            this->next_stop_reason = StopTransactionReason::NONE;
             return UnlockConnectorResponseStatus::UNLOCKED;
     }
 }
