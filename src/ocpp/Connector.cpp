@@ -34,7 +34,8 @@ void Connector::clearCableDeadline()
     cable_deadline = 0;
 }
 
-static const char * ConnectorState_Strings[] = {
+// keep in sync with ocpp_platform_gui
+static const char * const ConnectorStateStrings[] = {
     "IDLE",
     "NO_CABLE_NO_TAG",
     "NO_TAG",
@@ -166,7 +167,7 @@ void Connector::applyState() {
 }
 
 void Connector::setState(ConnectorState newState) {
-    log_debug("%s -> %s", ConnectorState_Strings[(int)state], ConnectorState_Strings[(int)newState]);
+    log_debug("%s -> %s", ConnectorStateStrings[(int)state], ConnectorStateStrings[(int)newState]);
     ConnectorState oldState = state;
     state = newState;
 
@@ -839,7 +840,7 @@ void Connector::onTagSeen(const char *tag_id) {
             case ConnectorState::FINISHING_UNLOCKED:
             case ConnectorState::FINISHING_NO_CABLE_UNLOCKED:
             case ConnectorState::UNAVAILABLE:
-                log_warn("Unexpected same tag in state %s. Was auth not cleared?", ConnectorState_Strings[(size_t)state]);
+                log_warn("Unexpected same tag in state %s. Was auth not cleared?", ConnectorStateStrings[(size_t)state]);
                 break;
         }
         return;
@@ -880,7 +881,7 @@ void Connector::onTagSeen(const char *tag_id) {
         case ConnectorState::FINISHING_NO_CABLE_LOCKED:
         case ConnectorState::FINISHING_NO_SAME_TAG:
         case ConnectorState::UNAVAILABLE:
-            log_debug("Ignoring other tag in state %s", ConnectorState_Strings[(size_t)state]);
+            log_debug("Ignoring other tag in state %s", ConnectorStateStrings[(size_t)state]);
             break;
     }
 }
@@ -925,7 +926,7 @@ void Connector::onAuthorizeConf(IdTagInfo info) {
         case ConnectorState::FINISHING_NO_CABLE_LOCKED:
         case ConnectorState::FINISHING_NO_SAME_TAG:
         case ConnectorState::UNAVAILABLE:
-            log_debug("Ignoring Authorize.conf in state %s", ConnectorState_Strings[(size_t)state]);
+            log_debug("Ignoring Authorize.conf in state %s", ConnectorStateStrings[(size_t)state]);
             return;
     }
 }
@@ -933,7 +934,7 @@ void Connector::onAuthorizeConf(IdTagInfo info) {
 // Handles StartTxnNotAccepted
 void Connector::onStartTransactionConf(IdTagInfo info, int32_t txn_id) {
     if (state != ConnectorState::TRANSACTION && state != ConnectorState::AUTH_STOP) {
-        log_debug("Ignoring StartTransaction.conf in state %s", ConnectorState_Strings[(size_t)state]);
+        log_debug("Ignoring StartTransaction.conf in state %s", ConnectorStateStrings[(size_t)state]);
         return;
     }
 
@@ -1020,7 +1021,7 @@ void Connector::onRemoteStartTransaction(const char *tag_id)
         case ConnectorState::TRANSACTION:
         case ConnectorState::AUTH_STOP:
         case ConnectorState::UNAVAILABLE:
-            log_debug("Ignoring remote start transaction in state %s", ConnectorState_Strings[(size_t)state]);
+            log_debug("Ignoring remote start transaction in state %s", ConnectorStateStrings[(size_t)state]);
             break;
     }
 }

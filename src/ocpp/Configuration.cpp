@@ -195,7 +195,7 @@ ChangeConfigurationResponseStatus OcppConfiguration::setValue(const char *newVal
     return ChangeConfigurationResponseStatus::REJECTED;
 }
 
-static const char *connectorPhaseRotationStrings[] = {
+static const char * const connectorPhaseRotationStrings[] = {
     "NotApplicable",
     "Unknown",
     "RST",
@@ -206,6 +206,7 @@ static const char *connectorPhaseRotationStrings[] = {
     "TSR",
 };
 
+// keep in sync with ocpp_plaform_gui.py config_key_strings
 const char * const config_keys[OCPP_CONFIG_COUNT] {
     // CORE PROFILE
     //"AllowOfflineTxForUnknownId",

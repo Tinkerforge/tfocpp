@@ -5,6 +5,184 @@ import time
 
 NUM_CONNECTORS = 1
 
+# charge point state
+# statusnotificationstatus
+# message if type
+# connector state
+# tag status
+# configuration
+
+# keep in sync with ChargePoint.h OcppStateStrings
+charge_point_state_strings = [
+    "PowerOn",
+    "FlushPersistentMessages",
+    "Idle",
+    "Pending",
+    "Rejected",
+    "Unavailable",
+    "Faulted",
+    "SoftReset",
+    "HardReset"
+]
+
+# TODO: generate
+status_notification_status_strings = [
+    "Available",
+    "Preparing",
+    "Charging",
+    "SuspendedEV",
+    "SuspendedEVSE",
+    "Finishing",
+    "Reserved",
+    "Unavailable",
+    "Faulted",
+    "NONE"
+]
+
+#TODO generate
+message_in_flight_type_strings = [
+    "Authorize",
+    "BootNotification",
+    "ChangeAvailabilityResponse",
+    "ChangeConfigurationResponse",
+    "ClearCacheResponse",
+    "DataTransfer",
+    "DataTransferResponse",
+    "GetConfigurationResponse",
+    "Heartbeat",
+    "MeterValues",
+    "RemoteStartTransactionResponse",
+    "RemoteStopTransactionResponse",
+    "ResetResponse",
+    "StartTransaction",
+    "StatusNotification",
+    "StopTransaction",
+    "UnlockConnectorResponse",
+    "AuthorizeResponse",
+    "BootNotificationResponse",
+    "ChangeAvailability",
+    "ChangeConfiguration",
+    "ClearCache",
+    "GetConfiguration",
+    "HeartbeatResponse",
+    "MeterValuesResponse",
+    "RemoteStartTransaction",
+    "RemoteStopTransaction",
+    "Reset",
+    "StartTransactionResponse",
+    "StatusNotificationResponse",
+    "StopTransactionResponse",
+    "UnlockConnector",
+    "GetDiagnosticsResponse",
+    "DiagnosticsStatusNotification",
+    "FirmwareStatusNotification",
+    "UpdateFirmwareResponse",
+    "GetDiagnostics",
+    "DiagnosticsStatusNotificationResponse",
+    "FirmwareStatusNotificationResponse",
+    "UpdateFirmware",
+    "GetLocalListVersionResponse",
+    "SendLocalListResponse",
+    "GetLocalListVersion",
+    "SendLocalList",
+    "CancelReservationResponse",
+    "ReserveNowResponse",
+    "CancelReservation",
+    "ReserveNow",
+    "ClearChargingProfileResponse",
+    "GetCompositeScheduleResponse",
+    "SetChargingProfileResponse",
+    "ClearChargingProfile",
+    "GetCompositeSchedule",
+    "SetChargingProfile",
+    "TriggerMessageResponse",
+    "TriggerMessage"
+]
+
+# keep in sync with Connector.cpp ConnectorStateStrings
+connector_state_strings = [
+    "IDLE",
+    "NO_CABLE_NO_TAG",
+    "NO_TAG",
+    "AUTH_START_NO_PLUG",
+    "AUTH_START_NO_CABLE",
+    "AUTH_START",
+    "NO_PLUG",
+    "NO_CABLE",
+    "TRANSACTION",
+    "AUTH_STOP",
+    "FINISHING_UNLOCKED",
+    "FINISHING_NO_CABLE_UNLOCKED",
+    "FINISHING_NO_CABLE_LOCKED",
+    "FINISHING_NO_SAME_TAG",
+    "UNAVAILABLE"
+]
+
+# TODO: generate
+tag_status_strings = [
+    "Accepted",
+    "Blocked",
+    "Expired",
+    "Invalid",
+    "ConcurrentTx"
+]
+
+# keep in sync with Configuration config_keys
+config_key_strings = [
+    # CORE PROFILE
+    #"AllowOfflineTxForUnknownId",
+    #"AuthorizationCacheEnabled",
+    "AuthorizeRemoteTxRequests",
+    #"BlinkRepeat",
+    "ClockAlignedDataInterval",
+    "ConnectionTimeOut",
+    "ConnectorPhaseRotation",
+    "ConnectorPhaseRotationMaxLength",
+    "GetConfigurationMaxKeys",
+    "HeartbeatInterval",
+    #"LightIntensity",
+    "LocalAuthorizeOffline",
+    "LocalPreAuthorize",
+    #"MaxEnergyOnInvalidId",
+    "MessageTimeout",
+    "MeterValuesAlignedData",
+    "MeterValuesAlignedDataMaxLength",
+    "MeterValuesSampledData",
+    "MeterValuesSampledDataMaxLength",
+    "MeterValueSampleInterval",
+    #"MinimumStatusDuration",
+    "NumberOfConnectors",
+    "ResetRetries",
+    "StopTransactionOnEVSideDisconnect",
+    "StopTransactionOnInvalidId",
+    "StopTransactionMaxMeterValues",
+    "StopTxnAlignedData",
+    "StopTxnAlignedDataMaxLength",
+    "StopTxnSampledData",
+    "StopTxnSampledDataMaxLength",
+    "SupportedFeatureProfiles",
+    #"SupportedFeatureProfilesMaxLength",
+    "TransactionMessageAttempts",
+    "TransactionMessageRetryInterval",
+    "UnlockConnectorOnEVSideDisconnect",
+    "WebSocketPingInterval",
+
+    # # LOCAL AUTH LIST MANAGEMENT PROFILE
+    #"LocalAuthListEnabled",
+    #"LocalAuthListMaxLength",
+    #"SendLocalListMaxLength",
+
+    # # RESERVATION PROFILE
+    #"ReserveConnectorZeroSupported",
+
+    # SMART CHARGING PROFILE
+    "ChargeProfileMaxStackLevel",
+    "ChargingScheduleAllowedChargingRateUnit",
+    "ChargingScheduleMaxPeriods",
+    "ConnectorSwitch3to1PhaseSupported",
+    "MaxChargingProfilesInstalled",
+]
+
 """
 struct PlatformResponse {
     uint8_t seq_num;
@@ -345,6 +523,14 @@ def receive():
     config_value = config_value.decode("utf-8").replace("\0", "")
     tag_id = tag_id.decode("utf-8").replace("\0", "")
     parent_tag_id = parent_tag_id.decode("utf-8").replace("\0", "")
+
+    charge_point_state = charge_point_state_strings[charge_point_state]
+    charge_point_last_sent_status = status_notification_status_strings[charge_point_last_sent_status]
+    message_in_flight_type = message_in_flight_type_strings[message_in_flight_type]
+    config_key = config_key_strings[config_key]
+    state = connector_state_strings[state]
+    last_sent_status = status_notification_status_strings[last_sent_status]
+    tag_status = tag_status_strings[tag_status]
 
     req_charge_current.setText("{:3.3f} A".format(charge_current / 1000.0))
     req_locked.setText(", ".join("Locked" if (connector_locked & (1 << i)) else "Unlocked" for i in range(1)))

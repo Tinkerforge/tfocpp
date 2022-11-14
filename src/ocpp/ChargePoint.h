@@ -11,6 +11,19 @@
 #include "ChargingProfile.h"
 #include "Types.h"
 
+// keep in sync with ocpp_platform_gui.py charge_point_state_strings
+const char * const OcppStateStrings[] = {
+    "PowerOn",
+    "FlushPersistentMessages",
+    "Idle",
+    "Pending",
+    "Rejected",
+    "Unavailable",
+    "Faulted",
+    "SoftReset",
+    "HardReset"
+};
+
 enum class OcppState {
     PowerOn, // send boot notification, wait for boot notification conf, don't do anything else
     FlushPersistentMessages, // boot notification received, accepted, but we have to send old txn messages first

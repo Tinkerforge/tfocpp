@@ -239,7 +239,7 @@ void platform_register_tag_seen_callback(void *ctx, void(*cb)(int32_t, const cha
     tag_seen_cb_user_data = user_data;
 }
 
-const char *trt_string[] = {
+const char * const trt_string[] = {
 "Blocked",
 "Expired",
 "Invalid",
