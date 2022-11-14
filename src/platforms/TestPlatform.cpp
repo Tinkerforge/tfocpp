@@ -260,7 +260,7 @@ const SupportedMeasurand *platform_get_supported_measurands(int32_t connector_id
     return platform_get_supported_measurands_cb(connector_id, measurand);
 }
 
-bool platform_get_signed_meter_value(int32_t connectorId, SampledValueMeasurand measurant, SampledValuePhase phase, SampledValueLocation location, char buf[PLATFORM_MEASURAND_MAX_DATA_LEN]) {
+bool platform_get_signed_meter_value(int32_t connectorId, SampledValueMeasurand measurant, SampledValuePhase phase, SampledValueLocation location, char buf[OCPP_PLATFORM_MEASURAND_MAX_DATA_LEN]) {
     //return platform_get_signed_meter_value_cb(connectorId, measurant, phase, location, buf);
     return false;
 }

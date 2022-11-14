@@ -101,8 +101,8 @@ void platform_set_charging_current(int32_t connectorId, uint32_t milliAmps);
 // For example to implement a remote stop that unlocks immediately, use platform_unlock_cable.
 void platform_register_stop_callback(void *ctx, void (*cb)(int32_t, StopReason, void *), void *user_data);
 
-#define PLATFORM_MEASURAND_MAX_DATA_LEN 16 // 11 digits, point, 3 digits, \0
-#define PLATFORM_MEASURAND_ACQUISITION_INTERVAL_MS 1000 //Tune this depending on the meter/communication speed
+#define OCPP_PLATFORM_MEASURAND_MAX_DATA_LEN 16 // 11 digits, point, 3 digits, \0
+#define OCPP_PLATFORM_MEASURAND_ACQUISITION_INTERVAL_MS 1000 //Tune this depending on the meter/communication speed
 /*
 Value as a “Raw” (decimal) number or “SignedData”. Field Type is
 “string” to allow for digitally signed data readings. Decimal numeric values are
@@ -117,7 +117,7 @@ taken from the main energy meter.
 // Only REGISTER values are allowed to be signed?
 // We must calculate the average over all non-energy values
 // this cannot be done if they are signed (intransparent) binary blobs.
-bool platform_get_signed_meter_value(int32_t connectorId, SampledValueMeasurand measurand, SampledValuePhase phase, SampledValueLocation location, char buf[PLATFORM_MEASURAND_MAX_DATA_LEN]);
+bool platform_get_signed_meter_value(int32_t connectorId, SampledValueMeasurand measurand, SampledValuePhase phase, SampledValueLocation location, char buf[OCPP_PLATFORM_MEASURAND_MAX_DATA_LEN]);
 float platform_get_raw_meter_value(int32_t connectorId, SampledValueMeasurand measurand, SampledValuePhase phase, SampledValueLocation location);
 
 // This is the Energy.Active.Import.Register measurand in Wh

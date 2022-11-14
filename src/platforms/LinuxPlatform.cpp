@@ -21,8 +21,8 @@
 struct PlatformResponse {
     uint8_t seq_num;
     char tag_id_seen[22];
-    uint8_t evse_state[NUM_CONNECTORS];
-    uint32_t energy[NUM_CONNECTORS];
+    uint8_t evse_state[OCPP_NUM_CONNECTORS];
+    uint32_t energy[OCPP_NUM_CONNECTORS];
 }  __attribute__((__packed__));
 
 struct ConnectorMessage {
@@ -45,7 +45,7 @@ struct ConnectorMessage {
 struct PlatformMessage {
     uint8_t seq_num = 0;
     char message[63] = "";
-    uint32_t charge_current[NUM_CONNECTORS] = {0};
+    uint32_t charge_current[OCPP_NUM_CONNECTORS] = {0};
     uint8_t connector_locked = 0;
 
     uint8_t charge_point_state;
@@ -64,7 +64,7 @@ struct PlatformMessage {
     uint8_t config_key;
     char config_value[500];
 
-    ConnectorMessage connector_messages[NUM_CONNECTORS];
+    ConnectorMessage connector_messages[OCPP_NUM_CONNECTORS];
 }  __attribute__((__packed__));
 
 struct mg_mgr mgr;        // Event manager
@@ -517,7 +517,7 @@ const SupportedMeasurand *platform_get_supported_measurands(int32_t connector_id
     return supported_measurands + supported_measurand_offsets[(size_t)measurand];
 }
 
-bool platform_get_signed_meter_value(int32_t connectorId, SampledValueMeasurand measurant, SampledValuePhase phase, SampledValueLocation location, char buf[PLATFORM_MEASURAND_MAX_DATA_LEN]) {
+bool platform_get_signed_meter_value(int32_t connectorId, SampledValueMeasurand measurant, SampledValuePhase phase, SampledValueLocation location, char buf[OCPP_PLATFORM_MEASURAND_MAX_DATA_LEN]) {
     log_warn("signed values not supported yet!");
 }
 

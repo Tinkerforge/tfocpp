@@ -18,7 +18,7 @@ extern "C" {
 }
 
 
-//static StatusNotificationStatus last_connector_status[NUM_CONNECTORS];
+//static StatusNotificationStatus last_connector_status[OCPP_NUM_CONNECTORS];
 
 void OcppChargePoint::tick_power_on() {
     if (last_bn_send_ms == 0 && !platform_ws_connected(platform_ctx))
@@ -115,7 +115,7 @@ void OcppChargePoint::tick() {
     }
 
     if (state != OcppState::SoftReset && state != OcppState::HardReset) {
-        for(int32_t i = 0; i < NUM_CONNECTORS; ++i) {
+        for(int32_t i = 0; i < OCPP_NUM_CONNECTORS; ++i) {
             connectors[i].tick();
         }
     }
@@ -135,7 +135,7 @@ void OcppChargePoint::onConnect()
         return;
 
     this->forceSendStatus();
-    for(int32_t i = 0; i < NUM_CONNECTORS; ++i)
+    for(int32_t i = 0; i < OCPP_NUM_CONNECTORS; ++i)
         connectors[i].forceSendStatus();
 }
 
@@ -191,15 +191,15 @@ ChangeAvailabilityResponseStatus OcppChargePoint::onChangeAvailability(ChangeAva
             break;
     }
 }
-// ("false" + ',') * (NUM_CONNECTORS + 1) + '[' + ']' + '\0'
-#define AVAILABLE_STRING_BUF_SIZE 6 * (NUM_CONNECTORS + 1) + 3
+// ("false" + ',') * (OCPP_NUM_CONNECTORS + 1) + '[' + ']' + '\0'
+#define AVAILABLE_STRING_BUF_SIZE 6 * (OCPP_NUM_CONNECTORS + 1) + 3
 
 void OcppChargePoint::saveAvailability()
 {
-    StaticJsonDocument<JSON_ARRAY_SIZE(NUM_CONNECTORS + 1)> doc;
+    StaticJsonDocument<JSON_ARRAY_SIZE(OCPP_NUM_CONNECTORS + 1)> doc;
     doc.add(this->state != OcppState::Unavailable);
 
-    for(int32_t i = 0; i < NUM_CONNECTORS; ++i) {
+    for(int32_t i = 0; i < OCPP_NUM_CONNECTORS; ++i) {
         doc.add(!connectors[i].willBeUnavailable());
     }
 
@@ -215,14 +215,14 @@ void OcppChargePoint::loadAvailability()
     auto buf = heap_alloc_array<char>(AVAILABLE_STRING_BUF_SIZE);
     size_t len = platform_read_file("avail", buf.get(), AVAILABLE_STRING_BUF_SIZE);
 
-    StaticJsonDocument<JSON_ARRAY_SIZE(NUM_CONNECTORS + 1)> doc;
+    StaticJsonDocument<JSON_ARRAY_SIZE(OCPP_NUM_CONNECTORS + 1)> doc;
     if (deserializeJson(doc, buf.get(), len) != DeserializationError::Ok)
         return;
 
     if (!doc.is<JsonArray>())
         return;
 
-    for(int32_t i = 0; i < NUM_CONNECTORS; ++i) {
+    for(int32_t i = 0; i < OCPP_NUM_CONNECTORS; ++i) {
         if (!doc[(size_t)(i + 1)].as<bool>())
             connectors[i].onChangeAvailability(ChangeAvailabilityType::INOPERATIVE);
     }
@@ -295,7 +295,7 @@ bool OcppChargePoint::sendCallAction(const ICall &call, time_t timestamp, int32_
     the profile SHOULD be deleted.
     */
     if (call.action == CallAction::STOP_TRANSACTION) {
-        for(size_t stack_level = 0; stack_level <= CHARGE_PROFILE_MAX_STACK_LEVEL; ++stack_level) {
+        for(size_t stack_level = 0; stack_level <= OCPP_CHARGE_PROFILE_MAX_STACK_LEVEL; ++stack_level) {
             removeChargingProfile(connectorId, ChargingProfilePurpose::TX_PROFILE, stack_level);
             connectors[connectorId - 1].txProfiles[stack_level].clear();
         }
@@ -310,7 +310,7 @@ void OcppChargePoint::onTimeout(CallAction action, uint32_t messageId, int32_t c
 
     switch (action) {
         case CallAction::AUTHORIZE:
-            if (connectorId > 0 && connectorId <= NUM_CONNECTORS)
+            if (connectorId > 0 && connectorId <= OCPP_NUM_CONNECTORS)
                 connectors[connectorId].onAuthorizeError();
             break;
 
@@ -391,7 +391,7 @@ CallResponse OcppChargePoint::handleAuthorizeResponse(int32_t connectorId, Autho
     IdTagInfo info;
     info.updateFromIdTagInfo(conf.idTagInfo());
 
-    if (connectorId > 0 && connectorId <= NUM_CONNECTORS)
+    if (connectorId > 0 && connectorId <= OCPP_NUM_CONNECTORS)
         connectors[connectorId - 1].onAuthorizeConf(info);
 
     return CallResponse{CallErrorCode::OK, ""};
@@ -412,7 +412,7 @@ CallResponse OcppChargePoint::handleBootNotificationResponse(int32_t connectorId
     if (conf.interval() > 0)
         setIntConfig(ConfigKey::HeartbeatInterval, conf.interval());
     else
-        setIntConfig(ConfigKey::HeartbeatInterval, DEFAULT_HEARTBEAT_INTERVAL_S);
+        setIntConfig(ConfigKey::HeartbeatInterval, OCPP_DEFAULT_HEARTBEAT_INTERVAL_S);
 
     switch (conf.status()) {
         case BootNotificationResponseStatus::ACCEPTED: {
@@ -422,7 +422,7 @@ CallResponse OcppChargePoint::handleBootNotificationResponse(int32_t connectorId
 
             this->forceSendStatus();
 
-            for(int32_t i = 0; i < NUM_CONNECTORS; ++i)
+            for(int32_t i = 0; i < OCPP_NUM_CONNECTORS; ++i)
                 connectors[i].forceSendStatus();
 
             if (startRestore())
@@ -453,7 +453,7 @@ CallResponse OcppChargePoint::handleChangeAvailability(const char *uid, ChangeAv
         resp = this->onChangeAvailability(req.type());
 
         if (resp != ChangeAvailabilityResponseStatus::REJECTED) {
-            for(int32_t i = 0; i < NUM_CONNECTORS; ++i) {
+            for(int32_t i = 0; i < OCPP_NUM_CONNECTORS; ++i) {
                 auto conn_resp = connectors[i].onChangeAvailability(req.type());
                 if (conn_resp == ChangeAvailabilityResponseStatus::REJECTED)
                     log_warn("Connectors rejecting the change availability request is not supported yet!");
@@ -461,7 +461,7 @@ CallResponse OcppChargePoint::handleChangeAvailability(const char *uid, ChangeAv
                     resp = conn_resp;
             }
         }
-    } else if (conn_id < 0 || conn_id > NUM_CONNECTORS)
+    } else if (conn_id < 0 || conn_id > OCPP_NUM_CONNECTORS)
         resp = ChangeAvailabilityResponseStatus::REJECTED;
     else
         resp = connectors[conn_id - 1].onChangeAvailability(req.type());
@@ -480,7 +480,7 @@ CallResponse OcppChargePoint::handleChangeConfiguration(const char *uid, ChangeC
     log_info("Received ChangeConfiguration.req %s to %s", req.key(), req.value());
     size_t key_idx;
     ChangeConfigurationResponseStatus status = ChangeConfigurationResponseStatus::ACCEPTED;
-    if (!lookup_key(&key_idx, req.key(), config_keys, CONFIG_COUNT)) {
+    if (!lookup_key(&key_idx, req.key(), config_keys, OCPP_CONFIG_COUNT)) {
         status = ChangeConfigurationResponseStatus::NOT_SUPPORTED;
     } else if (getConfig(key_idx).readonly) {
         status = ChangeConfigurationResponseStatus::REJECTED;
@@ -550,13 +550,13 @@ CallResponse OcppChargePoint::handleGetConfiguration(const char *uid, GetConfigu
     bool dump_all = false;
 
     if (req.key_count() == 0) {
-        known_keys = CONFIG_COUNT;
+        known_keys = OCPP_CONFIG_COUNT;
         scratch_buf_size = 20 * known_keys;
         dump_all = true;
     } else {
         for(size_t i = 0; i < req.key_count(); ++i) {
             size_t result;
-            if (lookup_key(&result, req.key(i).get(), config_keys, CONFIG_COUNT)) {
+            if (lookup_key(&result, req.key(i).get(), config_keys, OCPP_CONFIG_COUNT)) {
                 ++known_keys;
                 switch(getConfig(result).type) {
                     case OcppConfigurationValueType::Boolean:
@@ -682,7 +682,7 @@ CallResponse OcppChargePoint::handleRemoteStartTransaction(const char *uid, Remo
     int conn_idx = -1;
 
     if (!req.connectorId().is_set()) {
-        for(int32_t i = 0; i < NUM_CONNECTORS; ++i) {
+        for(int32_t i = 0; i < OCPP_NUM_CONNECTORS; ++i) {
             if (!connectors[i].isSelectableForRemoteStartTxn())
                 continue;
 
@@ -699,7 +699,7 @@ CallResponse OcppChargePoint::handleRemoteStartTransaction(const char *uid, Remo
     } else
         conn_idx = req.connectorId().get() - 1;
 
-    if (conn_idx < 0 || conn_idx >= NUM_CONNECTORS) {
+    if (conn_idx < 0 || conn_idx >= OCPP_NUM_CONNECTORS) {
         log_info("Sending RemoteStartTransaction.conf Rejected (unknown connector id)\n");
         connection.sendCallResponse(RemoteStartTransactionResponse(uid, ResponseStatus::REJECTED));
         return CallResponse{CallErrorCode::OK, ""};
@@ -710,7 +710,7 @@ CallResponse OcppChargePoint::handleRemoteStartTransaction(const char *uid, Remo
 
         auto prof = req.chargingProfile().get();
 
-        if (prof.stackLevel() < 0 || prof.stackLevel() > CHARGE_PROFILE_MAX_STACK_LEVEL) {
+        if (prof.stackLevel() < 0 || prof.stackLevel() > OCPP_CHARGE_PROFILE_MAX_STACK_LEVEL) {
             log_info("Rejected: stack level %d out of range", prof.stackLevel());
             connection.sendCallResponse(RemoteStartTransactionResponse(uid, ResponseStatus::REJECTED));
             return CallResponse{CallErrorCode::OK, ""};
@@ -768,7 +768,7 @@ CallResponse OcppChargePoint::handleRemoteStartTransaction(const char *uid, Remo
 CallResponse OcppChargePoint::handleRemoteStopTransaction(const char *uid, RemoteStopTransactionView req)
 {
     log_info("Received RemoteStopTransaction.req for txn %d", req.transactionId());
-    for(int32_t i = 0; i < NUM_CONNECTORS; ++i) {
+    for(int32_t i = 0; i < OCPP_NUM_CONNECTORS; ++i) {
         if (!connectors[i].canHandleRemoteStopTxn(req.transactionId()))
             continue;
 
@@ -792,7 +792,7 @@ CallResponse OcppChargePoint::handleReset(const char *uid, ResetView req)
     log_info("Sending Request.conf Accepted\n");
     connection.sendCallResponse(ResetResponse(uid, ResponseStatus::ACCEPTED));
 
-    for(int32_t i = 0; i < NUM_CONNECTORS; ++i) {
+    for(int32_t i = 0; i < OCPP_NUM_CONNECTORS; ++i) {
         connectors[i].onRemoteStopTransaction();
         connectors[i].onChangeAvailability(ChangeAvailabilityType::INOPERATIVE);
     }
@@ -812,7 +812,7 @@ CallResponse OcppChargePoint::handleStartTransactionResponse(int32_t connectorId
     IdTagInfo info;
     info.updateFromIdTagInfo(conf.idTagInfo());
 
-    if (connectorId > 0 && connectorId <= NUM_CONNECTORS)
+    if (connectorId > 0 && connectorId <= OCPP_NUM_CONNECTORS)
         connectors[connectorId - 1].onStartTransactionConf(info, conf.transactionId());
 
     // We received the txn-ID, so maybe now a TxProfile applies.
@@ -845,7 +845,7 @@ CallResponse OcppChargePoint::handleUnlockConnector(const char *uid, UnlockConne
     log_info("Received UnlockConnector.req");
     int32_t conn_id = req.connectorId() - 1;
 
-    if (conn_id < 0 || conn_id >= NUM_CONNECTORS) {
+    if (conn_id < 0 || conn_id >= OCPP_NUM_CONNECTORS) {
         connection.sendCallResponse(UnlockConnectorResponse(uid, UnlockConnectorResponseStatus::NOT_SUPPORTED));
         return CallResponse{CallErrorCode::OK, ""};
     }
@@ -903,11 +903,11 @@ CallResponse OcppChargePoint::handleClearChargingProfile(const char *uid, ClearC
 
     bool accepted = false;
 
-    for(size_t stack_level = 0; stack_level <= CHARGE_PROFILE_MAX_STACK_LEVEL; ++stack_level) {
+    for(size_t stack_level = 0; stack_level <= OCPP_CHARGE_PROFILE_MAX_STACK_LEVEL; ++stack_level) {
         accepted |= handleClearProfile(req, this->chargePointMaxProfiles[stack_level], 0);
         accepted |= handleClearProfile(req, this->txDefaultProfiles[stack_level], 0);
 
-        for(int32_t conn_id = 0; conn_id < NUM_CONNECTORS; ++conn_id) {
+        for(int32_t conn_id = 0; conn_id < OCPP_NUM_CONNECTORS; ++conn_id) {
             accepted |= handleClearProfile(req, connectors[conn_id].txProfiles[stack_level], conn_id + 1);
             accepted |= handleClearProfile(req, connectors[conn_id].txDefaultProfiles[stack_level], conn_id + 1);
         }
@@ -926,13 +926,13 @@ CallResponse OcppChargePoint::handleGetCompositeSchedule(const char *uid, GetCom
     log_info("Received GetCompositeSchedule.req");
 
     int32_t conn_id = req.connectorId();
-    if (conn_id < 0 || conn_id > NUM_CONNECTORS) {
+    if (conn_id < 0 || conn_id > OCPP_NUM_CONNECTORS) {
         connection.sendCallResponse(GetCompositeScheduleResponse(uid, ResponseStatus::REJECTED));
         return CallResponse{CallErrorCode::OK, ""};
     }
 
     GetCompositeScheduleResponseChargingSchedule sched;
-    GetCompositeScheduleResponseChargingScheduleChargingSchedulePeriod periods[GET_COMPOSITE_SCHEDULE_MAX_PERIODS];
+    GetCompositeScheduleResponseChargingScheduleChargingSchedulePeriod periods[OCPP_GET_COMPOSITE_SCHEDULE_MAX_PERIODS];
     size_t periods_used = 0;
 
     time_t start = platform_get_system_time(platform_ctx);
@@ -950,7 +950,7 @@ CallResponse OcppChargePoint::handleGetCompositeSchedule(const char *uid, GetCom
 
         periods[periods_used].limit = result.allocatedLimit[req.connectorId()];
         if (req.chargingRateUnit().is_set() && req.chargingRateUnit().get() == ChargingRateUnit::W)
-            periods[periods_used].limit *= LINE_VOLTAGE * periods[periods_used].numberPhases;
+            periods[periods_used].limit *= OCPP_LINE_VOLTAGE * periods[periods_used].numberPhases;
 
         ++periods_used;
     }
@@ -987,7 +987,7 @@ CallResponse OcppChargePoint::handleSetChargingProfile(const char *uid, SetCharg
     log_info("Received SetChargingProfile.req stacklevel %d", req.csChargingProfiles().stackLevel());
 
     int32_t conn_id = req.connectorId();
-    if (conn_id < 0 || conn_id > NUM_CONNECTORS) {
+    if (conn_id < 0 || conn_id > OCPP_NUM_CONNECTORS) {
         log_info("Rejected: connector ID %d out of range", conn_id);
         connection.sendCallResponse(SetChargingProfileResponse(uid, SetChargingProfileResponseStatus::REJECTED));
         return CallResponse{CallErrorCode::OK, ""};
@@ -995,7 +995,7 @@ CallResponse OcppChargePoint::handleSetChargingProfile(const char *uid, SetCharg
 
     auto prof = req.csChargingProfiles();
 
-    if (prof.stackLevel() < 0 || prof.stackLevel() > CHARGE_PROFILE_MAX_STACK_LEVEL) {
+    if (prof.stackLevel() < 0 || prof.stackLevel() > OCPP_CHARGE_PROFILE_MAX_STACK_LEVEL) {
         log_info("Rejected: stack level %d out of range", prof.stackLevel());
         connection.sendCallResponse(SetChargingProfileResponse(uid, SetChargingProfileResponseStatus::REJECTED));
         return CallResponse{CallErrorCode::OK, ""};
@@ -1038,11 +1038,11 @@ CallResponse OcppChargePoint::handleSetChargingProfile(const char *uid, SetCharg
     with the same chargingProfileId, or the same combination of stackLevel / ChargingProfilePurpose, exists on the
     Charge Point, the new charging profile SHALL replace the existing charging profile, otherwise it SHALL be added.
     */
-    for(size_t stackLevel = 0; stackLevel < CHARGE_PROFILE_MAX_STACK_LEVEL; ++stackLevel) {
+    for(size_t stackLevel = 0; stackLevel < OCPP_CHARGE_PROFILE_MAX_STACK_LEVEL; ++stackLevel) {
         clearProfileById(0, prof.chargingProfileId(), &this->chargePointMaxProfiles[stackLevel]);
         clearProfileById(0, prof.chargingProfileId(), &this->txDefaultProfiles[stackLevel]);
 
-        for(size_t connectorIdx = 0; connectorIdx < NUM_CONNECTORS; ++connectorIdx) {
+        for(size_t connectorIdx = 0; connectorIdx < OCPP_NUM_CONNECTORS; ++connectorIdx) {
             clearProfileById(connectorIdx + 1, prof.chargingProfileId(), &connectors[connectorIdx].txProfiles[stackLevel]);
             clearProfileById(connectorIdx + 1, prof.chargingProfileId(), &connectors[connectorIdx].txDefaultProfiles[stackLevel]);
         }
@@ -1088,7 +1088,7 @@ static void debug_print_limits(float *allowedLimit,
         log_trace("    \tConnID\tAllowed\tPhases\tMinRate");
     else
         log_debug("    \tConnID\tAllowed\tPhases\tMinRate");
-    for(int32_t i = 0; i < NUM_CONNECTORS + 1; ++i) {
+    for(int32_t i = 0; i < OCPP_NUM_CONNECTORS + 1; ++i) {
         if (trace)
             log_trace("    \t%d\t%.3f\t%d\t%.3f", i, allowedLimit[i], allowedPhases[i], minChargingRate[i]);
         else
@@ -1103,16 +1103,16 @@ OcppChargePoint::EvalChargingProfilesResult OcppChargePoint::evalChargingProfile
 
     // This is always a current. Charging profiles can contain current or power limits,
     // but power limits are converted to current limits when calling eval().
-    float allowedCurrent[NUM_CONNECTORS + 1];
-    int32_t allowedPhases[NUM_CONNECTORS + 1];
-    float minChargingCurrent[NUM_CONNECTORS + 1] = {0};
+    float allowedCurrent[OCPP_NUM_CONNECTORS + 1];
+    int32_t allowedPhases[OCPP_NUM_CONNECTORS + 1];
+    float minChargingCurrent[OCPP_NUM_CONNECTORS + 1] = {0};
 
-    for(int32_t i = 0; i < NUM_CONNECTORS + 1; ++i) {
+    for(int32_t i = 0; i < OCPP_NUM_CONNECTORS + 1; ++i) {
         allowedCurrent[i] = platform_get_maximum_charging_current(i) / 1000.0f;
         allowedPhases[i] = 3;
     }
 
-    for(int stackLevel = CHARGE_PROFILE_MAX_STACK_LEVEL; stackLevel >= 0; --stackLevel) {
+    for(int stackLevel = OCPP_CHARGE_PROFILE_MAX_STACK_LEVEL; stackLevel >= 0; --stackLevel) {
         if (!this->chargePointMaxProfiles[stackLevel].is_set()) {
             log_trace("    ChargePointMaxProfiles[%d] not set", stackLevel);
             continue;
@@ -1134,11 +1134,11 @@ OcppChargePoint::EvalChargingProfilesResult OcppChargePoint::evalChargingProfile
         break;
     }
 
-    for(int32_t connectorIdx = 0; connectorIdx < NUM_CONNECTORS; ++connectorIdx) {
+    for(int32_t connectorIdx = 0; connectorIdx < OCPP_NUM_CONNECTORS; ++connectorIdx) {
         auto &conn = connectors[connectorIdx];
         log_debug("    Connector %d", connectorIdx + 1);
 
-        for(int stackLevel = CHARGE_PROFILE_MAX_STACK_LEVEL; stackLevel >= 0; --stackLevel) {
+        for(int stackLevel = OCPP_CHARGE_PROFILE_MAX_STACK_LEVEL; stackLevel >= 0; --stackLevel) {
             if (!conn.txProfiles[stackLevel].is_set()) {
                 log_trace("    TxProfiles[%d] not set", stackLevel);
                 continue;
@@ -1181,7 +1181,7 @@ OcppChargePoint::EvalChargingProfilesResult OcppChargePoint::evalChargingProfile
         // TxDefaultProfiles can be set for the whole charge point or only for one connector.
         // If a profile is set for a specific connector it overrides the one on the same stack level
         // of the whole charge point, but only for this connector.
-        for(int stackLevel = CHARGE_PROFILE_MAX_STACK_LEVEL; stackLevel >= 0; --stackLevel) {
+        for(int stackLevel = OCPP_CHARGE_PROFILE_MAX_STACK_LEVEL; stackLevel >= 0; --stackLevel) {
             ChargingProfile *prof = nullptr;
             if (conn.txDefaultProfiles[stackLevel].is_set()) {
                 prof = &conn.txDefaultProfiles[stackLevel].get();
@@ -1235,14 +1235,14 @@ profiles_evaluated:
     result.allocatedLimit[0] = allowedCurrent[0];
     result.allocatedPhases[0] = allowedPhases[0];
 
-    for(int32_t i = 1; i < NUM_CONNECTORS + 1; ++i) {
+    for(int32_t i = 1; i < OCPP_NUM_CONNECTORS + 1; ++i) {
         result.allocatedLimit[i] = 0;
         result.allocatedPhases[i] = 3;
     }
 
 
-    for(int32_t connectorId = 1; connectorId < NUM_CONNECTORS + 1; ++connectorId) {
-        auto required = std::max(minChargingCurrent[0], std::max(minChargingCurrent[connectorId], (float)CURRENT_REQUIRED_TO_START_CHARGING));
+    for(int32_t connectorId = 1; connectorId < OCPP_NUM_CONNECTORS + 1; ++connectorId) {
+        auto required = std::max(minChargingCurrent[0], std::max(minChargingCurrent[connectorId], (float)OCPP_CURRENT_REQUIRED_TO_START_CHARGING));
         auto allowed = std::min(availableLimit, allowedCurrent[connectorId]);
         if (required > allowed)
             break;
@@ -1254,7 +1254,7 @@ profiles_evaluated:
     // Now as many connectors as possible have the amount of current allocated that they need to (efficiently) charge.
     // Fairly redistribute the left-over current between those connectors.
     if (availableLimit > 0) {
-        std::array<int32_t, NUM_CONNECTORS> indices = {};
+        std::array<int32_t, OCPP_NUM_CONNECTORS> indices = {};
         std::iota(indices.begin(), indices.end(), 1);
         std::sort(indices.begin(), indices.end(), [allowedCurrent](int32_t a, int32_t b) {
             return allowedCurrent[a] > allowedCurrent[b];
@@ -1289,7 +1289,7 @@ void OcppChargePoint::evalAndApplyChargingProfiles()
     auto result = evalChargingProfiles(platform_get_system_time(this->platform_ctx));
     this->next_profile_eval = std::min(result.nextCheck, platform_get_system_time(this->platform_ctx) + 5 * 60);
 
-    for(int32_t i = 0; i < NUM_CONNECTORS; ++i) {
+    for(int32_t i = 0; i < OCPP_NUM_CONNECTORS; ++i) {
         uint32_t limit = (uint32_t)(result.allocatedLimit[i + 1] * 1000);
         log_debug("Setting connector %d limit to %u", i + 1, limit);
         connectors[i].current_allowed = limit;
@@ -1303,11 +1303,11 @@ void OcppChargePoint::triggerChargingProfileEval()
 
 void OcppChargePoint::loadProfiles()
 {
-    for(size_t stackLevel = 0; stackLevel < CHARGE_PROFILE_MAX_STACK_LEVEL; ++stackLevel) {
+    for(size_t stackLevel = 0; stackLevel < OCPP_CHARGE_PROFILE_MAX_STACK_LEVEL; ++stackLevel) {
         restoreChargingProfile(0, ChargingProfilePurpose::CHARGE_POINT_MAX_PROFILE, stackLevel, &this->chargePointMaxProfiles[stackLevel]);
         restoreChargingProfile(0, ChargingProfilePurpose::TX_DEFAULT_PROFILE, stackLevel, &this->chargePointMaxProfiles[stackLevel]);
 
-        for(size_t connectorIdx = 0; connectorIdx < NUM_CONNECTORS; ++connectorIdx) {
+        for(size_t connectorIdx = 0; connectorIdx < OCPP_NUM_CONNECTORS; ++connectorIdx) {
             restoreChargingProfile(connectorIdx + 1, ChargingProfilePurpose::TX_PROFILE, stackLevel, &connectors[connectorIdx].txProfiles[stackLevel]);
             restoreChargingProfile(connectorIdx + 1, ChargingProfilePurpose::TX_DEFAULT_PROFILE, stackLevel, &connectors[connectorIdx].txDefaultProfiles[stackLevel]);
         }
@@ -1322,7 +1322,7 @@ void OcppChargePoint::handleTagSeen(int32_t connectorId, const char *tagId)
     if (connectorId <= 0)
         return;
 
-    if (connectorId > NUM_CONNECTORS)
+    if (connectorId > OCPP_NUM_CONNECTORS)
         return;
 
     auto &conn = connectors[connectorId - 1];
@@ -1336,7 +1336,7 @@ void OcppChargePoint::handleStop(int32_t connectorId, StopReason reason) {
     if (connectorId <= 0)
         return;
 
-    if (connectorId > NUM_CONNECTORS)
+    if (connectorId > OCPP_NUM_CONNECTORS)
         return;
 
     auto &conn = connectors[connectorId - 1];
@@ -1351,7 +1351,7 @@ void OcppChargePoint::start(const char *websocket_endpoint_url, const char *char
     loadAvailability();
     loadProfiles();
     platform_ctx = connection.start(websocket_endpoint_url, charge_point_name_percent_encoded, this);
-    for(int32_t i = 0; i < NUM_CONNECTORS; ++i) {
+    for(int32_t i = 0; i < OCPP_NUM_CONNECTORS; ++i) {
         connectors[i].init(i + 1, this);
     }
 

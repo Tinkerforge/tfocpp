@@ -105,7 +105,7 @@ ValueToSend MeterValueAccumulator::get(SampledValueContext context)
 {
     // Sample a value per connector and phase.
     auto sampled_values = heap_alloc_array<MeterValueSampledValue>(supported_measurand_count);
-    auto sampled_value_content = heap_alloc_array<char>(supported_measurand_count * PLATFORM_MEASURAND_MAX_DATA_LEN);
+    auto sampled_value_content = heap_alloc_array<char>(supported_measurand_count * OCPP_PLATFORM_MEASURAND_MAX_DATA_LEN);
     size_t sampled_value_idx = 0;
     size_t value_offset = 0;
 
@@ -128,8 +128,8 @@ ValueToSend MeterValueAccumulator::get(SampledValueContext context)
                 ++value_offset;
             }
 
-            char *value_buf = sampled_value_content.get() + (sampled_value_idx * PLATFORM_MEASURAND_MAX_DATA_LEN);
-            snprintf(value_buf, PLATFORM_MEASURAND_MAX_DATA_LEN, "%.3f", value);
+            char *value_buf = sampled_value_content.get() + (sampled_value_idx * OCPP_PLATFORM_MEASURAND_MAX_DATA_LEN);
+            snprintf(value_buf, OCPP_PLATFORM_MEASURAND_MAX_DATA_LEN, "%.3f", value);
 
             sampled_values[sampled_value_idx].value = value_buf;
             sampled_values[sampled_value_idx].format = is_signed ? SampledValueFormat::SIGNED_DATA : SampledValueFormat::RAW;

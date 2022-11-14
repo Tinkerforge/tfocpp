@@ -75,10 +75,6 @@ struct OcppConfiguration {
     ChangeConfigurationResponseStatus setValue(const char *newValue);
 };
 
-// This is all configs specified in the OCPP spec.
-#define MAX_SPECIFIED_CONFIGS 46
-#define MAX_CONFIG_LENGTH 501 // the spec does not specify a maximum length. however the payload of a change configuration message has a max length of 500
-
 enum class ConnectorPhaseRotation {
     NotApplicable,
     Unknown,
@@ -147,9 +143,9 @@ enum class ConfigKey {
     CONFIG_KEY_MAX
 };
 
-#define CONFIG_COUNT ((size_t)ConfigKey::CONFIG_KEY_MAX)
+#define OCPP_CONFIG_COUNT ((size_t)ConfigKey::CONFIG_KEY_MAX)
 
-extern const char * const config_keys[CONFIG_COUNT];
+extern const char * const config_keys[OCPP_CONFIG_COUNT];
 
 OcppConfiguration& getConfig(size_t key);
 OcppConfiguration& getConfig(ConfigKey key);

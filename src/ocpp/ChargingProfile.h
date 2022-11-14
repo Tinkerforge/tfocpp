@@ -19,7 +19,7 @@ public:
     Opt<int32_t> duration;
     Opt<time_t> startSchedule;
     ChargingRateUnit unit;
-    PeriodItem chargingSchedulePeriod[CHARGING_SCHEDULE_MAX_PERIODS];
+    PeriodItem chargingSchedulePeriod[OCPP_CHARGING_SCHEDULE_MAX_PERIODS];
     size_t chargingSchedulePeriodCount;
     Opt<float> minChargingRate;
 };
@@ -178,10 +178,10 @@ public:
         if (period.numberPhases.is_set())
             result.numberPhases = period.numberPhases.get();
 
-        result.currentLimit = period.limit / (sched.unit == ChargingRateUnit::A ? 1 : (LINE_VOLTAGE * result.numberPhases));
+        result.currentLimit = period.limit / (sched.unit == ChargingRateUnit::A ? 1 : (OCPP_LINE_VOLTAGE * result.numberPhases));
 
         if (sched.minChargingRate.is_set())
-            result.minChargingCurrent = sched.minChargingRate.get() / (sched.unit == ChargingRateUnit::A ? 1 : (LINE_VOLTAGE * result.numberPhases));
+            result.minChargingCurrent = sched.minChargingRate.get() / (sched.unit == ChargingRateUnit::A ? 1 : (OCPP_LINE_VOLTAGE * result.numberPhases));
 
         return result;
     }

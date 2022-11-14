@@ -93,8 +93,8 @@ public:
 
     struct EvalChargingProfilesResult {
         time_t nextCheck;
-        float allocatedLimit[NUM_CONNECTORS + 1];
-        int32_t allocatedPhases[NUM_CONNECTORS + 1];
+        float allocatedLimit[OCPP_NUM_CONNECTORS + 1];
+        int32_t allocatedPhases[OCPP_NUM_CONNECTORS + 1];
     };
 
     EvalChargingProfilesResult evalChargingProfiles(time_t timeToEval);
@@ -119,11 +119,11 @@ public:
     • For operations initiated by the Charge Point (when reporting), ConnectorId 0 is reserved for the Charge
     Point main controller.
     */
-    Connector connectors[NUM_CONNECTORS];
+    Connector connectors[OCPP_NUM_CONNECTORS];
 
-    // +1 as stack levels 0 up to (including) CHARGE_PROFILE_MAX_STACK_LEVEL are allowed.
-    Opt<ChargingProfile> chargePointMaxProfiles[CHARGE_PROFILE_MAX_STACK_LEVEL + 1];
-    Opt<ChargingProfile> txDefaultProfiles[CHARGE_PROFILE_MAX_STACK_LEVEL + 1];
+    // +1 as stack levels 0 up to (including) OCPP_CHARGE_PROFILE_MAX_STACK_LEVEL are allowed.
+    Opt<ChargingProfile> chargePointMaxProfiles[OCPP_CHARGE_PROFILE_MAX_STACK_LEVEL + 1];
+    Opt<ChargingProfile> txDefaultProfiles[OCPP_CHARGE_PROFILE_MAX_STACK_LEVEL + 1];
     void loadProfiles();
 
     time_t next_profile_eval = 0;

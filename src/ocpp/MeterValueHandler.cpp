@@ -6,7 +6,7 @@
 void OcppMeterValueHandler::tick() {
     // TODO: let the platform trigger when new values are available instead of polling.
     // This makes sure that meter values are always up to date if we also handle the clock aligned/interval sampling and sending here.
-    if (!deadline_elapsed(last_run + PLATFORM_MEASURAND_ACQUISITION_INTERVAL_MS))
+    if (!deadline_elapsed(last_run + OCPP_PLATFORM_MEASURAND_ACQUISITION_INTERVAL_MS))
         return;
 
     last_run = platform_now_ms();
