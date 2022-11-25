@@ -202,7 +202,9 @@ void Connector::setState(ConnectorState newState) {
                 case ConnectorState::AUTH_START:
                 case ConnectorState::NO_PLUG:
                 case ConnectorState::NO_CABLE:
-                case ConnectorState::NO_TAG: {
+                case ConnectorState::NO_TAG:
+                case ConnectorState::FINISHING_UNLOCKED:
+                case ConnectorState::FINISHING_NO_SAME_TAG: {
                     /*
                     If the Charge Point was unable to deliver the StartTransaction.req despite repeated attempts, or if the Central System was
                     unable to deliver the StartTransaction.conf response, then the Charge Point will not receive a transactionId.
@@ -221,17 +223,18 @@ void Connector::setState(ConnectorState newState) {
                     this->sendCallAction(StartTransaction(connectorId, authorized_for.tagId, energy, this->transaction_start_time), this->transaction_start_time);
                     break;
                 }
+                case ConnectorState::AUTH_STOP:
+                    break;
+
                 case ConnectorState::IDLE:
                 case ConnectorState::NO_CABLE_NO_TAG:
                 case ConnectorState::AUTH_START_NO_PLUG:
                 case ConnectorState::AUTH_START_NO_CABLE:
                 case ConnectorState::TRANSACTION:
-                case ConnectorState::AUTH_STOP:
-                case ConnectorState::FINISHING_UNLOCKED:
                 case ConnectorState::FINISHING_NO_CABLE_UNLOCKED:
                 case ConnectorState::FINISHING_NO_CABLE_LOCKED:
-                case ConnectorState::FINISHING_NO_SAME_TAG:
                 case ConnectorState::UNAVAILABLE:
+                    log_error("Unexpected transition into transaction! We did not send a StartTransaction.req!");
                     break;
             }
             break;
