@@ -414,12 +414,21 @@ def get_testcases():
         result = json.loads(resp.read())
     return {x['name']: x['desc'] for x in result["testcases"]}
 
+working_testcases = [
+    "TC_CP_V16_001",
+    "TC_CP_V16_002",
+    "TC_CP_V16_003",
+    "TC_CP_V16_004_1",
+    "TC_CP_V16_004_2",
+    "TC_CP_V16_005_1",
+]
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('octt_ip', help="OCTT ip for API calls.")
     parser.add_argument('--api-port', help="OCTT HTTP API port. Default 63341", default=63341)
     parser.add_argument('--ws-port', help="OCTT websocket port. Default 8080", default=8080)
-    parser.add_argument('testcase')
+    parser.add_argument('test_cases', nargs='*')
     # No short form for you: It has to hurt to type this out.
     parser.add_argument('--ignore-unexpected-suspended-status-notifications', action='store_true')
     parser.add_argument('-p', '--pause-before-test', action='store_true')
@@ -459,14 +468,20 @@ def main():
             log('.', end='')
         log('\nOCTT started')
 
-        test_cases = get_testcases()
+        test_case_descs = get_testcases()
 
-        run_test(test_cases, "TC_CP_V16_000_RESET")
+        if len(args.test_cases) > 0:
+            testcases = args.test_cases
+        else:
+            testcases = working_testcases
 
-        if args.pause_before_test:
-            input("Press enter to start test")
+        for testcase in testcases:
+            run_test(test_case_descs, "TC_CP_V16_000_RESET")
 
-        run_test(test_cases, args.testcase)
+            if args.pause_before_test:
+                input("Press enter to start test")
+
+            run_test(test_case_descs, testcase)
     finally:
         global ocpp_thread
         if ocpp_thread is not None:
