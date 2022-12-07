@@ -271,15 +271,26 @@ def handle_expected_statusnotifications(p: str):
 
     advance_prompt(not fail)
 
+ignore_slow_intervals = False
 def handle_expected_heartbeat(p: str):
     log("Expected heartbeat interval prompt received", end=" ")
-    expected, actual = re.match(r"Expected Heartbeat Interval : (\d)+\nActual Heartbeat Interval : (\d)+", p).groups()
-    advance_prompt(expected == actual)
+    expected, actual = re.match(r"Expected Heartbeat Interval : (\d+)\nActual Heartbeat Interval : (\d+)", p).groups()
+    log("Expected {} actual {}".format(expected, actual), end=" ")
+    if ignore_slow_intervals and expected != actual:
+        log(red("Ignoring slow heartbeat"), end=" ")
+        advance_prompt(True)
+    else:
+        advance_prompt(expected == actual)
 
 def handle_expected_meter_value_sample_interval(p: str):
     log("Expected meter value sample interval prompt received", end=" ")
-    expected, actual = re.match(r"Expected MeterValue Sample Interval : (\d)+\nActual MeterValue Sample : (\d)+", p).groups()
-    advance_prompt(expected == actual)
+    expected, actual = re.match(r"Expected MeterValue Sample Interval : (\d+)\nActual MeterValue Sample : (\d+)", p).groups()
+    log("Expected {} actual {}".format(expected, actual), end=" ")
+    if ignore_slow_intervals and expected != actual:
+        log(red("Ignoring slow meter interval"), end=" ")
+        advance_prompt(True)
+    else:
+        advance_prompt(expected == actual)
 
 ignore_unexpected = False
 def handle_unexpected_statusnotifications(p: str):
@@ -431,6 +442,7 @@ def main():
     parser.add_argument('test_cases', nargs='*')
     # No short form for you: It has to hurt to type this out.
     parser.add_argument('--ignore-unexpected-suspended-status-notifications', action='store_true')
+    parser.add_argument('--ignore-slow-intervals', action='store_true')
     parser.add_argument('-p', '--pause-before-test', action='store_true')
 
     args = parser.parse_args()
@@ -446,6 +458,10 @@ def main():
     if args.ignore_unexpected_suspended_status_notifications:
         global ignore_unexpected
         ignore_unexpected = True
+
+    if args.ignore_slow_intervals:
+        global ignore_slow_intervals
+        ignore_slow_intervals = True
 
     if args.pause_before_test:
         input("Start wireshark now.")
