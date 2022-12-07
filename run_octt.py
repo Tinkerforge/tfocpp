@@ -304,7 +304,7 @@ def handle_unexpected_statusnotifications(p: str):
     for match in matches:
         timestamp, connector_id, status, error_code, test_info = match
         if status == "SUSPENDED_EVSE" and ignore_unexpected:
-            log(red("Ignoring unexpected StatusNotification with status SUSPENDED_EVSE"))
+            log(red("Ignoring unexpected StatusNotification with status SUSPENDED_EVSE"), end= " ")
             continue
         log(f"\nUnexpected StatusNotification! {timestamp=} {connector_id=} {status=} {error_code=} {test_info=}")
         advance_prompt(False)
