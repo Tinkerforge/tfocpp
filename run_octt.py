@@ -18,7 +18,34 @@ from linux_platform_packet import *
 octt_ip = None
 octt_ws_port = None
 octt_api_port = None
+indent = 0
+last_print_with_newline = True
 
+def log(*args, **kwargs):
+    global indent
+    global last_print_with_newline
+    if indent == 0 or not last_print_with_newline:
+        print(*args, **kwargs)
+    else:
+        print(" " * (indent - 1), *args, **kwargs)
+
+    last_print_with_newline = not "end" in kwargs
+
+colors = {"off":"\x1b[00m",
+          "blue":   "\x1b[34m",
+          "cyan":   "\x1b[36m",
+          "green":  "\x1b[32m",
+          "red":    "\x1b[31m",
+          "gray": "\x1b[90m"}
+
+def red(s):
+    return colors["red"]+s+colors["off"]
+
+def green(s):
+    return colors["green"]+s+colors["off"]
+
+def gray(s):
+    return colors['gray']+s+colors["off"]
 
 def run_octt(task_queue: Queue[str]):
     process = subprocess.Popen(os.path.abspath("./octt/run_auto.sh"),
@@ -68,7 +95,7 @@ def handle_ocpp_platform_request(data, addr, sock):
     global last_seen_connector_state
 
     if len(data) < request_len:
-        print("malformed request {} < {}".format(len(data), request_len))
+        log("malformed request {} < {}".format(len(data), request_len))
         return
 
     charge_current = []
@@ -167,12 +194,12 @@ def run_ocpp(task_queue: Queue[str]):
             except BlockingIOError:
                 pass
             except Exception as e:
-                print(e)
+                log(e)
             else:
                 try:
                     handle_ocpp_platform_request(data, addr, sock)
                 except Exception as e:
-                    print("!", e)
+                    log("!", e)
 
             try:
                 x = task_queue.get(timeout=0.01)
@@ -212,9 +239,9 @@ def get_prompt():
 
 def advance_prompt(success: bool):
     if success:
-        print("Advancing prompt")
+        log(green("Advancing prompt"))
     else:
-        print("Failing prompt")
+        log(red("Failing prompt"))
 
     req = Request('http://{}:{}/ocpp/autoExecPrompt'.format(octt_ip, octt_api_port))
     req.add_header('Content-Type', 'application/json')
@@ -228,7 +255,7 @@ exp_stn = re.compile(r"(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}\+\d{2}:\d{2})
 unexp_stn = re.compile(r"(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}\+\d{2}:\d{2})?  - ConnectorId :(\d+)  -  (\w+)  -  \n(\w+) - (N\/A)")
 
 def handle_expected_statusnotifications(p: str):
-    print("Expected StatusNotification prompt received. Checking status notifications.", end=" ")
+    log("Expected StatusNotification prompt received. Checking status notifications.", end=" ")
     expected_matches = (p.count("\n") - 4) / 3
 
     matches = exp_stn.findall(p)
@@ -239,25 +266,25 @@ def handle_expected_statusnotifications(p: str):
     for match in matches:
         timestamp, connector_id, status, error_code, test_info, received = match
         if not received:
-            print("\nExpected StatusNotification was not received! ", timestamp, connector_id, status, error_code, test_info, received)
+            log("\nExpected StatusNotification was not received! ", timestamp, connector_id, status, error_code, test_info, received)
             fail = True
 
     advance_prompt(not fail)
 
 def handle_expected_heartbeat(p: str):
-    print("Expected heartbeat interval prompt received", end=" ")
+    log("Expected heartbeat interval prompt received", end=" ")
     expected, actual = re.match(r"Expected Heartbeat Interval : (\d)+\nActual Heartbeat Interval : (\d)+", p).groups()
     advance_prompt(expected == actual)
 
 def handle_expected_meter_value_sample_interval(p: str):
-    print("Expected meter value sample interval prompt received", end=" ")
+    log("Expected meter value sample interval prompt received", end=" ")
     expected, actual = re.match(r"Expected MeterValue Sample Interval : (\d)+\nActual MeterValue Sample : (\d)+", p).groups()
     advance_prompt(expected == actual)
 
 ignore_unexpected = False
 def handle_unexpected_statusnotifications(p: str):
     expected_matches = (p.count("\n") - 4) / 3
-    print("Unexpected StatusNotification prompt received. Checking status notifications.", end=" ")
+    log("Unexpected StatusNotification prompt received. Checking status notifications.", end=" ")
 
     matches = unexp_stn.findall(p)
     if len(matches) != expected_matches:
@@ -266,9 +293,9 @@ def handle_unexpected_statusnotifications(p: str):
     for match in matches:
         timestamp, connector_id, status, error_code, test_info = match
         if status == "SUSPENDED_EVSE" and ignore_unexpected:
-            print("Unexpected StatusNotification has status SUSPENDED_EVSE and ignore-unexpected is true. Ignoring.")
+            log(red("Ignoring unexpected StatusNotification with status SUSPENDED_EVSE"))
             continue
-        print(f"\nUnexpected StatusNotification! {timestamp=} {connector_id=} {status=} {error_code=} {test_info=}")
+        log(f"\nUnexpected StatusNotification! {timestamp=} {connector_id=} {status=} {error_code=} {test_info=}")
         advance_prompt(False)
         return
 
@@ -285,28 +312,28 @@ def handle_prompt(p: str):
 
     # Every test
     if p == "Ensure that charge point is setup for this test.":
-        print("Setup prompt received.", end=" ")
+        log("Setup prompt received.", end=" ")
         if ocpp_thread is None:
-            print("Starting OCPP.", end=" ")
+            log("Starting OCPP.", end=" ")
             ocpp_thread = Thread(target=run_ocpp, args=[ocpp_queue])
             ocpp_thread.start()
             time.sleep(2)
         else:
-            print("OCPP already running", end=" ")
+            log("OCPP already running", end=" ")
         advance_prompt(True)
     # Every test
     elif p.startswith("Expected StatusNotifications\n"):
         handle_expected_statusnotifications(p)
     # TC_CP_V16_001
     elif p == "Power cycle the charge point and then resume the test case by clicking 'Yes'.":
-        print("Power cycle prompt received.", end=" ")
+        log("Power cycle prompt received.", end=" ")
         if ocpp_thread is None:
-            print("Can't power cycle if OCPP is not running")
+            log("Can't power cycle if OCPP is not running")
             advance_prompt(False)
             raise Exception("Can't power cycle if OCPP is not running")
 
         advance_prompt(True)
-        print("Restarting OCPP")
+        log("Restarting OCPP")
         ocpp_queue.put(None)
         ocpp_thread.join()
         ocpp_thread = Thread(target=run_ocpp, args=[ocpp_queue])
@@ -316,12 +343,12 @@ def handle_prompt(p: str):
         handle_expected_heartbeat(p)
     # TC_CP_V16_003
     elif p == "First resume the test case by clicking 'Yes' and plugin cable.":
-        print("Plug in cable prompt received. Plugging in cable", end=" ")
+        log("Plug in cable prompt received. Plugging in cable", end=" ")
         advance_prompt(True)
         evse_state = EVSE_STATE_CONNECTED
     # TC_CP_V16_003
     elif p == "First resume the test case by clicking 'Yes' and present valid identification.":
-        print("Present valid identification prompt received. Presenting tag", end=" ")
+        log("Present valid identification prompt received. Presenting tag", end=" ")
         advance_prompt(True)
         next_tag_id = "Valid"
     # TC_CP_V16_003
@@ -329,29 +356,31 @@ def handle_prompt(p: str):
         handle_expected_meter_value_sample_interval(p)
     # TC_CP_V16_003
     elif p == "EV driver stops the transaction":
-        print("Present same identification prompt received. Presenting tag", end=" ")
+        log("Present same identification prompt received. Presenting tag", end=" ")
         advance_prompt(True)
         next_tag_id = "Valid"
     elif p == "First resume the test case by clicking 'Yes' and Unplug cable.":
-        print("Unplug cable prompt received. Unplugging cable", end=" ")
+        log("Unplug cable prompt received. Unplugging cable", end=" ")
         advance_prompt(True)
         evse_state = EVSE_STATE_NOT_CONNECTED
     elif p == "Is Charge Point connector status 'Available' ?" or \
          p == "Is connector status 'Available' at central system?": # TC_CP_V16_005_1; This is probably a wrong prompt: The central is the test tool. In the test context it makes sense to check whether the connector status is Available _at the charge point_
-        print("Checking if connector is available")
+        log("Checking if connector is available", end=" ")
         advance_prompt(last_seen_connector_state == "IDLE")
     elif p.startswith("UnExpected StatusNotifications"):
         handle_unexpected_statusnotifications(p)
     # TC_CP_V16_005_1
     elif p == "First resume the test case by clicking 'Yes'and unplug at EV side.":
-        print("Unplug at EV side prompt received. Unplugging", end=" ")
+        log("Unplug at EV side prompt received. Unplugging", end=" ")
         advance_prompt(True)
         evse_state = EVSE_STATE_PLUG_DETECTED
     else:
-        print("Unknown prompt: {}".format(p))
+        log("Unknown prompt: {}".format(p))
 
 def run_test(testcases, test_name: str):
-    print("Executing test {}: {}".format(test_name, testcases[test_name]))
+    log("Executing test {}: {}".format(test_name, testcases[test_name]))
+    global indent
+    indent = 4
 
     result_queue = Queue()
     def inner(test_name: str):
@@ -368,7 +397,8 @@ def run_test(testcases, test_name: str):
     while True:
         try:
             result = json.loads(result_queue.get_nowait())["testCase_Result"]
-            print("Test {} result {}".format(test_name, result))
+            indent = 0
+            log("Test {} result {}".format(test_name, result))
             if result != "PASS":
                 raise Exception("Test did not pass")
             return
@@ -417,7 +447,7 @@ def main():
     octt_thread.start()
 
     try:
-        print("Waiting for OCTT to start", end='')
+        log("Waiting for OCTT to start", end='')
 
         while True:
             time.sleep(1)
@@ -426,8 +456,8 @@ def main():
                 break
             except:
                 pass
-            print('.', end='')
-        print('\nOCTT started')
+            log('.', end='')
+        log('\nOCTT started')
 
         test_cases = get_testcases()
 
