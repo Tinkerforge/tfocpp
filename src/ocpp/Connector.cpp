@@ -365,6 +365,41 @@ bool Connector::isSelectableForRemoteStartTxn()
     }
 }
 
+bool Connector::canHandleRemoteStartTxn()
+{
+    // A connector is can handle a RemoteStartTransaction if
+    // - it is not unavailable or faulted
+    // - no transaction is running (we can't start one if one is already running)
+    // Note that this is not the same as isSelectableForRemoteStartTxn(), as in canHandleRemoteStartTxn
+    // we already know, that this connector is the target of the RemoteStartTransaction.req
+    // so we don't have to require a plug.
+
+    EVSEState evse_state = platform_get_evse_state(connectorId);
+    if (evse_state == EVSEState::Faulted)
+        return false;
+
+    switch (state) {
+        case ConnectorState::UNAVAILABLE:
+        case ConnectorState::TRANSACTION:
+        case ConnectorState::AUTH_STOP:
+            return false;
+
+        case ConnectorState::IDLE:
+        case ConnectorState::NO_PLUG:
+        case ConnectorState::AUTH_START_NO_PLUG:
+        case ConnectorState::NO_CABLE_NO_TAG:
+        case ConnectorState::NO_TAG:
+        case ConnectorState::AUTH_START_NO_CABLE: //TODO: How to handle that an authorization is in flight (that could be responded to by the central!)
+        case ConnectorState::AUTH_START:
+        case ConnectorState::NO_CABLE:
+        case ConnectorState::FINISHING_UNLOCKED:
+        case ConnectorState::FINISHING_NO_CABLE_UNLOCKED:
+        case ConnectorState::FINISHING_NO_CABLE_LOCKED:
+        case ConnectorState::FINISHING_NO_SAME_TAG:
+            return true;
+    }
+}
+
 bool Connector::canHandleRemoteStopTxn(int32_t txn_id)
 {
     switch (state) {

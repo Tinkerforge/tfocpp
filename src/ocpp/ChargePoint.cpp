@@ -705,6 +705,13 @@ CallResponse OcppChargePoint::handleRemoteStartTransaction(const char *uid, Remo
         return CallResponse{CallErrorCode::OK, ""};
     }
 
+    // The spec does not explicitly require this, however OCTT as a test for this.
+    if (!connectors[conn_idx].canHandleRemoteStartTxn()) {
+        log_info("Sending RemoteStartTransaction.conf Rejected (connector faulted, unavailable or already in transaction)\n");
+        connection.sendCallResponse(RemoteStartTransactionResponse(uid, ResponseStatus::REJECTED));
+        return CallResponse{CallErrorCode::OK, ""};
+    }
+
     if (req.chargingProfile().is_set()) {
         log_info("RemoteStartTransaction.req contains charging profile");
 

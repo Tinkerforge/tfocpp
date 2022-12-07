@@ -106,6 +106,7 @@ struct Connector {
     void sendCallAction(const ICall &call, time_t timestamp = 0);
 
     bool isSelectableForRemoteStartTxn();
+    bool canHandleRemoteStartTxn();
     bool canHandleRemoteStopTxn(int32_t transaction_id);
 
     void onTagSeen(const char *tag_id);
