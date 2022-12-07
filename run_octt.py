@@ -470,7 +470,11 @@ working_testcases = [
     "TC_CP_V16_018_1",
     "TC_CP_V16_021",
     "TC_CP_V16_023",
-    "TC_CP_V16_026"
+    "TC_CP_V16_026",
+    "TC_CP_V16_027",
+    "TC_CP_V16_028",
+    "TC_CP_V16_040_1"
+    "TC_CP_V16_040_2"
 ]
 
 def main():
@@ -573,6 +577,16 @@ TC_CP_V16_018_1 Unlock connector with charging session
 TC_CP_V16_021 Change/Set configuration
 ! TC_CP_V16_023 Start charging session - authorize invalid / blocked / expired
 TC_CP_V16_026 Remote start charging session - rejected
+TC_CP_V16_027 Remote start transaction - connector id shall not be 0
+TC_CP_V16_028 Remote stop transaction - rejected
+TC_CP_V16_031 Unlock connector - unknown connector
+
+
+working - missing verification
+------------------------------
+TC_CP_V16_040_1 Configuration keys
+! TC_CP_V16_040_2 Configuration keys
+    - both tests don't check for the ChangeConfiguration.conf result (NotSupported/Rejected)
 
 not working yet
 ---------------
@@ -595,8 +609,15 @@ TC_CP_V16_018_2 Unlock connector with charging session
 TC_CP_V16_019 Retrieve all configuration keys
     - Test tool hangs forever?
 
-TC_CP_V16_024 Start Charging Session Lock Failure
-    - No platform API to communicate lock failure yet
+
+TC_CP_V16_035 Idle charge point
+!! TC_CP_V16_036 Connection loss during transaction
+TC_CP_V16_037_1 Offline Start Transaction
+# TC_CP_V16_037_2 Offline start transaction
+### TC_CP_V16_037_3 Offline start transaction
+TC_CP_V16_038 Offline stop transaction
+TC_CP_V16_039 Offline transaction
+    - run_octt currently has no way of disconnecting the web socket connection
 
 prerequisites not supported
 ---------------------------
@@ -605,30 +626,14 @@ TC_CP_V16_005_3 EV side disconnected
 TC_CP_V16_006 One reader for multiple connectors
     We don't support more than one connector yet.
 ## TC_CP_V16_007 Regular start charging session - cached id
-#   Authorization cache not implemented yet
+    Authorization cache not implemented yet
 ### TC_CP_V16_008 Regular start charging session - id in authorization list
-#   Authorization cache not implemented yet
-
-not tested yet
---------------
-
-TC_CP_V16_027 Remote start transaction - connector id shall not be 0
-TC_CP_V16_028 Remote stop transaction - rejected
-TC_CP_V16_030 Unlock connector - unlock failure
-TC_CP_V16_031 Unlock connector - unknown connector
-TC_CP_V16_032_1 Power failure boot charging point - configured to stop transaction(s)  Stop all transactions before going down
-# TC_CP_V16_032_2 Power failure boot charging point-configured to stop transaction(s)
-TC_CP_V16_034 Power failure with unavailable status
-TC_CP_V16_035 Idle charge point
-!! TC_CP_V16_036 Connection loss during transaction
-TC_CP_V16_037_1 Offline Start Transaction
-# TC_CP_V16_037_2 Offline start transaction
-### TC_CP_V16_037_3 Offline start transaction
-TC_CP_V16_038 Offline stop transaction
-TC_CP_V16_039 Offline transaction
-TC_CP_V16_040_1 Configuration keys
-! TC_CP_V16_040_2 Configuration keys
+    Authorization cache not implemented yet
+TC_CP_V16_024 Start Charging Session Lock Failure
+    No platform API to communicate lock failure yet
 TC_CP_V16_041 Fault behavior
+    No platform API to fault charge point yet
+
 TC_CP_V16_042_1 Get Local List Version,Non-Happy case
 TC_CP_V16_042_2 Get Local List Version,Local Authorization List Empty
 TC_CP_V16_043 SendLocalAuthorizationList-UpdatedType=Differential & Full
@@ -657,6 +662,18 @@ TC_CP_V16_052 Cancel Reservation - Rejected
 TC_CP_V16_053 Use a reserved Connector with parentIdTag
 TC_CP_V16_054 Trigger Message
 TC_CP_V16_055 Trigger Message - Rejected
+    - Unsupported feature profiles
+
+not tested yet
+--------------
+
+TC_CP_V16_030 Unlock connector - unlock failure
+
+TC_CP_V16_032_1 Power failure boot charging point - configured to stop transaction(s)  Stop all transactions before going down
+# TC_CP_V16_032_2 Power failure boot charging point-configured to stop transaction(s)
+TC_CP_V16_034 Power failure with unavailable status
+
+
 TC_CP_V16_056 Central Smart Charging - TxDefaultProfile
 TC_CP_V16_057 Central Smart Charging - TxProfile
 TC_CP_V16_058_1 Central Smart Charging - No ongoing transaction
