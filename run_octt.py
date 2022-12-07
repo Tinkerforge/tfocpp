@@ -86,6 +86,7 @@ next_seq_num = 0
 next_tag_id = ""
 evse_state = EVSE_STATE_NOT_CONNECTED
 last_seen_connector_state = "IDLE"
+last_current_allowed = 0
 def handle_ocpp_platform_request(data, addr, sock):
     global last_seen_seq_num
     global next_seq_num
@@ -150,6 +151,7 @@ def handle_ocpp_platform_request(data, addr, sock):
     tag_status = tag_status_strings[tag_status]
 
     last_seen_connector_state = state
+    last_current_allowed = current_allowed
 
     if (message != "POLL"):
         return
@@ -315,7 +317,7 @@ def handle_unexpected_statusnotifications(p: str):
 ocpp_queue = Queue()
 ocpp_thread = None
 
-def handle_prompt(p: str):
+def handle_prompt(p: str, test_case: str):
     global ocpp_thread
 
     global next_tag_id
@@ -359,6 +361,11 @@ def handle_prompt(p: str):
         evse_state = EVSE_STATE_CONNECTED
     # TC_CP_V16_003
     elif p == "First resume the test case by clicking 'Yes' and present valid identification.":
+        if test_case == "TC_CP_V16_005_2":
+            log('TC_CP_V16_005_2: Work-around for wrong "Present valid tag" prompt activated.', end=" ")
+            advance_prompt(True)
+            return
+
         log("Present valid identification prompt received. Presenting tag", end=" ")
         advance_prompt(True)
         next_tag_id = "Valid"
@@ -385,31 +392,55 @@ def handle_prompt(p: str):
         log("Unplug at EV side prompt received. Unplugging", end=" ")
         advance_prompt(True)
         evse_state = EVSE_STATE_PLUG_DETECTED
+    # TC_CP_V16_012
+    elif p == "Sending Remote Stop Transaction" and test_case == "TC_CP_V16_012":
+        # Redundant popup "Sending Remote Stop Transaction". Just click yes.
+        log("TC_CP_V16_012: Work-aroung for redundant prompt.", end=" ")
+        advance_prompt(True)
+    elif p == "First resume the test case by clicking 'Yes' and then Stop charging" and test_case == "TC_CP_V16_012":
+        # Incorrect popup "First resume the test case by clicking 'Yes' and then Stop charging". Press yes ASAP, otherwise the StopTransaction.req validation might be too late.
+        log("TC_CP_V16_012: Work-aroung for incorrect prompt.", end=" ")
+        advance_prompt(True)
+    elif p == "First resume the test case by clicking 'Yes' and present invalid identification.":
+        log("Present invalid identification prompt received. Presenting tag", end=" ")
+        advance_prompt(True)
+        next_tag_id = "Invalid"
     else:
         log("Unknown prompt: {}".format(p))
 
-def run_test(testcases, test_name: str):
-    log("Executing test {}: {}".format(test_name, testcases[test_name]))
+def run_test(testcases, test_case: str):
+    log("Executing test {}: {}".format(test_case, testcases[test_case]))
     global indent
     indent = 4
 
     result_queue = Queue()
-    def inner(test_name: str):
+    def inner(test_case: str):
         req = Request('http://{}:{}/ocpp/autoExecTestcase'.format(octt_ip, octt_api_port))
         req.add_header('Content-Type', 'application/json')
-        data = json.dumps({'testCaseID': test_name, 'executionType': 'start'}).encode('utf-8')
+        data = json.dumps({'testCaseID': test_case, 'executionType': 'start'}).encode('utf-8')
         with urlopen(req, timeout=5 * 60, data=data) as resp:
             result = resp.read().decode('utf-8')
         result_queue.put(result)
 
-    test_thread = Thread(target=inner, args=[test_name])
+    test_thread = Thread(target=inner, args=[test_case])
     test_thread.start()
 
     while True:
         try:
             result = json.loads(result_queue.get_nowait())["testCase_Result"]
+
+            if test_case == "TC_CP_V16_023":
+                log("TC_CP_V16_023 work-around: Waiting for (unauthorized!) start of transaction.", end=" ")
+                time.sleep(5)
+                if last_current_allowed != 0:
+                    print(red("Transaction was started"))
+                    result = "FAIL"
+                else:
+                    print(green("No unauthorized transaction started"))
+
+
             indent = 0
-            log("Test {} result {}".format(test_name, result))
+            log("Test {} result".format(test_case), red(result) if result != "PASS" else green(result))
             if result != "PASS":
                 raise Exception("Test did not pass")
             return
@@ -417,7 +448,7 @@ def run_test(testcases, test_name: str):
             pass
         time.sleep(1)
         if waiting_on_prompt():
-            handle_prompt(get_prompt())
+            handle_prompt(get_prompt(), test_case)
 
 def get_testcases():
     req = Request('http://{}:{}/ocpp/getTestcases'.format(octt_ip, octt_api_port))
@@ -432,6 +463,14 @@ working_testcases = [
     "TC_CP_V16_004_1",
     "TC_CP_V16_004_2",
     "TC_CP_V16_005_1",
+    "TC_CP_V16_005_2",
+    "TC_CP_V16_010",
+    "TC_CP_V16_011_2",
+    "TC_CP_V16_017_1",
+    "TC_CP_V16_018_1",
+    "TC_CP_V16_021",
+    "TC_CP_V16_023",
+    "TC_CP_V16_026"
 ]
 
 def main():
@@ -498,6 +537,7 @@ def main():
                 input("Press enter to start test")
 
             run_test(test_case_descs, testcase)
+
     finally:
         global ocpp_thread
         if ocpp_thread is not None:
@@ -525,31 +565,53 @@ TC_CP_V16_003 Regular charging session - plugin first
 TC_CP_V16_004_1 Regular charging session - identification first
 TC_CP_V16_004_2 Regular charging session - identification first - ConnectionTimeOut
 TC_CP_V16_005_1 EV side disconnected
-
-not tested yet
---------------
 ## TC_CP_V16_005_2 EV side disconnected
-# TC_CP_V16_005_3 EV side disconnected
-TC_CP_V16_006 One reader for multiple connectors
-## TC_CP_V16_007 Regular start charging session - cached id
-### TC_CP_V16_008 Regular start charging session - id in authorization list
 # TC_CP_V16_010 Remote start charging session - cable plugged in first
-# TC_CP_V16_011_1 Remote Start Charging Session – Remote Start First
 TC_CP_V16_011_2 Remote Start Charging Session - Time Out
+TC_CP_V16_017_1 Unlock connector no charging session running(Not fixed cable)
+TC_CP_V16_018_1 Unlock connector with charging session
+TC_CP_V16_021 Change/Set configuration
+! TC_CP_V16_023 Start charging session - authorize invalid / blocked / expired
+TC_CP_V16_026 Remote start charging session - rejected
+
+not working yet
+---------------
+# TC_CP_V16_011_1 Remote Start Charging Session – Remote Start First
+    This seems to be a timing issue with the test tool: The tool waits forever for a StopTxn.req however this req is sent.
 ## TC_CP_V16_012 Remote stop charging session
+    This has the same timing issue, but with a incorrect prompt that makes the test tool miss our StopTxn.req every time.
+
 TC_CP_V16_013 Hard reset without transaction
 TC_CP_V16_014 Soft reset without transaction
 !! TC_CP_V16_015 Hard reset with transaction
 TC_CP_V16_016 Soft reset with transaction
-TC_CP_V16_017_1 Unlock connector no charging session running(Not fixed cable)
+    - Maybe an issue with the way run_octt is starting ocpp_linux? It does not come back after a hard/soft reset
+
 TC_CP_V16_017_2 Unlock connector no charging session running(Fixed cable)
-# TC_CP_V16_018_1 Unlock connector with charging session
+    - We have to report Not supported if we receive a UnlockConnector.req and have a fixed cable
 TC_CP_V16_018_2 Unlock connector with charging session
+    - We have to report Not supported if we receive a UnlockConnector.req and have a fixed cable
+
 TC_CP_V16_019 Retrieve all configuration keys
-TC_CP_V16_021 Change/Set configuration
-! TC_CP_V16_023 Start charging session - authorize invalid / blocked / expired
+    - Test tool hangs forever?
+
 TC_CP_V16_024 Start Charging Session Lock Failure
-TC_CP_V16_026 Remote start charging session - rejected
+    - No platform API to communicate lock failure yet
+
+prerequisites not supported
+---------------------------
+TC_CP_V16_005_3 EV side disconnected
+    This requires StopTransactionOnEVSideDisconnect to be settable to false. We don't allow this.
+TC_CP_V16_006 One reader for multiple connectors
+    We don't support more than one connector yet.
+## TC_CP_V16_007 Regular start charging session - cached id
+#   Authorization cache not implemented yet
+### TC_CP_V16_008 Regular start charging session - id in authorization list
+#   Authorization cache not implemented yet
+
+not tested yet
+--------------
+
 TC_CP_V16_027 Remote start transaction - connector id shall not be 0
 TC_CP_V16_028 Remote stop transaction - rejected
 TC_CP_V16_030 Unlock connector - unlock failure
