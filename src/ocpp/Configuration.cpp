@@ -304,7 +304,14 @@ static OcppConfiguration config[OCPP_CONFIG_COUNT] = {
     /*MinimumStatusDuration*/             //OcppConfiguration::integer(OCPP_DEFAULT_MINIMUM_STATUS_DURATION, false, false, 0),
     /*NumberOfConnectors*/                OcppConfiguration::integer(OCPP_NUM_CONNECTORS, true, false, 0),
     /*ResetRetries*/                      OcppConfiguration::integer(OCPP_DEFAULT_RESET_RETRIES, false, false, 0),
-    /*StopTransactionOnEVSideDisconnect*/ OcppConfiguration::boolean(OCPP_DEFAULT_STOP_TRANSACTION_ON_EV_SIDE_DISCONNECT, false, false),
+
+    /*
+    The description of the configuration key: StopTransactionOnEVSideDisconnect is required. It was added to
+    OCPP to support EVs without lock at the car side. But this is now never the case, it was only the case with the
+    first version of the Mitsubishi Outlander PHEV.
+    The German eichrect does not allow this configuration key to be implemented.
+    */
+    /*StopTransactionOnEVSideDisconnect*/ OcppConfiguration::boolean(true, true, false),
     /*StopTransactionOnInvalidId*/        OcppConfiguration::boolean(OCPP_DEFAULT_STOP_TRANSACTION_ON_INVALID_ID, false, false),
 
     // Hardcode 2: This is the maximum amount of _meter values_ to send in a stoptxn.
