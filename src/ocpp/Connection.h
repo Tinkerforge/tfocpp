@@ -27,7 +27,7 @@ public:
 
 class OcppConnection {
 public:
-    void* start(const char *websocket_endpoint_url, const char *charge_point_name_percent_encoded, OcppChargePoint *ocpp_handle);
+    void* start(const char *websocket_endpoint_url, const char *charge_point_name_percent_encoded, const char *basic_auth_user, const char *basic_auth_pass, OcppChargePoint *ocpp_handle);
 
     void tick();
 

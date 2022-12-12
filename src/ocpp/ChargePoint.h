@@ -43,7 +43,7 @@ public:
 
     OcppChargePoint (const OcppChargePoint&) = delete;
 
-    void start(const char *websocket_endpoint_url, const char *charge_point_name_percent_encoded);
+    void start(const char *websocket_endpoint_url, const char *charge_point_name, const char *basic_auth_pass);
 
     void stop();
 

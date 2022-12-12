@@ -1350,14 +1350,62 @@ void OcppChargePoint::handleStop(int32_t connectorId, StopReason reason) {
     conn.onStop(reason);
 }
 
-void OcppChargePoint::start(const char *websocket_endpoint_url, const char *charge_point_name_percent_encoded) {
+static bool is_url_safe(char c) {
+    // RFC 3986: unreserved  = ALPHA / DIGIT / "-" / "." / "_" / "~"
+    return (c >= 'a' && c <= 'z') ||
+           (c >= 'A' && c <= 'Z') ||
+           (c >= '0' && c <= '9') ||
+           (c == '-') ||
+           (c == '.') ||
+           (c == '_') ||
+           (c == '~');
+}
+
+static size_t url_encode(char *buf, size_t len, const char *url) {
+    auto url_len = strlen(url);
+    size_t offset = 0;
+    const char * const hex = "0123456789abcdef";
+
+    for(int i = 0; i < url_len; ++i) {
+        // We want a logical right shift below, so use unsigned char here.
+        unsigned char c = url[i];
+        if (is_url_safe(c)) {
+            if (offset < len)
+                buf[offset] = c;
+            ++offset;
+        } else {
+            if (offset < len) {
+                buf[offset + 0] = '%';
+                buf[offset + 1] = hex[c >> 4];
+                buf[offset + 2] = hex[c & 0x0F];
+            }
+            offset += 3;
+        }
+    }
+
+    if (offset < len)
+        buf[offset] = '\0';
+    else if (len > 0)
+        buf[len - 1] = '\0';
+
+    return offset;
+}
+
+void OcppChargePoint::start(const char *websocket_endpoint_url, const char *charge_point_name, const char *basic_auth_pass) {
     loadConfig();
 #ifdef OCPP_STATE_CALLBACKS
     debugDumpConfig();
 #endif
     loadAvailability();
     loadProfiles();
-    platform_ctx = connection.start(websocket_endpoint_url, charge_point_name_percent_encoded, this);
+
+    auto encoded_len = url_encode(nullptr, 0, charge_point_name);
+
+    auto buf = heap_alloc_array<char>(encoded_len + 1);
+
+    url_encode(buf.get(), encoded_len + 1, charge_point_name);
+
+    platform_ctx = connection.start(websocket_endpoint_url, buf.get(), charge_point_name, basic_auth_pass, this);
     for(int32_t i = 0; i < OCPP_NUM_CONNECTORS; ++i) {
         connectors[i].init(i + 1, this);
     }

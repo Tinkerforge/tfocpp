@@ -106,7 +106,7 @@ static void fn(struct mg_connection *c, int ev, void *ev_data, void *fn_data) {
 }
 
 
-void* platform_init(const char *websocket_url)
+void* platform_init(const char *websocket_url, const char *basic_auth_user, const char *basic_auth_pass)
 {
     mg_mgr_init(&mgr);        // Initialise event manager
     //mg_log_set("4");
@@ -223,7 +223,7 @@ OcppChargePoint *cp = nullptr;
 void ocpp_start(const char *ws_url, const char *charge_point_name)
 {
     cp = new OcppChargePoint();
-    cp->start(ws_url, charge_point_name);
+    cp->start(ws_url, charge_point_name, nullptr);
 }
 
 void ocpp_tick()

@@ -130,12 +130,29 @@ void send_message(const char *message) {
 
 PlatformResponse pr;
 
-void* platform_init(const char *websocket_url)
+void* platform_init(const char *websocket_url, const char *basic_auth_user, const char *basic_auth_pass)
 {
     mg_mgr_init(&mgr);        // Initialise event manager
     //mg_log_set("4");
     is_ssl = mg_url_is_ssl(websocket_url);
-    c = mg_ws_connect(&mgr, websocket_url, fn, &done, "%s", "Sec-WebSocket-Protocol: ocpp1.6\r\n");     // Create client
+
+    if (basic_auth_user != nullptr && basic_auth_pass != nullptr) {
+        std::unique_ptr<char[]> buf = heap_alloc_array<char>(2 * (strlen(basic_auth_user) + strlen(basic_auth_pass) + 1) + 1);
+
+        int offset = 0;
+        for(int i = 0; i < strlen(basic_auth_user); ++i)
+            offset = mg_base64_update(basic_auth_user[i], buf.get(), offset);
+
+        offset = mg_base64_update(':', buf.get(), offset);
+
+        for(int i = 0; i < strlen(basic_auth_pass); ++i)
+            offset = mg_base64_update(basic_auth_pass[i], buf.get(), offset);
+
+        offset = mg_base64_final(buf.get(), offset);
+        c = mg_ws_connect(&mgr, websocket_url, fn, &done, "Sec-WebSocket-Protocol: ocpp1.6\r\nAuthorization: Basic %s\r\n", buf.get());     // Create client
+    } else {
+        c = mg_ws_connect(&mgr, websocket_url, fn, &done, "%s", "Sec-WebSocket-Protocol: ocpp1.6\r\n");     // Create client
+    }
     return &mgr;
 }
 
@@ -363,8 +380,8 @@ int main(int argc, char **argv) {
     argc_ = argc;
     argv_ = argv;
 
-    if (argc < 2) {
-        printf("Usage %s ws[s]://central-host-or-ip:port/central/path\n", argv[0]);
+    if (argc < 2 || argc > 3) {
+        printf("Usage %s ws[s]://central-host-or-ip:port/central/path [basic_auth_pass]\n", argv[0]);
         return -1;
     }
 
@@ -382,6 +399,8 @@ int main(int argc, char **argv) {
     addr.sin_addr.s_addr = inet_addr("127.0.0.2");
 
     char buf[sizeof(PlatformResponse)] = {0};
+
+    cp.start(argv[1], "CP_4", argc == 3 ? argv[2] : nullptr);
 
     while(true) {
         cp.tick();
