@@ -22,5 +22,5 @@ Opt<int32_t> parse_int(const char *c);
 
 template <typename T>
 std::unique_ptr<T[]> heap_alloc_array(size_t n) {
-    return std::unique_ptr<T[]>{new T[n]};
+    return std::unique_ptr<T[]>{new T[n]()};
 }
