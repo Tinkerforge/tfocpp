@@ -5268,6 +5268,7 @@ void mg_tls_init(struct mg_connection *c, const struct mg_tls_opts *opts) {
   const char *id = "mongoose";
   static unsigned char s_initialised = 0;
   int rc;
+  const char *filename;
 
   if (tls == NULL) {
     mg_error(c, "TLS OOM");
@@ -5295,6 +5296,20 @@ void mg_tls_init(struct mg_connection *c, const struct mg_tls_opts *opts) {
   SSL_set_options(tls->ssl, SSL_OP_NO_SSLv3);
   SSL_set_options(tls->ssl, SSL_OP_NO_TLSv1);
   SSL_set_options(tls->ssl, SSL_OP_NO_TLSv1_1);
+
+  filename = getenv("SSLKEYLOGFILE");
+  if (filename != nullptr) {
+    SSL_CTX_set_keylog_callback(tls->ctx, [](const SSL *ssl, const char *line) {
+        const char *filename = getenv("SSLKEYLOGFILE");
+        if (filename == nullptr)
+            return;
+        int fd = open(filename, O_WRONLY | O_APPEND | O_CREAT, 0644);
+        if (fd < 0)
+            return;
+        write(fd, line, strlen(line));
+        write(fd, "\n", 1);
+    });
+  }
 #ifdef MG_ENABLE_OPENSSL_NO_COMPRESSION
   SSL_set_options(tls->ssl, SSL_OP_NO_COMPRESSION);
 #endif
