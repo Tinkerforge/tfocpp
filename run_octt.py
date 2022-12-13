@@ -95,7 +95,7 @@ next_seq_num = 0
 next_tag_id = ""
 evse_state = EVSE_STATE_NOT_CONNECTED
 last_seen_connector_state = "IDLE"
-last_current_allowed = 0
+last_charge_current = 0
 def handle_ocpp_platform_request(data, addr, sock):
     global last_seen_seq_num
     global next_seq_num
@@ -160,7 +160,7 @@ def handle_ocpp_platform_request(data, addr, sock):
     tag_status = tag_status_strings[tag_status]
 
     last_seen_connector_state = state
-    last_current_allowed = current_allowed
+    last_charge_current = charge_current
 
     if (message != "POLL"):
         return
@@ -173,10 +173,10 @@ def handle_ocpp_platform_request(data, addr, sock):
                 *([0] * NUM_CONNECTORS))
 
     if evse_state_auto:
-        if evse_state == EVSE_STATE_CONNECTED and current_allowed > 0:
+        if evse_state == EVSE_STATE_CONNECTED and charge_current > 0:
             evse_state = EVSE_STATE_CHARGING
-            energy_transfer_periods.append((datetime.datetime.now().astimezone().replace(microsecond=0).isoformat(), None))
-        if evse_state == EVSE_STATE_CHARGING and current_allowed == 0:
+            energy_transfer_periods.append([datetime.datetime.now().astimezone().replace(microsecond=0).isoformat(), None])
+        if evse_state == EVSE_STATE_CHARGING and charge_current == 0:
             evse_state = EVSE_STATE_CONNECTED
             energy_transfer_periods[-1][1] = datetime.datetime.now().astimezone().replace(microsecond=999999).isoformat()
 
@@ -456,7 +456,7 @@ def run_test(testcases, test_case: str):
             if test_case == "TC_CP_V16_023":
                 log("TC_CP_V16_023 work-around: Waiting for (unauthorized!) start of transaction.", end=" ")
                 time.sleep(5)
-                if last_current_allowed != 0:
+                if last_charge_current != 0:
                     print(red("Transaction was started"))
                     result = "FAIL"
                 else:
