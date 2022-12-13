@@ -341,11 +341,15 @@ def handle_unexpected_statusnotifications(p: str):
 ocpp_queue = Queue()
 ocpp_thread = None
 
+tc_069_workaround_counter = 0
+
 def handle_prompt(p: str, test_case: str):
     global ocpp_thread
 
     global next_tag_id
     global evse_state
+
+    global tc_069_workaround_counter
 
     # Every test
     if p == "Ensure that charge point is setup for this test.":
@@ -429,6 +433,25 @@ def handle_prompt(p: str, test_case: str):
         log("Present invalid identification prompt received. Presenting tag", end=" ")
         advance_prompt(True)
         next_tag_id = "Invalid"
+    #TC_CP_V16_068
+    elif p == "EV driver authorizes/swipes a card resume the test case by clicking 'Yes'." \
+      or p == "EV driver authorizes/swipes with a same card used to start transaction & resume the test case by clicking 'Yes'.":
+        if test_case == "TC_CP_V16_069":
+            tc_069_workaround_counter += 1
+        if tc_069_workaround_counter == 2:
+            log("Working around wrong prompt TC_CP_V16_069", end=" ")
+            advance_prompt(True)
+            next_tag_id = "RFID2"
+            return
+
+        log("Present valid identification prompt received. Presenting tag", end=" ")
+        advance_prompt(True)
+        next_tag_id = "RFID1"
+    #TC_CP_V16_068
+    elif p == "EV driver authorizes/swipes with a different card & resume the test case by clicking 'Yes'." and test_case == "TC_CP_V16_068":
+        log("Present another valid identification prompt received. Working around bug in TC_CP_V16_068", end=" ")
+        advance_prompt(True)
+        #next_tag_id = "RFID2"
     else:
         log("Unknown prompt: {}".format(p))
 
@@ -503,7 +526,16 @@ working_testcases = [
     "TC_CP_V16_056",
     "TC_CP_V16_057",
     "TC_CP_V16_058_1",
-    "TC_CP_V16_058_2"
+    "TC_CP_V16_058_2",
+    "TC_CP_V16_059",
+    "TC_CP_V16_060",
+    "TC_CP_V16_062",
+    "TC_CP_V16_067",
+    "TC_CP_V16_068",
+    "TC_CP_V16_070",
+    "TC_CP_V16_071",
+    "TC_CP_V16_072",
+    "TC_CP_V16_082"
 ]
 
 def main():
@@ -613,12 +645,23 @@ TC_CP_V16_056 Central Smart Charging - TxDefaultProfile
 TC_CP_V16_057 Central Smart Charging - TxProfile
 TC_CP_V16_058_1 Central Smart Charging - No ongoing transaction
 TC_CP_V16_058_2 Central Smart Charging - Wrong transactionId
+TC_CP_V16_059 Remote Start Transaction with Charging Profile
+TC_CP_V16_060 Remote Start Transaction with Charging Profile - Rejected
+TC_CP_V16_067 Clear Charging Profile
+! TC_CP_V16_068 Stop transaction-IdTag stop transaction matches IdTag start transaction
+TC_CP_V16_070 Sampled Meter Values
+TC_CP_V16_071 Clock-aligned Meter Values
+TC_CP_V16_072 Stacking Charging Profiles
+TC_CP_V16_082 The Central System sets a default schedule for a currently ongoing transaction.
 
 working - missing verification
 ------------------------------
 TC_CP_V16_040_1 Configuration keys
 ! TC_CP_V16_040_2 Configuration keys
     - both tests don't check for the ChangeConfiguration.conf result (NotSupported/Rejected)
+
+TC_CP_V16_062 Data Transfer to a Charge Point
+    - We reject all data transfers and this is accepted.
 
 not working yet
 ---------------
@@ -641,6 +684,8 @@ TC_CP_V16_018_2 Unlock connector with charging session
 TC_CP_V16_019 Retrieve all configuration keys
     - Test tool hangs forever?
 
+TC_CP_V16_030 Unlock connector - unlock failure
+    - No way to simulate this yet
 
 TC_CP_V16_035 Idle charge point
 !! TC_CP_V16_036 Connection loss during transaction
@@ -650,6 +695,17 @@ TC_CP_V16_037_1 Offline Start Transaction
 TC_CP_V16_038 Offline stop transaction
 TC_CP_V16_039 Offline transaction
     - run_octt currently has no way of disconnecting the web socket connection
+
+TC_CP_V16_066 Get Composite Schedule
+    - OCTT randomly closes the web socket connection?!?
+
+# TC_CP_V16_069 Stop transaction-ParentIdTag stop transaction matches ParentIdTag start transaction
+    - We don't track the tag ID in flight correctly
+
+TC_CP_V16_032_1 Power failure boot charging point - configured to stop transaction(s)  Stop all transactions before going down
+# TC_CP_V16_032_2 Power failure boot charging point-configured to stop transaction(s)
+TC_CP_V16_034 Power failure with unavailable status
+    - No way to simulate power failure yet
 
 prerequisites not supported
 ---------------------------
@@ -694,29 +750,10 @@ TC_CP_V16_052 Cancel Reservation - Rejected
 TC_CP_V16_053 Use a reserved Connector with parentIdTag
 TC_CP_V16_054 Trigger Message
 TC_CP_V16_055 Trigger Message - Rejected
+TC_CP_V16_061 Clear Authorization Data in Authorization Cache
+TC_CP_V16_064 Data Transfer to a Central System (Listener)
     - Unsupported feature profiles
 
-not tested yet
---------------
-
-TC_CP_V16_030 Unlock connector - unlock failure
-
-TC_CP_V16_032_1 Power failure boot charging point - configured to stop transaction(s)  Stop all transactions before going down
-# TC_CP_V16_032_2 Power failure boot charging point-configured to stop transaction(s)
-TC_CP_V16_034 Power failure with unavailable status
-
-TC_CP_V16_059 Remote Start Transaction with Charging Profile
-TC_CP_V16_060 Remote Start Transaction with Charging Profile - Rejected
-TC_CP_V16_061 Clear Authorization Data in Authorization Cache
-TC_CP_V16_062 Data Transfer to a Charge Point
-TC_CP_V16_064 Data Transfer to a Central System (Listener)
-TC_CP_V16_066 Get Composite Schedule
-TC_CP_V16_067 Clear Charging Profile
-! TC_CP_V16_068 Stop transaction-IdTag stop transaction matches IdTag start transaction
-# TC_CP_V16_069 Stop transaction-ParentIdTag stop transaction matches ParentIdTag start transaction
-TC_CP_V16_070 Sampled Meter Values
-TC_CP_V16_071 Clock-aligned Meter Values
-TC_CP_V16_072 Stacking Charging Profiles
 TC_CP_V16_073 Update Charge Point Password for HTTP Basic Authentication
 TC_CP_V16_074 Update Charge Point Certificate by request of Central System
 TC_CP_V16_075 Install a certificate on the Charge Point
@@ -726,7 +763,9 @@ TC_CP_V16_078 Invalid CentralSystemCertificate Security Event
 TC_CP_V16_079 Get Security Log
 ! TC_CP_V16_080 Secure Firmware Update
 ! TC_CP_V16_081 Secure Firmware Update - Invalid Signature
-TC_CP_V16_082 The Central System sets a default schedule for a currently ongoing transaction.
+    - Security whitepaper not implemented yet
 
-# _087????
+not tested yet
+--------------
+
 """
