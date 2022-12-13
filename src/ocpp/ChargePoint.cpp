@@ -1031,6 +1031,21 @@ CallResponse OcppChargePoint::handleSetChargingProfile(const char *uid, SetCharg
         return CallResponse{CallErrorCode::OK, ""};
     }
 
+    /* To prevent mismatch between transactions and a TxProfile, The Central System SHALL include
+       the transactionId in a SetChargingProfile.req if the profile applies to a specific transaction. */
+    if (purpose == ChargingProfilePurpose::TX_PROFILE && !prof.transactionId().is_set()) {
+        log_info("Rejected: TX_PROFILE but no transaction id passed");
+        connection.sendCallResponse(SetChargingProfileResponse(uid, SetChargingProfileResponseStatus::REJECTED));
+        return CallResponse{CallErrorCode::OK, ""};
+    }
+
+    // The test tool expects us to reject here. The spec only implies this via the requirement to include a transaction ID.
+    if (purpose == ChargingProfilePurpose::TX_PROFILE && connectors[conn_id - 1].transaction_id != prof.transactionId().get()) {
+        log_info("Rejected: TX_PROFILE but no transaction active on connector %d", conn_id);
+        connection.sendCallResponse(SetChargingProfileResponse(uid, SetChargingProfileResponseStatus::REJECTED));
+        return CallResponse{CallErrorCode::OK, ""};
+    }
+
     // reject if either recurKind is set and kind is not recurring or if it is not set and kind is recurring.
     if (prof.chargingProfileKind() == ChargingProfileKind::RECURRING != prof.recurrencyKind().is_set()) {
         log_info("Rejected: RECURRING but recurrency set");
