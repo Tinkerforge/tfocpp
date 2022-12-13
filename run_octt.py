@@ -497,8 +497,13 @@ working_testcases = [
     "TC_CP_V16_026",
     "TC_CP_V16_027",
     "TC_CP_V16_028",
+    "TC_CP_V16_031",
     "TC_CP_V16_040_1"
-    "TC_CP_V16_040_2"
+    "TC_CP_V16_040_2",
+    "TC_CP_V16_056",
+    "TC_CP_V16_057",
+    "TC_CP_V16_058_1",
+    "TC_CP_V16_058_2"
 ]
 
 def main():
@@ -604,7 +609,10 @@ TC_CP_V16_026 Remote start charging session - rejected
 TC_CP_V16_027 Remote start transaction - connector id shall not be 0
 TC_CP_V16_028 Remote stop transaction - rejected
 TC_CP_V16_031 Unlock connector - unknown connector
-
+TC_CP_V16_056 Central Smart Charging - TxDefaultProfile
+TC_CP_V16_057 Central Smart Charging - TxProfile
+TC_CP_V16_058_1 Central Smart Charging - No ongoing transaction
+TC_CP_V16_058_2 Central Smart Charging - Wrong transactionId
 
 working - missing verification
 ------------------------------
@@ -697,11 +705,6 @@ TC_CP_V16_032_1 Power failure boot charging point - configured to stop transacti
 # TC_CP_V16_032_2 Power failure boot charging point-configured to stop transaction(s)
 TC_CP_V16_034 Power failure with unavailable status
 
-
-TC_CP_V16_056 Central Smart Charging - TxDefaultProfile
-TC_CP_V16_057 Central Smart Charging - TxProfile
-TC_CP_V16_058_1 Central Smart Charging - No ongoing transaction
-TC_CP_V16_058_2 Central Smart Charging - Wrong transactionId
 TC_CP_V16_059 Remote Start Transaction with Charging Profile
 TC_CP_V16_060 Remote Start Transaction with Charging Profile - Rejected
 TC_CP_V16_061 Clear Authorization Data in Authorization Cache
