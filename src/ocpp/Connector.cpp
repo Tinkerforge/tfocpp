@@ -955,6 +955,7 @@ void Connector::onAuthorizeConf(IdTagInfo info) {
             break;
 
         case ConnectorState::AUTH_STOP:
+            // FIXME Track the tag ID that was authorized just now. This is NOT a member of the info parameter!
             setState(auth_success ? ConnectorState::FINISHING_UNLOCKED : ConnectorState::TRANSACTION);
             break;
 
