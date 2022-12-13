@@ -12,6 +12,7 @@ import re
 import socket
 import struct
 from urllib.request import urlopen, Request
+import datetime
 
 from linux_platform_packet import *
 
@@ -71,6 +72,14 @@ def run_octt(task_queue: Queue[str]):
                 os.killpg(os.getpgid(process.pid), signal.SIGKILL)
             return
     pass
+
+
+"""
+(SUT Charging Station) In multiple testcases, StatusNotification(status=Charging) is missing in the expected
+StatusNotification list. As a general rule: The Charging Station is allowed to send a
+StatusNotification(status=Charging) when there is energy transfer. This happens after a transaction is started.
+"""
+energy_transfer_periods = []
 
 EVSE_STATE_NOT_CONNECTED = 0
 EVSE_STATE_PLUG_DETECTED = 1
@@ -166,8 +175,10 @@ def handle_ocpp_platform_request(data, addr, sock):
     if evse_state_auto:
         if evse_state == EVSE_STATE_CONNECTED and current_allowed > 0:
             evse_state = EVSE_STATE_CHARGING
+            energy_transfer_periods.append((datetime.datetime.now().astimezone().replace(microsecond=0).isoformat(), None))
         if evse_state == EVSE_STATE_CHARGING and current_allowed == 0:
             evse_state = EVSE_STATE_CONNECTED
+            energy_transfer_periods[-1][1] = datetime.datetime.now().astimezone().replace(microsecond=999999).isoformat()
 
     next_seq_num += 1
     next_seq_num %= 256
@@ -306,8 +317,21 @@ def handle_unexpected_statusnotifications(p: str):
     for match in matches:
         timestamp, connector_id, status, error_code, test_info = match
         if status == "SUSPENDED_EVSE" and ignore_unexpected:
-            log(red("Ignoring unexpected StatusNotification with status SUSPENDED_EVSE"), end= " ")
+            log(red("Ignoring unexpected StatusNotification with status SUSPENDED_EVSE"), end=" ")
             continue
+
+        if status == "CHARGING":
+            skip = True
+            for start, end in energy_transfer_periods:
+                if datetime.datetime.fromisoformat(start) < datetime.datetime.fromisoformat(timestamp) \
+                  and (end is None or datetime.datetime.fromisoformat(timestamp) < datetime.datetime.fromisoformat(end)):
+                    log("Working around missing charging status notification", end=" ")
+                    break
+            else:
+                skip = False
+            if skip:
+                continue
+
         log(f"\nUnexpected StatusNotification! {timestamp=} {connector_id=} {status=} {error_code=} {test_info=}")
         advance_prompt(False)
         return
