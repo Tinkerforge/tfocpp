@@ -97,6 +97,7 @@ evse_state = EVSE_STATE_NOT_CONNECTED
 last_seen_connector_state = "IDLE"
 last_charge_current = 0
 connector_has_fixed_cable = False
+last_txn_id = -1
 def handle_ocpp_platform_request(data, addr, sock):
     global last_seen_seq_num
     global next_seq_num
@@ -146,6 +147,11 @@ def handle_ocpp_platform_request(data, addr, sock):
     if seq_num == last_seen_seq_num:
         return
     last_seen_seq_num = seq_num
+    global last_txn_id
+    if last_txn_id != txn_id:
+        print(txn_id)
+    last_txn_id = txn_id
+
 
     message = message.decode("utf-8").replace("\0", "")
     config_value = config_value.decode("utf-8").replace("\0", "")
@@ -260,7 +266,7 @@ def advance_prompt(success: bool):
 
     req = Request('http://{}:{}/ocpp/autoExecPrompt'.format(octt_ip, octt_api_port))
     req.add_header('Content-Type', 'application/json')
-    data = json.dumps({'continuePrompt': success, 'auto': 'api'}).encode('utf-8')
+    data = json.dumps({'continuePrompt': success, 'auto': 'api', 'transactionID': last_txn_id}).encode('utf-8')
     with urlopen(req, timeout=5 * 60, data=data) as resp:
         resp.read()
 
@@ -454,6 +460,9 @@ def handle_prompt(p: str, test_case: str):
         log("Present another valid identification prompt received. Working around bug in TC_CP_V16_068", end=" ")
         advance_prompt(True)
         #next_tag_id = "RFID2"
+    elif p == "Please enter value and click OK to continue":
+        log("Sending transaction ID to stop", end=" ")
+        advance_prompt(True)
     else:
         log("Unknown prompt: {}".format(p))
 
@@ -604,6 +613,10 @@ def main():
 
         for testcase in testcases:
             run_test(test_case_descs, "TC_CP_V16_000_RESET")
+            if last_txn_id >= 0 and last_txn_id < 0x7FFFFFFF:
+                #run_test(test_case_descs, "TC_CP_V16_000_STOPTX")
+                global evse_state
+                evse_state = EVSE_STATE_NOT_CONNECTED
 
             if args.pause_before_test:
                 input("Press enter to start test")
