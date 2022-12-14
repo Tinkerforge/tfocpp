@@ -21,6 +21,8 @@
 struct PlatformResponse {
     uint8_t seq_num;
     char tag_id_seen[22];
+    uint8_t fixed_cable;
+    static_assert(OCPP_NUM_CONNECTORS <= 8, "Linux platform only supports up to 8 connectors for now. Change fixed cable in PlatformResponse to increase this.");
     uint8_t evse_state[OCPP_NUM_CONNECTORS];
     uint32_t energy[OCPP_NUM_CONNECTORS];
 }  __attribute__((__packed__));
@@ -621,4 +623,7 @@ uint32_t platform_get_maximum_charging_current(int32_t connectorId) {
     return 32000;
 }
 
+bool platform_has_fixed_cable(int32_t connectorId) {
+    return pr.fixed_cable & (1 << connectorId);
+}
 #endif

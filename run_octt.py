@@ -96,6 +96,7 @@ next_tag_id = ""
 evse_state = EVSE_STATE_NOT_CONNECTED
 last_seen_connector_state = "IDLE"
 last_charge_current = 0
+connector_has_fixed_cable = False
 def handle_ocpp_platform_request(data, addr, sock):
     global last_seen_seq_num
     global next_seq_num
@@ -168,6 +169,7 @@ def handle_ocpp_platform_request(data, addr, sock):
     b = struct.pack(response_format,
                 next_seq_num,
                 (bytearray([1]) + next_tag_id.encode("utf-8")) if next_tag_id else "".encode("utf-8"),
+                0xFF if connector_has_fixed_cable else 0,
                 evse_state,
                 *([0] * (NUM_CONNECTORS - 1)),
                 *([0] * NUM_CONNECTORS))
@@ -459,6 +461,9 @@ def run_test(testcases, test_case: str):
     log("Executing test {}: {}".format(test_case, testcases[test_case]))
     global indent
     indent = 4
+
+    global connector_has_fixed_cable
+    connector_has_fixed_cable = test_case in ["TC_CP_V16_017_2"]
 
     result_queue = Queue()
     def inner(test_case: str):

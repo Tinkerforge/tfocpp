@@ -74,6 +74,7 @@ void platform_tag_rejected(const char *tag, TagRejectionType trt);
 void platform_tag_timed_out(int32_t connectorId);
 void platform_cable_timed_out(int32_t connectorId);
 
+bool platform_has_fixed_cable(int32_t connectorId);
 void platform_lock_cable(int32_t connectorId);
 void platform_unlock_cable(int32_t connectorId);
 

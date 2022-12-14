@@ -184,6 +184,7 @@ config_key_strings = [
 struct PlatformResponse {
     uint8_t seq_num;
     char tag_id_seen[22];
+    uint8_t fixed_cable;
     uint8_t evse_state[NUM_CONNECTORS];
     uint32_t energy[NUM_CONNECTORS];
 }  __attribute__((__packed__));
@@ -268,7 +269,7 @@ request_format = header_format + \
 request_format += connector_format * NUM_CONNECTORS
 request_format = request_format.format(num_conn=NUM_CONNECTORS)
 
-response_format = header_format + "22s{num_conn}B{num_conn}I".format(num_conn=NUM_CONNECTORS)
+response_format = header_format + "22sB{num_conn}B{num_conn}I".format(num_conn=NUM_CONNECTORS)
 
 request_len = struct.calcsize(request_format)
 response_len = struct.calcsize(response_format)

@@ -304,6 +304,7 @@ def receive():
     b = struct.pack(response_format,
                     next_seq_num,
                     (bytearray([1]) + resp_tag_id.text().encode("utf-8")) if resp_send_tag_id.isChecked() else "".encode("utf-8"),
+                    0,
                     resp_evse_state.currentIndex(),
                     *([0] * (NUM_CONNECTORS - 1)),
                     *([0] * NUM_CONNECTORS))
