@@ -850,14 +850,17 @@ CallResponse OcppChargePoint::handleStopTransactionResponse(int32_t connectorId,
 CallResponse OcppChargePoint::handleUnlockConnector(const char *uid, UnlockConnectorView req)
 {
     log_info("Received UnlockConnector.req");
+
+    auto result = UnlockConnectorResponseStatus::NONE;
+
     int32_t conn_id = req.connectorId() - 1;
 
-    if (conn_id < 0 || conn_id >= OCPP_NUM_CONNECTORS) {
-        connection.sendCallResponse(UnlockConnectorResponse(uid, UnlockConnectorResponseStatus::NOT_SUPPORTED));
-        return CallResponse{CallErrorCode::OK, ""};
-    }
-
-    auto result = connectors[conn_id].onUnlockConnector();
+    if (conn_id < 0 || conn_id >= OCPP_NUM_CONNECTORS)
+        result = UnlockConnectorResponseStatus::NOT_SUPPORTED;
+    else if (platform_has_fixed_cable(conn_id))
+        result = UnlockConnectorResponseStatus::NOT_SUPPORTED;
+    else
+        result = connectors[conn_id].onUnlockConnector();
 
     log_info("Sending UnlockConnector.conf %s\n", UnlockConnectorResponseStatusStrings[(size_t)result]);
     connection.sendCallResponse(UnlockConnectorResponse(uid, result));
