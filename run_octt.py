@@ -658,34 +658,54 @@ working - missing verification
 ------------------------------
 TC_CP_V16_040_1 Configuration keys
 ! TC_CP_V16_040_2 Configuration keys
-    - both tests don't check for the ChangeConfiguration.conf result (NotSupported/Rejected)
+    both tests don't check for the ChangeConfiguration.conf result (NotSupported/Rejected)
 
 TC_CP_V16_062 Data Transfer to a Charge Point
-    - We reject all data transfers and this is accepted.
+    We reject all data transfers and this is accepted.
 
-not working yet
----------------
+OCPP implementation issues
+--------------------------
+TC_CP_V16_017_2 Unlock connector no charging session running(Fixed cable)
+TC_CP_V16_018_2 Unlock connector with charging session
+    We have to report Not supported if we receive a UnlockConnector.req and have a fixed cable
+
+TC_CP_V16_024 Start Charging Session Lock Failure
+    No platform API to communicate lock failure yet
+
+TC_CP_V16_032_1 Power failure boot charging point - configured to stop transaction(s)  Stop all transactions before going down
+# TC_CP_V16_032_2 Power failure boot charging point-configured to stop transaction(s)
+TC_CP_V16_034 Power failure with unavailable status
+    No platform API to communicate power failure yet
+
+TC_CP_V16_041 Fault behavior
+    No platform API to fault charge point yet
+
+# TC_CP_V16_069 Stop transaction-ParentIdTag stop transaction matches ParentIdTag start transaction
+    We don't track the tag ID in flight correctly
+
+OCTT issues
+-----------
 # TC_CP_V16_011_1 Remote Start Charging Session – Remote Start First
     This seems to be a timing issue with the test tool: The tool waits forever for a StopTxn.req however this req is sent.
 ## TC_CP_V16_012 Remote stop charging session
     This has the same timing issue, but with a incorrect prompt that makes the test tool miss our StopTxn.req every time.
 
+TC_CP_V16_019 Retrieve all configuration keys
+    Test tool hangs forever?
+
+TC_CP_V16_066 Get Composite Schedule
+    OCTT randomly closes the web socket connection?!?
+
+run_octt.py issues
+------------------
 TC_CP_V16_013 Hard reset without transaction
 TC_CP_V16_014 Soft reset without transaction
 !! TC_CP_V16_015 Hard reset with transaction
 TC_CP_V16_016 Soft reset with transaction
-    - Maybe an issue with the way run_octt is starting ocpp_linux? It does not come back after a hard/soft reset
-
-TC_CP_V16_017_2 Unlock connector no charging session running(Fixed cable)
-    - We have to report Not supported if we receive a UnlockConnector.req and have a fixed cable
-TC_CP_V16_018_2 Unlock connector with charging session
-    - We have to report Not supported if we receive a UnlockConnector.req and have a fixed cable
-
-TC_CP_V16_019 Retrieve all configuration keys
-    - Test tool hangs forever?
+    Maybe an issue with the way run_octt is starting ocpp_linux? It does not come back after a hard/soft reset
 
 TC_CP_V16_030 Unlock connector - unlock failure
-    - No way to simulate this yet
+    No way to simulate this yet
 
 TC_CP_V16_035 Idle charge point
 !! TC_CP_V16_036 Connection loss during transaction
@@ -694,18 +714,7 @@ TC_CP_V16_037_1 Offline Start Transaction
 ### TC_CP_V16_037_3 Offline start transaction
 TC_CP_V16_038 Offline stop transaction
 TC_CP_V16_039 Offline transaction
-    - run_octt currently has no way of disconnecting the web socket connection
-
-TC_CP_V16_066 Get Composite Schedule
-    - OCTT randomly closes the web socket connection?!?
-
-# TC_CP_V16_069 Stop transaction-ParentIdTag stop transaction matches ParentIdTag start transaction
-    - We don't track the tag ID in flight correctly
-
-TC_CP_V16_032_1 Power failure boot charging point - configured to stop transaction(s)  Stop all transactions before going down
-# TC_CP_V16_032_2 Power failure boot charging point-configured to stop transaction(s)
-TC_CP_V16_034 Power failure with unavailable status
-    - No way to simulate power failure yet
+    run_octt currently has no way of disconnecting the web socket connection
 
 prerequisites not supported
 ---------------------------
@@ -713,15 +722,9 @@ TC_CP_V16_005_3 EV side disconnected
     This requires StopTransactionOnEVSideDisconnect to be settable to false. We don't allow this.
 TC_CP_V16_006 One reader for multiple connectors
     We don't support more than one connector yet.
-## TC_CP_V16_007 Regular start charging session - cached id
-    Authorization cache not implemented yet
-### TC_CP_V16_008 Regular start charging session - id in authorization list
-    Authorization cache not implemented yet
-TC_CP_V16_024 Start Charging Session Lock Failure
-    No platform API to communicate lock failure yet
-TC_CP_V16_041 Fault behavior
-    No platform API to fault charge point yet
 
+## TC_CP_V16_007 Regular start charging session - cached id
+### TC_CP_V16_008 Regular start charging session - id in authorization list
 TC_CP_V16_042_1 Get Local List Version,Non-Happy case
 TC_CP_V16_042_2 Get Local List Version,Local Authorization List Empty
 TC_CP_V16_043 SendLocalAuthorizationList-UpdatedType=Differential & Full
@@ -752,7 +755,7 @@ TC_CP_V16_054 Trigger Message
 TC_CP_V16_055 Trigger Message - Rejected
 TC_CP_V16_061 Clear Authorization Data in Authorization Cache
 TC_CP_V16_064 Data Transfer to a Central System (Listener)
-    - Unsupported feature profiles
+    Unsupported feature profiles
 
 TC_CP_V16_073 Update Charge Point Password for HTTP Basic Authentication
 TC_CP_V16_074 Update Charge Point Certificate by request of Central System
@@ -763,9 +766,6 @@ TC_CP_V16_078 Invalid CentralSystemCertificate Security Event
 TC_CP_V16_079 Get Security Log
 ! TC_CP_V16_080 Secure Firmware Update
 ! TC_CP_V16_081 Secure Firmware Update - Invalid Signature
-    - Security whitepaper not implemented yet
-
-not tested yet
---------------
+    Security whitepaper not implemented yet
 
 """
