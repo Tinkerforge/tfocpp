@@ -385,9 +385,8 @@ int main(int argc, char **argv) {
         return -1;
     }
 
-    OcppChargePoint cp;
 
-    cp.start(argv[1], "CP_1");
+    OcppChargePoint cp;
 
     addr.sin_family = AF_INET;
     addr.sin_addr.s_addr = inet_addr("127.0.0.1");
