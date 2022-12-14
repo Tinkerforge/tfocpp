@@ -463,7 +463,7 @@ def run_test(testcases, test_case: str):
     indent = 4
 
     global connector_has_fixed_cable
-    connector_has_fixed_cable = test_case in ["TC_CP_V16_017_2"]
+    connector_has_fixed_cable = test_case in ["TC_CP_V16_017_2", "TC_CP_V16_018_2"]
 
     result_queue = Queue()
     def inner(test_case: str):
@@ -519,7 +519,9 @@ working_testcases = [
     "TC_CP_V16_010",
     "TC_CP_V16_011_2",
     "TC_CP_V16_017_1",
+    "TC_CP_V16_017_2",
     "TC_CP_V16_018_1",
+    "TC_CP_V16_018_2",
     "TC_CP_V16_021",
     "TC_CP_V16_023",
     "TC_CP_V16_026",
@@ -639,7 +641,9 @@ TC_CP_V16_005_1 EV side disconnected
 # TC_CP_V16_010 Remote start charging session - cable plugged in first
 TC_CP_V16_011_2 Remote Start Charging Session - Time Out
 TC_CP_V16_017_1 Unlock connector no charging session running(Not fixed cable)
+TC_CP_V16_017_2 Unlock connector no charging session running(Fixed cable)
 TC_CP_V16_018_1 Unlock connector with charging session
+TC_CP_V16_018_2 Unlock connector with charging session
 TC_CP_V16_021 Change/Set configuration
 ! TC_CP_V16_023 Start charging session - authorize invalid / blocked / expired
 TC_CP_V16_026 Remote start charging session - rejected
@@ -670,9 +674,6 @@ TC_CP_V16_062 Data Transfer to a Charge Point
 
 OCPP implementation issues
 --------------------------
-TC_CP_V16_017_2 Unlock connector no charging session running(Fixed cable)
-TC_CP_V16_018_2 Unlock connector with charging session
-    We have to report Not supported if we receive a UnlockConnector.req and have a fixed cable
 
 TC_CP_V16_024 Start Charging Session Lock Failure
     No platform API to communicate lock failure yet
