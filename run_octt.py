@@ -691,6 +691,7 @@ TC_CP_V16_058_1 Central Smart Charging - No ongoing transaction
 TC_CP_V16_058_2 Central Smart Charging - Wrong transactionId
 TC_CP_V16_059 Remote Start Transaction with Charging Profile
 TC_CP_V16_060 Remote Start Transaction with Charging Profile - Rejected
+TC_CP_V16_066 Get Composite Schedule
 TC_CP_V16_067 Clear Charging Profile
 ! TC_CP_V16_068 Stop transaction-IdTag stop transaction matches IdTag start transaction
 TC_CP_V16_069 Stop transaction-ParentIdTag stop transaction matches ParentIdTag start transaction
@@ -727,9 +728,6 @@ OCTT issues
     This seems to be a timing issue with the test tool: The tool waits forever for a StopTxn.req however this req is sent.
 ## TC_CP_V16_012 Remote stop charging session
     This has the same timing issue, but with a incorrect prompt that makes the test tool miss our StopTxn.req every time.
-
-TC_CP_V16_066 Get Composite Schedule
-    OCTT randomly closes the web socket connection?!?
 
 run_octt.py issues
 ------------------
