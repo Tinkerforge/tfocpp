@@ -997,6 +997,14 @@ CallResponse OcppChargePoint::handleGetCompositeSchedule(const char *uid, GetCom
         if (req.chargingRateUnit().is_set() && req.chargingRateUnit().get() == ChargingRateUnit::W)
             periods[periods_used].limit *= OCPP_LINE_VOLTAGE * periods[periods_used].numberPhases;
 
+        if (periods_used > 0
+         && periods[periods_used - 1].limit == periods[periods_used].limit
+         && periods[periods_used - 1].numberPhases == periods[periods_used].numberPhases)
+            // If this period and the last one have exactly the same limits, we don't have to report the second period.
+            // This can happen, as evalChargingProfiles only returns the next time to check, not the next time a limit
+            // change will happen in any case.
+            continue;
+
         ++periods_used;
     }
 
