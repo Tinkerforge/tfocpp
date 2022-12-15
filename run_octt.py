@@ -541,6 +541,7 @@ working_testcases = [
     "TC_CP_V16_017_2",
     "TC_CP_V16_018_1",
     "TC_CP_V16_018_2",
+    "TC_CP_V16_019",
     "TC_CP_V16_021",
     "TC_CP_V16_023",
     "TC_CP_V16_026",
@@ -558,6 +559,7 @@ working_testcases = [
     "TC_CP_V16_062",
     "TC_CP_V16_067",
     "TC_CP_V16_068",
+    "TC_CP_V16_069",
     "TC_CP_V16_070",
     "TC_CP_V16_071",
     "TC_CP_V16_072",
@@ -676,6 +678,7 @@ TC_CP_V16_017_1 Unlock connector no charging session running(Not fixed cable)
 TC_CP_V16_017_2 Unlock connector no charging session running(Fixed cable)
 TC_CP_V16_018_1 Unlock connector with charging session
 TC_CP_V16_018_2 Unlock connector with charging session
+TC_CP_V16_019 Retrieve all configuration keys
 TC_CP_V16_021 Change/Set configuration
 ! TC_CP_V16_023 Start charging session - authorize invalid / blocked / expired
 TC_CP_V16_026 Remote start charging session - rejected
@@ -690,6 +693,7 @@ TC_CP_V16_059 Remote Start Transaction with Charging Profile
 TC_CP_V16_060 Remote Start Transaction with Charging Profile - Rejected
 TC_CP_V16_067 Clear Charging Profile
 ! TC_CP_V16_068 Stop transaction-IdTag stop transaction matches IdTag start transaction
+TC_CP_V16_069 Stop transaction-ParentIdTag stop transaction matches ParentIdTag start transaction
 TC_CP_V16_070 Sampled Meter Values
 TC_CP_V16_071 Clock-aligned Meter Values
 TC_CP_V16_072 Stacking Charging Profiles
@@ -706,7 +710,6 @@ TC_CP_V16_062 Data Transfer to a Charge Point
 
 OCPP implementation issues
 --------------------------
-
 TC_CP_V16_024 Start Charging Session Lock Failure
     No platform API to communicate lock failure yet
 
@@ -718,18 +721,12 @@ TC_CP_V16_034 Power failure with unavailable status
 TC_CP_V16_041 Fault behavior
     No platform API to fault charge point yet
 
-# TC_CP_V16_069 Stop transaction-ParentIdTag stop transaction matches ParentIdTag start transaction
-    We don't track the tag ID in flight correctly
-
 OCTT issues
 -----------
 # TC_CP_V16_011_1 Remote Start Charging Session – Remote Start First
     This seems to be a timing issue with the test tool: The tool waits forever for a StopTxn.req however this req is sent.
 ## TC_CP_V16_012 Remote stop charging session
     This has the same timing issue, but with a incorrect prompt that makes the test tool miss our StopTxn.req every time.
-
-TC_CP_V16_019 Retrieve all configuration keys
-    Test tool hangs forever?
 
 TC_CP_V16_066 Get Composite Schedule
     OCTT randomly closes the web socket connection?!?
