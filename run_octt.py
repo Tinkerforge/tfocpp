@@ -21,8 +21,14 @@ octt_ws_port = None
 octt_api_port = None
 indent = 0
 last_print_with_newline = True
+quiet = False
 
-def log(*args, **kwargs):
+def log(*args, is_quiet=False, **kwargs):
+    global quiet
+
+    if quiet and not is_quiet:
+        return
+
     global indent
     global last_print_with_newline
     if indent == 0 or not last_print_with_newline:
@@ -107,7 +113,7 @@ def handle_ocpp_platform_request(data, addr, sock):
     global last_seen_connector_state
 
     if len(data) < request_len:
-        log("malformed request {} < {}".format(len(data), request_len))
+        log("malformed request {} < {}".format(len(data), request_len), is_quiet=True)
         return
 
     charge_current = []
@@ -148,8 +154,6 @@ def handle_ocpp_platform_request(data, addr, sock):
         return
     last_seen_seq_num = seq_num
     global last_txn_id
-    if last_txn_id != txn_id:
-        print(txn_id)
     last_txn_id = txn_id
 
 
@@ -467,7 +471,13 @@ def handle_prompt(p: str, test_case: str):
         log("Unknown prompt: {}".format(p))
 
 def run_test(testcases, test_case: str):
-    log("Executing test {}: {}".format(test_case, testcases[test_case]))
+    global quiet
+    if not quiet:
+        log("Executing test {}: {}".format(test_case, testcases[test_case]), end=" ")
+    else:
+        max_name_len = max([len(x) for x in testcases.keys()])
+        log(test_case, is_quiet=test_case != "TC_CP_V16_000_RESET", end=" " * (max_name_len - len(test_case) + 4))
+
     global indent
     indent = 4
 
@@ -494,16 +504,16 @@ def run_test(testcases, test_case: str):
                 log("TC_CP_V16_023 work-around: Waiting for (unauthorized!) start of transaction.", end=" ")
                 time.sleep(5)
                 if last_charge_current != 0:
-                    print(red("Transaction was started"))
+                    log(red("Transaction was started"))
                     result = "FAIL"
                 else:
-                    print(green("No unauthorized transaction started"))
-
+                    log(green("No unauthorized transaction started"))
 
             indent = 0
-            log("Test {} result".format(test_case), red(result) if result != "PASS" else green(result))
-            if result != "PASS":
-                raise Exception("Test did not pass")
+            if not quiet:
+                log("Test {} result".format(test_case), red(result) if result != "PASS" else green(result))
+            else:
+                log(red(result) if result != "PASS" else green(result), is_quiet=test_case != "TC_CP_V16_000_RESET")
             return
         except Empty:
             pass
@@ -559,6 +569,8 @@ def main():
     parser.add_argument('octt_ip', help="OCTT ip for API calls.")
     parser.add_argument('--api-port', help="OCTT HTTP API port. Default 63341", default=63341)
     parser.add_argument('--ws-port', help="OCTT websocket port. Default 8080", default=8080)
+    parser.add_argument('--all-tests', help="Runs all tests, even known unsupported ones", action='store_true')
+    parser.add_argument('-q', '--quiet', action='store_true')
     parser.add_argument('test_cases', nargs='*')
     # No short form for you: It has to hurt to type this out.
     parser.add_argument('--ignore-unexpected-suspended-status-notifications', action='store_true')
@@ -583,6 +595,10 @@ def main():
         global ignore_slow_intervals
         ignore_slow_intervals = True
 
+    if args.quiet:
+        global quiet
+        quiet = True
+
     if args.pause_before_test:
         input("Start wireshark now.")
 
@@ -606,7 +622,10 @@ def main():
 
         test_case_descs = get_testcases()
 
-        if len(args.test_cases) > 0:
+        if args.all_tests:
+            log("Running ALL test cases!", is_quiet=True)
+            testcases = test_case_descs.keys()
+        elif len(args.test_cases) > 0:
             testcases = args.test_cases
         else:
             testcases = working_testcases
