@@ -49,6 +49,7 @@ struct Connector {
     ConnectorState state = ConnectorState::IDLE;
     StatusNotificationStatus last_sent_status = StatusNotificationStatus::NONE;
 
+    char tagIdInFlight[21] = {0};
     IdTagInfo authorized_for;
 
     uint32_t tag_deadline = 0;

@@ -181,8 +181,8 @@ void Connector::setState(ConnectorState newState) {
                 case ConnectorState::NO_TAG:
                 case ConnectorState::FINISHING_UNLOCKED:
                 case ConnectorState::FINISHING_NO_CABLE_UNLOCKED:
-                    log_info("Sending Authorize.req connector %d for tag %s (Authorizing for start)", this->connectorId, authorized_for.tagId);
-                    this->sendCallAction(Authorize(authorized_for.tagId));
+                    log_info("Sending Authorize.req connector %d for tag %s (Authorizing for start)", this->connectorId, tagIdInFlight);
+                    this->sendCallAction(Authorize(tagIdInFlight));
                     break;
                 case ConnectorState::TRANSACTION:
                 case ConnectorState::AUTH_STOP:
@@ -893,21 +893,33 @@ void Connector::onTagSeen(const char *tag_id) {
     // Handle non-same tag.
     switch (state) {
         case ConnectorState::IDLE:
-            authorized_for.updateTagId(tag_id);
+            memset(tagIdInFlight, 0, ARRAY_SIZE(tagIdInFlight));
+            strncpy(tagIdInFlight, tag_id, ARRAY_SIZE(tagIdInFlight) - 1);
+
+            //authorized_for.updateTagId(tag_id);
             setState(ConnectorState::AUTH_START_NO_PLUG);
             break;
         case ConnectorState::NO_CABLE_NO_TAG:
         case ConnectorState::FINISHING_NO_CABLE_UNLOCKED:
-            authorized_for.updateTagId(tag_id);
+            memset(tagIdInFlight, 0, ARRAY_SIZE(tagIdInFlight));
+            strncpy(tagIdInFlight, tag_id, ARRAY_SIZE(tagIdInFlight) - 1);
+
+            //authorized_for.updateTagId(tag_id);
             setState(ConnectorState::AUTH_START_NO_CABLE);
             break;
         case ConnectorState::NO_TAG:
         case ConnectorState::FINISHING_UNLOCKED:
-            authorized_for.updateTagId(tag_id);
+            memset(tagIdInFlight, 0, ARRAY_SIZE(tagIdInFlight));
+            strncpy(tagIdInFlight, tag_id, ARRAY_SIZE(tagIdInFlight) - 1);
+
+            //authorized_for.updateTagId(tag_id);
             setState(ConnectorState::AUTH_START);
             break;
 
         case ConnectorState::TRANSACTION:
+            memset(tagIdInFlight, 0, ARRAY_SIZE(tagIdInFlight));
+            strncpy(tagIdInFlight, tag_id, ARRAY_SIZE(tagIdInFlight) - 1);
+
             // We still need the tag ID that started the transaction, so don't override authorized_for here, but send the AUTH request immediately.
             log_info("Sending Authorize.req connector %d for tag %s (Authorizing for stop)", this->connectorId, tag_id);
             this->sendCallAction(Authorize(tag_id));
@@ -938,8 +950,11 @@ void Connector::onAuthorizeConf(IdTagInfo info) {
     bool auth_success = info.status == ResponseIdTagInfoEntriesStatus::ACCEPTED;
     log_info("%successful auth", auth_success ? "S" : "Uns");
 
-    if (auth_success)
+    if (auth_success) {
+        authorized_for.updateTagId(tagIdInFlight);
+        memset(tagIdInFlight, 0, ARRAY_SIZE(tagIdInFlight));
         authorized_for.updateFromIdTagInfo(info);
+    }
 
     // Don't deauth if authorize fails: This could have been an authorize for stopping, so we have to keep the old auth.
 
@@ -955,7 +970,6 @@ void Connector::onAuthorizeConf(IdTagInfo info) {
             break;
 
         case ConnectorState::AUTH_STOP:
-            // FIXME Track the tag ID that was authorized just now. This is NOT a member of the info parameter!
             setState(auth_success ? ConnectorState::FINISHING_UNLOCKED : ConnectorState::TRANSACTION);
             break;
 
