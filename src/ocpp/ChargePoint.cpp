@@ -676,6 +676,42 @@ CallResponse OcppChargePoint::handleMeterValuesResponse(int32_t connectorId, Met
     return CallResponse{CallErrorCode::OK, ""};
 }
 
+template<typename T>
+static bool is_charging_profile_valid(T prof, int32_t conn_id) {
+    if (prof.stackLevel() < 0 || prof.stackLevel() > OCPP_CHARGE_PROFILE_MAX_STACK_LEVEL) {
+        log_info("Rejected: stack level %d out of range", prof.stackLevel());
+        return false;
+    }
+
+    if (prof.chargingSchedule().chargingSchedulePeriod_count() > OCPP_CHARGING_SCHEDULE_MAX_PERIODS)  {
+        log_info("Rejected: charging schedule period count %u out of range", prof.chargingSchedule().chargingSchedulePeriod_count());
+        return false;
+    }
+
+    //TODO check OCPP_CHARGING_SCHEDULE_ALLOWED_CHARGING_RATE_UNIT
+
+    auto purpose = prof.chargingProfilePurpose();
+    /* ChargePointMaxProfile can only be set at Charge Point ConnectorId 0.*/
+    if (purpose == ChargingProfilePurpose::CHARGE_POINT_MAX_PROFILE && conn_id != 0) {
+        log_info("Rejected: CHARGE_POINT_MAX_PROFILE for connector id %d != 0 not allowed", conn_id);
+        return false;
+    }
+
+    /* TxProfile SHALL only be set at Charge Point ConnectorId >0. */
+    if (purpose == ChargingProfilePurpose::TX_PROFILE && conn_id == 0) {
+        log_info("Rejected: TX_PROFILE for connector id == 0 not allowed");
+        return false;
+    }
+
+    // reject if either recurKind is set and kind is not recurring or if it is not set and kind is recurring.
+    if (prof.chargingProfileKind() == ChargingProfileKind::RECURRING != prof.recurrencyKind().is_set()) {
+        log_info("Rejected: RECURRING but recurrency set");
+        return false;
+    }
+
+    return true;
+}
+
 CallResponse OcppChargePoint::handleRemoteStartTransaction(const char *uid, RemoteStartTransactionView req)
 {
     log_info("Received RemoteStartTransaction.req for connector %d%s and tag %s", req.connectorId().is_set() ? req.connectorId().get() : 0, req.connectorId().is_set() ? "" : "[ANY CONNECTOR]", req.idTag());
@@ -717,8 +753,7 @@ CallResponse OcppChargePoint::handleRemoteStartTransaction(const char *uid, Remo
 
         auto prof = req.chargingProfile().get();
 
-        if (prof.stackLevel() < 0 || prof.stackLevel() > OCPP_CHARGE_PROFILE_MAX_STACK_LEVEL) {
-            log_info("Rejected: stack level %d out of range", prof.stackLevel());
+        if (!is_charging_profile_valid(prof, conn_idx + 1)) {
             connection.sendCallResponse(RemoteStartTransactionResponse(uid, ResponseStatus::REJECTED));
             return CallResponse{CallErrorCode::OK, ""};
         }
@@ -1005,26 +1040,12 @@ CallResponse OcppChargePoint::handleSetChargingProfile(const char *uid, SetCharg
 
     auto prof = req.csChargingProfiles();
 
-    if (prof.stackLevel() < 0 || prof.stackLevel() > OCPP_CHARGE_PROFILE_MAX_STACK_LEVEL) {
-        log_info("Rejected: stack level %d out of range", prof.stackLevel());
+    if(!is_charging_profile_valid(prof, conn_id)) {
         connection.sendCallResponse(SetChargingProfileResponse(uid, SetChargingProfileResponseStatus::REJECTED));
         return CallResponse{CallErrorCode::OK, ""};
     }
 
     auto purpose = prof.chargingProfilePurpose();
-    /* ChargePointMaxProfile can only be set at Charge Point ConnectorId 0.*/
-    if (purpose == ChargingProfilePurpose::CHARGE_POINT_MAX_PROFILE && conn_id != 0) {
-        log_info("Rejected: CHARGE_POINT_MAX_PROFILE for connector id %d != 0 not allowed", conn_id);
-        connection.sendCallResponse(SetChargingProfileResponse(uid, SetChargingProfileResponseStatus::REJECTED));
-        return CallResponse{CallErrorCode::OK, ""};
-    }
-
-    /* TxProfile SHALL only be set at Charge Point ConnectorId >0. */
-    if (purpose == ChargingProfilePurpose::TX_PROFILE && conn_id == 0) {
-        log_info("Rejected: TX_PROFILE for connector id == 0 not allowed");
-        connection.sendCallResponse(SetChargingProfileResponse(uid, SetChargingProfileResponseStatus::REJECTED));
-        return CallResponse{CallErrorCode::OK, ""};
-    }
 
     /* If there is no transaction active on the connector specified in a charging profile
        of type TxProfile, then the Charge Point SHALL discard it and return an error status in SetChargingProfile.conf. */
@@ -1045,13 +1066,6 @@ CallResponse OcppChargePoint::handleSetChargingProfile(const char *uid, SetCharg
     // The test tool expects us to reject here. The spec only implies this via the requirement to include a transaction ID.
     if (purpose == ChargingProfilePurpose::TX_PROFILE && connectors[conn_id - 1].transaction_id != prof.transactionId().get()) {
         log_info("Rejected: TX_PROFILE but no transaction active on connector %d", conn_id);
-        connection.sendCallResponse(SetChargingProfileResponse(uid, SetChargingProfileResponseStatus::REJECTED));
-        return CallResponse{CallErrorCode::OK, ""};
-    }
-
-    // reject if either recurKind is set and kind is not recurring or if it is not set and kind is recurring.
-    if (prof.chargingProfileKind() == ChargingProfileKind::RECURRING != prof.recurrencyKind().is_set()) {
-        log_info("Rejected: RECURRING but recurrency set");
         connection.sendCallResponse(SetChargingProfileResponse(uid, SetChargingProfileResponseStatus::REJECTED));
         return CallResponse{CallErrorCode::OK, ""};
     }
