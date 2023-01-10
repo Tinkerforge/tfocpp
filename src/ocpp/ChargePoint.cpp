@@ -60,7 +60,7 @@ void OcppChargePoint::tick_idle() {
 }
 
 void OcppChargePoint::tick_hard_reset() {
-    platform_reset();
+    platform_reset(true);
 }
 
 void OcppChargePoint::tick_soft_reset() {
@@ -73,7 +73,7 @@ void OcppChargePoint::tick_soft_reset() {
 
     this->stop();
 
-    platform_reset();
+    platform_reset(false);
 }
 
 void OcppChargePoint::tick_flush_persistent_messages() {

@@ -420,7 +420,7 @@ int main(int argc, char **argv) {
     return 0;
 }
 
-void platform_reset() {
+void platform_reset(bool hard) {
     char *exec_argv[] = { argv_[0], 0 };
 
     execv("/proc/self/exe", exec_argv);

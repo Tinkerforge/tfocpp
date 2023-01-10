@@ -124,7 +124,7 @@ float platform_get_raw_meter_value(int32_t connectorId, SampledValueMeasurand me
 // This is the Energy.Active.Import.Register measurand in Wh
 int32_t platform_get_energy(int32_t connectorId);
 
-void platform_reset();
+void platform_reset(bool hard);
 
 struct SupportedMeasurand {
     const SampledValuePhase phase;

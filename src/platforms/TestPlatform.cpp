@@ -35,7 +35,7 @@ static const char *(*platform_get_meter_value_cb)(int32_t connectorId, SampledVa
 
 static int32_t (*platform_get_energy_cb)(int32_t connectorId) = nullptr;
 
-static void (*platform_reset_cb)() = nullptr;
+static void (*platform_reset_cb)(bool hard) = nullptr;
 
 static size_t (*platform_read_file_cb)(const char *name, char *buf, size_t len) = nullptr;
 static bool (*platform_write_file_cb)(const char *name, char *buf, size_t len) = nullptr;
@@ -60,7 +60,7 @@ void set_platform_set_charging_current_cb(void (*cb)(int32_t connectorId, uint32
 void set_platform_get_meter_value_cb(const char * (*cb)(int32_t connectorId, SampledValueMeasurand measurant)) {platform_get_meter_value_cb = cb;}
 void set_platform_get_energy_cb(int32_t (*cb)(int32_t connectorId)) {platform_get_energy_cb = cb;}
 void set_platform_register_stop_callback_cb(void (*cb)(void *ctx, void (*cb)(int32_t, StopReason, void *), void *user_data)) {platform_register_stop_callback_cb = cb;}
-void set_platform_reset_cb(void (*cb)()) {platform_reset_cb = cb;}
+void set_platform_reset_cb(void (*cb)(bool)) {platform_reset_cb = cb;}
 
 void set_platform_read_file_cb(size_t (*cb)(const char *name, char *buf, size_t len)) { platform_read_file_cb = cb;}
 void set_platform_write_file_cb(bool (*cb)(const char *name, char *buf, size_t len)) { platform_write_file_cb = cb;}
@@ -242,8 +242,8 @@ void ocpp_destroy() {
     cp = nullptr;
 }
 
-void platform_reset() {
-    platform_reset_cb();
+void platform_reset(bool hard) {
+    platform_reset_cb(hard);
 }
 
 size_t platform_read_file(const char *name, char *buf, size_t len) {

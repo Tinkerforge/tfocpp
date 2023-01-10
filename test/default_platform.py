@@ -152,9 +152,9 @@ def trigger_stop(test, connector_id, reason):
     test.assertIsNotNone(stop_cb)
     stop_cb(connector_id, reason, stop_cb_user_data)
 
-@ctypes.CFUNCTYPE(None)
-def platform_reset():
-    return print("platform_reset")
+@ctypes.CFUNCTYPE(None, ctypes.c_bool)
+def platform_reset(hard):
+    return print("{} reset", "hard" if hard else "soft")
 
 files = {}
 
