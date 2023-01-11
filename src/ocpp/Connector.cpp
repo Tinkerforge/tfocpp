@@ -252,6 +252,8 @@ void Connector::setState(ConnectorState newState) {
                     auto timestamp = platform_get_system_time(cp->platform_ctx);
                     auto energy = platform_get_energy(connectorId);
 
+                    this->meter_value_handler.onStopTransaction();
+
                     onTxnMsgResponseReceived(this->transaction_confirmed_timestamp);
                     persistStopTxn((uint8_t)this->next_stop_reason, energy, transaction_id, authorized_for.tagId, timestamp);
                     log_info("Sending StopTransaction.req at connector %d for tag %s at %.3f kWh. StopReason %d", this->connectorId, authorized_for.tagId, energy / 1000.0f, this->next_stop_reason);
