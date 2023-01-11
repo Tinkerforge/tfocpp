@@ -294,6 +294,17 @@ void OcppConnection::tick() {
         return;
     }
 
+    /*
+    A value of 0 disables client side websocket
+    Ping / Pong. In this case there is either no ping /
+    pong or the server initiates the ping and client
+    responds with Pong.
+    */
+    if (getIntConfigUnsigned(ConfigKey::WebSocketPingInterval) != 0 && deadline_elapsed(next_ping_deadline)) {
+        platform_ws_send_ping(platform_ctx);
+        next_ping_deadline = platform_now_ms() + getIntConfigUnsigned(ConfigKey::WebSocketPingInterval) * 1000;
+    }
+
 
     if (message_in_flight.is_valid()) {
         if (!deadline_elapsed(message_timeout_deadline))

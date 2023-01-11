@@ -17,6 +17,7 @@ void platform_destroy(void *ctx);
 bool platform_ws_connected(void *ctx);
 void platform_ws_send(void *ctx, const char *buf, size_t buf_len);
 void platform_ws_register_receive_callback(void *ctx, void(*cb)(char *, size_t, void *), void *user_data);
+void platform_ws_send_ping(void *ctx);
 
 uint32_t platform_now_ms();
 void platform_set_system_time(void *ctx, time_t t);
