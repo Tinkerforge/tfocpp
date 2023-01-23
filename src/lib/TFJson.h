@@ -147,7 +147,7 @@ void TFJsonSerializer::add(int64_t i) {
 
     in_empty_container = false;
 
-    this->writeFmt("%lld", i);
+    this->writeFmt("%" PRIi64, i);
 }
 
 void TFJsonSerializer::add(int32_t i) {
