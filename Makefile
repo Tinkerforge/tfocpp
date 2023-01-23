@@ -44,7 +44,7 @@ ifeq ($(WITH_TLS),yes)
 endif
 
 CFLAGS += -std=c99 ${COMPILE_FLAGS}
-CXXFLAGS += -std=c++11 ${COMPILE_FLAGS}
+CXXFLAGS += -std=c++11 -stdlib=libc++ ${COMPILE_FLAGS}
 LDFLAGS += -pthread
 
 STATIC_FLAG =
@@ -53,7 +53,7 @@ ifeq ($(STATIC),yes)
 	LIBS += ./libwebsockets.a
 	STATIC_FLAG += -static
 else
-	LIBS += -lwebsockets -lstdc++
+	LIBS += -lwebsockets -lc++
 endif
 
 SOURCES :=	$(wildcard src/ocpp/*.cpp) \
