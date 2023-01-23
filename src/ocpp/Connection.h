@@ -13,7 +13,7 @@ class QueueItem {
 public:
     CallAction action;
     std::unique_ptr<char[]> buf;
-    uint32_t message_id;
+    uint64_t message_id;
     int32_t connector_id;
     size_t len;
     time_t timestamp;

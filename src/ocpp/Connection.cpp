@@ -1,5 +1,8 @@
 #include "Connection.h"
 
+#include "errno.h"
+#include "inttypes.h"
+
 #include "ChargePoint.h"
 #include "Persistency.h"
 #include "Types.h"
@@ -85,22 +88,22 @@ void OcppConnection::handleMessage(char *message, size_t message_len)
         return;
     }
 
-    long uid_long = atol(uniqueID);
-    if (uid_long < 0) {
-        log_error("received %s with invalid message ID %ld. ", messageType == 3 ? "call result" : "call error", uid_long);
+    errno = 0;
+    uint64_t uid = strtoull(uniqueID, nullptr, 10);
+    if (errno != 0) {
+        log_error("received %s with invalid message ID %s. ", messageType == 3 ? "call result" : "call error", uniqueID);
         return;
     }
-    uint32_t uid = (uint32_t) uid_long;
 
     if (!message_in_flight.is_valid()) {
-        log_warn("received %s with message ID %u, but no call is in flight", messageType == 3 ? "call result" : "call error", uid);
+        log_warn("received %s with message ID %" PRIu64 ", but no call is in flight", messageType == 3 ? "call result" : "call error", uid);
         return;
     }
 
-    uint32_t last_call_message_id = message_in_flight.message_id;
+    uint64_t last_call_message_id = message_in_flight.message_id;
 
     if (uid != last_call_message_id) {
-        log_error("received %s with message ID %u. expected was %u ", messageType == 3 ? "call result" : "call error", uid, last_call_message_id);
+        log_error("received %s with message ID %" PRIu64 ". expected was %" PRIu64, messageType == 3 ? "call result" : "call error", uid, last_call_message_id);
         return;
     }
 

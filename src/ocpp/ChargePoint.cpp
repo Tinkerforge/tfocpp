@@ -304,7 +304,7 @@ bool OcppChargePoint::sendCallAction(const ICall &call, time_t timestamp, int32_
     return true;
 }
 
-void OcppChargePoint::onTimeout(CallAction action, uint32_t messageId, int32_t connectorId)
+void OcppChargePoint::onTimeout(CallAction action, uint64_t messageId, int32_t connectorId)
 {
     (void) messageId;
 

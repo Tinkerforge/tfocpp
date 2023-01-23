@@ -78,7 +78,7 @@ public:
     void forceSendStatus();
 
     bool sendCallAction(const ICall &call, time_t timestamp = 0, int32_t connectorId = 0);
-    void onTimeout(CallAction action, uint32_t messageId, int32_t connectorId);
+    void onTimeout(CallAction action, uint64_t messageId, int32_t connectorId);
 
     // Core Profile
     CallResponse handleAuthorizeResponse(int32_t connectorId, AuthorizeResponseView conf);

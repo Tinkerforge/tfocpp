@@ -257,7 +257,7 @@ request_format = header_format + \
 "B"             + \
 "q"             + \
 "B"             + \
-"i"             + \
+"Q"             + \
 "Q"             + \
 "I"             + \
 "I"             + \

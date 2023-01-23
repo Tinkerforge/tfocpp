@@ -372,7 +372,7 @@ struct ICall {
     virtual size_t serializeJson(char *buf, size_t buf_len) const = 0;
 
     CallAction action;
-    uint32_t ocppJmessageId;
+    uint64_t ocppJmessageId;
     const char *ocppJcallId;
 };
 

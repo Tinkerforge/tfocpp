@@ -185,7 +185,7 @@ void platform_update_connector_state(int32_t connector_id,
                                      bool txn_with_invalid_id,
                                      bool unavailable_requested);
 void platform_update_connection_state(CallAction message_in_flight_type,
-                                      int32_t message_in_flight_id,
+                                      uint64_t message_in_flight_id,
                                       size_t message_in_flight_len,
                                       uint32_t message_timeout_deadline,
                                       uint32_t txn_msg_retry_deadline,
