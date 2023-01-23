@@ -1,6 +1,8 @@
 #pragma clang diagnostic ignored "-Weverything"
 
+#ifndef _GNU_SOURCE
 #define _GNU_SOURCE
+#endif
 #include <time.h>
 #include <sys/time.h>
 #include <errno.h>
