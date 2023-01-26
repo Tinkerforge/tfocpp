@@ -385,6 +385,30 @@ void OcppChargePoint::onTimeout(CallAction action, uint64_t messageId, int32_t c
     }
 }
 
+ChangeConfigurationResponseStatus OcppChargePoint::changeConfig(const char *key, const char *value)
+{
+    size_t key_idx;
+    ChangeConfigurationResponseStatus status = ChangeConfigurationResponseStatus::ACCEPTED;
+    if (!lookup_key(&key_idx, key, config_keys, OCPP_CONFIG_COUNT)) {
+        return ChangeConfigurationResponseStatus::NOT_SUPPORTED;
+    }
+
+    if (getConfig(key_idx).readonly) {
+        return ChangeConfigurationResponseStatus::REJECTED;
+    }
+
+    status = getConfig(key_idx).setValue(value);
+
+    if (status == ChangeConfigurationResponseStatus::ACCEPTED || status == ChangeConfigurationResponseStatus::REBOOT_REQUIRED) {
+#ifdef OCPP_STATE_CALLBACKS
+        platform_update_config_state((ConfigKey) key_idx, value);
+#endif
+        saveConfig();
+    }
+
+    return status;
+}
+
 CallResponse OcppChargePoint::handleAuthorizeResponse(int32_t connectorId, AuthorizeResponseView conf)
 {
     log_info("Received Authorize.conf for connector %d\n", connectorId);
@@ -478,22 +502,8 @@ CallResponse OcppChargePoint::handleChangeAvailability(const char *uid, ChangeAv
 CallResponse OcppChargePoint::handleChangeConfiguration(const char *uid, ChangeConfigurationView req)
 {
     log_info("Received ChangeConfiguration.req %s to %s", req.key(), req.value());
-    size_t key_idx;
-    ChangeConfigurationResponseStatus status = ChangeConfigurationResponseStatus::ACCEPTED;
-    if (!lookup_key(&key_idx, req.key(), config_keys, OCPP_CONFIG_COUNT)) {
-        status = ChangeConfigurationResponseStatus::NOT_SUPPORTED;
-    } else if (getConfig(key_idx).readonly) {
-        status = ChangeConfigurationResponseStatus::REJECTED;
-    } else {
-        status = getConfig(key_idx).setValue(req.value());
-    }
 
-    if (status == ChangeConfigurationResponseStatus::ACCEPTED || status == ChangeConfigurationResponseStatus::REBOOT_REQUIRED) {
-#ifdef OCPP_STATE_CALLBACKS
-        platform_update_config_state((ConfigKey) key_idx, req.value());
-#endif
-        saveConfig();
-    }
+    ChangeConfigurationResponseStatus status = this->changeConfig(req.key(), req.value());
 
     log_info("Sending ChangeConfiguration.conf %s\n", ChangeConfigurationResponseStatusStrings[(size_t)status]);
     connection.sendCallResponse(ChangeConfigurationResponse(uid, status));

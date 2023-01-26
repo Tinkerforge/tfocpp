@@ -80,6 +80,8 @@ public:
     bool sendCallAction(const ICall &call, time_t timestamp = 0, int32_t connectorId = 0);
     void onTimeout(CallAction action, uint64_t messageId, int32_t connectorId);
 
+    ChangeConfigurationResponseStatus changeConfig(const char *key, const char *value);
+
     // Core Profile
     CallResponse handleAuthorizeResponse(int32_t connectorId, AuthorizeResponseView conf);
     CallResponse handleBootNotificationResponse(int32_t connectorId, BootNotificationResponseView conf);
