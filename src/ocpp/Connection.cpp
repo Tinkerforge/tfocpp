@@ -363,7 +363,7 @@ bool QueueItem::is_valid()
     return buf != nullptr;
 }
 
-void* OcppConnection::start(const char *websocket_endpoint_url, const char *charge_point_name_percent_encoded, const char *basic_auth_user, const char *basic_auth_pass, OcppChargePoint *ocpp_handle) {
+void* OcppConnection::start(const char *websocket_endpoint_url, const char *charge_point_name_percent_encoded, const char *basic_auth_user, const uint8_t *basic_auth_pass, size_t basic_auth_pass_length, OcppChargePoint *ocpp_handle) {
     this->cp = ocpp_handle;
     std::string ws_url;
     ws_url.reserve(strlen(websocket_endpoint_url) + 1 + strlen(charge_point_name_percent_encoded));
@@ -371,7 +371,7 @@ void* OcppConnection::start(const char *websocket_endpoint_url, const char *char
     ws_url += '/';
     ws_url += charge_point_name_percent_encoded;
 
-    platform_ctx = platform_init(ws_url.c_str(), basic_auth_user, basic_auth_pass);
+    platform_ctx = platform_init(ws_url.c_str(), basic_auth_user, basic_auth_pass, basic_auth_pass_length);
     platform_ws_register_receive_callback(platform_ctx, [](char *c, size_t s, void *user_data){((OcppConnection*)user_data)->handleMessage(c, s);}, this);
 
     return platform_ctx;

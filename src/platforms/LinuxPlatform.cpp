@@ -132,14 +132,14 @@ void send_message(const char *message) {
 
 PlatformResponse pr;
 
-void* platform_init(const char *websocket_url, const char *basic_auth_user, const char *basic_auth_pass)
+void* platform_init(const char *websocket_url, const char *basic_auth_user, const uint8_t *basic_auth_pass, size_t basic_auth_pass_length)
 {
     mg_mgr_init(&mgr);        // Initialise event manager
     //mg_log_set("4");
     is_ssl = mg_url_is_ssl(websocket_url);
 
     if (basic_auth_user != nullptr && basic_auth_pass != nullptr) {
-        std::unique_ptr<char[]> buf = heap_alloc_array<char>(2 * (strlen(basic_auth_user) + strlen(basic_auth_pass) + 1) + 1);
+        std::unique_ptr<char[]> buf = heap_alloc_array<char>(2 * (strlen(basic_auth_user) + basic_auth_pass_length + 1) + 1);
 
         int offset = 0;
         for(int i = 0; i < strlen(basic_auth_user); ++i)
@@ -147,7 +147,7 @@ void* platform_init(const char *websocket_url, const char *basic_auth_user, cons
 
         offset = mg_base64_update(':', buf.get(), offset);
 
-        for(int i = 0; i < strlen(basic_auth_pass); ++i)
+        for(int i = 0; i < basic_auth_pass_length; ++i)
             offset = mg_base64_update(basic_auth_pass[i], buf.get(), offset);
 
         offset = mg_base64_final(buf.get(), offset);

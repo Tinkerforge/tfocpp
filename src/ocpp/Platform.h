@@ -10,7 +10,7 @@
 #include "ChargePoint.h"
 #include "Types.h"
 
-void *platform_init(const char *websocket_url, const char *basic_auth_user = nullptr, const char *basic_auth_pass = nullptr);
+void *platform_init(const char *websocket_url, const char *basic_auth_user = nullptr, const uint8_t *basic_auth_pass = nullptr, size_t basic_auth_pass_length = 0);
 void platform_disconnect(void *ctx);
 void platform_destroy(void *ctx);
 
