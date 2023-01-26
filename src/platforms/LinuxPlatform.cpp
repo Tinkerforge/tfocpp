@@ -55,7 +55,7 @@ struct PlatformMessage {
     time_t next_profile_eval;
 
     uint8_t message_in_flight_type;
-    int32_t message_in_flight_id;
+    uint64_t message_in_flight_id;
     size_t message_in_flight_len;
     uint32_t message_timeout_deadline;
     uint32_t txn_msg_retry_deadline;
