@@ -293,11 +293,11 @@ static OcppConfiguration config[OCPP_CONFIG_COUNT] = {
     // Its save to use the number of possible measurands as limit in elements,
     // because the complete list has a length of 465.
     // This also means that we don't have to implement the MeterValuesAlignedDataMaxLength key.
-    /*MeterValuesAlignedData*/            OcppConfiguration::csl(OCPP_DEFAULT_METER_VALUES_ALIGNED_DATA, MAX_CONFIG_LENGTH, 5, false, false, SampledValueMeasurandStrings, (size_t)SampledValueMeasurand::NONE),
+    /*MeterValuesAlignedData*/            OcppConfiguration::csl(OCPP_DEFAULT_METER_VALUES_ALIGNED_DATA, MAX_CONFIG_LENGTH, OCPP_METER_VALUES_ALIGNED_DATA_MAX_LENGTH, false, false, SampledValueMeasurandStrings, (size_t)SampledValueMeasurand::NONE),
     /*MeterValuesAlignedDataMaxLength*/   OcppConfiguration::integer(OCPP_METER_VALUES_ALIGNED_DATA_MAX_LENGTH, true, false, 0),
 
     // Same reasoning as with MeterValuesAlignedData.
-    /*MeterValuesSampledData*/            OcppConfiguration::csl(OCPP_DEFAULT_METER_VALUES_SAMPLED_DATA, MAX_CONFIG_LENGTH, 5, false, false, SampledValueMeasurandStrings, (size_t)SampledValueMeasurand::NONE, false, true),
+    /*MeterValuesSampledData*/            OcppConfiguration::csl(OCPP_DEFAULT_METER_VALUES_SAMPLED_DATA, MAX_CONFIG_LENGTH, OCPP_METER_VALUES_SAMPLED_DATA_MAX_LENGTH, false, false, SampledValueMeasurandStrings, (size_t)SampledValueMeasurand::NONE, false, true),
     /*MeterValuesSampledDataMaxLength*/   OcppConfiguration::integer(OCPP_METER_VALUES_SAMPLED_DATA_MAX_LENGTH, true, false, 0),
 
     /*MeterValueSampleInterval*/          OcppConfiguration::integer(OCPP_DEFAULT_METER_VALUE_SAMPLE_INTERVAL, false, false, 0),
