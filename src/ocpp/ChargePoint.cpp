@@ -393,10 +393,6 @@ ChangeConfigurationResponseStatus OcppChargePoint::changeConfig(const char *key,
         return ChangeConfigurationResponseStatus::NOT_SUPPORTED;
     }
 
-    if (getConfig(key_idx).readonly) {
-        return ChangeConfigurationResponseStatus::REJECTED;
-    }
-
     status = getConfig(key_idx).setValue(value);
 
     if (status == ChangeConfigurationResponseStatus::ACCEPTED || status == ChangeConfigurationResponseStatus::REBOOT_REQUIRED) {
