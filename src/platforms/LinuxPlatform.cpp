@@ -405,7 +405,7 @@ int main(int argc, char **argv) {
 
     char buf[sizeof(PlatformResponse)] = {0};
 
-    cp.start(argv[1], "CP_4", argc == 3 ? argv[2] : nullptr);
+    cp.start(argv[1], "CP_4", argc == 3 ? (const uint8_t *)argv[2] : nullptr, argc == 3 ? strlen(argv[2]) : 0);
 
     while(true) {
         cp.tick();
