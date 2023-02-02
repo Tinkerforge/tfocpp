@@ -14,7 +14,7 @@ void OcppMeterValueHandler::tick() {
     if (getIntConfig(ConfigKey::ClockAlignedDataInterval) != 0)
         clock_aligned_meter_values.tick();
 
-    if (getIntConfig(ConfigKey::MeterValueSampleInterval) != 0 && this->transaction_active())
+    if (getIntConfig(ConfigKey::MeterValueSampleInterval) != 0 && this->transaction_active() && charging_session_meter_values.samples_this_run == 0)
         charging_session_meter_values.tick();
 
     if (clock_aligned_interval_crossed()) {

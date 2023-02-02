@@ -8,8 +8,8 @@ struct OcppMeterValueHandler {
     void init(int32_t connId, OcppChargePoint *chargePoint) {
         this->connectorId = connId;
         this->cp = chargePoint;
-        this->clock_aligned_meter_values.init(connId, chargePoint, ConfigKey::MeterValuesAlignedData);
-        this->charging_session_meter_values.init(connId, chargePoint, ConfigKey::MeterValuesSampledData);
+        this->clock_aligned_meter_values.init(connId, true, chargePoint, ConfigKey::MeterValuesAlignedData);
+        this->charging_session_meter_values.init(connId, false, chargePoint, ConfigKey::MeterValuesSampledData);
     }
 
     void tick();

@@ -10,7 +10,7 @@ enum class MeasurandType {
     Average
 };
 
-static MeasurandType get_measurand_type(SampledValueMeasurand m) {
+static MeasurandType get_measurand_type(SampledValueMeasurand m, bool average) {
     switch (m) {
         case SampledValueMeasurand::ENERGY_ACTIVE_EXPORT_REGISTER:
         case SampledValueMeasurand::ENERGY_ACTIVE_IMPORT_REGISTER:
@@ -38,7 +38,7 @@ static MeasurandType get_measurand_type(SampledValueMeasurand m) {
         case SampledValueMeasurand::TEMPERATURE:
         case SampledValueMeasurand::SO_C:
         case SampledValueMeasurand::RPM:
-            return MeasurandType::Average;
+            return average ? MeasurandType::Average : MeasurandType::Register;
 
         case SampledValueMeasurand::NONE:
             return MeasurandType::Register;
@@ -57,7 +57,7 @@ void MeterValueAccumulator::tick()
 
     for(size_t i = 0; i < measurand_count; ++i) {
         auto measurand = measurands[i];
-        auto measurand_type = get_measurand_type(measurand);
+        auto measurand_type = get_measurand_type(measurand, this->average);
         // If we want an interval measurand, get the corresponding register value to calculate the interval with.
         // We should not query the platform for interval measurements.
         if (measurand_type == MeasurandType::Interval)
@@ -111,7 +111,7 @@ ValueToSend MeterValueAccumulator::get(SampledValueContext context)
 
     for(size_t i = 0; i < measurand_count; ++i) {
         auto measurand = measurands[i];
-        auto measurand_type = get_measurand_type(measurand);
+        auto measurand_type = get_measurand_type(measurand, this->average);
         if (measurand_type == MeasurandType::Interval)
             measurand = (SampledValueMeasurand)((size_t)measurand - 4);
 
@@ -157,9 +157,10 @@ void MeterValueAccumulator::reset()
     samples_this_run = 0;
 }
 
-void MeterValueAccumulator::init(int32_t connId, OcppChargePoint *chargePoint, ConfigKey dataToSample)
+void MeterValueAccumulator::init(int32_t connId, bool average, OcppChargePoint *chargePoint, ConfigKey dataToSample)
 {
     this->connectorId = connId;
+    this->average = average;
     this->cp = chargePoint;
     this->data_to_sample = dataToSample;
 
@@ -174,7 +175,7 @@ void MeterValueAccumulator::init(int32_t connId, OcppChargePoint *chargePoint, C
         auto m = (SampledValueMeasurand)measurands_configured[i];
         measurands[i] = m; // Store the unmodified measurand to be able to disambiguate between _INTERVAL and _REGISTER later.
 
-        auto type = get_measurand_type(m);
+        auto type = get_measurand_type(m, this->average);
         // If we want an interval measurand, get the corresponding register value to calculate the interval with.
         // We should not query the platform for interval measurements.
         if (type == MeasurandType::Interval)
