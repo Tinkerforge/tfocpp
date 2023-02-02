@@ -68,7 +68,7 @@ struct Connector {
     // and StopTransactionOnInvalidId is not configured to true.
     // In this case we have to continue the transaction but supply no energy.
     // In the future we can use the (optional) config key MaxEnergyOnInvalidId here.
-    bool transaction_with_invalid_tag_id = false;
+    bool transaction_with_non_accepted_tag_id = false;
 
     // This is set to true if we receive a ChangeAvailability.req that requests setting
     // us to unavailable, but the connector is currently locked.

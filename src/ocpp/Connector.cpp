@@ -69,7 +69,7 @@ void Connector::applyState() {
 
             transaction_id = INT32_MAX;
             transaction_start_time = 0;
-            transaction_with_invalid_tag_id = false;
+            transaction_with_non_accepted_tag_id = false;
             break;
 
         case ConnectorState::NO_CABLE_NO_TAG:
@@ -83,7 +83,7 @@ void Connector::applyState() {
 
             transaction_id = INT32_MAX;
             transaction_start_time = 0;
-            transaction_with_invalid_tag_id = false;
+            transaction_with_non_accepted_tag_id = false;
             break;
 
         case ConnectorState::NO_TAG:
@@ -97,7 +97,7 @@ void Connector::applyState() {
 
             transaction_id = INT32_MAX;
             transaction_start_time = 0;
-            transaction_with_invalid_tag_id = false;
+            transaction_with_non_accepted_tag_id = false;
             break;
 
         case ConnectorState::AUTH_START_NO_PLUG:
@@ -113,7 +113,7 @@ void Connector::applyState() {
 
             transaction_id = INT32_MAX;
             transaction_start_time = 0;
-            transaction_with_invalid_tag_id = false;
+            transaction_with_non_accepted_tag_id = false;
             break;
 
         case ConnectorState::AUTH_START:
@@ -125,7 +125,7 @@ void Connector::applyState() {
 
             transaction_id = INT32_MAX;
             transaction_start_time = 0;
-            transaction_with_invalid_tag_id = false;
+            transaction_with_non_accepted_tag_id = false;
             break;
 
         case ConnectorState::NO_PLUG:
@@ -138,14 +138,14 @@ void Connector::applyState() {
 
             transaction_id = INT32_MAX;
             transaction_start_time = 0;
-            transaction_with_invalid_tag_id = false;
+            transaction_with_non_accepted_tag_id = false;
             break;
 
         case ConnectorState::TRANSACTION:
         case ConnectorState::AUTH_STOP:
             platform_lock_cable(connectorId);
             // TODO: implement MaxEnergyOnInvalidId here
-            platform_set_charging_current(connectorId, transaction_with_invalid_tag_id ? 0 : this->current_allowed);
+            platform_set_charging_current(connectorId, transaction_with_non_accepted_tag_id ? 0 : this->current_allowed);
 
             clearTagDeadline();
             clearCableDeadline();
@@ -161,7 +161,7 @@ void Connector::applyState() {
 
             transaction_id = INT32_MAX;
             transaction_start_time = 0;
-            transaction_with_invalid_tag_id = false;
+            transaction_with_non_accepted_tag_id = false;
             break;
     }
 }
@@ -471,9 +471,9 @@ StatusNotificationStatus Connector::getStatus() {
                     break;
             }
 
-            // transaction_with_invalid_tag_id is set if StartTransaction.conf returns not accepted.
+            // transaction_with_non_accepted_tag_id is set if StartTransaction.conf returns not accepted.
             // In this case report SuspendedEVSE as it has precedence over SuspendedEV or Charging
-            if ((result == StatusNotificationStatus::SUSPENDED_EV || result == StatusNotificationStatus::CHARGING) && transaction_with_invalid_tag_id)
+            if ((result == StatusNotificationStatus::SUSPENDED_EV || result == StatusNotificationStatus::CHARGING) && transaction_with_non_accepted_tag_id)
                 return StatusNotificationStatus::SUSPENDED_EVSE;
             return result;
         }
@@ -846,7 +846,7 @@ void Connector::tick() {
     this->sendStatus();
     this->meter_value_handler.tick();
 #ifdef OCPP_STATE_CALLBACKS
-    platform_update_connector_state(connectorId, state, last_sent_status, authorized_for, tag_deadline, cable_deadline, transaction_id, transaction_confirmed_timestamp, transaction_start_time, current_allowed, transaction_with_invalid_tag_id, unavailable_requested);
+    platform_update_connector_state(connectorId, state, last_sent_status, authorized_for, tag_deadline, cable_deadline, transaction_id, transaction_confirmed_timestamp, transaction_start_time, current_allowed, transaction_with_non_accepted_tag_id, unavailable_requested);
 #endif
 }
 
@@ -1017,10 +1017,20 @@ void Connector::onStartTransactionConf(IdTagInfo info, int32_t txn_id) {
         return;
     }
 
-    // TODO: Figure out if the spec really means INVALID here or everything that is not ACCEPTED.
-    //if (info.status == ResponseIdTagInfoEntriesStatus::INVALID) {
-        this->transaction_with_invalid_tag_id = true;
-    //}
+
+    // The spec (and errata) talk about how to handle StartTransaction.confs with the authorization status
+    // not being "Accepted". Specifically in the note, the spec technically switches to
+    // "Invalid" only:
+    /*
+    Note: In the case of an invalid identifier, an operator MAY choose to
+    charge the EV with a minimum
+    amount of energy so the EV is able to drive away. This amount is
+    controlled by the optional
+    configuration key: MaxEnergyOnInvalidId."
+    */
+    // As it does not make any sense to prefer an invalid tag over (for example) a known, but expired tag
+    // we interpret this as an error in the spec and handle all non-"Accepted" statuses in the same way.
+    this->transaction_with_non_accepted_tag_id = true;
 }
 
 bool Connector::isTransactionActive()
