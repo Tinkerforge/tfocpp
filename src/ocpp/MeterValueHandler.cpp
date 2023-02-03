@@ -40,6 +40,8 @@ void OcppMeterValueHandler::tick() {
     }
 
     if (charging_session_interval_crossed(&timestamp)) {
+        charging_session_meter_values.tick();
+
         auto to_send = charging_session_meter_values.get(SampledValueContext::SAMPLE_PERIODIC);
         MeterValue mv;
         mv.timestamp = timestamp;
