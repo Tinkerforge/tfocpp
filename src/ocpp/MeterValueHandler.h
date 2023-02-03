@@ -5,12 +5,7 @@
 class OcppChargePoint;
 
 struct OcppMeterValueHandler {
-    void init(int32_t connId, OcppChargePoint *chargePoint) {
-        this->connectorId = connId;
-        this->cp = chargePoint;
-        this->clock_aligned_meter_values.init(connId, true, chargePoint, ConfigKey::MeterValuesAlignedData);
-        this->charging_session_meter_values.init(connId, false, chargePoint, ConfigKey::MeterValuesSampledData);
-    }
+    void init(int32_t connId, OcppChargePoint *chargePoint);
 
     void tick();
     void onStartTransaction(int32_t txnId) {
@@ -28,8 +23,8 @@ struct OcppMeterValueHandler {
         this->transactionId = INT32_MAX;
     }
 
-    bool clock_aligned_interval_crossed();
-    bool charging_session_interval_crossed();
+    bool clock_aligned_interval_crossed(time_t *timestamp);
+    bool charging_session_interval_crossed(time_t *timestamp);
     bool transaction_active() { return transactionId != INT32_MAX;}
 
     int connectorId;

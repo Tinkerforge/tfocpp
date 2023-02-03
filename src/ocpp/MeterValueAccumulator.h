@@ -7,7 +7,6 @@
 class OcppChargePoint;
 
 struct ValueToSend {
-    time_t timestamp;
     std::unique_ptr<MeterValueSampledValue[]> sampled_values;
     size_t sampled_value_count;
     std::unique_ptr<char[]> sampled_value_content;

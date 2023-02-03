@@ -3,6 +3,14 @@
 #include "ChargePoint.h"
 #include "Platform.h"
 
+void OcppMeterValueHandler::init(int32_t connId, OcppChargePoint *chargePoint) {
+    this->connectorId = connId;
+    this->cp = chargePoint;
+    this->clock_aligned_meter_values.init(connId, true, chargePoint, ConfigKey::MeterValuesAlignedData);
+    this->charging_session_meter_values.init(connId, false, chargePoint, ConfigKey::MeterValuesSampledData);
+    last_clock_aligned_send = platform_get_system_time(cp->platform_ctx);
+}
+
 void OcppMeterValueHandler::tick() {
     // TODO: let the platform trigger when new values are available instead of polling.
     // This makes sure that meter values are always up to date if we also handle the clock aligned/interval sampling and sending here.
@@ -17,10 +25,11 @@ void OcppMeterValueHandler::tick() {
     if (getIntConfig(ConfigKey::MeterValueSampleInterval) != 0 && this->transaction_active() && charging_session_meter_values.samples_this_run == 0)
         charging_session_meter_values.tick();
 
-    if (clock_aligned_interval_crossed()) {
+    time_t timestamp;
+    if (clock_aligned_interval_crossed(&timestamp)) {
         auto to_send = clock_aligned_meter_values.get(SampledValueContext::SAMPLE_CLOCK);
         MeterValue mv;
-        mv.timestamp = to_send.timestamp;
+        mv.timestamp = timestamp;
         mv.sampledValue = to_send.sampled_values.get();
         mv.sampledValue_length = to_send.sampled_value_count;
         if (mv.sampledValue_length > 0) {
@@ -30,10 +39,10 @@ void OcppMeterValueHandler::tick() {
         clock_aligned_meter_values.reset();
     }
 
-    if (charging_session_interval_crossed()) {
+    if (charging_session_interval_crossed(&timestamp)) {
         auto to_send = charging_session_meter_values.get(SampledValueContext::SAMPLE_PERIODIC);
         MeterValue mv;
-        mv.timestamp = to_send.timestamp;
+        mv.timestamp = timestamp;
         mv.sampledValue = to_send.sampled_values.get();
         mv.sampledValue_length = to_send.sampled_value_count;
         if (mv.sampledValue_length > 0) {
@@ -44,7 +53,7 @@ void OcppMeterValueHandler::tick() {
     }
 }
 
-bool OcppMeterValueHandler::clock_aligned_interval_crossed() {
+bool OcppMeterValueHandler::clock_aligned_interval_crossed(time_t *timestamp) {
     uint32_t interval = getIntConfigUnsigned(ConfigKey::ClockAlignedDataInterval);
 
     /*
@@ -73,11 +82,12 @@ bool OcppMeterValueHandler::clock_aligned_interval_crossed() {
             return false;
     }
 
+    *timestamp = last_clock_aligned_send;
     last_clock_aligned_send = now;
     return true;
 }
 
-bool OcppMeterValueHandler::charging_session_interval_crossed()
+bool OcppMeterValueHandler::charging_session_interval_crossed(time_t *timestamp)
 {
     uint32_t interval = getIntConfigUnsigned(ConfigKey::MeterValueSampleInterval);
     if (interval == 0)
@@ -90,5 +100,6 @@ bool OcppMeterValueHandler::charging_session_interval_crossed()
         return false;
 
     last_charging_session_send = platform_now_ms();
+    *timestamp = platform_get_system_time(cp->platform_ctx);
     return true;
 }

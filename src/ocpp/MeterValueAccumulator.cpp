@@ -152,7 +152,6 @@ ValueToSend MeterValueAccumulator::get(SampledValueContext context)
     }
 
     return ValueToSend{
-        platform_get_system_time(this->cp->platform_ctx),
         std::move(sampled_values),
         supported_measurand_count,
         std::move(sampled_value_content)};
