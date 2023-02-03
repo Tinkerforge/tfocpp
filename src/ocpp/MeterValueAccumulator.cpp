@@ -134,7 +134,7 @@ ValueToSend MeterValueAccumulator::get(SampledValueContext context)
             sampled_values[sampled_value_idx].value = value_buf;
             sampled_values[sampled_value_idx].format = is_signed ? SampledValueFormat::SIGNED_DATA : SampledValueFormat::RAW;
             sampled_values[sampled_value_idx].location = m.location;
-            sampled_values[sampled_value_idx].measurand = measurand;
+            sampled_values[sampled_value_idx].measurand = measurand_type == MeasurandType::Interval ? (SampledValueMeasurand)((size_t)measurand + 4) : measurand;
             sampled_values[sampled_value_idx].phase = m.phase;
             sampled_values[sampled_value_idx].unit = m.unit;
             sampled_values[sampled_value_idx].context = context;
