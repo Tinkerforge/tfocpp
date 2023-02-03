@@ -79,9 +79,9 @@ void MeterValueAccumulator::tick()
                     meter_values[value_offset] = platform_get_raw_meter_value(this->connectorId, measurand, s.phase, s.location);
                     break;
                 case MeasurandType::Interval:
-                    // Use two values for intervals: one for the first run after the interval reset, one for the latest value
-                    // We can then calculate the interval value when sending.
-                    if (samples_this_run == 0)
+                    // Use two values for intervals as a mini ring-buffer. Set the first one only on the first run after boot-up.
+                    // ::reset() "rotates" the ring buffer.
+                    if (first_run)
                         meter_values[value_offset] = platform_get_raw_meter_value(this->connectorId, measurand, s.phase, s.location);
                     else
                         meter_values[value_offset + 1] = platform_get_raw_meter_value(this->connectorId, measurand, s.phase, s.location);
@@ -97,6 +97,7 @@ void MeterValueAccumulator::tick()
             ++value_offset;
         }
     }
+    first_run = false;
 
     ++samples_this_run;
 }
@@ -124,7 +125,13 @@ ValueToSend MeterValueAccumulator::get(SampledValueContext context)
 
             float value = meter_values[value_offset];
             if (measurand_type == MeasurandType::Interval) {
-                value = meter_values[value_offset + 1] - value;
+                // We need two samples in the first run (start and end of the interval)
+                // and one additional sample per run after the first one
+                // (end of the last interval becomes start of the next one)
+                if ((first_run && samples_this_run == 0) || samples_this_run <= 1)
+                    value = 0;
+                else
+                    value = meter_values[value_offset + 1] - value;
                 ++value_offset;
             }
 
@@ -153,7 +160,36 @@ ValueToSend MeterValueAccumulator::get(SampledValueContext context)
 
 void MeterValueAccumulator::reset()
 {
-    memset(meter_values.get(), 0, sizeof(meter_values[0]) * meter_values_len);
+    size_t value_offset = 0;
+
+    for(size_t i = 0; i < measurand_count; ++i) {
+        auto measurand = measurands[i];
+        auto measurand_type = get_measurand_type(measurand, this->average);
+        // If we want an interval measurand, get the corresponding register value to calculate the interval with.
+        // We should not query the platform for interval measurements.
+        if (measurand_type == MeasurandType::Interval)
+            measurand = (SampledValueMeasurand)((size_t)measurand - 4);
+
+        size_t supported_count = platform_get_supported_measurand_count(this->connectorId, measurand);
+
+        for(size_t supported_idx = 0; supported_idx < supported_count; ++supported_idx) {
+            switch (measurand_type) {
+                case MeasurandType::Register:
+                case MeasurandType::Average:
+                    meter_values[value_offset] = 0;
+                    break;
+                case MeasurandType::Interval:
+                    if (samples_this_run > 1)
+                        meter_values[value_offset] = meter_values[value_offset + 1];
+                    meter_values[value_offset + 1] = 0;
+                    ++value_offset;
+                    break;
+            }
+
+            ++value_offset;
+        }
+    }
+
     samples_this_run = 0;
 }
 

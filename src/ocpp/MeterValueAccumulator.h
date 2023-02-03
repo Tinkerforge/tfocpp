@@ -23,6 +23,7 @@ struct MeterValueAccumulator {
     size_t supported_measurand_count;
     size_t meter_values_len = 0;
     uint32_t samples_this_run = 0;
+    bool first_run = true;
 
     ValueToSend get(SampledValueContext context);
 
