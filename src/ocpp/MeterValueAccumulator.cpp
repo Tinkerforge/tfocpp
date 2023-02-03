@@ -64,31 +64,32 @@ void MeterValueAccumulator::tick()
             measurand = (SampledValueMeasurand)((size_t)measurand - 4);
 
         size_t supported_count = platform_get_supported_measurand_count(this->connectorId, measurand);
-        auto *supported = platform_get_supported_measurands(this->connectorId, measurand);
-
+        const SupportedMeasurand *sup = platform_get_supported_measurands(this->connectorId, measurand);
         for(size_t supported_idx = 0; supported_idx < supported_count; ++supported_idx) {
-            auto s = supported[supported_idx];
+            auto m = sup[supported_idx];
+            if (measurand_phases != nullptr && measurand_phases[i] != SampledValuePhase::NONE && m.phase != measurand_phases[i])
+                continue;
 
             switch (measurand_type) {
                 case MeasurandType::Register:
-                    if (s.is_signed) {
+                    if (m.is_signed) {
                         log_warn("Signed values not supported yet!");
                         continue;
                     }
 
-                    meter_values[value_offset] = platform_get_raw_meter_value(this->connectorId, measurand, s.phase, s.location);
+                    meter_values[value_offset] = platform_get_raw_meter_value(this->connectorId, measurand, m.phase, m.location);
                     break;
                 case MeasurandType::Interval:
                     // Use two values for intervals as a mini ring-buffer. Set the first one only on the first run after boot-up.
                     // ::reset() "rotates" the ring buffer.
                     if (first_run)
-                        meter_values[value_offset] = platform_get_raw_meter_value(this->connectorId, measurand, s.phase, s.location);
+                        meter_values[value_offset] = platform_get_raw_meter_value(this->connectorId, measurand, m.phase, m.location);
                     else
-                        meter_values[value_offset + 1] = platform_get_raw_meter_value(this->connectorId, measurand, s.phase, s.location);
+                        meter_values[value_offset + 1] = platform_get_raw_meter_value(this->connectorId, measurand, m.phase, m.location);
                     ++value_offset;
                     break;
                 case MeasurandType::Average:
-                    float new_value = platform_get_raw_meter_value(this->connectorId, measurand, s.phase, s.location);
+                    float new_value = platform_get_raw_meter_value(this->connectorId, measurand, m.phase, m.location);
                     // TODO: store value "undivided" here and divide by samples_this_run only in get()
                     meter_values[value_offset] = ((meter_values[value_offset] * samples_this_run) + new_value) / ((float)samples_this_run + 1);
                     break;
@@ -116,11 +117,13 @@ ValueToSend MeterValueAccumulator::get(SampledValueContext context)
         if (measurand_type == MeasurandType::Interval)
             measurand = (SampledValueMeasurand)((size_t)measurand - 4);
 
-        size_t count = platform_get_supported_measurand_count(this->connectorId, measurand);
-        auto *sup = platform_get_supported_measurands(this->connectorId, measurand);
-
-        for(size_t supported_idx = 0; supported_idx < count; ++supported_idx) {
+        size_t supported_count = platform_get_supported_measurand_count(this->connectorId, measurand);
+        const SupportedMeasurand *sup = platform_get_supported_measurands(this->connectorId, measurand);
+        for(size_t supported_idx = 0; supported_idx < supported_count; ++supported_idx) {
             auto m = sup[supported_idx];
+            if (measurand_phases != nullptr && measurand_phases[i] != SampledValuePhase::NONE && m.phase != measurand_phases[i])
+                continue;
+
             bool is_signed = false;
 
             float value = meter_values[value_offset];
@@ -170,8 +173,12 @@ void MeterValueAccumulator::reset()
             measurand = (SampledValueMeasurand)((size_t)measurand - 4);
 
         size_t supported_count = platform_get_supported_measurand_count(this->connectorId, measurand);
-
+        const SupportedMeasurand *sup = platform_get_supported_measurands(this->connectorId, measurand);
         for(size_t supported_idx = 0; supported_idx < supported_count; ++supported_idx) {
+            auto m = sup[supported_idx];
+            if (measurand_phases != nullptr && measurand_phases[i] != SampledValuePhase::NONE && m.phase != measurand_phases[i])
+                continue;
+
             switch (measurand_type) {
                 case MeasurandType::Register:
                 case MeasurandType::Average:
@@ -204,8 +211,15 @@ void MeterValueAccumulator::init(int32_t connId, bool average, OcppChargePoint *
     measurand_count = getCSLConfigLen(dataToSample);
     supported_measurand_count = 0;
     size_t *measurands_configured = getCSLConfig(dataToSample);
+    size_t *phases = getCSLPhases(dataToSample);
 
     measurands = heap_alloc_array<SampledValueMeasurand>(measurand_count);
+    if (phases != nullptr) {
+        measurand_phases = heap_alloc_array<SampledValuePhase>(measurand_count);
+        for(size_t i = 0; i < measurand_count; ++i)
+            measurand_phases[i] = (SampledValuePhase) phases[i];
+    }
+
     for(size_t i = 0; i < measurand_count; ++i) {
         auto m = (SampledValueMeasurand)measurands_configured[i];
         measurands[i] = m; // Store the unmodified measurand to be able to disambiguate between _INTERVAL and _REGISTER later.
@@ -217,7 +231,14 @@ void MeterValueAccumulator::init(int32_t connId, bool average, OcppChargePoint *
             m = (SampledValueMeasurand)((size_t)m - 4);
 
         size_t supported_count = platform_get_supported_measurand_count(this->connectorId, m);
-        supported_measurand_count += supported_count;
+        const SupportedMeasurand *sup = platform_get_supported_measurands(this->connectorId, m);
+        for(size_t supported_idx = 0; supported_idx < supported_count; ++supported_idx) {
+            auto m = sup[supported_idx];
+            if (measurand_phases != nullptr && measurand_phases[i] != SampledValuePhase::NONE && m.phase != measurand_phases[i])
+                continue;
+            ++supported_measurand_count;
+        }
+
         meter_values_len += supported_count * (type == MeasurandType::Interval ? 2 : 1);
     }
 

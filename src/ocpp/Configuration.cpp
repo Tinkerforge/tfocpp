@@ -152,8 +152,10 @@ ChangeConfigurationResponseStatus OcppConfiguration::setValue(const char *newVal
 
                         // Suffix phases are used for MeterValuesSampledData:
                         /* Where applicable, the Measurand is combined with the optional phase; for instance: Voltage.L1 */
+                        char *last_dot = nullptr;
                         if (phase_suffix_allowed) {
-                            char *last_dot = strrchr(token, '.');
+                            phases_buf[next_parsed_buf_insert] = (size_t)SampledValuePhase::NONE;
+                            last_dot = strrchr(token, '.');
                             if (last_dot != nullptr) {
                                 size_t phase_idx = 0;
                                 if (lookup_key(&phase_idx, last_dot + 1, SampledValuePhaseStrings, (size_t) SampledValuePhase::NONE)) {
@@ -166,6 +168,10 @@ ChangeConfigurationResponseStatus OcppConfiguration::setValue(const char *newVal
                         size_t idx;
                         if (!lookup_key(&idx, token, value.csl.allowed_values, value.csl.allowed_values_len))
                             return ChangeConfigurationResponseStatus::REJECTED;
+
+                        // Undo string termination to make sure the complete string is copied over into value.csl.c later.
+                        if (last_dot != nullptr)
+                            *last_dot = '.';
 
                         parsed_buf[next_parsed_buf_insert] = idx;
                         ++next_parsed_buf_insert; //if prefix_index is set this will be overwritten anyway.
@@ -416,6 +422,15 @@ size_t *getCSLConfig(ConfigKey key) {
         return nullptr;
     }
     return cfg.value.csl.parsed;
+}
+
+size_t *getCSLPhases(ConfigKey key) {
+    OcppConfiguration &cfg = config[(size_t)key];
+    if (cfg.type != OcppConfigurationValueType::CSL) {
+        log_error("Tried to read config %s (%d) as csl, but it is of type %s", config_keys[(size_t) key], (int)key, cfg.type == OcppConfigurationValueType::Integer ? "integer" : "boolean");
+        return nullptr;
+    }
+    return cfg.value.csl.phases;
 }
 
 bool setIntConfig(ConfigKey key, int32_t i) {

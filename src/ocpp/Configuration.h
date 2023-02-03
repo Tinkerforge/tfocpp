@@ -154,6 +154,7 @@ uint32_t getIntConfigUnsigned(ConfigKey key);
 bool getBoolConfig(ConfigKey key);
 size_t getCSLConfigLen(ConfigKey key);
 size_t *getCSLConfig(ConfigKey key);
+size_t *getCSLPhases(ConfigKey key);
 bool setIntConfig(ConfigKey key, int32_t i);
 bool setBoolConfig(ConfigKey key, bool b);
 
