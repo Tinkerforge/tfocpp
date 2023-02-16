@@ -199,10 +199,10 @@ void MeterValueAccumulator::reset()
     samples_this_run = 0;
 }
 
-void MeterValueAccumulator::init(int32_t connId, bool average, OcppChargePoint *chargePoint, ConfigKey dataToSample)
+void MeterValueAccumulator::init(int32_t connId, bool average_values, OcppChargePoint *chargePoint, ConfigKey dataToSample)
 {
     this->connectorId = connId;
-    this->average = average;
+    this->average = average_values;
     this->cp = chargePoint;
     this->data_to_sample = dataToSample;
 
@@ -221,17 +221,17 @@ void MeterValueAccumulator::init(int32_t connId, bool average, OcppChargePoint *
     }
 
     for(size_t i = 0; i < measurand_count; ++i) {
-        auto m = (SampledValueMeasurand)measurands_configured[i];
-        measurands[i] = m; // Store the unmodified measurand to be able to disambiguate between _INTERVAL and _REGISTER later.
+        auto m_conf = (SampledValueMeasurand)measurands_configured[i];
+        measurands[i] = m_conf; // Store the unmodified measurand to be able to disambiguate between _INTERVAL and _REGISTER later.
 
-        auto type = get_measurand_type(m, this->average);
+        auto type = get_measurand_type(m_conf, this->average);
         // If we want an interval measurand, get the corresponding register value to calculate the interval with.
         // We should not query the platform for interval measurements.
         if (type == MeasurandType::Interval)
-            m = (SampledValueMeasurand)((size_t)m - 4);
+            m_conf = (SampledValueMeasurand)((size_t)m_conf - 4);
 
-        size_t supported_count = platform_get_supported_measurand_count(this->connectorId, m);
-        const SupportedMeasurand *sup = platform_get_supported_measurands(this->connectorId, m);
+        size_t supported_count = platform_get_supported_measurand_count(this->connectorId, m_conf);
+        const SupportedMeasurand *sup = platform_get_supported_measurands(this->connectorId, m_conf);
         for(size_t supported_idx = 0; supported_idx < supported_count; ++supported_idx) {
             auto m = sup[supported_idx];
             if (measurand_phases != nullptr && measurand_phases[i] != SampledValuePhase::NONE && m.phase != measurand_phases[i])

@@ -13,7 +13,7 @@ struct ValueToSend {
 };
 
 struct MeterValueAccumulator {
-    void init(int32_t connId, bool average, OcppChargePoint *chargePoint, ConfigKey data_to_sample);
+    void init(int32_t connId, bool average_values, OcppChargePoint *chargePoint, ConfigKey data_to_sample);
     void reset();
     void tick();
     std::unique_ptr<float[]> meter_values = nullptr;
