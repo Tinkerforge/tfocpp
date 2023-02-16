@@ -274,42 +274,43 @@ static OcppConfiguration config[OCPP_CONFIG_COUNT] = {
     // CORE PROFILE
     /*AllowOfflineTxForUnknownId*/        //OcppConfiguration::boolean(OCPP_DEFAULT_ALLOW_OFFLINE_TX_FOR_UNKNOWN_ID, false, false),
     /*AuthorizationCacheEnabled*/         //OcppConfiguration::boolean(OCPP_DEFAULT_AUTHORIZATION_CACHE_ENABLED, false, false),
-    /*AuthorizeRemoteTxRequests*/         OcppConfiguration::boolean(OCPP_DEFAULT_AUTHORIZE_REMOTE_TX_REQUESTS, false, false),
+    /*AuthorizeRemoteTxRequests*/         OcppConfiguration::boolean(OCPP_DEFAULT_AUTHORIZE_REMOTE_TX_REQUESTS, false, OCPP_AUTHORIZE_REMOTE_TX_REQUESTS_REQUIRES_REBOOT),
     /*BlinkRepeat*/                       //OcppConfiguration::integer(OCPP_DEFAULT_BLINK_REPEAT, false, false),
-    /*ClockAlignedDataInterval*/          OcppConfiguration::integer(OCPP_DEFAULT_CLOCK_ALIGNED_DATA_INTERVAL, false, false, 0),
-    /*ConnectionTimeOut*/                 OcppConfiguration::integer(OCPP_DEFAULT_CONNECTION_TIME_OUT, false, false, 0, (UINT32_MAX / 2 - 1) / 1000),
+    /*ClockAlignedDataInterval*/          OcppConfiguration::integer(OCPP_DEFAULT_CLOCK_ALIGNED_DATA_INTERVAL, false, OCPP_CLOCK_ALIGNED_DATA_INTERVAL_REQUIRES_REBOOT, 0),
+    /*ConnectionTimeOut*/                 OcppConfiguration::integer(OCPP_DEFAULT_CONNECTION_TIME_OUT, false, OCPP_CONNECTION_TIME_OUT_REQUIRES_REBOOT, 0, (UINT32_MAX / 2 - 1) / 1000),
 
                                           // +1 for index 0: "the phase rotation between
                                           //    the grid connection and the main energymeter"
                                           // +5 for two digits, the dot, comma and space
                                           // +1 for null-terminator
                                           // Format is "0.RST, 1.RST, 2.RTS"
-    /*ConnectorPhaseRotation*/            OcppConfiguration::csl(OCPP_DEFAULT_CONNECTOR_PHASE_ROTATION, (OCPP_NUM_CONNECTORS + 1) * (strlen("NotApplicable") + 5) + 1, OCPP_NUM_CONNECTORS + 1, false, false, connectorPhaseRotationStrings, ARRAY_SIZE(connectorPhaseRotationStrings), true),
+    /*ConnectorPhaseRotation*/            OcppConfiguration::csl(OCPP_DEFAULT_CONNECTOR_PHASE_ROTATION, (OCPP_NUM_CONNECTORS + 1) * (strlen("NotApplicable") + 5) + 1, OCPP_NUM_CONNECTORS + 1, false, OCPP_CONNECTOR_PHASE_ROTATION_REQUIRES_REBOOT, connectorPhaseRotationStrings, ARRAY_SIZE(connectorPhaseRotationStrings), true),
     /*ConnectorPhaseRotationMaxLength*/   OcppConfiguration::integer(OCPP_NUM_CONNECTORS + 1, true, false, 0),
 
     /*GetConfigurationMaxKeys*/           OcppConfiguration::integer(OCPP_CONFIG_COUNT, true, false, 0),
-    /*HeartbeatInterval*/                 OcppConfiguration::integer(OCPP_DEFAULT_HEARTBEAT_INTERVAL_S, false, false, 0, (UINT32_MAX / 2 - 1) / 1000),
-    /*LightIntensity*/                    //OcppConfiguration::integer(OCPP_DEFAULT_LIGHT_INTENSITY, false, false, 0),
-    /*LocalAuthorizeOffline*/             OcppConfiguration::boolean(OCPP_DEFAULT_LOCAL_AUTHORIZE_OFFLINE, false, false),
-    /*LocalPreAuthorize*/                 OcppConfiguration::boolean(OCPP_DEFAULT_LOCAL_PRE_AUTHORIZE, false, false),
-    /*MaxEnergyOnInvalidId*/              //OcppConfiguration::integer(OCPP_DEFAULT_MAX_ENERGY_ON_INVALID_ID, false, false, 0),
+    /*HeartbeatInterval*/                 OcppConfiguration::integer(OCPP_DEFAULT_HEARTBEAT_INTERVAL_S, false, OCPP_HEARTBEAT_INTERVAL_S_REQUIRES_REBOOT, 0, (UINT32_MAX / 2 - 1) / 1000),
+    /*LightIntensity*/                    //OcppConfiguration::integer(OCPP_DEFAULT_LIGHT_INTENSITY, false, OCPP_LIGHT_INTENSITY_REQUIRES_REBOOT, 0),
+    /*LocalAuthorizeOffline*/             OcppConfiguration::boolean(OCPP_DEFAULT_LOCAL_AUTHORIZE_OFFLINE, false, OCPP_LOCAL_AUTHORIZE_OFFLINE_REQUIRES_REBOOT),
+    /*LocalPreAuthorize*/                 OcppConfiguration::boolean(OCPP_DEFAULT_LOCAL_PRE_AUTHORIZE, false, OCPP_LOCAL_PRE_AUTHORIZE_REQUIRES_REBOOT),
+    /*MaxEnergyOnInvalidId*/              //OcppConfiguration::integer(OCPP_DEFAULT_MAX_ENERGY_ON_INVALID_ID, false, OCPP_MAX_ENERGY_ON_INVALID_ID_REQUIRES_REBOOT, 0),
 
-    /*MessageTimeout*/                    OcppConfiguration::integer(OCPP_DEFAULT_MESSAGE_TIMEOUT, false, false, 1, (UINT32_MAX / 2 - 1) / 1000),
+    /*MessageTimeout*/                    OcppConfiguration::integer(OCPP_DEFAULT_MESSAGE_TIMEOUT, false, OCPP_MESSAGE_TIMEOUT_REQUIRES_REBOOT, 1, (UINT32_MAX / 2 - 1) / 1000),
 
     // Its save to use the number of possible measurands as limit in elements,
     // because the complete list has a length of 465.
     // This also means that we don't have to implement the MeterValuesAlignedDataMaxLength key.
-    /*MeterValuesAlignedData*/            OcppConfiguration::csl(OCPP_DEFAULT_METER_VALUES_ALIGNED_DATA, MAX_CONFIG_LENGTH, OCPP_METER_VALUES_ALIGNED_DATA_MAX_LENGTH, false, false, SampledValueMeasurandStrings, (size_t)SampledValueMeasurand::NONE),
+    // Force reboot required to true, as MeterValueHandler does not support changing this at runtime.
+    /*MeterValuesAlignedData*/            OcppConfiguration::csl(OCPP_DEFAULT_METER_VALUES_ALIGNED_DATA, MAX_CONFIG_LENGTH, OCPP_METER_VALUES_ALIGNED_DATA_MAX_LENGTH, false, true/*OCPP_METER_VALUES_ALIGNED_DATA_REQUIRES_REBOOT*/, SampledValueMeasurandStrings, (size_t)SampledValueMeasurand::NONE),
     /*MeterValuesAlignedDataMaxLength*/   OcppConfiguration::integer(OCPP_METER_VALUES_ALIGNED_DATA_MAX_LENGTH, true, false, 0),
 
     // Same reasoning as with MeterValuesAlignedData.
-    /*MeterValuesSampledData*/            OcppConfiguration::csl(OCPP_DEFAULT_METER_VALUES_SAMPLED_DATA, MAX_CONFIG_LENGTH, OCPP_METER_VALUES_SAMPLED_DATA_MAX_LENGTH, false, false, SampledValueMeasurandStrings, (size_t)SampledValueMeasurand::NONE, false, true),
+    /*MeterValuesSampledData*/            OcppConfiguration::csl(OCPP_DEFAULT_METER_VALUES_SAMPLED_DATA, MAX_CONFIG_LENGTH, OCPP_METER_VALUES_SAMPLED_DATA_MAX_LENGTH, false, true/*OCPP_METER_VALUES_SAMPLED_DATA_REQUIRES_REBOOT*/, SampledValueMeasurandStrings, (size_t)SampledValueMeasurand::NONE, false, true),
     /*MeterValuesSampledDataMaxLength*/   OcppConfiguration::integer(OCPP_METER_VALUES_SAMPLED_DATA_MAX_LENGTH, true, false, 0),
 
-    /*MeterValueSampleInterval*/          OcppConfiguration::integer(OCPP_DEFAULT_METER_VALUE_SAMPLE_INTERVAL, false, false, 0),
-    /*MinimumStatusDuration*/             //OcppConfiguration::integer(OCPP_DEFAULT_MINIMUM_STATUS_DURATION, false, false, 0),
+    /*MeterValueSampleInterval*/          OcppConfiguration::integer(OCPP_DEFAULT_METER_VALUE_SAMPLE_INTERVAL, false, OCPP_METER_VALUE_SAMPLE_INTERVAL_REQUIRES_REBOOT, 0),
+    /*MinimumStatusDuration*/             //OcppConfiguration::integer(OCPP_DEFAULT_MINIMUM_STATUS_DURATION, false, OCPP_MINIMUM_STATUS_DURATION_REQUIRES_REBOOT, 0),
     /*NumberOfConnectors*/                OcppConfiguration::integer(OCPP_NUM_CONNECTORS, true, false, 0),
-    /*ResetRetries*/                      OcppConfiguration::integer(OCPP_DEFAULT_RESET_RETRIES, false, false, 0),
+    /*ResetRetries*/                      OcppConfiguration::integer(OCPP_DEFAULT_RESET_RETRIES, false, OCPP_RESET_RETRIES_REQUIRES_REBOOT, 0),
 
     /*
     The description of the configuration key: StopTransactionOnEVSideDisconnect is required. It was added to
@@ -318,17 +319,17 @@ static OcppConfiguration config[OCPP_CONFIG_COUNT] = {
     The German eichrect does not allow this configuration key to be implemented.
     */
     /*StopTransactionOnEVSideDisconnect*/ OcppConfiguration::boolean(true, true, false),
-    /*StopTransactionOnInvalidId*/        OcppConfiguration::boolean(OCPP_DEFAULT_STOP_TRANSACTION_ON_INVALID_ID, false, false),
+    /*StopTransactionOnInvalidId*/        OcppConfiguration::boolean(OCPP_DEFAULT_STOP_TRANSACTION_ON_INVALID_ID, false, OCPP_STOP_TRANSACTION_ON_INVALID_ID_REQUIRES_REBOOT),
 
     // Hardcode 2: This is the maximum amount of _meter values_ to send in a stoptxn.
     // However the size of the packet depends on which values to sample _per_ meter value.
     // To make sure we don't have to recalculate this if the configuration which values to sample changes,
     // we just abuse that the spec (errata 4.0) rules "The Start and Stop meter values SHALL never be dropped."
     // This should be sufficient in real-life, as we still periodically send meter values anyway.
-    /*StopTransactionMaxMeterValues*/     OcppConfiguration::integer(OCPP_STOP_TRANSACTION_MAX_METER_VALUES, true, true),
+    /*StopTransactionMaxMeterValues*/     OcppConfiguration::integer(OCPP_STOP_TRANSACTION_MAX_METER_VALUES, true, false),
 
     // Same reasoning as with MeterValuesAlignedData.
-    /*StopTxnAlignedData*/                OcppConfiguration::csl("", MAX_CONFIG_LENGTH, 0, false, false, SampledValueMeasurandStrings, (size_t)SampledValueMeasurand::NONE),
+    /*StopTxnAlignedData*/                OcppConfiguration::csl("", MAX_CONFIG_LENGTH, 0, false, STOP_TXN_ALIGNED_DATA_REQUIRES_REBOOT, SampledValueMeasurandStrings, (size_t)SampledValueMeasurand::NONE),
 
     // Hardcode 0 for now: We don't want to support sending metering data in StopTransaction.req for now. The spec says:
     /*
@@ -340,15 +341,15 @@ static OcppConfiguration config[OCPP_CONFIG_COUNT] = {
     /*StopTxnAlignedDataMaxLength*/       OcppConfiguration::integer(0, true, false, 0),
 
     // Same reasoning as with MeterValuesAlignedData.
-    /*StopTxnSampledData*/                OcppConfiguration::csl("", MAX_CONFIG_LENGTH, 0, false, false, SampledValueMeasurandStrings, (size_t)SampledValueMeasurand::NONE),
+    /*StopTxnSampledData*/                OcppConfiguration::csl("", MAX_CONFIG_LENGTH, 0, false, STOP_TXN_SAMPLED_DATA_REQUIRES_REBOOT, SampledValueMeasurandStrings, (size_t)SampledValueMeasurand::NONE),
     /*StopTxnSampledDataMaxLength*/       OcppConfiguration::integer(0, true, false, 0),
 
     /*SupportedFeatureProfiles*/          OcppConfiguration::csl(OCPP_SUPPORTED_FEATURE_PROFILES, strlen(OCPP_SUPPORTED_FEATURE_PROFILES) + 1, 2, true, false, nullptr, 0, false),
     /*SupportedFeatureProfilesMaxLength*/ //OcppConfiguration::integer(1, true), //errata 4.0: "This configuration key does not have to be implemented. It should not have been part of OCPP 1.6, "SupportedFeatureProfiles" is a readonly configuration key, false, 0."
-    /*TransactionMessageAttempts*/        OcppConfiguration::integer(OCPP_DEFAULT_TRANSACTION_MESSAGE_ATTEMPTS, false, false, 0),
-    /*TransactionMessageRetryInterval*/   OcppConfiguration::integer(OCPP_DEFAULT_TRANSACTION_MESSAGE_RETRY_INTERVAL, false, false, 0, (UINT32_MAX / 2 - 1) / 1000),
-    /*UnlockConnectorOnEVSideDisconnect*/ OcppConfiguration::boolean(OCPP_DEFAULT_UNLOCK_CONNECTOR_ON_EV_SIDE_DISCONNECT, false, false),
-    /*WebSocketPingInterval*/             OcppConfiguration::integer(OCPP_DEFAULT_WEB_SOCKET_PING_INTERVAL, false, false, 0, (UINT32_MAX / 2 - 1) / 1000),
+    /*TransactionMessageAttempts*/        OcppConfiguration::integer(OCPP_DEFAULT_TRANSACTION_MESSAGE_ATTEMPTS, false, OCPP_TRANSACTION_MESSAGE_ATTEMPTS_REQUIRES_REBOOT, 0),
+    /*TransactionMessageRetryInterval*/   OcppConfiguration::integer(OCPP_DEFAULT_TRANSACTION_MESSAGE_RETRY_INTERVAL, false, OCPP_TRANSACTION_MESSAGE_RETRY_INTERVAL_REQUIRES_REBOOT, 0, (UINT32_MAX / 2 - 1) / 1000),
+    /*UnlockConnectorOnEVSideDisconnect*/ OcppConfiguration::boolean(OCPP_DEFAULT_UNLOCK_CONNECTOR_ON_EV_SIDE_DISCONNECT, false, OCPP_UNLOCK_CONNECTOR_ON_EV_SIDE_DISCONNECT_REQUIRES_REBOOT),
+    /*WebSocketPingInterval*/             OcppConfiguration::integer(OCPP_DEFAULT_WEB_SOCKET_PING_INTERVAL, false, OCPP_WEB_SOCKET_PING_INTERVAL_REQUIRES_REBOOT, 0, (UINT32_MAX / 2 - 1) / 1000),
 
 
     // // LOCAL AUTH LIST MANAGEMENT PROFILE
