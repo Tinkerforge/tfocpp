@@ -543,6 +543,7 @@ const SupportedMeasurand *platform_get_supported_measurands(int32_t connector_id
 
 bool platform_get_signed_meter_value(int32_t connectorId, SampledValueMeasurand measurant, SampledValuePhase phase, SampledValueLocation location, char buf[OCPP_PLATFORM_MEASURAND_MAX_DATA_LEN]) {
     log_warn("signed values not supported yet!");
+    return false;
 }
 
 float platform_get_raw_meter_value(int32_t connectorId, SampledValueMeasurand measurant, SampledValuePhase phase, SampledValueLocation location) {
