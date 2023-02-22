@@ -311,7 +311,7 @@ void OcppChargePoint::onTimeout(CallAction action, uint64_t messageId, int32_t c
     switch (action) {
         case CallAction::AUTHORIZE:
             if (connectorId > 0 && connectorId <= OCPP_NUM_CONNECTORS)
-                connectors[connectorId].onAuthorizeError();
+                connectors[connectorId - 1].onAuthorizeError();
             break;
 
         // Transaction related messages only trigger the timeout
