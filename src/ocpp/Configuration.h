@@ -8,7 +8,7 @@
 
 #include "Messages.h"
 
-enum class OcppConfigurationValueType {
+enum class OcppConfigurationValueType : uint8_t {
     Integer,
     Boolean,
     CSL
@@ -16,6 +16,9 @@ enum class OcppConfigurationValueType {
 
 struct OcppConfiguration {
     OcppConfigurationValueType type;
+    bool readonly;
+    bool requires_reboot;
+
     union {
         struct {
             int32_t i;
@@ -48,9 +51,6 @@ struct OcppConfiguration {
             bool prefix_index;
         } csl;
     } value;
-
-    bool readonly;
-    bool requires_reboot;
 
     static OcppConfiguration integer(int32_t value,
                                      bool readonly,
