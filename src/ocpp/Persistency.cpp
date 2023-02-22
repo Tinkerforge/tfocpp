@@ -48,7 +48,9 @@ void persistStartTxn(int32_t connector_id, const char id_tag[21], int32_t meter_
     txn.meter_start = meter_start;
     txn.reservation_id = reservation_id;
     memset(txn.id_tag, 0, sizeof(txn.id_tag));
-    strncpy(txn.id_tag, id_tag, ARRAY_SIZE(txn.id_tag));
+    // - 1 is not necessary here, because id_tag should be null terminated.
+    // But it does not hurt to do this correctly.
+    strncpy(txn.id_tag, id_tag, ARRAY_SIZE(txn.id_tag) - 1);
 
     char buf[sizeof(StartTxn)] = {0};
     memcpy(buf, &txn, sizeof(StartTxn));
@@ -81,8 +83,11 @@ void persistStopTxn(uint8_t reason, int32_t meter_stop, int32_t transaction_id, 
     txn.meter_stop = meter_stop;
     txn.transaction_id = transaction_id;
     memset(txn.id_tag, 0, sizeof(txn.id_tag));
-    if (id_tag != nullptr)
-        strncpy(txn.id_tag, id_tag, ARRAY_SIZE(txn.id_tag));
+    if (id_tag != nullptr) {
+        // - 1 is not necessary here, because id_tag should be null terminated.
+        // But it does not hurt to do this correctly.
+        strncpy(txn.id_tag, id_tag, ARRAY_SIZE(txn.id_tag) - 1);
+    }
 
     char buf[sizeof(StopTxn)] = {0};
     memcpy(buf, &txn, sizeof(StopTxn));

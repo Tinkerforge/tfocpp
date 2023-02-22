@@ -582,7 +582,7 @@ OcppDirEnt* platform_read_dir(void *dir_fd)
 
     dir_ent.is_dir = d->d_type != DT_REG;
     memset(dir_ent.name, 0, sizeof(dir_ent.name));
-    strncpy(dir_ent.name, d->d_name, sizeof(dir_ent.name));
+    strncpy(dir_ent.name, d->d_name, sizeof(dir_ent.name) - 1);
     dir_ent.name[sizeof(dir_ent.name) - 1] = '\0';
     return &dir_ent;
 }
