@@ -1309,7 +1309,7 @@ profiles_evaluated:
     if (availableLimit > 0) {
         std::array<int32_t, OCPP_NUM_CONNECTORS> indices = {};
         std::iota(indices.begin(), indices.end(), 1);
-        std::sort(indices.begin(), indices.end(), [allowedCurrent](int32_t a, int32_t b) {
+        std::sort(indices.begin(), indices.end(), [&allowedCurrent](int32_t a, int32_t b) {
             return allowedCurrent[a] > allowedCurrent[b];
         });
 
