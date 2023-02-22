@@ -147,7 +147,7 @@ void *platform_open_dir(const char *name);
 
 struct OcppDirEnt {
     bool is_dir;
-    char name[32] = "";
+    char name[33] = "";
 };
 
 // return nullptr if no more files
