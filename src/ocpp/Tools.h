@@ -20,7 +20,10 @@ bool lookup_key(size_t *result, // Result pointer. May be null if you only need 
 
 Opt<int32_t> parse_int(const char *c);
 
+#ifndef HEAP_ALLOC_ARRAY_DEFINED
+#define HEAP_ALLOC_ARRAY_DEFINED
 template <typename T>
 std::unique_ptr<T[]> heap_alloc_array(size_t n) {
     return std::unique_ptr<T[]>{new T[n]()};
 }
+#endif
