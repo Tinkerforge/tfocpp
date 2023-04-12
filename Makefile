@@ -26,7 +26,10 @@ COMPILE_FLAGS = -DOCPP_LOG_LEVEL=4 \
 			    ${CLANG_WARNINGS} \
 			    -fdiagnostics-color=always \
 			    -Ilib/ArduinoJson \
-			    -Ilib/mongoose -Isrc
+			    -Ilib/mongoose \
+			    -Isrc \
+			    -fno-exceptions \
+			    -fno-rtti
 
 ifeq ($(WITH_SANITIZERS),yes)
 	COMPILE_FLAGS += -fsanitize=address,undefined,leak
