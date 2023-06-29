@@ -69,7 +69,8 @@ OcppConfiguration OcppConfiguration::csl(const char *value,
     result.requires_reboot = requires_reboot;
 
     memset(result.value.csl.c, 0, len);
-    strncpy(result.value.csl.c, value, len);
+
+    result.setValue(value);
 
     return result;
 }
