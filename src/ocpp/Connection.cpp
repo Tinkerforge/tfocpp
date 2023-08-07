@@ -204,22 +204,23 @@ void OcppConnection::sendCallError(const char *uid, CallErrorCode code, const ch
     size_t len = 0;
     {
         TFJsonSerializer json{nullptr, 0};
-        len = buildCallError(json, uid, code, desc);
+        len = buildCallError(json, uid, code, desc) + 1; // null terminator
     }
     auto buf = heap_alloc_array<char>(len);
     TFJsonSerializer json{buf.get(), len};
     len = buildCallError(json, uid, code, desc);
 
-    platform_ws_send(platform_ctx, buf.get(), len);
+    platform_ws_send(platform_ctx, buf.get(), len - 1);
 }
 
 bool OcppConnection::sendCallResponse(const ICall &call)
 {
-    auto len = call.measureJson();
+    auto len = call.measureJson() + 1; // null terminator
     auto buf = heap_alloc_array<char>(len);
     call.serializeJson(buf.get(), len);
 
-    platform_ws_send(platform_ctx, buf.get(), len);
+    platform_ws_send(platform_ctx, buf.get(), len - 1);
+    sentResponse = true;
     return true;
 }
 
@@ -352,10 +353,10 @@ QueueItem::QueueItem(const ICall &call, time_t timestamp, int32_t connector_id) 
         connector_id(connector_id),
         len(0),
         timestamp(timestamp) {
-    auto length = call.measureJson();
+    auto length = call.measureJson() + 1; // null terminator
     this->buf = heap_alloc_array<char>(length);
     call.serializeJson(this->buf.get(), length);
-    this->len = length;
+    this->len = length - 1;
 }
 
 bool QueueItem::is_valid()
