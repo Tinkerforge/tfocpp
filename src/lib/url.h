@@ -1,4 +1,6 @@
+#if defined(__clang__)
 #pragma clang diagnostic ignored "-Weverything"
+#endif
 
 /*
  Simple, STB-style, parser for URL:s as specified by RFC1738 ( http://www.ietf.org/rfc/rfc1738.txt )
@@ -437,6 +439,9 @@ URL_PARSER_LINKAGE size_t parse_url_calc_mem_usage( const char* url )
 	return sizeof( parsed_url ) + strlen( url ) + 7; // 7 == max number of '\0' terminate
 }
 
+#if defined(__GNUC__)
+__attribute__((unused))
+#endif
 URL_PARSER_LINKAGE parsed_url* parse_url( const char* url, void* usermem, size_t mem_size )
 {
 	void* mem = usermem;

@@ -43,6 +43,7 @@ static MeasurandType get_measurand_type(SampledValueMeasurand m, bool average) {
         case SampledValueMeasurand::NONE:
             return MeasurandType::Register;
     }
+    SILENCE_GCC_UNREACHABLE();
 }
 
 // Assert that _REGISTER is always 4 before the equivalent _INTERVAL value.

@@ -365,6 +365,7 @@ bool Connector::isSelectableForRemoteStartTxn()
         case ConnectorState::FINISHING_NO_SAME_TAG:
             return true;
     }
+    SILENCE_GCC_UNREACHABLE();
 }
 
 bool Connector::canHandleRemoteStartTxn()
@@ -400,6 +401,7 @@ bool Connector::canHandleRemoteStartTxn()
         case ConnectorState::FINISHING_NO_SAME_TAG:
             return true;
     }
+    SILENCE_GCC_UNREACHABLE();
 }
 
 bool Connector::canHandleRemoteStopTxn(int32_t txn_id)
@@ -424,6 +426,7 @@ bool Connector::canHandleRemoteStopTxn(int32_t txn_id)
         case ConnectorState::AUTH_STOP:
             return this->transaction_id == txn_id;
     }
+    SILENCE_GCC_UNREACHABLE();
 }
 
 StatusNotificationStatus Connector::getStatus() {
@@ -1055,6 +1058,7 @@ bool Connector::isTransactionActive()
         case ConnectorState::AUTH_STOP:
             return true;
     }
+    SILENCE_GCC_UNREACHABLE();
 }
 
 void Connector::onRemoteStartTransaction(const char *tag_id)
@@ -1150,6 +1154,7 @@ UnlockConnectorResponseStatus Connector::onUnlockConnector()
             this->next_stop_reason = StopTransactionReason::NONE;
             return UnlockConnectorResponseStatus::UNLOCKED;
     }
+    SILENCE_GCC_UNREACHABLE();
 }
 
 ChangeAvailabilityResponseStatus Connector::onChangeAvailability(ChangeAvailabilityType type) {
@@ -1197,6 +1202,7 @@ ChangeAvailabilityResponseStatus Connector::onChangeAvailability(ChangeAvailabil
                     return ChangeAvailabilityResponseStatus::ACCEPTED;
             }
     }
+    SILENCE_GCC_UNREACHABLE();
 }
 
 // Handles StopCallback

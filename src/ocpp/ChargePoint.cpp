@@ -7,6 +7,7 @@
 #include "Platform.h"
 
 #include "Persistency.h"
+#include "Tools.h"
 
 #include <limits>
 #include <array>
@@ -190,6 +191,7 @@ ChangeAvailabilityResponseStatus OcppChargePoint::onChangeAvailability(ChangeAva
             }
             break;
     }
+    SILENCE_GCC_UNREACHABLE();
 }
 // ("false" + ',') * (OCPP_NUM_CONNECTORS + 1) + '[' + ']' + '\0'
 #define AVAILABLE_STRING_BUF_SIZE 6 * (OCPP_NUM_CONNECTORS + 1) + 3
@@ -246,6 +248,7 @@ StatusNotificationStatus OcppChargePoint::getStatus()
         case OcppState::FlushPersistentMessages:
             return StatusNotificationStatus::AVAILABLE;
     }
+    SILENCE_GCC_UNREACHABLE();
 }
 
 void OcppChargePoint::sendStatus()

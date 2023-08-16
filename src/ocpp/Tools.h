@@ -27,3 +27,9 @@ std::unique_ptr<T[]> heap_alloc_array(size_t n) {
     return std::unique_ptr<T[]>{new T[n]()};
 }
 #endif
+
+#if defined(__GNUC__) && !defined(__clang__)
+#define SILENCE_GCC_UNREACHABLE() assert(false)
+#else
+#define SILENCE_GCC_UNREACHABLE()
+#endif

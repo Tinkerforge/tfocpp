@@ -5,6 +5,7 @@
 #include "ChargePoint.h"
 #include "Platform.h"
 #include "Types.h"
+#include "Tools.h"
 
 extern "C" {
 #include "lib/libiso8601/iso8601.h"
@@ -3028,6 +3029,7 @@ CallResponse callHandler(const char *uid, const char *action_string, JsonObject 
         case CallAction::TRIGGER_MESSAGE:
             return CallResponse{CallErrorCode::NotSupported, "action not supported"};
     }
+    SILENCE_GCC_UNREACHABLE();
 }
 
 CallResponse callResultHandler(int32_t connectorId, CallAction resultTo, JsonObject obj, OcppChargePoint *cp) {
@@ -3147,4 +3149,5 @@ CallResponse callResultHandler(int32_t connectorId, CallAction resultTo, JsonObj
         case CallAction::TRIGGER_MESSAGE:
             return CallResponse{CallErrorCode::NotSupported, "action not supported"};
     }
+    SILENCE_GCC_UNREACHABLE();
 }
