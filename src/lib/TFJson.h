@@ -244,6 +244,9 @@ size_t TFJsonSerializer::end() {
     // This mirrors the behaviour of snprintf.
     size_t result = buf_required;
     this->write('\0');
+    if (buf_size > 0 && result >= buf_size)
+        buf[buf_size - 1] = '\0';
+
     return result;
 }
 
@@ -297,7 +300,11 @@ void TFJsonSerializer::write(const char *c, size_t len) {
                 write('t');
                 break;
             default:
+#if __CHAR_UNSIGNED__ == 1
+                if (*c <= 0x1F) {
+#else
                 if (*c <= 0x1F && *c >= 0/*UTF-8 compatibility*/) {
+#endif
                     char x = *c;
 
                     write('\\');
