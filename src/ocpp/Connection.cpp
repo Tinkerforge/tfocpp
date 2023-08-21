@@ -220,7 +220,6 @@ bool OcppConnection::sendCallResponse(const ICall &call)
     call.serializeJson(buf.get(), len);
 
     platform_ws_send(platform_ctx, buf.get(), len - 1);
-    sentResponse = true;
     return true;
 }
 
