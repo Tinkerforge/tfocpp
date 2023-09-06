@@ -225,27 +225,26 @@ bool OcppConnection::sendCallResponse(const ICall &call)
 
 bool OcppConnection::sendCallAction(const ICall &call, time_t timestamp, int32_t connectorId)
 {
-    // Not transaction-related messages are allowed to be dropped.
-    // This means that we can just enforce a queue depth of 5.
-    // Transaction-related messages may not be dropped, however we (currently) allow dropping meter values messages.
-    // This means that only Start and StopTxn messages will be emplaced in the txn_msg queue.
-    // To create a StartTxn message the connection must work, because we don't implement any way of authenticating offline.
-    // So only if the Authorize message gets through, we can create a StartTxn message.
-    // The worst case now is that we lose the connection directly after the Authorize message, and the transaction continues.
-    // We then have enqueued at most two messages, one StartTxn and one StopTxn.
     if (is_transaction_related(call.action)) {
         if (timestamp == 0) {
             log_error("Attempted to send transaction related call action without valid timestamp!");
             return false;
         }
-        // TODO: as long as we don't implement any way of authenticating offline, this is not necessary.
-        /*if (transaction_messages.size() >= 5) {
+        // Meter values are transaction releated messages. However the amount of energy charged in a transaction
+        // can be calculated with only the Start and StopTransaction.reqs. If we get a new transaction related message
+        // and the queue is full, we drop the oldest meter values message. The queue should then always have enough room, because
+        // only Start and StopTxn messages will be emplaced permanently in the txn_msg queue.
+        // To create a StartTxn message the connection must work, because we don't implement any way of authenticating offline.
+        // So only if the Authorize message gets through, we can create a StartTxn message.
+        // The worst case now is that we lose the connection directly after the Authorize message, and the transaction continues.
+        // We then have enqueued at most two non-meter-value messages, one StartTxn and one StopTxn.
+        if (transaction_messages.size() >= OCPP_TRANSACTION_RELATED_MESSAGE_QUEUE_SIZE) {
             size_t i;
             for(i = 0; i < transaction_messages.size(); ++i)
                 if (transaction_messages[i].action == CallAction::METER_VALUES)
                     break;
             transaction_messages.erase(transaction_messages.begin() + i);
-        }*/
+        }
         transaction_messages.emplace_back(call, timestamp, connectorId);
         return true;
     }
