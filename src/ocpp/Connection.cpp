@@ -287,7 +287,7 @@ void OcppConnection::tick() {
         cp->onDisconnect();
     else if (connected && !was_connected) {
         cp->onConnect();
-        last_pong_seen = platform_now_ms();
+        pong_deadline = platform_now_ms() + OCPP_WEBSOCKET_PING_PONG_TIMEOUT * 1000;
     }
 
     was_connected = connected;
@@ -309,7 +309,7 @@ void OcppConnection::tick() {
         next_ping_deadline = platform_now_ms() + getIntConfigUnsigned(ConfigKey::WebSocketPingInterval) * 1000;
     }
 
-    if (getIntConfigUnsigned(ConfigKey::WebSocketPingInterval) != 0 && deadline_elapsed(last_pong_seen + OCPP_WEBSOCKET_PING_PONG_TIMEOUT * 1000)) {
+    if (getIntConfigUnsigned(ConfigKey::WebSocketPingInterval) != 0 && deadline_elapsed(pong_deadline)) {
         platform_reconnect(platform_ctx);
         return;
     }
@@ -379,7 +379,7 @@ void* OcppConnection::start(const char *websocket_endpoint_url, const char *char
 
     platform_ctx = platform_init(ws_url.c_str(), basic_auth_user, basic_auth_pass, basic_auth_pass_length);
     platform_ws_register_receive_callback(platform_ctx, [](char *c, size_t s, void *user_data){((OcppConnection*)user_data)->handleMessage(c, s);}, this);
-    platform_ws_register_pong_callback(platform_ctx, [](void *user_data){((OcppConnection*)user_data)->last_pong_seen = platform_now_ms();}, this);
+    platform_ws_register_pong_callback(platform_ctx, [](void *user_data){((OcppConnection*)user_data)->pong_deadline = platform_now_ms() + OCPP_WEBSOCKET_PING_PONG_TIMEOUT * 1000;}, this);
 
     return platform_ctx;
 }
