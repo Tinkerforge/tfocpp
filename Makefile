@@ -16,7 +16,8 @@ CLANG_WARNINGS = -Weverything \
 				 -Wno-padded \
 				 -Wno-exit-time-destructors \
 				 -Wno-double-promotion \
-				 -Wno-implicit-int-float-conversion
+				 -Wno-implicit-int-float-conversion \
+				 -Wno-unsafe-buffer-usage
 
 COMPILE_FLAGS = -DOCPP_LOG_LEVEL=4 \
 			    -DOCPP_STATE_CALLBACKS \
