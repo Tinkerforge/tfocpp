@@ -20,23 +20,23 @@ CLANG_WARNINGS = -Weverything \
 				 -Wno-unsafe-buffer-usage
 
 COMPILE_FLAGS = -DOCPP_LOG_LEVEL=4 \
-			    -DOCPP_STATE_CALLBACKS \
-			    -gdwarf-4 \
-			    -fPIC \
-			    -O0 \
-			    ${CLANG_WARNINGS} \
-			    -fdiagnostics-color=always \
-			    -Ilib/ArduinoJson \
-			    -Ilib/mongoose \
-			    -Isrc \
-			    -fno-exceptions \
-			    -fno-rtti \
-			    -DOCPP_METER_VALUES_ALIGNED_DATA_MAX_LENGTH=20 \
-			    -DOCPP_DEFAULT_CLOCK_ALIGNED_DATA_INTERVAL=60 \
-			    -DOCPP_DEFAULT_METER_VALUES_ALIGNED_DATA="\"Energy.Active.Import.Register\"" \
-			    -DOCPP_METER_VALUES_SAMPLED_DATA_MAX_LENGTH=20 \
-			    -DOCPP_DEFAULT_METER_VALUE_SAMPLE_INTERVAL=60 \
-			    -DOCPP_DEFAULT_METER_VALUES_SAMPLED_DATA="\"Energy.Active.Import.Register\""
+				-DOCPP_STATE_CALLBACKS \
+				-gdwarf-4 \
+				-fPIC \
+				-O0 \
+				${CLANG_WARNINGS} \
+				-fdiagnostics-color=always \
+				-Ilib/ArduinoJson \
+				-Ilib/mongoose \
+				-Isrc \
+				-fno-exceptions \
+				-fno-rtti \
+				-DOCPP_METER_VALUES_ALIGNED_DATA_MAX_LENGTH=20 \
+				-DOCPP_DEFAULT_CLOCK_ALIGNED_DATA_INTERVAL=60 \
+				-DOCPP_DEFAULT_METER_VALUES_ALIGNED_DATA="\"Energy.Active.Import.Register\"" \
+				-DOCPP_METER_VALUES_SAMPLED_DATA_MAX_LENGTH=20 \
+				-DOCPP_DEFAULT_METER_VALUE_SAMPLE_INTERVAL=60 \
+				-DOCPP_DEFAULT_METER_VALUES_SAMPLED_DATA="\"Energy.Active.Import.Register\""
 
 ifeq ($(WITH_SANITIZERS),yes)
 	COMPILE_FLAGS += -fsanitize=address,undefined,leak
@@ -67,8 +67,8 @@ else
 endif
 
 SOURCES :=	$(wildcard src/ocpp/*.cpp) \
-		    lib/mongoose/mongoose.cpp \
-		    src/platforms/LinuxWS.cpp
+			lib/mongoose/mongoose.cpp \
+			src/platforms/LinuxWS.cpp
 
 CFILES := src/lib/musl_libc_timegm.c \
 		  $(wildcard src/lib/libiso8601/*.c)
