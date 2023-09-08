@@ -12,12 +12,14 @@
 
 void *platform_init(const char *websocket_url, const char *basic_auth_user = nullptr, const uint8_t *basic_auth_pass = nullptr, size_t basic_auth_pass_length = 0);
 void platform_disconnect(void *ctx);
+void platform_reconnect(void *ctx);
 void platform_destroy(void *ctx);
 
 bool platform_ws_connected(void *ctx);
 void platform_ws_send(void *ctx, const char *buf, size_t buf_len);
 void platform_ws_register_receive_callback(void *ctx, void(*cb)(char *, size_t, void *), void *user_data);
 void platform_ws_send_ping(void *ctx);
+void platform_ws_register_pong_callback(void *ctx, void (*cb)(void *), void *user_data);
 
 uint32_t platform_now_ms();
 void platform_set_system_time(void *ctx, time_t t);
