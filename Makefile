@@ -68,6 +68,7 @@ endif
 
 SOURCES :=	$(wildcard src/ocpp/*.cpp) \
 		    lib/mongoose/mongoose.cpp \
+		    src/platforms/LinuxWS.cpp
 
 CFILES := src/lib/musl_libc_timegm.c \
 		  $(wildcard src/lib/libiso8601/*.c)
