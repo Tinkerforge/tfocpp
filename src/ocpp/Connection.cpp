@@ -269,6 +269,18 @@ bool OcppConnection::sendCallAction(const ICall &call, time_t timestamp, int32_t
 }
 
 void OcppConnection::tick() {
+    static bool was_connected = false;
+    bool connected = platform_ws_connected(platform_ctx);
+    if (!connected && was_connected) {
+        cp->onDisconnect();
+        connection_state_change_time = platform_get_system_time(platform_ctx);
+    } else if (connected && !was_connected) {
+        cp->onConnect();
+        last_ping_sent = platform_now_ms();
+        pong_deadline = platform_now_ms() + OCPP_WEBSOCKET_PING_PONG_TIMEOUT * 1000;
+        connection_state_change_time = platform_get_system_time(platform_ctx);
+    }
+
 #ifdef OCPP_STATE_CALLBACKS
     platform_update_connection_state(
         message_in_flight.action,
@@ -278,17 +290,12 @@ void OcppConnection::tick() {
         transaction_message_retry_deadline,
         (uint8_t)messages.size(),
         (uint8_t)status_notifications.size(),
-        (uint8_t)transaction_messages.size());
+        (uint8_t)transaction_messages.size(),
+        connected,
+        connection_state_change_time,
+        last_ping_sent,
+        pong_deadline);
 #endif
-
-    static bool was_connected = false;
-    bool connected = platform_ws_connected(platform_ctx);
-    if (!connected && was_connected)
-        cp->onDisconnect();
-    else if (connected && !was_connected) {
-        cp->onConnect();
-        pong_deadline = platform_now_ms() + OCPP_WEBSOCKET_PING_PONG_TIMEOUT * 1000;
-    }
 
     was_connected = connected;
 
@@ -306,7 +313,8 @@ void OcppConnection::tick() {
     */
     if (getIntConfigUnsigned(ConfigKey::WebSocketPingInterval) != 0 && deadline_elapsed(next_ping_deadline)) {
         platform_ws_send_ping(platform_ctx);
-        next_ping_deadline = platform_now_ms() + getIntConfigUnsigned(ConfigKey::WebSocketPingInterval) * 1000;
+        last_ping_sent = platform_now_ms();
+        next_ping_deadline = last_ping_sent + getIntConfigUnsigned(ConfigKey::WebSocketPingInterval) * 1000;
     }
 
     if (getIntConfigUnsigned(ConfigKey::WebSocketPingInterval) != 0 && deadline_elapsed(pong_deadline)) {

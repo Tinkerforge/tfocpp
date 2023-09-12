@@ -193,7 +193,11 @@ void platform_update_connection_state(CallAction message_in_flight_type,
                                       uint32_t txn_msg_retry_deadline,
                                       uint8_t message_queue_depth,
                                       uint8_t status_notification_queue_depth,
-                                      uint8_t transaction_message_queue_depth);
+                                      uint8_t transaction_message_queue_depth,
+                                      bool connected,
+                                      time_t connected_change_time,
+                                      uint32_t last_ping_sent,
+                                      uint32_t pong_deadline);
 void platform_update_config_state(ConfigKey key,
                                   const char *value);
 #endif

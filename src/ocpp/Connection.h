@@ -46,7 +46,9 @@ public:
     QueueItem message_in_flight;
     uint32_t message_timeout_deadline;
 
+    time_t connection_state_change_time = 0;
     uint32_t next_ping_deadline = 0;
+    uint32_t last_ping_sent = 0;
     uint32_t pong_deadline = 0;
     uint32_t transaction_message_retry_deadline;
     uint32_t transaction_message_attempts = 0;
