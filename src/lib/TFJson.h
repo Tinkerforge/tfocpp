@@ -24,9 +24,7 @@ struct TFJsonSerializer {
     // Object
     void add(const char *key, uint64_t u);
     void add(const char *key, int64_t i);
-    void add(const char *key, uint32_t u);
-    void add(const char *key, int32_t i);
-    void add(const char *key, float f);
+    void add(const char *key, double f);
     void add(const char *key, bool b);
     void addNull(const char *key);
     void add(const char *key, const char *c);
@@ -35,10 +33,8 @@ struct TFJsonSerializer {
 
     // Array or top level
     void add(uint64_t u, bool enquote = false);
-    void add(uint32_t u);
     void add(int64_t i);
-    void add(int32_t i);
-    void add(float f);
+    void add(double f);
     void add(bool b);
     void addNull();
     #define TFJSON_USE_STRLEN std::numeric_limits<size_t>::max()
@@ -57,7 +53,6 @@ private:
     void write(char c);
     void writeUnescaped(const char *c, size_t len);
     void writeFmt(const char *fmt, ...) __attribute__((__format__(__printf__, 2, 3)));
-    void back(size_t n);
 };
 #endif
 
@@ -82,17 +77,7 @@ void TFJsonSerializer::add(const char *key, int64_t i) {
     this->add(i);
 }
 
-void TFJsonSerializer::add(const char *key, uint32_t u) {
-    this->addKey(key);
-    this->add(u);
-}
-
-void TFJsonSerializer::add(const char *key, int32_t i) {
-    this->addKey(key);
-    this->add(i);
-}
-
-void TFJsonSerializer::add(const char *key, float f) {
+void TFJsonSerializer::add(const char *key, double f) {
     this->addKey(key);
     this->add(f);
 }
@@ -122,14 +107,6 @@ void TFJsonSerializer::addObject(const char *key) {
     this->write('{');
 }
 
-void TFJsonSerializer::add(uint32_t u) {
-    if (!in_empty_container)
-        this->write(',');
-
-    in_empty_container = false;
-    this->writeFmt("%u", u);
-}
-
 void TFJsonSerializer::add(uint64_t u, bool enquote) {
     if (!in_empty_container)
         this->write(',');
@@ -153,15 +130,7 @@ void TFJsonSerializer::add(int64_t i) {
     this->writeFmt("%" PRIi64, i);
 }
 
-void TFJsonSerializer::add(int32_t i) {
-    if (!in_empty_container)
-        this->write(',');
-
-    in_empty_container = false;
-    this->writeFmt("%d", i);
-}
-
-void TFJsonSerializer::add(float f) {
+void TFJsonSerializer::add(double f) {
     if (!in_empty_container)
         this->write(',');
 
@@ -377,12 +346,4 @@ void TFJsonSerializer::writeFmt(const char *fmt, ...) {
     return;
 }
 
-void TFJsonSerializer::back(size_t n) {
-    buf_required -= n;
-
-    if (buf == head)
-        return;
-
-    head -= n;
-}
 #endif

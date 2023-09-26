@@ -330,7 +330,7 @@ void MeterValue::serializeInto(TFJsonSerializer &json) {
     }
 
 void GetCompositeScheduleResponseChargingSchedule::serializeInto(TFJsonSerializer &json) {
-        if (duration != OCPP_INTEGER_NOT_PASSED) json.add("duration", duration);
+        if (duration != OCPP_INTEGER_NOT_PASSED) json.add("duration", (int64_t)duration);
         if (startSchedule != OCPP_DATETIME_NOT_PASSED) unix_timestamp_to_iso_string(startSchedule, json, "startSchedule");
         if (chargingRateUnit != GetCompositeScheduleResponseChargingScheduleChargingRateUnit::NONE) json.add("chargingRateUnit",GetCompositeScheduleResponseChargingScheduleChargingRateUnitStrings[(size_t)chargingRateUnit]);
         if (chargingSchedulePeriod != nullptr) { json.addArray("chargingSchedulePeriod"); for(size_t i = 0; i < chargingSchedulePeriod_length; ++i) { json.addObject(); chargingSchedulePeriod[i].serializeInto(json); json.endObject(); } json.endArray(); }
@@ -348,9 +348,9 @@ void MeterValueSampledValue::serializeInto(TFJsonSerializer &json) {
     }
 
 void GetCompositeScheduleResponseChargingScheduleChargingSchedulePeriod::serializeInto(TFJsonSerializer &json) {
-        if (startPeriod != OCPP_INTEGER_NOT_PASSED) json.add("startPeriod", startPeriod);
+        if (startPeriod != OCPP_INTEGER_NOT_PASSED) json.add("startPeriod", (int64_t)startPeriod);
         if (!isnan(limit)) json.add("limit", limit);
-        if (numberPhases != OCPP_INTEGER_NOT_PASSED) json.add("numberPhases", numberPhases);
+        if (numberPhases != OCPP_INTEGER_NOT_PASSED) json.add("numberPhases", (int64_t)numberPhases);
     }
 
 
@@ -363,7 +363,7 @@ Authorize::Authorize(const char idTag[21]) :
 size_t Authorize::serializeJson(char *buf, size_t buf_len) const {
     TFJsonSerializer json{buf, buf_len};
     json.addArray();
-        json.add((int32_t)OcppRpcMessageType::CALL);
+        json.add((int64_t)OcppRpcMessageType::CALL);
         json.add(this->ocppJmessageId, true);
         json.add(CallActionStrings[(size_t)this->action]);
         json.addObject();
@@ -398,7 +398,7 @@ BootNotification::BootNotification(const char chargePointVendor[21],
 size_t BootNotification::serializeJson(char *buf, size_t buf_len) const {
     TFJsonSerializer json{buf, buf_len};
     json.addArray();
-        json.add((int32_t)OcppRpcMessageType::CALL);
+        json.add((int64_t)OcppRpcMessageType::CALL);
         json.add(this->ocppJmessageId, true);
         json.add(CallActionStrings[(size_t)this->action]);
         json.addObject();
@@ -426,7 +426,7 @@ ChangeAvailabilityResponse::ChangeAvailabilityResponse(const char *call_id,
 size_t ChangeAvailabilityResponse::serializeJson(char *buf, size_t buf_len) const {
     TFJsonSerializer json{buf, buf_len};
     json.addArray();
-        json.add((int32_t)OcppRpcMessageType::CALLRESULT);
+        json.add((int64_t)OcppRpcMessageType::CALLRESULT);
         json.add(this->ocppJcallId);
 
         json.addObject();
@@ -446,7 +446,7 @@ ChangeConfigurationResponse::ChangeConfigurationResponse(const char *call_id,
 size_t ChangeConfigurationResponse::serializeJson(char *buf, size_t buf_len) const {
     TFJsonSerializer json{buf, buf_len};
     json.addArray();
-        json.add((int32_t)OcppRpcMessageType::CALLRESULT);
+        json.add((int64_t)OcppRpcMessageType::CALLRESULT);
         json.add(this->ocppJcallId);
 
         json.addObject();
@@ -466,7 +466,7 @@ ClearCacheResponse::ClearCacheResponse(const char *call_id,
 size_t ClearCacheResponse::serializeJson(char *buf, size_t buf_len) const {
     TFJsonSerializer json{buf, buf_len};
     json.addArray();
-        json.add((int32_t)OcppRpcMessageType::CALLRESULT);
+        json.add((int64_t)OcppRpcMessageType::CALLRESULT);
         json.add(this->ocppJcallId);
 
         json.addObject();
@@ -489,7 +489,7 @@ DataTransfer::DataTransfer(const char vendorId[256],
 size_t DataTransfer::serializeJson(char *buf, size_t buf_len) const {
     TFJsonSerializer json{buf, buf_len};
     json.addArray();
-        json.add((int32_t)OcppRpcMessageType::CALL);
+        json.add((int64_t)OcppRpcMessageType::CALL);
         json.add(this->ocppJmessageId, true);
         json.add(CallActionStrings[(size_t)this->action]);
         json.addObject();
@@ -513,7 +513,7 @@ DataTransferResponse::DataTransferResponse(const char *call_id,
 size_t DataTransferResponse::serializeJson(char *buf, size_t buf_len) const {
     TFJsonSerializer json{buf, buf_len};
     json.addArray();
-        json.add((int32_t)OcppRpcMessageType::CALLRESULT);
+        json.add((int64_t)OcppRpcMessageType::CALLRESULT);
         json.add(this->ocppJcallId);
 
         json.addObject();
@@ -538,7 +538,7 @@ GetConfigurationResponse::GetConfigurationResponse(const char *call_id,
 size_t GetConfigurationResponse::serializeJson(char *buf, size_t buf_len) const {
     TFJsonSerializer json{buf, buf_len};
     json.addArray();
-        json.add((int32_t)OcppRpcMessageType::CALLRESULT);
+        json.add((int64_t)OcppRpcMessageType::CALLRESULT);
         json.add(this->ocppJcallId);
 
         json.addObject();
@@ -557,7 +557,7 @@ Heartbeat::Heartbeat() :
 size_t Heartbeat::serializeJson(char *buf, size_t buf_len) const {
     TFJsonSerializer json{buf, buf_len};
     json.addArray();
-        json.add((int32_t)OcppRpcMessageType::CALL);
+        json.add((int64_t)OcppRpcMessageType::CALL);
         json.add(this->ocppJmessageId, true);
         json.add(CallActionStrings[(size_t)this->action]);
         json.addObject();
@@ -581,12 +581,12 @@ MeterValues::MeterValues(int32_t connectorId,
 size_t MeterValues::serializeJson(char *buf, size_t buf_len) const {
     TFJsonSerializer json{buf, buf_len};
     json.addArray();
-        json.add((int32_t)OcppRpcMessageType::CALL);
+        json.add((int64_t)OcppRpcMessageType::CALL);
         json.add(this->ocppJmessageId, true);
         json.add(CallActionStrings[(size_t)this->action]);
         json.addObject();
-            if (connectorId != OCPP_INTEGER_NOT_PASSED) json.add("connectorId", connectorId);
-            if (transactionId != OCPP_INTEGER_NOT_PASSED) json.add("transactionId", transactionId);
+            if (connectorId != OCPP_INTEGER_NOT_PASSED) json.add("connectorId", (int64_t)connectorId);
+            if (transactionId != OCPP_INTEGER_NOT_PASSED) json.add("transactionId", (int64_t)transactionId);
             if (meterValue != nullptr) { json.addArray("meterValue"); for(size_t i = 0; i < meterValue_length; ++i) { json.addObject(); meterValue[i].serializeInto(json); json.endObject(); } json.endArray(); }
         json.endObject();
     json.endArray();
@@ -603,7 +603,7 @@ RemoteStartTransactionResponse::RemoteStartTransactionResponse(const char *call_
 size_t RemoteStartTransactionResponse::serializeJson(char *buf, size_t buf_len) const {
     TFJsonSerializer json{buf, buf_len};
     json.addArray();
-        json.add((int32_t)OcppRpcMessageType::CALLRESULT);
+        json.add((int64_t)OcppRpcMessageType::CALLRESULT);
         json.add(this->ocppJcallId);
 
         json.addObject();
@@ -623,7 +623,7 @@ RemoteStopTransactionResponse::RemoteStopTransactionResponse(const char *call_id
 size_t RemoteStopTransactionResponse::serializeJson(char *buf, size_t buf_len) const {
     TFJsonSerializer json{buf, buf_len};
     json.addArray();
-        json.add((int32_t)OcppRpcMessageType::CALLRESULT);
+        json.add((int64_t)OcppRpcMessageType::CALLRESULT);
         json.add(this->ocppJcallId);
 
         json.addObject();
@@ -643,7 +643,7 @@ ResetResponse::ResetResponse(const char *call_id,
 size_t ResetResponse::serializeJson(char *buf, size_t buf_len) const {
     TFJsonSerializer json{buf, buf_len};
     json.addArray();
-        json.add((int32_t)OcppRpcMessageType::CALLRESULT);
+        json.add((int64_t)OcppRpcMessageType::CALLRESULT);
         json.add(this->ocppJcallId);
 
         json.addObject();
@@ -670,14 +670,14 @@ StartTransaction::StartTransaction(int32_t connectorId,
 size_t StartTransaction::serializeJson(char *buf, size_t buf_len) const {
     TFJsonSerializer json{buf, buf_len};
     json.addArray();
-        json.add((int32_t)OcppRpcMessageType::CALL);
+        json.add((int64_t)OcppRpcMessageType::CALL);
         json.add(this->ocppJmessageId, true);
         json.add(CallActionStrings[(size_t)this->action]);
         json.addObject();
-            if (connectorId != OCPP_INTEGER_NOT_PASSED) json.add("connectorId", connectorId);
+            if (connectorId != OCPP_INTEGER_NOT_PASSED) json.add("connectorId", (int64_t)connectorId);
             if (idTag != nullptr) json.add("idTag", idTag);
-            if (meterStart != OCPP_INTEGER_NOT_PASSED) json.add("meterStart", meterStart);
-            if (reservationId != OCPP_INTEGER_NOT_PASSED) json.add("reservationId", reservationId);
+            if (meterStart != OCPP_INTEGER_NOT_PASSED) json.add("meterStart", (int64_t)meterStart);
+            if (reservationId != OCPP_INTEGER_NOT_PASSED) json.add("reservationId", (int64_t)reservationId);
             if (timestamp != OCPP_DATETIME_NOT_PASSED) unix_timestamp_to_iso_string(timestamp, json, "timestamp");
         json.endObject();
     json.endArray();
@@ -705,11 +705,11 @@ StatusNotification::StatusNotification(int32_t connectorId,
 size_t StatusNotification::serializeJson(char *buf, size_t buf_len) const {
     TFJsonSerializer json{buf, buf_len};
     json.addArray();
-        json.add((int32_t)OcppRpcMessageType::CALL);
+        json.add((int64_t)OcppRpcMessageType::CALL);
         json.add(this->ocppJmessageId, true);
         json.add(CallActionStrings[(size_t)this->action]);
         json.addObject();
-            if (connectorId != OCPP_INTEGER_NOT_PASSED) json.add("connectorId", connectorId);
+            if (connectorId != OCPP_INTEGER_NOT_PASSED) json.add("connectorId", (int64_t)connectorId);
             if (errorCode != StatusNotificationErrorCode::NONE) json.add("errorCode",StatusNotificationErrorCodeStrings[(size_t)errorCode]);
             if (info != nullptr) json.add("info", info);
             if (status != StatusNotificationStatus::NONE) json.add("status",StatusNotificationStatusStrings[(size_t)status]);
@@ -741,14 +741,14 @@ StopTransaction::StopTransaction(int32_t meterStop,
 size_t StopTransaction::serializeJson(char *buf, size_t buf_len) const {
     TFJsonSerializer json{buf, buf_len};
     json.addArray();
-        json.add((int32_t)OcppRpcMessageType::CALL);
+        json.add((int64_t)OcppRpcMessageType::CALL);
         json.add(this->ocppJmessageId, true);
         json.add(CallActionStrings[(size_t)this->action]);
         json.addObject();
             if (idTag != nullptr) json.add("idTag", idTag);
-            if (meterStop != OCPP_INTEGER_NOT_PASSED) json.add("meterStop", meterStop);
+            if (meterStop != OCPP_INTEGER_NOT_PASSED) json.add("meterStop", (int64_t)meterStop);
             if (timestamp != OCPP_DATETIME_NOT_PASSED) unix_timestamp_to_iso_string(timestamp, json, "timestamp");
-            if (transactionId != OCPP_INTEGER_NOT_PASSED) json.add("transactionId", transactionId);
+            if (transactionId != OCPP_INTEGER_NOT_PASSED) json.add("transactionId", (int64_t)transactionId);
             if (reason != StopTransactionReason::NONE) json.add("reason",StopTransactionReasonStrings[(size_t)reason]);
             if (transactionData != nullptr) { json.addArray("transactionData"); for(size_t i = 0; i < transactionData_length; ++i) { json.addObject(); transactionData[i].serializeInto(json); json.endObject(); } json.endArray(); }
         json.endObject();
@@ -766,7 +766,7 @@ UnlockConnectorResponse::UnlockConnectorResponse(const char *call_id,
 size_t UnlockConnectorResponse::serializeJson(char *buf, size_t buf_len) const {
     TFJsonSerializer json{buf, buf_len};
     json.addArray();
-        json.add((int32_t)OcppRpcMessageType::CALLRESULT);
+        json.add((int64_t)OcppRpcMessageType::CALLRESULT);
         json.add(this->ocppJcallId);
 
         json.addObject();
@@ -786,7 +786,7 @@ ClearChargingProfileResponse::ClearChargingProfileResponse(const char *call_id,
 size_t ClearChargingProfileResponse::serializeJson(char *buf, size_t buf_len) const {
     TFJsonSerializer json{buf, buf_len};
     json.addArray();
-        json.add((int32_t)OcppRpcMessageType::CALLRESULT);
+        json.add((int64_t)OcppRpcMessageType::CALLRESULT);
         json.add(this->ocppJcallId);
 
         json.addObject();
@@ -812,12 +812,12 @@ GetCompositeScheduleResponse::GetCompositeScheduleResponse(const char *call_id,
 size_t GetCompositeScheduleResponse::serializeJson(char *buf, size_t buf_len) const {
     TFJsonSerializer json{buf, buf_len};
     json.addArray();
-        json.add((int32_t)OcppRpcMessageType::CALLRESULT);
+        json.add((int64_t)OcppRpcMessageType::CALLRESULT);
         json.add(this->ocppJcallId);
 
         json.addObject();
             if (status != ResponseStatus::NONE) json.add("status",ResponseStatusStrings[(size_t)status]);
-            if (connectorId != OCPP_INTEGER_NOT_PASSED) json.add("connectorId", connectorId);
+            if (connectorId != OCPP_INTEGER_NOT_PASSED) json.add("connectorId", (int64_t)connectorId);
             if (scheduleStart != OCPP_DATETIME_NOT_PASSED) unix_timestamp_to_iso_string(scheduleStart, json, "scheduleStart");
             if (chargingSchedule != nullptr) { json.addObject("chargingSchedule"); chargingSchedule->serializeInto(json); json.endObject(); }
         json.endObject();
@@ -835,7 +835,7 @@ SetChargingProfileResponse::SetChargingProfileResponse(const char *call_id,
 size_t SetChargingProfileResponse::serializeJson(char *buf, size_t buf_len) const {
     TFJsonSerializer json{buf, buf_len};
     json.addArray();
-        json.add((int32_t)OcppRpcMessageType::CALLRESULT);
+        json.add((int64_t)OcppRpcMessageType::CALLRESULT);
         json.add(this->ocppJcallId);
 
         json.addObject();

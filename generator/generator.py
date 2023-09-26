@@ -268,7 +268,7 @@ def param_insertion(message: str, name: str, p: Property):
 
         return 'if ({name} != nullptr) json.add("{name}", {name});'.format(name=name)
     elif isinstance(p.element, Integer):
-        return 'if ({name} != OCPP_INTEGER_NOT_PASSED) json.add("{name}", {name});'.format(name=name)
+        return 'if ({name} != OCPP_INTEGER_NOT_PASSED) json.add("{name}", (int64_t){name});'.format(name=name)
     elif isinstance(p.element, Number):
         return 'if (!isnan({name})) json.add("{name}", {name});'.format(name=name)
     elif isinstance(p.element, Boolean):

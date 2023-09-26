@@ -189,7 +189,7 @@ void OcppConnection::handleCallError(CallErrorCode code, const char *desc, JsonO
 
 static size_t buildCallError(TFJsonSerializer &json, const char *uid, CallErrorCode code, const char *desc) {
     json.addArray();
-    json.add((int32_t)OcppRpcMessageType::CALLERROR);
+    json.add((int64_t)OcppRpcMessageType::CALLERROR);
     json.add(uid);
     json.add(CallErrorCodeStrings[(size_t)code]);
     json.add(desc);
