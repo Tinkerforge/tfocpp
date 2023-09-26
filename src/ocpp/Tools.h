@@ -29,6 +29,7 @@ std::unique_ptr<T[]> heap_alloc_array(size_t n) {
 #endif
 
 #if defined(__GNUC__) && !defined(__clang__)
+#include <cassert>
 #define SILENCE_GCC_UNREACHABLE() assert(false)
 #else
 #define SILENCE_GCC_UNREACHABLE()

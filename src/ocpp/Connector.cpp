@@ -256,7 +256,7 @@ void Connector::setState(ConnectorState newState) {
 
                     onTxnMsgResponseReceived(this->transaction_confirmed_timestamp);
                     persistStopTxn((uint8_t)this->next_stop_reason, energy, transaction_id, authorized_for.tagId, timestamp);
-                    log_info("Sending StopTransaction.req at connector %d for tag %s at %.3f kWh. StopReason %d", this->connectorId, authorized_for.tagId, energy / 1000.0f, this->next_stop_reason);
+                    log_info("Sending StopTransaction.req at connector %d for tag %s at %.3f kWh. StopReason %d", this->connectorId, authorized_for.tagId, energy / 1000.0f, (int)this->next_stop_reason);
                     this->sendCallAction(StopTransaction(energy, timestamp, transaction_id, authorized_for.tagId, this->next_stop_reason), timestamp);
                     break;
                 }

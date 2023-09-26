@@ -693,7 +693,7 @@ static bool is_charging_profile_valid(T prof, int32_t conn_id) {
     }
 
     if (prof.chargingSchedule().chargingSchedulePeriod_count() > OCPP_CHARGING_SCHEDULE_MAX_PERIODS)  {
-        log_info("Rejected: charging schedule period count %u out of range", prof.chargingSchedule().chargingSchedulePeriod_count());
+        log_info("Rejected: charging schedule period count %zu out of range", prof.chargingSchedule().chargingSchedulePeriod_count());
         return false;
     }
 
@@ -1336,7 +1336,7 @@ profiles_evaluated:
         log_debug("    Next check: never");
     }
 
-    log_debug("");
+    log_debug("%s", "");
     return result;
 }
 
