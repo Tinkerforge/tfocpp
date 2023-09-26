@@ -5,15 +5,12 @@
 #include <stdint.h>
 #include <stdarg.h>
 #include <inttypes.h>
-
 #include <limits>
 
 struct TFJsonSerializer {
     char * const buf;
     const size_t buf_size;
-
     char *head;
-
     size_t buf_required;
     bool in_empty_container = true;
 
@@ -57,6 +54,7 @@ private:
 #endif
 
 #ifdef TFJSON_IMPLEMENTATION
+
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
@@ -335,14 +333,14 @@ void TFJsonSerializer::writeFmt(const char *fmt, ...) {
     if (buf_size == 0)
         return;
 
-    if ((size_t) w >= buf_left) {
+    if ((size_t)w >= buf_left) {
         head = buf + buf_size;
 
         buf[buf_size - 1] = '\0';
         return;
     }
 
-    head += (size_t) w;
+    head += (size_t)w;
     return;
 }
 
