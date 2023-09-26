@@ -2,8 +2,9 @@
 
 #include "Platform.h"
 
-#include "string.h"
-#include "ArduinoJson.h"
+#include <string.h>
+#include <stdlib.h>
+#include <errno.h>
 
 #ifndef OCPP_PLATFORM_ESP32
 bool deadline_elapsed(uint32_t deadline_ms)
@@ -41,13 +42,18 @@ bool lookup_key(size_t *result, const char *key, const char * const *array, size
 }
 
 Opt<int32_t> parse_int(const char *c) {
-    StaticJsonDocument<16> doc;
-    if (deserializeJson(doc, c) != DeserializationError::Ok)
+    errno = 0;
+
+    char *p;
+    int32_t parsed = strtol(c, &p, 10);
+
+    if (errno != 0 || c == p)
         return {false};
 
-    if (!doc.is<int32_t>())
+    p += strspn(p, " \r\n\t");
+
+    if (*p != '\0')
         return {false};
 
-    int32_t parsed = doc.as<int32_t>();
     return {parsed};
 }
