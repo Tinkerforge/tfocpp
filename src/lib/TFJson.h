@@ -308,7 +308,7 @@ void TFJsonSerializer::write(char c) {
 void TFJsonSerializer::writeUnescaped(const char *c, size_t len) {
     buf_required += len;
 
-    if (len > buf_size || (head - buf) > (buf_size - len))
+    if (len > buf_size || (size_t)(head - buf) > (buf_size - len))
         return;
 
     memcpy(head, c, len);
