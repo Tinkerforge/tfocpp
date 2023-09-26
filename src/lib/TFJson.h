@@ -669,7 +669,11 @@ bool TFJsonDeserializer::isHexDigit() {
 
 bool TFJsonDeserializer::isControl() {
     // JSON allows 0x7F unescaped
+#if CHAR_MIN == 0
+    return cur <= 0x1F;
+#else
     return cur >= 0x00 && cur <= 0x1F;
+#endif
 }
 
 bool TFJsonDeserializer::skipWhitespace() {
