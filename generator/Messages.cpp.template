@@ -5,6 +5,7 @@
 #include "ChargePoint.h"
 #include "Platform.h"
 #include "Types.h"
+#include "Tools.h"
 
 extern "C" {
 #include "lib/libiso8601/iso8601.h"

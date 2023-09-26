@@ -3029,6 +3029,7 @@ CallResponse callHandler(const char *uid, const char *action_string, JsonObject 
         case CallAction::TRIGGER_MESSAGE:
             return CallResponse{CallErrorCode::NotSupported, "action not supported"};
     }
+
     SILENCE_GCC_UNREACHABLE();
 }
 
@@ -3149,5 +3150,6 @@ CallResponse callResultHandler(int32_t connectorId, CallAction resultTo, JsonObj
         case CallAction::TRIGGER_MESSAGE:
             return CallResponse{CallErrorCode::NotSupported, "action not supported"};
     }
+
     SILENCE_GCC_UNREACHABLE();
 }

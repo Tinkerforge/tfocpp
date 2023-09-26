@@ -2,6 +2,7 @@ from statham.schema.elements import Element, Object, Array, String, Integer, Num
 from statham.schema.property import Property
 from typing import List
 import re
+import os
 
 from schema import *
 
@@ -741,7 +742,7 @@ def generate_send_function(obj: Object):
 size_t {action}::serializeJson(char *buf, size_t buf_len) const {{
     TFJsonSerializer json{{buf, buf_len}};
     json.addArray();
-        json.add((int32_t)OcppRpcMessageType::CALL{result});
+        json.add((int64_t)OcppRpcMessageType::CALL{result});
         {add_id}
         {add_action}
         json.addObject();
@@ -837,6 +838,8 @@ def generate_on_call(all_messages: List[Object], supported_to_recv: List[Object]
         {default_cases}
             return CallResponse{{CallErrorCode::NotSupported, "action not supported"}};
     }}
+
+    SILENCE_GCC_UNREACHABLE();
 }}"""
 
     case_template = """
@@ -878,6 +881,8 @@ def generate_on_call_response(all_messages: List[Object], supported_to_recv: Lis
         {default_cases}
             return CallResponse{{CallErrorCode::NotSupported, "action not supported"}};
     }}
+
+    SILENCE_GCC_UNREACHABLE();
 }}"""
 
     case_template = """
@@ -1016,12 +1021,12 @@ if __name__ == "__main__":
         structs = structs.replace(old, new)
         messages = messages.replace(old, new)
 
+    os.makedirs('generated', exist_ok=True)
     specialize_template("Messages.h.template", "generated/Messages.h", {
-        "{{{enums}}}": enums,
-        "{{{structs}}}": structs,
-        "{{{messages}}}": messages,
+        "{{{enums}}}": '\n'.join([s.rstrip() for s in enums.split('\n')]),
+        "{{{structs}}}": '\n'.join([s.rstrip() for s in structs.split('\n')]),
+        "{{{messages}}}": '\n'.join([s.rstrip() for s in messages.split('\n')]),
     })
-
 
     enum_strings = newline_remove("\n\n".join(enum_impls))
     struct_method_impls = newline_remove("\n\n".join(struct_impls))
@@ -1038,10 +1043,8 @@ if __name__ == "__main__":
         struct_method_impls = struct_method_impls.replace(old, new)
         message_impls = message_impls.replace(old, new)
 
-
     specialize_template("Messages.cpp.template", "generated/Messages.cpp", {
-        "{{{enum_strings}}}": enum_strings,
-        "{{{struct_method_impls}}}": struct_method_impls,
-        "{{{message_impls}}}": message_impls,
+        "{{{enum_strings}}}": '\n'.join([s.rstrip() for s in enum_strings.split('\n')]),
+        "{{{struct_method_impls}}}": '\n'.join([s.rstrip() for s in struct_method_impls.split('\n')]),
+        "{{{message_impls}}}": '\n'.join([s.rstrip() for s in message_impls.split('\n')]),
     })
-
