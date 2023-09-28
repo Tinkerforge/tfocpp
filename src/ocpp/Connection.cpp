@@ -274,6 +274,7 @@ void OcppConnection::tick() {
     if (!connected && was_connected) {
         cp->onDisconnect();
         connection_state_change_time = platform_get_system_time(platform_ctx);
+        platform_reconnect(platform_ctx);
     } else if (connected && !was_connected) {
         cp->onConnect();
         last_ping_sent = platform_now_ms();
