@@ -410,7 +410,7 @@ ChangeConfigurationResponseStatus OcppChargePoint::changeConfig(const char *key,
 
 CallResponse OcppChargePoint::handleAuthorizeResponse(int32_t connectorId, AuthorizeResponseView conf)
 {
-    log_info("Received Authorize.conf for connector %d\n", connectorId);
+    log_info("Received Authorize.conf for connector %d", connectorId);
     IdTagInfo info;
     info.updateFromIdTagInfo(conf.idTagInfo());
 
@@ -422,7 +422,7 @@ CallResponse OcppChargePoint::handleAuthorizeResponse(int32_t connectorId, Autho
 
 CallResponse OcppChargePoint::handleBootNotificationResponse(int32_t connectorId, BootNotificationResponseView conf) {
     (void) connectorId;
-    log_info("Received BootNotification.conf for connector %d. Interval %d\n", connectorId, conf.interval());
+    log_info("Received BootNotification.conf for connector %d. Interval %d", connectorId, conf.interval());
 
     if ((state != OcppState::PowerOn) &&
         (state != OcppState::Pending) &&
@@ -489,7 +489,7 @@ CallResponse OcppChargePoint::handleChangeAvailability(const char *uid, ChangeAv
     else
         resp = connectors[conn_id - 1].onChangeAvailability(req.type());
 
-    log_info("Sending ChangeAvailablility.conf %s\n", ChangeAvailabilityResponseStatusStrings[(size_t)resp]);
+    log_info("Sending ChangeAvailablility.conf %s", ChangeAvailabilityResponseStatusStrings[(size_t)resp]);
     connection.sendCallResponse(ChangeAvailabilityResponse(uid, resp));
 
     if (resp != ChangeAvailabilityResponseStatus::REJECTED)
@@ -504,7 +504,7 @@ CallResponse OcppChargePoint::handleChangeConfiguration(const char *uid, ChangeC
 
     ChangeConfigurationResponseStatus status = this->changeConfig(req.key(), req.value());
 
-    log_info("Sending ChangeConfiguration.conf %s\n", ChangeConfigurationResponseStatusStrings[(size_t)status]);
+    log_info("Sending ChangeConfiguration.conf %s", ChangeConfigurationResponseStatusStrings[(size_t)status]);
     connection.sendCallResponse(ChangeConfigurationResponse(uid, status));
 
     return CallResponse{CallErrorCode::OK, ""};
@@ -521,7 +521,7 @@ CallResponse OcppChargePoint::handleClearCache(const char *uid, ClearCacheView r
     When the Authorization Cache is not implemented and the Charge Point receives a ClearCache.req message. The Charge Point
     SHALL response with ClearCache.conf with the status: Rejected.
     */
-    log_info("Sending ClearCache.conf Rejected\n");
+    log_info("Sending ClearCache.conf Rejected");
     connection.sendCallResponse(ClearCacheResponse(uid, ResponseStatus::REJECTED));
 
     return CallResponse{CallErrorCode::OK, ""};
@@ -535,7 +535,7 @@ CallResponse OcppChargePoint::handleDataTransfer(const char *uid, DataTransferVi
     If the recipient of the request has no implementation for the specific vendorId it SHALL return a status
     ‘UnknownVendor’ and the data element SHALL not be present.
     */
-    log_info("Sending DataTransfer.conf UnknownVendorId\n");
+    log_info("Sending DataTransfer.conf UnknownVendorId");
     connection.sendCallResponse(DataTransferResponse(uid, DataTransferResponseStatus::UNKNOWN_VENDOR_ID));
 
     return CallResponse{CallErrorCode::OK, ""};
@@ -543,7 +543,7 @@ CallResponse OcppChargePoint::handleDataTransfer(const char *uid, DataTransferVi
 
 CallResponse OcppChargePoint::handleDataTransferResponse(int32_t connectorId, DataTransferResponseView conf)
 {
-    log_info("Received DataTransfer.conf for connector %d. Status %s\n", connectorId, DataTransferResponseStatusStrings[(size_t)conf.status()]);
+    log_info("Received DataTransfer.conf for connector %d. Status %s", connectorId, DataTransferResponseStatusStrings[(size_t)conf.status()]);
     (void) connectorId;
     (void) conf;
 
@@ -662,7 +662,7 @@ CallResponse OcppChargePoint::handleGetConfiguration(const char *uid, GetConfigu
         }
     }
 
-    log_info("Sending GetConfiguration.conf with %lu known and %lu unknown keys\n", known_keys, unknown_keys);
+    log_info("Sending GetConfiguration.conf with %lu known and %lu unknown keys", known_keys, unknown_keys);
     connection.sendCallResponse(GetConfigurationResponse(uid, known.get(), known_keys, unknown.get(), unknown_keys));
 
     return CallResponse{CallErrorCode::OK, ""};
@@ -670,7 +670,7 @@ CallResponse OcppChargePoint::handleGetConfiguration(const char *uid, GetConfigu
 
 CallResponse OcppChargePoint::handleHeartbeatResponse(int32_t connectorId, HeartbeatResponseView conf)
 {
-    log_info("Received Heartbeat.conf for connector %d\n", connectorId);
+    log_info("Received Heartbeat.conf for connector %d", connectorId);
     (void)connectorId;
     platform_set_system_time(platform_ctx, conf.currentTime());
     return CallResponse{CallErrorCode::OK, ""};
@@ -679,7 +679,7 @@ CallResponse OcppChargePoint::handleHeartbeatResponse(int32_t connectorId, Heart
 
 CallResponse OcppChargePoint::handleMeterValuesResponse(int32_t connectorId, MeterValuesResponseView conf)
 {
-    log_info("Received MeterValues.conf for connector %d\n", connectorId);
+    log_info("Received MeterValues.conf for connector %d", connectorId);
     (void) connectorId;
     (void) conf;
     return CallResponse{CallErrorCode::OK, ""};
@@ -734,7 +734,7 @@ CallResponse OcppChargePoint::handleRemoteStartTransaction(const char *uid, Remo
             if (conn_idx != -1) {
                 // We already have another selectable connector.
                 // -> Reject the request as it is ambiguous which connector to start.
-                log_info("Sending RemoteStartTransaction.conf Rejected (ambiguous)\n");
+                log_info("Sending RemoteStartTransaction.conf Rejected (ambiguous)");
                 connection.sendCallResponse(RemoteStartTransactionResponse(uid, ResponseStatus::REJECTED));
                 return CallResponse{CallErrorCode::OK, ""};
             }
@@ -745,14 +745,14 @@ CallResponse OcppChargePoint::handleRemoteStartTransaction(const char *uid, Remo
         conn_idx = req.connectorId().get() - 1;
 
     if (conn_idx < 0 || conn_idx >= OCPP_NUM_CONNECTORS) {
-        log_info("Sending RemoteStartTransaction.conf Rejected (unknown connector id)\n");
+        log_info("Sending RemoteStartTransaction.conf Rejected (unknown connector id)");
         connection.sendCallResponse(RemoteStartTransactionResponse(uid, ResponseStatus::REJECTED));
         return CallResponse{CallErrorCode::OK, ""};
     }
 
     // The spec does not explicitly require this, however OCTT as a test for this.
     if (!connectors[conn_idx].canHandleRemoteStartTxn()) {
-        log_info("Sending RemoteStartTransaction.conf Rejected (connector faulted, unavailable or already in transaction)\n");
+        log_info("Sending RemoteStartTransaction.conf Rejected (connector faulted, unavailable or already in transaction)");
         connection.sendCallResponse(RemoteStartTransactionResponse(uid, ResponseStatus::REJECTED));
         return CallResponse{CallErrorCode::OK, ""};
     }
@@ -804,7 +804,7 @@ CallResponse OcppChargePoint::handleRemoteStartTransaction(const char *uid, Remo
     // can handle the request just as if the user starts interacting with the connector with a tag (i.e.
     // the IDLE -> AUTH_START_NO_PLUG transistion)
 
-    log_info("Sending RemoteStartTransaction.conf Accepted\n");
+    log_info("Sending RemoteStartTransaction.conf Accepted");
     connection.sendCallResponse(RemoteStartTransactionResponse(uid, ResponseStatus::ACCEPTED));
 
     if (getBoolConfig(ConfigKey::AuthorizeRemoteTxRequests)) {
@@ -824,12 +824,12 @@ CallResponse OcppChargePoint::handleRemoteStopTransaction(const char *uid, Remot
             continue;
 
         connectors[i].onRemoteStopTransaction();
-        log_info("Sending RemoteStopTransaction.conf Accepted (connector %d)\n", i);
+        log_info("Sending RemoteStopTransaction.conf Accepted (connector %d)", i);
         connection.sendCallResponse(RemoteStopTransactionResponse(uid, ResponseStatus::ACCEPTED));
         return CallResponse{CallErrorCode::OK, ""};
     }
 
-    log_info("Sending RemoteStopTransaction.conf Rejected (unknown transaction id)\n");
+    log_info("Sending RemoteStopTransaction.conf Rejected (unknown transaction id)");
     connection.sendCallResponse(RemoteStopTransactionResponse(uid, ResponseStatus::REJECTED));
     return CallResponse{CallErrorCode::OK, ""};
 }
@@ -840,7 +840,7 @@ CallResponse OcppChargePoint::handleReset(const char *uid, ResetView req)
     (void) uid;
     (void) req;
 
-    log_info("Sending Request.conf Accepted\n");
+    log_info("Sending Request.conf Accepted");
     connection.sendCallResponse(ResetResponse(uid, ResponseStatus::ACCEPTED));
 
     for(int32_t i = 0; i < OCPP_NUM_CONNECTORS; ++i) {
@@ -859,7 +859,7 @@ CallResponse OcppChargePoint::handleReset(const char *uid, ResetView req)
 
 CallResponse OcppChargePoint::handleStartTransactionResponse(int32_t connectorId, StartTransactionResponseView conf)
 {
-    log_info("Received StartTransaction.conf for connector %d\n", connectorId);
+    log_info("Received StartTransaction.conf for connector %d", connectorId);
     IdTagInfo info;
     info.updateFromIdTagInfo(conf.idTagInfo());
 
@@ -874,7 +874,7 @@ CallResponse OcppChargePoint::handleStartTransactionResponse(int32_t connectorId
 
 CallResponse OcppChargePoint::handleStatusNotificationResponse(int32_t connectorId, StatusNotificationResponseView conf)
 {
-    log_info("Received StatusNotification.conf for connector %d\n", connectorId);
+    log_info("Received StatusNotification.conf for connector %d", connectorId);
     (void) connectorId;
     (void) conf;
 
@@ -883,7 +883,7 @@ CallResponse OcppChargePoint::handleStatusNotificationResponse(int32_t connector
 
 CallResponse OcppChargePoint::handleStopTransactionResponse(int32_t connectorId, StopTransactionResponseView conf)
 {
-    log_info("Received StopTransaction.conf for connector %d\n", connectorId);
+    log_info("Received StopTransaction.conf for connector %d", connectorId);
     (void) connectorId;
     (void) conf;
 
@@ -906,7 +906,7 @@ CallResponse OcppChargePoint::handleUnlockConnector(const char *uid, UnlockConne
     else
         result = connectors[conn_id].onUnlockConnector();
 
-    log_info("Sending UnlockConnector.conf %s\n", UnlockConnectorResponseStatusStrings[(size_t)result]);
+    log_info("Sending UnlockConnector.conf %s", UnlockConnectorResponseStatusStrings[(size_t)result]);
     connection.sendCallResponse(UnlockConnectorResponse(uid, result));
     return CallResponse{CallErrorCode::OK, ""};
 }
