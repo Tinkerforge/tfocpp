@@ -1068,8 +1068,6 @@ bool TFJsonDeserializer::parseString(bool report_as_member) {
                 }
             }
 
-            okay();
-
             uint32_t code_point = strtoul(hex, nullptr, 16);
 
             if (code_point <= 0x7F) {
@@ -1094,6 +1092,8 @@ bool TFJsonDeserializer::parseString(bool report_as_member) {
                 reportError(Error::InvalidEscapeSequence);
                 return false;
             }
+
+            okay();
 
             continue;
         }
