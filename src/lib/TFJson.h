@@ -163,6 +163,16 @@ private:
 #include <errno.h>
 #include <inttypes.h>
 #include <assert.h>
+#include <limits.h> // for CHAR_MIN
+
+static bool isctrl(char c) {
+    // JSON allows 0x7F unescaped
+#if CHAR_MIN == 0
+    return c <= 0x1F;
+#else
+    return c <= 0x1F && c >= 0; // UTF-8 compatibility
+#endif
+}
 
 #if 0
 #define debugf(...) printf("TFJsonDeserializer: " __VA_ARGS__)
@@ -377,11 +387,7 @@ void TFJsonSerializer::write(const char *c, size_t len) {
                 write('t');
                 break;
             default:
-#if CHAR_MIN == 0
-                if (*c <= 0x1F) {
-#else
-                if (*c <= 0x1F && *c >= 0/*UTF-8 compatibility*/) {
-#endif
+                if (isctrl(*c)) {
                     char x = *c;
 
                     write('\\');
@@ -668,12 +674,7 @@ bool TFJsonDeserializer::isHexDigit() {
 }
 
 bool TFJsonDeserializer::isControl() {
-    // JSON allows 0x7F unescaped
-#if CHAR_MIN == 0
-    return cur <= 0x1F;
-#else
-    return cur >= 0x00 && cur <= 0x1F;
-#endif
+    return isctrl(cur);
 }
 
 bool TFJsonDeserializer::skipWhitespace() {
