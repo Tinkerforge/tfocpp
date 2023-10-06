@@ -275,11 +275,19 @@ void OcppConnection::tick() {
         cp->onDisconnect();
         connection_state_change_time = platform_get_system_time(platform_ctx);
         platform_reconnect(platform_ctx);
+        next_reconnect_deadline = platform_now_ms() + OCPP_RECONNECT_WEBSOCKET_INTERVAL_S * 1000;
     } else if (connected && !was_connected) {
         cp->onConnect();
         last_ping_sent = platform_now_ms();
         pong_deadline = platform_now_ms() + OCPP_WEBSOCKET_PING_PONG_TIMEOUT * 1000;
         connection_state_change_time = platform_get_system_time(platform_ctx);
+    }
+
+    if (!connected && !was_connected) {
+        if (next_reconnect_deadline != 0 && deadline_elapsed(next_reconnect_deadline)) {
+            platform_reconnect(platform_ctx);
+            next_reconnect_deadline = platform_now_ms() + OCPP_RECONNECT_WEBSOCKET_INTERVAL_S * 1000;
+        }
     }
 
 #ifdef OCPP_STATE_CALLBACKS

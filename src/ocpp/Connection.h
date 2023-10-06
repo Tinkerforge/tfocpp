@@ -50,6 +50,7 @@ public:
     uint32_t next_ping_deadline = 0;
     uint32_t last_ping_sent = 0;
     uint32_t pong_deadline = 0;
+    uint32_t next_reconnect_deadline = 0;
     uint32_t transaction_message_retry_deadline;
     uint32_t transaction_message_attempts = 0;
 
