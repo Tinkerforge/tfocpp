@@ -387,6 +387,9 @@ void* OcppConnection::start(const char *websocket_endpoint_url, const char *char
     ws_url += charge_point_name_percent_encoded;
 
     platform_ctx = platform_init(ws_url.c_str(), basic_auth_user, basic_auth_pass, basic_auth_pass_length);
+    if (platform_ctx == nullptr)
+        return nullptr;
+
     platform_ws_register_receive_callback(platform_ctx, [](char *c, size_t s, void *user_data){((OcppConnection*)user_data)->handleMessage(c, s);}, this);
     platform_ws_register_pong_callback(platform_ctx, [](void *user_data){((OcppConnection*)user_data)->pong_deadline = platform_now_ms() + OCPP_WEBSOCKET_PING_PONG_TIMEOUT * 1000;}, this);
 

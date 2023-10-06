@@ -1440,7 +1440,7 @@ static size_t url_encode(char *buf, size_t len, const char *url) {
     return offset;
 }
 
-void OcppChargePoint::start(const char *websocket_endpoint_url, const char *charge_point_name, const uint8_t *basic_auth_pass, size_t basic_auth_pass_length) {
+bool OcppChargePoint::start(const char *websocket_endpoint_url, const char *charge_point_name, const uint8_t *basic_auth_pass, size_t basic_auth_pass_length) {
     loadConfig();
 #ifdef OCPP_STATE_CALLBACKS
     debugDumpConfig();
@@ -1455,12 +1455,16 @@ void OcppChargePoint::start(const char *websocket_endpoint_url, const char *char
     url_encode(buf.get(), encoded_len + 1, charge_point_name);
 
     platform_ctx = connection.start(websocket_endpoint_url, buf.get(), charge_point_name, basic_auth_pass, basic_auth_pass_length, this);
+    if (platform_ctx == nullptr)
+        return false;
+
     for(int32_t i = 0; i < OCPP_NUM_CONNECTORS; ++i) {
         connectors[i].init(i + 1, this);
     }
 
     platform_register_tag_seen_callback(platform_ctx, [](int32_t connectorId, const char *tagId, void *user_data){((OcppChargePoint*)user_data)->handleTagSeen(connectorId, tagId);}, this);
     platform_register_stop_callback(platform_ctx, [](int32_t connectorId, StopReason reason, void *user_data){((OcppChargePoint*)user_data)->handleStop(connectorId, reason);}, this);
+    return true;
 }
 
 void OcppChargePoint::stop() {
