@@ -175,7 +175,7 @@ bool restoreNextTxnMessage(OcppConnection *conn) {
                     StartTxn start_txn;
                     memcpy(&start_txn, buf, sizeof(StartTxn));
                     log_info("Sending RESTORED StartTransaction.req at connector %d for tag %s at %.3f kWh.", start_txn.connector_id, start_txn.id_tag, start_txn.meter_start / 1000.0f);
-                    conn->sendCallAction(StartTransaction(start_txn.connector_id, start_txn.id_tag, start_txn.meter_start, timestamp, start_txn.reservation_id), timestamp);
+                    conn->sendCallAction(StartTransaction(start_txn.connector_id, start_txn.id_tag, start_txn.meter_start, timestamp, start_txn.reservation_id), timestamp, start_txn.connector_id);
                     return true;
                 }
             case PERSISTENT_TYPE_STOP_TXN: {
@@ -201,7 +201,7 @@ bool restoreNextTxnMessage(OcppConnection *conn) {
                 persistStopTxn((uint8_t)StopTransactionReason::REBOOT, new_energy, txn.transaction_id, "", new_timestamp);
                 platform_remove_file(name_buf);
                 log_info("Sending RESTORED StopTransaction.req at connector %d for unknown tag at %.3f kWh. (Txn stopped on reboot)", txn.connector_id, new_energy / 1000.0f);
-                conn->sendCallAction(StopTransaction(new_energy, new_timestamp, txn.transaction_id, nullptr, StopTransactionReason::REBOOT), new_timestamp);
+                conn->sendCallAction(StopTransaction(new_energy, new_timestamp, txn.transaction_id, nullptr, StopTransactionReason::REBOOT), new_timestamp, txn.connector_id);
                 return true;
             }
             case PERSISTENT_TYPE_METER_VALUES:
