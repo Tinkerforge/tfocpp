@@ -132,6 +132,7 @@ void OcppChargePoint::tick() {
 
 void OcppChargePoint::onConnect()
 {
+    log_warn("OCPP connected");
     if (state != OcppState::Idle)
         return;
 
@@ -142,7 +143,7 @@ void OcppChargePoint::onConnect()
 
 void OcppChargePoint::onDisconnect()
 {
-
+    log_warn("OCPP disconnected");
 }
 
 ChangeAvailabilityResponseStatus OcppChargePoint::onChangeAvailability(ChangeAvailabilityType type)
