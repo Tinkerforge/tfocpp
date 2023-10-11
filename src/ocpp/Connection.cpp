@@ -271,20 +271,24 @@ bool OcppConnection::sendCallAction(const ICall &call, time_t timestamp, int32_t
 void OcppConnection::tick() {
     static bool was_connected = false;
     bool connected = platform_ws_connected(platform_ctx);
+
     if (!connected && was_connected) {
         cp->onDisconnect();
         connection_state_change_time = platform_get_system_time(platform_ctx);
-        platform_reconnect(platform_ctx);
-        next_reconnect_deadline = platform_now_ms() + OCPP_RECONNECT_WEBSOCKET_INTERVAL_S * 1000;
     } else if (connected && !was_connected) {
         cp->onConnect();
+        connection_state_change_time = platform_get_system_time(platform_ctx);
+
+        // Connection establishment counts as successful ping/pong
         last_ping_sent = platform_now_ms();
         pong_deadline = platform_now_ms() + OCPP_WEBSOCKET_PING_PONG_TIMEOUT * 1000;
-        connection_state_change_time = platform_get_system_time(platform_ctx);
-    }
 
-    if (!connected && !was_connected) {
-        if (next_reconnect_deadline != 0 && deadline_elapsed(next_reconnect_deadline)) {
+        // Stop reconnects
+        next_reconnect_deadline = 0;
+    } else if (!connected && !was_connected) {
+        if (next_reconnect_deadline == 0) {
+            next_reconnect_deadline = platform_now_ms() + OCPP_RECONNECT_WEBSOCKET_INTERVAL_S * 1000;
+        } else if (deadline_elapsed(next_reconnect_deadline)) {
             platform_reconnect(platform_ctx);
             next_reconnect_deadline = platform_now_ms() + OCPP_RECONNECT_WEBSOCKET_INTERVAL_S * 1000;
         }
@@ -327,7 +331,7 @@ void OcppConnection::tick() {
     }
 
     if (getIntConfigUnsigned(ConfigKey::WebSocketPingInterval) != 0 && deadline_elapsed(pong_deadline)) {
-        platform_reconnect(platform_ctx);
+        platform_disconnect(platform_ctx);
         return;
     }
 
