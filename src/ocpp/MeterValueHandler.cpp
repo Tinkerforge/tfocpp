@@ -33,7 +33,7 @@ void OcppMeterValueHandler::tick() {
         mv.sampledValue = to_send.sampled_values.get();
         mv.sampledValue_length = to_send.sampled_value_count;
         if (mv.sampledValue_length > 0) {
-            log_info("Sending MeterValues.req of connector %d with %lu values (clock-aligned)", this->connectorId, mv.sampledValue_length);
+            log_info("Creating MeterValues.req of connector %d with %lu values (clock-aligned)", this->connectorId, mv.sampledValue_length);
             cp->sendCallAction(MeterValues(this->connectorId, &mv, 1), mv.timestamp, this->connectorId);
         }
         clock_aligned_meter_values.reset();
@@ -48,7 +48,7 @@ void OcppMeterValueHandler::tick() {
         mv.sampledValue = to_send.sampled_values.get();
         mv.sampledValue_length = to_send.sampled_value_count;
         if (mv.sampledValue_length > 0) {
-            log_info("Sending MeterValues.req of connector %d with %lu values (sampled)", this->connectorId, mv.sampledValue_length);
+            log_info("Creating MeterValues.req of connector %d with %lu values (sampled)", this->connectorId, mv.sampledValue_length);
             cp->sendCallAction(MeterValues(this->connectorId, &mv, 1), mv.timestamp, this->connectorId);
         }
         charging_session_meter_values.reset();

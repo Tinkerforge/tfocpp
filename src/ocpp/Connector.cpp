@@ -181,7 +181,7 @@ void Connector::setState(ConnectorState newState) {
                 case ConnectorState::NO_TAG:
                 case ConnectorState::FINISHING_UNLOCKED:
                 case ConnectorState::FINISHING_NO_CABLE_UNLOCKED:
-                    log_info("Sending Authorize.req connector %d for tag %s (Authorizing for start)", this->connectorId, tagIdInFlight);
+                    log_info("Creating Authorize.req connector %d for tag %s (Authorizing for start)", this->connectorId, tagIdInFlight);
                     this->sendCallAction(Authorize(tagIdInFlight));
                     break;
                 case ConnectorState::TRANSACTION:
@@ -219,7 +219,7 @@ void Connector::setState(ConnectorState newState) {
                     this->transaction_start_time = platform_get_system_time(cp->platform_ctx);
                     auto energy = platform_get_energy(connectorId);
                     persistStartTxn(connectorId, authorized_for.tagId, energy, OCPP_INTEGER_NOT_PASSED, this->transaction_start_time);
-                    log_info("Sending StartTransaction.req at connector %d for tag %s at %.3f kWh.", this->connectorId, authorized_for.tagId, energy / 1000.0f);
+                    log_info("Creating StartTransaction.req at connector %d for tag %s at %.3f kWh.", this->connectorId, authorized_for.tagId, energy / 1000.0f);
                     this->sendCallAction(StartTransaction(connectorId, authorized_for.tagId, energy, this->transaction_start_time), this->transaction_start_time);
                     break;
                 }
@@ -256,7 +256,7 @@ void Connector::setState(ConnectorState newState) {
 
                     onTxnMsgResponseReceived(this->transaction_confirmed_timestamp);
                     persistStopTxn((uint8_t)this->next_stop_reason, energy, transaction_id, authorized_for.tagId, timestamp);
-                    log_info("Sending StopTransaction.req at connector %d for tag %s at %.3f kWh. StopReason %d", this->connectorId, authorized_for.tagId, energy / 1000.0f, (int)this->next_stop_reason);
+                    log_info("Creating StopTransaction.req at connector %d for tag %s at %.3f kWh. StopReason %d", this->connectorId, authorized_for.tagId, energy / 1000.0f, (int)this->next_stop_reason);
                     this->sendCallAction(StopTransaction(energy, timestamp, transaction_id, authorized_for.tagId, this->next_stop_reason), timestamp);
                     break;
                 }
@@ -323,7 +323,7 @@ void Connector::sendStatus() {
 void Connector::forceSendStatus()
 {
     StatusNotificationStatus newStatus = getStatus();
-    log_info("Sending StatusNotification.req: Status %s for connector %d", StatusNotificationStatusStrings[(size_t)newStatus], connectorId);
+    log_info("Creating StatusNotification.req: Status %s for connector %d", StatusNotificationStatusStrings[(size_t)newStatus], connectorId);
 
     this->sendCallAction(StatusNotification(connectorId, StatusNotificationErrorCode::NO_ERROR, newStatus, nullptr, platform_get_system_time(cp->platform_ctx)));
     last_sent_status = newStatus;
@@ -926,7 +926,7 @@ void Connector::onTagSeen(const char *tag_id) {
             strncpy(tagIdInFlight, tag_id, ARRAY_SIZE(tagIdInFlight) - 1);
 
             // We still need the tag ID that started the transaction, so don't override authorized_for here, but send the AUTH request immediately.
-            log_info("Sending Authorize.req connector %d for tag %s (Authorizing for stop)", this->connectorId, tag_id);
+            log_info("Creating Authorize.req connector %d for tag %s (Authorizing for stop)", this->connectorId, tag_id);
             this->sendCallAction(Authorize(tag_id));
             setState(ConnectorState::AUTH_STOP);
             break;
