@@ -651,7 +651,7 @@ void Connector::tick() {
         case ConnectorState::TRANSACTION:
             switch (evse_state) {
                 case EVSEState::NotConnected:
-                    log_error("Unexpected EVSEState %d while Connector is in state %d. Aborting transaction!", (int)evse_state, (int)state);
+                    // This can happen if the charger has a fixed cable, not a plug.
                     this->next_stop_reason = StopTransactionReason::EV_DISCONNECTED;
                     setState(ConnectorState::FINISHING_NO_CABLE_UNLOCKED);
                     this->next_stop_reason = StopTransactionReason::NONE;
@@ -674,7 +674,7 @@ void Connector::tick() {
         case ConnectorState::AUTH_STOP:
             switch (evse_state) {
                 case EVSEState::NotConnected:
-                    log_error("Unexpected EVSEState %d while Connector is in state %d. Aborting transaction!", (int)evse_state, (int)state);
+                    // This can happen if the charger has a fixed cable, not a plug.
                     this->next_stop_reason = StopTransactionReason::EV_DISCONNECTED;
                     setState(ConnectorState::FINISHING_NO_CABLE_UNLOCKED);
                     this->next_stop_reason = StopTransactionReason::NONE;
