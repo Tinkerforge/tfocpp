@@ -375,7 +375,9 @@ void OcppConnection::tick() {
     } else
         return;
 
-    message_timeout_deadline = platform_now_ms() + getIntConfigUnsigned(ConfigKey::MessageTimeout) * 1000;
+    message_timeout_deadline = platform_now_ms() + (is_transaction_related(message_in_flight.action) ?
+                                                        getIntConfigUnsigned(ConfigKey::TransactionMessageRetryInterval) :
+                                                        getIntConfigUnsigned(ConfigKey::MessageTimeout)) * 1000;
 
     log_info("Sending %s (id %" PRIu64 ")", CallActionStrings[(size_t) message_in_flight.action], message_in_flight.message_id);
 
