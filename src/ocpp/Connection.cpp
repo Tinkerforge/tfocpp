@@ -123,7 +123,7 @@ void OcppConnection::handleMessage(char *message, size_t message_len)
         if (is_transaction_related(message_in_flight.action))
             onTxnMsgResponseReceived(message_in_flight.timestamp);
 
-        log_info("Received result for %s (id %llu)", CallActionStrings[(size_t) message_in_flight.action], uid);
+        log_info("Received result for %s (id %" PRIu64 ")", CallActionStrings[(size_t) message_in_flight.action], uid);
 
         CallResponse res = callResultHandler(message_in_flight.connector_id, message_in_flight.action, doc[2].as<JsonObject>(), cp);
         message_in_flight = QueueItem{};
@@ -172,7 +172,7 @@ void OcppConnection::handleCallError(uint64_t uid, CallErrorCode code, const cha
 {
     std::string details_string;
     serializeJsonPretty(details, details_string);
-    log_warn("Received call error (id %llu) %s %s:\n %s\n-----end of received call error-----", uid, CallErrorCodeStrings[(size_t)code], desc, details_string.c_str());
+    log_warn("Received call error (id " PRIu64 ") %s %s:\n %s\n-----end of received call error-----", uid, CallErrorCodeStrings[(size_t)code], desc, details_string.c_str());
 
     if (!is_transaction_related(message_in_flight.action)) {
         cp->onTimeout(message_in_flight.action, message_in_flight.message_id, message_in_flight.connector_id);
@@ -351,7 +351,7 @@ void OcppConnection::tick() {
             // Don't drop transaction related messages. Push to front to keep in order.
             transaction_messages.push_front(std::move(message_in_flight));
         } else {
-            log_info("%s (id %llu) timed out", CallActionStrings[(size_t) message_in_flight.action], message_in_flight.message_id);
+            log_info("%s (id " PRIu64 ") timed out", CallActionStrings[(size_t) message_in_flight.action], message_in_flight.message_id);
             cp->onTimeout(message_in_flight.action, message_in_flight.message_id, message_in_flight.connector_id);
             message_in_flight = QueueItem{};
         }
@@ -376,7 +376,7 @@ void OcppConnection::tick() {
 
     message_timeout_deadline = platform_now_ms() + getIntConfigUnsigned(ConfigKey::MessageTimeout) * 1000;
 
-    log_info("Sending %s (id %llu)", CallActionStrings[(size_t) message_in_flight.action], message_in_flight.message_id);
+    log_info("Sending %s (id " PRIu64 ")", CallActionStrings[(size_t) message_in_flight.action], message_in_flight.message_id);
 
     platform_ws_send(platform_ctx, message_in_flight.buf.get(), message_in_flight.len);
 }
