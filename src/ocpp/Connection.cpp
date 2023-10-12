@@ -75,6 +75,8 @@ void OcppConnection::handleMessage(char *message, size_t message_len)
             return;
         }
 
+        log_info("Received call (id %s)", uniqueID);
+
         CallResponse res = callHandler(uniqueID, doc[2].as<const char *>(), doc[3].as<JsonObject>(), cp);
 
         if (res.result != CallErrorCode::OK)
@@ -121,6 +123,8 @@ void OcppConnection::handleMessage(char *message, size_t message_len)
         if (is_transaction_related(message_in_flight.action))
             onTxnMsgResponseReceived(message_in_flight.timestamp);
 
+        log_info("Received result for %s (id %llu)", CallActionStrings[(size_t) message_in_flight.action], uid);
+
         CallResponse res = callResultHandler(message_in_flight.connector_id, message_in_flight.action, doc[2].as<JsonObject>(), cp);
         message_in_flight = QueueItem{};
         transaction_message_retry_deadline = 0;
@@ -159,16 +163,16 @@ void OcppConnection::handleMessage(char *message, size_t message_len)
             log_error("received call error with unknown error code '%s'! Replacing with GenericError.", doc[2].as<const char *>());
         }
 
-        handleCallError((CallErrorCode)cec, doc[3], doc[4]);
+        handleCallError(uid, (CallErrorCode)cec, doc[3], doc[4]);
         return;
     }
 }
 
-void OcppConnection::handleCallError(CallErrorCode code, const char *desc, JsonObject details)
+void OcppConnection::handleCallError(uint64_t uid, CallErrorCode code, const char *desc, JsonObject details)
 {
     std::string details_string;
     serializeJsonPretty(details, details_string);
-    log_warn("Received call error %s %s:\n %s\n-----end of received call error-----", CallErrorCodeStrings[(size_t)code], desc, details_string.c_str());
+    log_warn("Received call error (id %llu) %s %s:\n %s\n-----end of received call error-----", uid, CallErrorCodeStrings[(size_t)code], desc, details_string.c_str());
 
     if (!is_transaction_related(message_in_flight.action)) {
         cp->onTimeout(message_in_flight.action, message_in_flight.message_id, message_in_flight.connector_id);
@@ -201,6 +205,8 @@ static size_t buildCallError(TFJsonSerializer &json, const char *uid, CallErrorC
 
 void OcppConnection::sendCallError(const char *uid, CallErrorCode code, const char *desc)
 {
+    log_info("Sending error %s (%s) for id %s", CallErrorCodeStrings[(size_t) code], desc, uid);
+
     size_t len = 0;
     {
         TFJsonSerializer json{nullptr, 0};
@@ -215,6 +221,8 @@ void OcppConnection::sendCallError(const char *uid, CallErrorCode code, const ch
 
 bool OcppConnection::sendCallResponse(const ICall &call)
 {
+    log_info("Sending response for %s (id %s)", CallActionStrings[(size_t) call.action], call.ocppJcallId);
+
     auto len = call.measureJson() + 1; // null terminator
     auto buf = heap_alloc_array<char>(len);
     call.serializeJson(buf.get(), len);
@@ -335,7 +343,6 @@ void OcppConnection::tick() {
         return;
     }
 
-
     if (message_in_flight.is_valid()) {
         if (!deadline_elapsed(message_timeout_deadline))
             return;
@@ -344,6 +351,7 @@ void OcppConnection::tick() {
             // Don't drop transaction related messages. Push to front to keep in order.
             transaction_messages.push_front(std::move(message_in_flight));
         } else {
+            log_info("%s (id %llu) timed out", CallActionStrings[(size_t) message_in_flight.action], message_in_flight.message_id);
             cp->onTimeout(message_in_flight.action, message_in_flight.message_id, message_in_flight.connector_id);
             message_in_flight = QueueItem{};
         }
@@ -367,6 +375,8 @@ void OcppConnection::tick() {
         return;
 
     message_timeout_deadline = platform_now_ms() + getIntConfigUnsigned(ConfigKey::MessageTimeout) * 1000;
+
+    log_info("Sending %s (id %llu)", CallActionStrings[(size_t) message_in_flight.action], message_in_flight.message_id);
 
     platform_ws_send(platform_ctx, message_in_flight.buf.get(), message_in_flight.len);
 }

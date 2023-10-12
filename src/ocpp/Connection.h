@@ -33,7 +33,7 @@ public:
 
     void handleMessage(char *message, size_t message_len);
 
-    void handleCallError(CallErrorCode code, const char *desc, JsonObject details);
+    void handleCallError(uint64_t uid, CallErrorCode code, const char *desc, JsonObject details);
 
     void sendCallError(const char *uid, CallErrorCode code, const char *desc);
 
