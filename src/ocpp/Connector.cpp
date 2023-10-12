@@ -69,6 +69,7 @@ void Connector::applyState() {
 
             transaction_id = INT32_MAX;
             transaction_start_time = 0;
+            transaction_confirmed_timestamp = 0;
             transaction_with_non_accepted_tag_id = false;
             break;
 
@@ -83,6 +84,7 @@ void Connector::applyState() {
 
             transaction_id = INT32_MAX;
             transaction_start_time = 0;
+            transaction_confirmed_timestamp = 0;
             transaction_with_non_accepted_tag_id = false;
             break;
 
@@ -97,6 +99,7 @@ void Connector::applyState() {
 
             transaction_id = INT32_MAX;
             transaction_start_time = 0;
+            transaction_confirmed_timestamp = 0;
             transaction_with_non_accepted_tag_id = false;
             break;
 
@@ -113,6 +116,7 @@ void Connector::applyState() {
 
             transaction_id = INT32_MAX;
             transaction_start_time = 0;
+            transaction_confirmed_timestamp = 0;
             transaction_with_non_accepted_tag_id = false;
             break;
 
@@ -125,6 +129,7 @@ void Connector::applyState() {
 
             transaction_id = INT32_MAX;
             transaction_start_time = 0;
+            transaction_confirmed_timestamp = 0;
             transaction_with_non_accepted_tag_id = false;
             break;
 
@@ -138,6 +143,7 @@ void Connector::applyState() {
 
             transaction_id = INT32_MAX;
             transaction_start_time = 0;
+            transaction_confirmed_timestamp = 0;
             transaction_with_non_accepted_tag_id = false;
             break;
 
@@ -161,6 +167,7 @@ void Connector::applyState() {
 
             transaction_id = INT32_MAX;
             transaction_start_time = 0;
+            transaction_confirmed_timestamp = 0;
             transaction_with_non_accepted_tag_id = false;
             break;
     }
