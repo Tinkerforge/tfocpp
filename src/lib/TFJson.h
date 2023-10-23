@@ -118,7 +118,7 @@ struct TFJsonDeserializer {
     std::function<bool(int64_t)> int64_handler;
     std::function<bool(uint64_t)> uint64_handler;
     std::function<bool(char *, size_t)> number_handler;
-    std::function<bool(bool)> bool_handler;
+    std::function<bool(bool)> boolean_handler;
     std::function<bool(void)> null_handler;
 
     TFJsonDeserializer(size_t nesting_depth_max, bool allow_null_in_string = true);
@@ -138,7 +138,7 @@ struct TFJsonDeserializer {
     void setInt64Handler(std::function<bool(int64_t)> int64_handler);
     void setUInt64Handler(std::function<bool(uint64_t)> uint64_handler);
     void setNumberHandler(std::function<bool(char *, size_t)> number_handler);
-    void setBoolHandler(std::function<bool(bool)> bool_handler);
+    void setBooleanHandler(std::function<bool(bool)> boolean_handler);
     void setNullHandler(std::function<bool(void)> null_handler);
 
     bool parse(char *buf, size_t len = TFJSON_USE_STRLEN);
@@ -604,7 +604,7 @@ void TFJsonDeserializer::setUInt64Handler(std::function<bool(uint64_t)> uint64_h
 
 void TFJsonDeserializer::setNumberHandler(std::function<bool(char *, size_t)> number_handler_) { number_handler = number_handler_; }
 
-void TFJsonDeserializer::setBoolHandler(std::function<bool(bool)> bool_handler_) { bool_handler = bool_handler_; }
+void TFJsonDeserializer::setBooleanHandler(std::function<bool(bool)> boolean_handler_) { boolean_handler = boolean_handler_; }
 
 void TFJsonDeserializer::setNullHandler(std::function<bool(void)> null_handler_) { null_handler = null_handler_; }
 
@@ -1476,7 +1476,7 @@ bool TFJsonDeserializer::parseTrue() {
 
     okay();
 
-    if (bool_handler && !bool_handler(true)) {
+    if (boolean_handler && !boolean_handler(true)) {
         reportError(Error::Aborted);
         return false;
     }
@@ -1534,7 +1534,7 @@ bool TFJsonDeserializer::parseFalse() {
 
     okay();
 
-    if (bool_handler && !bool_handler(false)) {
+    if (boolean_handler && !boolean_handler(false)) {
         reportError(Error::Aborted);
         return false;
     }
