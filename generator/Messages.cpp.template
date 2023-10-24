@@ -28,7 +28,7 @@ static void unix_timestamp_to_iso_string(time_t timestamp, TFJsonSerializer &jso
 
     strftime(buf, ARRAY_SIZE(buf), "%FT%TZ", t);
 
-    json.add(key, buf);
+    json.addMemberString(key, buf);
 }
 
 ICall::~ICall() {}

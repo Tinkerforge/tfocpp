@@ -256,7 +256,7 @@ def param_size(param_name, e: Element):
 def param_insertion(message: str, name: str, p: Property):
     if isinstance(p.element, String):
         if p.element.enum:
-            return 'if ({name} != {{{message}{name_camel}}}::NONE) json.add("{name}",{{{message}{name_camel}}}Strings[(size_t){name}]);'.format(message=message, name=name, name_camel=camel(name))
+            return 'if ({name} != {{{message}{name_camel}}}::NONE) json.addMemberString("{name}", {{{message}{name_camel}}}Strings[(size_t){name}]);'.format(message=message, name=name, name_camel=camel(name))
 
         if p.element.format:
             if p.element.format == "date-time":
@@ -266,23 +266,23 @@ def param_insertion(message: str, name: str, p: Property):
             else:
                 raise Exception("Unknown format")
 
-        return 'if ({name} != nullptr) json.add("{name}", {name});'.format(name=name)
+        return 'if ({name} != nullptr) json.addMemberString("{name}", {name});'.format(name=name)
     elif isinstance(p.element, Integer):
-        return 'if ({name} != OCPP_INTEGER_NOT_PASSED) json.add("{name}", {name});'.format(name=name)
+        return 'if ({name} != OCPP_INTEGER_NOT_PASSED) json.addMemberNumber("{name}", {name});'.format(name=name)
     elif isinstance(p.element, Number):
-        return 'if (!isnan({name})) json.add("{name}", {name});'.format(name=name)
+        return 'if (!isnan({name})) json.addMemberNumber("{name}", {name});'.format(name=name)
     elif isinstance(p.element, Boolean):
         if not p.required:
             raise Exception("Non-required bools are not supported")
-        return 'json.add("{name}", {name});'.format(name=name)
+        return 'json.addMemberBoolean("{name}", {name});'.format(name=name)
     elif inspect.isclass(p.element):
         #return 'if ({name} != nullptr) {name}->serializeInto(json, "{name}");'.format(name=name)
-        return 'if ({name} != nullptr) {{ json.addObject("{name}"); {name}->serializeInto(json); json.endObject(); }}'.format(name=name)
+        return 'if ({name} != nullptr) {{ json.addMemberObject("{name}"); {name}->serializeInto(json); json.endObject(); }}'.format(name=name)
     elif isinstance(p.element, Array):
         if not isinstance(p.element.items, String):
-            return 'if ({name} != nullptr) {{ json.addArray("{name}"); for(size_t i = 0; i < {name}_length; ++i) {{ json.addObject(); {name}[i].serializeInto(json); json.endObject(); }} json.endArray(); }}'.format(name=name)
+            return 'if ({name} != nullptr) {{ json.addMemberArray("{name}"); for(size_t i = 0; i < {name}_length; ++i) {{ json.addObject(); {name}[i].serializeInto(json); json.endObject(); }} json.endArray(); }}'.format(name=name)
         else:
-            return 'if ({name} != nullptr) {{ json.addArray("{name}"); for(size_t i = 0; i < {name}_length; ++i) {{ json.add({name}[i]); }} json.endArray(); }}'.format(name=name)
+            return 'if ({name} != nullptr) {{ json.addMemberArray("{name}"); for(size_t i = 0; i < {name}_length; ++i) {{ json.addString({name}[i]); }} json.endArray(); }}'.format(name=name)
 
     raise Exception("Not implemented yet")
 
@@ -742,7 +742,7 @@ def generate_send_function(obj: Object):
 size_t {action}::serializeJson(char *buf, size_t buf_len) const {{
     TFJsonSerializer json{{buf, buf_len}};
     json.addArray();
-        json.add((int64_t)OcppRpcMessageType::CALL{result});
+        json.addNumber((int32_t)OcppRpcMessageType::CALL{result});
         {add_id}
         {add_action}
         json.addObject();
@@ -809,8 +809,8 @@ size_t {action}::serializeJson(char *buf, size_t buf_len) const {{
         attr_init=wrap_non_empty(",\n    ",",\n    ".join(attr_init),""),
         result="RESULT" if is_response else "",
         call_id="call_id" if is_response else "next_call_id++",
-        add_id = "json.add(this->ocppJcallId);" if is_response else "json.add(this->ocppJmessageId, true);",
-        add_action ="" if is_response else "json.add(CallActionStrings[(size_t)this->action]);",
+        add_id = "json.addString(this->ocppJcallId);" if is_response else "json.addNumber(this->ocppJmessageId, true);",
+        add_action ="" if is_response else "json.addString(CallActionStrings[(size_t)this->action]);",
         param_count=len(obj.properties),
         param_sizes="\n".join(param_sizes),
         param_insertions="\n            ".join(param_insertions))
