@@ -1347,6 +1347,8 @@ bool TFJsonDeserializer::parseNumber() {
         okay(-1);
 
         if (errno != 0) {
+            debugf("parseNumber() -> \"%.*s\", errno: %d\n", (int)number_len, number, errno);
+
             if (number_handler && !number_handler(number, number_len)) {
                 free(number_buf);
                 reportError(Error::Aborted);
@@ -1376,6 +1378,8 @@ bool TFJsonDeserializer::parseNumber() {
         okay(-1);
 
         if (errno != 0) {
+            debugf("parseNumber() -> \"%.*s\", errno: %d\n", (int)number_len, number, errno);
+
             if (number_handler && !number_handler(number, number_len)) {
                 free(number_buf);
                 reportError(Error::Aborted);
@@ -1405,6 +1409,8 @@ bool TFJsonDeserializer::parseNumber() {
         okay(-1);
 
         if (errno != 0) {
+            debugf("parseNumber() -> \"%.*s\", errno: %d\n", (int)number_len, number, errno);
+
             if (number_handler && !number_handler(number, number_len)) {
                 free(number_buf);
                 reportError(Error::Aborted);
