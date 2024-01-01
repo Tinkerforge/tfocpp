@@ -95,6 +95,8 @@ struct TFJsonDeserializer {
         InvalidUTF8ContinuationByte,
         BufferTooShort,
         OutOfMemory,
+        ElementTooLong,
+        RefillFailure,
     };
 
     const size_t nesting_depth_max;
@@ -104,11 +106,13 @@ struct TFJsonDeserializer {
     size_t utf8_count;
     char *buf;
     size_t buf_len;
+    ssize_t idx_nul;  // (virtual) nul-terminator
     ssize_t idx_cur;  // current character
     ssize_t idx_okay; // no parsing error until here [inclusive]
     ssize_t idx_done; // data is not needed anymore until here [inclusive]
     char cur;
-    std::function<void(Error, size_t)> error_handler;
+    std::function<void(Error, char *, size_t)> error_handler;
+    std::function<ssize_t(char *, size_t)> refill_handler;
     std::function<bool(void)> begin_handler;
     std::function<bool(void)> end_handler;
     std::function<bool(void)> object_begin_handler;
@@ -128,7 +132,8 @@ struct TFJsonDeserializer {
 
     static const char *getErrorName(Error error);
 
-    void setErrorHandler(std::function<void(Error, size_t)> error_handler);
+    void setErrorHandler(std::function<void(Error, char *, size_t)> error_handler);
+    void setRefillHandler(std::function<ssize_t(char *, size_t)> refill_handler);
     void setBeginHandler(std::function<bool(void)> begin_handler);
     void setEndHandler(std::function<bool(void)> end_handler);
     void setObjectBeginHandler(std::function<bool(void)> object_begin_handler);
@@ -148,7 +153,8 @@ struct TFJsonDeserializer {
 
 private:
     void reportError(Error error);
-    bool next();
+    size_t shift();
+    bool next(size_t *offset = nullptr);
     void okay(ssize_t offset = 0);
     void done();
     bool enterNesting();
@@ -583,11 +589,15 @@ const char *TFJsonDeserializer::getErrorName(Error error) {
         case Error::InvalidUTF8ContinuationByte: return "InvalidUTF8ContinuationByte";
         case Error::BufferTooShort: return "BufferTooShort";
         case Error::OutOfMemory: return "OutOfMemory";
+        case Error::ElementTooLong: return "ElementTooLong";
+        case Error::RefillFailure: return "RefillFailure";
         default: return "Unknown";
     }
 }
 
-void TFJsonDeserializer::setErrorHandler(std::function<void(Error, size_t)> error_handler_) { error_handler = error_handler_; }
+void TFJsonDeserializer::setErrorHandler(std::function<void(Error, char *, size_t)> error_handler_) { error_handler = error_handler_; }
+
+void TFJsonDeserializer::setRefillHandler(std::function<ssize_t(char *, size_t)> refill_handler_) { refill_handler = refill_handler_; }
 
 void TFJsonDeserializer::setBeginHandler(std::function<bool(void)> begin_handler_) { begin_handler = begin_handler_; }
 
@@ -621,12 +631,21 @@ bool TFJsonDeserializer::parse(char *buf_, size_t buf_len_) {
     nesting_depth = 0;
     utf8_count = 0;
     buf = buf_;
-    buf_len = buf_len_ == TFJSON_USE_STRLEN ? strlen(buf) : buf_len_;
+
+    if (buf_len_ == TFJSON_USE_STRLEN) {
+        idx_nul = strlen(buf);
+        buf_len = idx_nul + 1;
+    }
+    else {
+        idx_nul = buf_len_;
+        buf_len = buf_len_;
+    }
+
     idx_cur = -1;
     idx_okay = -1;
     idx_done = -1;
 
-    debugf("parse(%p, %zu) -> \"%.*s\"\n", buf, buf_len, (int)buf_len, buf);
+    debugf("parse(%p, %zu) -> \"%.*s\"\n", buf, buf_len, (int)idx_nul, buf);
 
     if (begin_handler && !begin_handler()) {
         reportError(Error::Aborted);
@@ -641,7 +660,7 @@ bool TFJsonDeserializer::parse(char *buf_, size_t buf_len_) {
         return false;
     }
 
-    if (idx_done + 1 < (ssize_t)buf_len) {
+    if (idx_done + 1 < idx_nul) {
         reportError(Error::ExpectingEndOfInput);
         return false;
     }
@@ -651,16 +670,16 @@ bool TFJsonDeserializer::parse(char *buf_, size_t buf_len_) {
         return false;
     }
 
-    debugf("parse(...) -> buf_len: %zu, idx_cur: %zd, idx_okay: %zd, idx_done: %zd\n", buf_len, idx_cur, idx_okay, idx_done);
+    debugf("parse(...) -> buf_len: %zu, idx_nul: %zd, idx_cur: %zd, idx_okay: %zd, idx_done: %zd\n", buf_len, idx_nul, idx_cur, idx_okay, idx_done);
 
     return true;
 }
 
 void TFJsonDeserializer::reportError(Error error) {
-    debugf("reportError(%s, idx_cur: %zd, idx_okay: %zd) -> \"%.*s\"\n", getErrorName(error), idx_cur, idx_okay, (int)(buf_len - idx_okay), buf + idx_okay + 1);
+    debugf("reportError(%s, idx_cur: %zd, idx_okay: %zd) -> \"%.*s\"\n", getErrorName(error), idx_cur, idx_okay, (int)(idx_nul - (idx_okay + 1)), buf + idx_okay + 1);
 
     if (error_handler) {
-        error_handler(error, idx_okay + 1);
+        error_handler(error, buf + idx_okay + 1, idx_nul - (idx_okay + 1));
     }
 }
 
@@ -674,11 +693,65 @@ static int count_leading_ones_intrinsic(char value) {
     return __builtin_clz(bits) - 24;
 }
 
-bool TFJsonDeserializer::next() {
-    if (idx_cur + 1 >= (ssize_t)buf_len) {
-        idx_cur = (ssize_t)buf_len;
+size_t TFJsonDeserializer::shift() {
+    size_t done_len = (size_t)idx_done + 1;
+
+    debugf("shift() -> idx_nul: %zd, done_len: %zu\n", idx_nul, done_len);
+
+    memmove(buf, buf + done_len, idx_nul - done_len);
+
+    idx_nul -= done_len;
+    idx_cur -= done_len;
+    idx_okay -= done_len;
+    idx_done -= done_len;
+
+    return done_len;
+}
+
+bool TFJsonDeserializer::next(size_t *offset) {
+    if (offset != nullptr) {
+        *offset = 0;
+    }
+
+    if (idx_cur + 1 >= idx_nul && refill_handler) {
+        // reached the end of the current input, try to refill. first move remaining
+        // input to the front of the buffer to avoid having to deal with wrapping
+        size_t shift_len = shift();
+
+        if (offset != nullptr) {
+            *offset = shift_len;
+        }
+
+        size_t unused_len = buf_len - idx_nul;
+
+        if (unused_len > 0) {
+            ssize_t refilled_len = refill_handler(buf + idx_nul, unused_len);
+
+            if (refilled_len < 0) {
+                reportError(Error::RefillFailure);
+                return false;
+            }
+
+            debugf("next() / refilled -> \"%.*s\"\n", (int)refilled_len, buf + idx_nul);
+
+            idx_nul += refilled_len;
+        }
+        else if (refill_handler(nullptr, 0) > 0) {
+            // the buffer is full with undone input and there is more input. the current
+            // element has to fit into the buffer. if there is more input after the
+            // current element then there has to be at least one char more than the current
+            // element in the buffer for the parser to be able to tell that the current
+            // element has ended
+            reportError(Error::ElementTooLong);
+            return false;
+        }
+    }
+
+    if (idx_cur + 1 >= idx_nul) {
+        idx_cur = idx_nul;
         cur = '\0';
-    } else {
+    }
+    else {
         ++idx_cur;
         cur = buf[idx_cur];
 
@@ -1069,6 +1142,7 @@ bool TFJsonDeserializer::parseString(bool report_as_member) {
 
     char *str = buf + idx_cur;
     char *end = str;
+    size_t offset;
 
     while (cur != '"') {
         if (cur == '\0') {
@@ -1086,16 +1160,22 @@ bool TFJsonDeserializer::parseString(bool report_as_member) {
 
             okay();
 
-            if (!next()) {
+            if (!next(&offset)) {
                 return false;
             }
+
+            str -= offset;
+            end -= offset;
 
             continue;
         }
 
-        if (!next()) {
+        if (!next(&offset)) {
             return false;
         }
+
+        str -= offset;
+        end -= offset;
 
         char unescaped = '\0';
 
@@ -1138,17 +1218,23 @@ bool TFJsonDeserializer::parseString(bool report_as_member) {
 
             okay();
 
-            if (!next()) {
+            if (!next(&offset)) {
                 return false;
             }
+
+            str -= offset;
+            end -= offset;
 
             continue;
         }
 
         if (cur == 'u') {
-            if (!next()) {
+            if (!next(&offset)) {
                 return false;
             }
+
+            str -= offset;
+            end -= offset;
 
             char hex[5] = {0};
 
@@ -1160,9 +1246,12 @@ bool TFJsonDeserializer::parseString(bool report_as_member) {
 
                 hex[i] = cur;
 
-                if (!next()) {
+                if (!next(&offset)) {
                     return false;
                 }
+
+                str -= offset;
+                end -= offset;
             }
 
             uint32_t code_point = strtoul(hex, nullptr, 16);
@@ -1234,11 +1323,14 @@ bool TFJsonDeserializer::parseString(bool report_as_member) {
 
 bool TFJsonDeserializer::parseNumber() {
     char *number = buf + idx_cur;
+    size_t offset;
 
     if (cur == '-') {
-        if (!next()) {
+        if (!next(&offset)) {
             return false;
         }
+
+        number -= offset;
     }
 
     if (!isDigit()) {
@@ -1248,24 +1340,30 @@ bool TFJsonDeserializer::parseNumber() {
 
     char first_digit = cur;
 
-    if (!next()) {
+    if (!next(&offset)) {
         return false;
     }
 
+    number -= offset;
+
     if (first_digit != '0') {
         while (isDigit()) {
-            if (!next()) {
+            if (!next(&offset)) {
                 return false;
             }
+
+            number -= offset;
         }
     }
 
     bool has_fraction_or_exponent = false;
 
     if (cur == '.') {
-        if (!next()) {
+        if (!next(&offset)) {
             return false;
         }
+
+        number -= offset;
 
         has_fraction_or_exponent = true;
 
@@ -1277,23 +1375,28 @@ bool TFJsonDeserializer::parseNumber() {
         }
 
         while (isDigit()) {
-            if (!next()) {
+            if (!next(&offset)) {
                 return false;
             }
+
+            number -= offset;
         }
     }
 
     if (cur == 'e' || cur == 'E') {
-        if (!next()) {
+        if (!next(&offset)) {
             return false;
         }
 
+        number -= offset;
         has_fraction_or_exponent = true;
 
         if (cur == '-' || cur == '+') {
-            if (!next()) {
+            if (!next(&offset)) {
                 return false;
             }
+
+            number -= offset;
         }
 
         if (!isDigit()) {
@@ -1304,9 +1407,11 @@ bool TFJsonDeserializer::parseNumber() {
         }
 
         while (isDigit()) {
-            if (!next()) {
+            if (!next(&offset)) {
                 return false;
             }
+
+            number -= offset;
         }
     }
 
