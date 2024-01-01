@@ -1335,30 +1335,39 @@ bool TFJsonDeserializer::parseNumber() {
     }
 
     if (has_fraction_or_exponent) {
-        char backup = number[number_len];
+        if (double_handler) {
+            char backup = number[number_len];
 
-        number[number_len] = '\0';
-        errno = 0;
+            number[number_len] = '\0';
+            errno = 0;
 
-        double result = strtod(number, nullptr);
+            double result = strtod(number, nullptr);
 
-        number[number_len] = backup;
+            number[number_len] = backup;
 
-        okay(-1);
+            okay(-1);
 
-        if (errno != 0) {
-            debugf("parseNumber() -> \"%.*s\", errno: %d\n", (int)number_len, number, errno);
+            if (errno != 0) {
+                debugf("parseNumber() -> \"%.*s\", errno: %d\n", (int)number_len, number, errno);
 
-            if (number_handler && !number_handler(number, number_len)) {
-                free(number_buf);
-                reportError(Error::Aborted);
-                return false;
+                if (number_handler && !number_handler(number, number_len)) {
+                    free(number_buf);
+                    reportError(Error::Aborted);
+                    return false;
+                }
+            }
+            else {
+                debugf("parseNumber() -> \"%.*s\" = %f\n", (int)number_len, number, result);
+
+                if (!double_handler(result)) {
+                    free(number_buf);
+                    reportError(Error::Aborted);
+                    return false;
+                }
             }
         }
-        else {
-            debugf("parseNumber() -> \"%.*s\" = %f\n", (int)number_len, number, result);
-
-            if (double_handler && !double_handler(result)) {
+        else if (number_handler) {
+            if (!number_handler(number, number_len)) {
                 free(number_buf);
                 reportError(Error::Aborted);
                 return false;
@@ -1366,30 +1375,39 @@ bool TFJsonDeserializer::parseNumber() {
         }
     }
     else if (*number == '-') {
-        char backup = number[number_len];
+        if (int64_handler) {
+            char backup = number[number_len];
 
-        number[number_len] = '\0';
-        errno = 0;
+            number[number_len] = '\0';
+            errno = 0;
 
-        int64_t result = strtoll(number, nullptr, 10);
+            int64_t result = strtoll(number, nullptr, 10);
 
-        number[number_len] = backup;
+            number[number_len] = backup;
 
-        okay(-1);
+            okay(-1);
 
-        if (errno != 0) {
-            debugf("parseNumber() -> \"%.*s\", errno: %d\n", (int)number_len, number, errno);
+            if (errno != 0) {
+                debugf("parseNumber() -> \"%.*s\", errno: %d\n", (int)number_len, number, errno);
 
-            if (number_handler && !number_handler(number, number_len)) {
-                free(number_buf);
-                reportError(Error::Aborted);
-                return false;
+                if (number_handler && !number_handler(number, number_len)) {
+                    free(number_buf);
+                    reportError(Error::Aborted);
+                    return false;
+                }
+            }
+            else {
+                debugf("parseNumber() -> \"%.*s\" = %" PRIi64 "\n", (int)number_len, number, result);
+
+                if (!int64_handler(result)) {
+                    free(number_buf);
+                    reportError(Error::Aborted);
+                    return false;
+                }
             }
         }
-        else {
-            debugf("parseNumber() -> \"%.*s\" = %" PRIi64 "\n", (int)number_len, number, result);
-
-            if (int64_handler && !int64_handler(result)) {
+        else if (number_handler) {
+            if (!number_handler(number, number_len)) {
                 free(number_buf);
                 reportError(Error::Aborted);
                 return false;
@@ -1397,30 +1415,39 @@ bool TFJsonDeserializer::parseNumber() {
         }
     }
     else {
-        char backup = number[number_len];
+        if (uint64_handler) {
+            char backup = number[number_len];
 
-        number[number_len] = '\0';
-        errno = 0;
+            number[number_len] = '\0';
+            errno = 0;
 
-        uint64_t result = strtoull(number, nullptr, 10);
+            uint64_t result = strtoull(number, nullptr, 10);
 
-        number[number_len] = backup;
+            number[number_len] = backup;
 
-        okay(-1);
+            okay(-1);
 
-        if (errno != 0) {
-            debugf("parseNumber() -> \"%.*s\", errno: %d\n", (int)number_len, number, errno);
+            if (errno != 0) {
+                debugf("parseNumber() -> \"%.*s\", errno: %d\n", (int)number_len, number, errno);
 
-            if (number_handler && !number_handler(number, number_len)) {
-                free(number_buf);
-                reportError(Error::Aborted);
-                return false;
+                if (number_handler && !number_handler(number, number_len)) {
+                    free(number_buf);
+                    reportError(Error::Aborted);
+                    return false;
+                }
+            }
+            else {
+                debugf("parseNumber() -> \"%.*s\" = %" PRIu64 "\n", (int)number_len, number, result);
+
+                if (!uint64_handler(result)) {
+                    free(number_buf);
+                    reportError(Error::Aborted);
+                    return false;
+                }
             }
         }
-        else {
-            debugf("parseNumber() -> \"%.*s\" = %" PRIu64 "\n", (int)number_len, number, result);
-
-            if (uint64_handler && !uint64_handler(result)) {
+        else if (number_handler) {
+            if (!number_handler(number, number_len)) {
                 free(number_buf);
                 reportError(Error::Aborted);
                 return false;
