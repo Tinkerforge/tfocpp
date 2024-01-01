@@ -1423,7 +1423,12 @@ bool TFJsonDeserializer::parseNumber() {
     if (number + number_len >= buf + buf_len) {
         // if number + number_len == buf + buf_len then there is no space
         // for temporarily nul-terminating the number to parse it
-        if (number_len + 1 > malloc_size_max) {
+        offset = shift();
+
+        if (offset > 0) {
+            number -= offset;
+        }
+        else if (number_len + 1 > malloc_size_max) {
             reportError(Error::BufferTooShort);
             return false;
         }
