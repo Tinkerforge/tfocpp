@@ -93,10 +93,13 @@ struct TFJsonDeserializer {
         InlineNullByte,
         InvalidUTF8StartByte,
         InvalidUTF8ContinuationByte,
+        BufferTooShort,
+        OutOfMemory,
     };
 
     const size_t nesting_depth_max;
     const bool allow_null_in_string;
+    const bool allow_malloc;
     size_t nesting_depth;
     size_t utf8_count;
     char *buf;
@@ -121,7 +124,7 @@ struct TFJsonDeserializer {
     std::function<bool(bool)> boolean_handler;
     std::function<bool(void)> null_handler;
 
-    TFJsonDeserializer(size_t nesting_depth_max, bool allow_null_in_string = true);
+    TFJsonDeserializer(size_t nesting_depth_max, bool allow_null_in_string = true, bool allow_malloc = true);
 
     static const char *getErrorName(Error error);
 
@@ -547,7 +550,11 @@ void TFJsonSerializer::writeFmt(const char *fmt, ...) {
     return;
 }
 
-TFJsonDeserializer::TFJsonDeserializer(size_t nesting_depth_max, bool allow_null_in_string) : nesting_depth_max(nesting_depth_max), allow_null_in_string(allow_null_in_string) {}
+TFJsonDeserializer::TFJsonDeserializer(size_t nesting_depth_max, bool allow_null_in_string, bool allow_malloc) :
+    nesting_depth_max(nesting_depth_max),
+    allow_null_in_string(allow_null_in_string),
+    allow_malloc(allow_malloc) {
+}
 
 const char *TFJsonDeserializer::getErrorName(Error error) {
     switch (error) {
@@ -574,6 +581,8 @@ const char *TFJsonDeserializer::getErrorName(Error error) {
         case Error::InlineNullByte: return "InlineNullByte";
         case Error::InvalidUTF8StartByte: return "InvalidUTF8StartByte";
         case Error::InvalidUTF8ContinuationByte: return "InvalidUTF8ContinuationByte";
+        case Error::BufferTooShort: return "BufferTooShort";
+        case Error::OutOfMemory: return "OutOfMemory";
         default: return "Unknown";
     }
 }
@@ -1302,8 +1311,28 @@ bool TFJsonDeserializer::parseNumber() {
     }
 
     size_t number_len = buf + idx_cur - number;
+    char *number_buf = nullptr;
 
     debugf("parseNumber() -> \"%.*s\"\n", (int)number_len, number);
+
+    if (number + number_len >= buf + buf_len) {
+        // if number + number_len == buf + buf_len then there is no space
+        // for temporarily nul-terminating the number to parse it
+        if (!allow_malloc) {
+            reportError(Error::BufferTooShort);
+            return false;
+        }
+        else {
+            number_buf = strndup(number, number_len);
+
+            if (number_buf == nullptr) {
+                reportError(Error::OutOfMemory);
+                return false;
+            }
+
+            number = number_buf;
+        }
+    }
 
     if (has_fraction_or_exponent) {
         char backup = number[number_len];
@@ -1319,6 +1348,7 @@ bool TFJsonDeserializer::parseNumber() {
 
         if (errno != 0) {
             if (number_handler && !number_handler(number, number_len)) {
+                free(number_buf);
                 reportError(Error::Aborted);
                 return false;
             }
@@ -1327,6 +1357,7 @@ bool TFJsonDeserializer::parseNumber() {
             debugf("parseNumber() -> \"%.*s\" = %f\n", (int)number_len, number, result);
 
             if (double_handler && !double_handler(result)) {
+                free(number_buf);
                 reportError(Error::Aborted);
                 return false;
             }
@@ -1346,6 +1377,7 @@ bool TFJsonDeserializer::parseNumber() {
 
         if (errno != 0) {
             if (number_handler && !number_handler(number, number_len)) {
+                free(number_buf);
                 reportError(Error::Aborted);
                 return false;
             }
@@ -1354,6 +1386,7 @@ bool TFJsonDeserializer::parseNumber() {
             debugf("parseNumber() -> \"%.*s\" = %" PRIi64 "\n", (int)number_len, number, result);
 
             if (int64_handler && !int64_handler(result)) {
+                free(number_buf);
                 reportError(Error::Aborted);
                 return false;
             }
@@ -1373,6 +1406,7 @@ bool TFJsonDeserializer::parseNumber() {
 
         if (errno != 0) {
             if (number_handler && !number_handler(number, number_len)) {
+                free(number_buf);
                 reportError(Error::Aborted);
                 return false;
             }
@@ -1381,12 +1415,14 @@ bool TFJsonDeserializer::parseNumber() {
             debugf("parseNumber() -> \"%.*s\" = %" PRIu64 "\n", (int)number_len, number, result);
 
             if (uint64_handler && !uint64_handler(result)) {
+                free(number_buf);
                 reportError(Error::Aborted);
                 return false;
             }
         }
     }
 
+    free(number_buf);
     done();
 
     return true;
