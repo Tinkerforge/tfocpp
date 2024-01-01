@@ -98,8 +98,8 @@ struct TFJsonDeserializer {
     };
 
     const size_t nesting_depth_max;
+    const size_t malloc_size_max;
     const bool allow_null_in_string;
-    const bool allow_malloc;
     size_t nesting_depth;
     size_t utf8_count;
     char *buf;
@@ -124,7 +124,7 @@ struct TFJsonDeserializer {
     std::function<bool(bool)> boolean_handler;
     std::function<bool(void)> null_handler;
 
-    TFJsonDeserializer(size_t nesting_depth_max, bool allow_null_in_string = true, bool allow_malloc = true);
+    TFJsonDeserializer(size_t nesting_depth_max, size_t malloc_size_max, bool allow_null_in_string = true);
 
     static const char *getErrorName(Error error);
 
@@ -550,10 +550,10 @@ void TFJsonSerializer::writeFmt(const char *fmt, ...) {
     return;
 }
 
-TFJsonDeserializer::TFJsonDeserializer(size_t nesting_depth_max, bool allow_null_in_string, bool allow_malloc) :
+TFJsonDeserializer::TFJsonDeserializer(size_t nesting_depth_max, size_t malloc_size_max, bool allow_null_in_string) :
     nesting_depth_max(nesting_depth_max),
-    allow_null_in_string(allow_null_in_string),
-    allow_malloc(allow_malloc) {
+    malloc_size_max(malloc_size_max),
+    allow_null_in_string(allow_null_in_string) {
 }
 
 const char *TFJsonDeserializer::getErrorName(Error error) {
@@ -1318,7 +1318,7 @@ bool TFJsonDeserializer::parseNumber() {
     if (number + number_len >= buf + buf_len) {
         // if number + number_len == buf + buf_len then there is no space
         // for temporarily nul-terminating the number to parse it
-        if (!allow_malloc) {
+        if (number_len + 1 > malloc_size_max) {
             reportError(Error::BufferTooShort);
             return false;
         }
