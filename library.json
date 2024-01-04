@@ -5,8 +5,8 @@
     "includeDir": "src",
     "repository":
     {
-      "type": "git",
-      "url": "https://github.com/Tinkerforge/tfocpp"
+        "type": "git",
+        "url": "https://github.com/Tinkerforge/tfocpp"
     },
     "export": {
         "include": [
@@ -15,6 +15,12 @@
             "lib/musl_libc_timegm.c"
         ]
     },
+    "dependencies": [
+        {
+            "name": "TFJson",
+            "version": "https://github.com/Tinkerforge/tfjson#06f871c0c096cc96cb1b7ec75277696da9973461"
+        }
+    ],
     "license": "LGPL-2.1",
     "frameworks": "*",
     "platforms": "*"

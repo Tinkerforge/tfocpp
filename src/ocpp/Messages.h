@@ -3,7 +3,7 @@
 #pragma once
 
 #include "Types.h"
-#include "lib/TFJson.h"
+#include "TFJson.h"
 
 #include <math.h>
 

@@ -10,7 +10,7 @@
 #include <dirent.h>
 
 #define TFJSON_IMPLEMENTATION
-#include "lib/TFJson.h"
+#include "TFJson.h"
 
 #include <sys/socket.h>
 #include <arpa/inet.h>

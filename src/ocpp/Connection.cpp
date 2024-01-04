@@ -2,13 +2,12 @@
 
 #include "errno.h"
 #include "inttypes.h"
+#include "TFJson.h"
 
 #include "ChargePoint.h"
 #include "Persistency.h"
 #include "Types.h"
 #include "Platform.h"
-
-#include "lib/TFJson.h"
 
 static bool is_transaction_related(CallAction action) {
      // TODO: only "periodic or clock-aligned MeterValues.req messages" are transaction related. Are those all MeterValues messages?

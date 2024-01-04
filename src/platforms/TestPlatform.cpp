@@ -8,7 +8,7 @@
 #include "time.h"
 
 #define TFJSON_IMPLEMENTATION
-#include "lib/TFJson.h"
+#include "TFJson.h"
 
 static uint32_t (*platform_now_ms_cb)() = nullptr;
 static void (*platform_set_system_time_cb)(void *ctx, time_t t) = nullptr;
