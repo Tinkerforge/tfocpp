@@ -163,13 +163,12 @@ ChangeAvailabilityResponseStatus OcppChargePoint::onChangeAvailability(ChangeAva
                 case OcppState::HardReset:
                     return ChangeAvailabilityResponseStatus::REJECTED;
 
+                case OcppState::FlushPersistentMessages:
                 case OcppState::Idle:
-                case OcppState::Unavailable:
-                    this->state = OcppState::Idle;
                     return ChangeAvailabilityResponseStatus::ACCEPTED;
 
-                case OcppState::FlushPersistentMessages:
-                    this->state = OcppState::FlushPersistentMessages;
+                case OcppState::Unavailable:
+                    this->state = OcppState::Idle;
                     return ChangeAvailabilityResponseStatus::ACCEPTED;
             }
             break;
@@ -185,8 +184,10 @@ ChangeAvailabilityResponseStatus OcppChargePoint::onChangeAvailability(ChangeAva
                 case OcppState::FlushPersistentMessages:
                     return ChangeAvailabilityResponseStatus::REJECTED;
 
-                case OcppState::Idle:
                 case OcppState::Unavailable:
+                    return ChangeAvailabilityResponseStatus::ACCEPTED;
+
+                case OcppState::Idle:
                     this->state = OcppState::Unavailable;
                     return ChangeAvailabilityResponseStatus::ACCEPTED;
             }
