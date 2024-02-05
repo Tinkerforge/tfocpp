@@ -169,7 +169,7 @@ ChangeAvailabilityResponseStatus OcppChargePoint::onChangeAvailability(ChangeAva
                     return ChangeAvailabilityResponseStatus::ACCEPTED;
 
                 case OcppState::FlushPersistentMessages:
-                    this->state = OcppState::Idle;
+                    this->state = OcppState::FlushPersistentMessages;
                     return ChangeAvailabilityResponseStatus::ACCEPTED;
             }
             break;
