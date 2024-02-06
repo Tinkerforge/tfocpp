@@ -57,4 +57,6 @@ public:
     std::deque<QueueItem> messages;
     std::deque<QueueItem> status_notifications;
     std::deque<QueueItem> transaction_messages;
+    // As there can only be one call in flight, we don't need a queue here.
+    QueueItem next_response;
 };

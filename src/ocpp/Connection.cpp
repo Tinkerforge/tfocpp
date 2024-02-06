@@ -216,18 +216,14 @@ void OcppConnection::sendCallError(const char *uid, CallErrorCode code, const ch
     TFJsonSerializer json{buf.get(), len + 1};
     buildCallError(json, uid, code, desc);
 
-    platform_ws_send(platform_ctx, buf.get(), len);
+    next_response.buf = std::move(buf);
+    next_response.len = len;
 }
 
 bool OcppConnection::sendCallResponse(const ICall &call)
 {
     log_info("Sending response for %s (id %s)", CallActionStrings[(size_t) call.action], call.ocppJcallId);
-
-    auto len = call.measureJson() + 1; // null terminator
-    auto buf = heap_alloc_array<char>(len);
-    call.serializeJson(buf.get(), len);
-
-    platform_ws_send(platform_ctx, buf.get(), len - 1);
+    next_response = QueueItem{call, 0, 0};
     return true;
 }
 
@@ -323,6 +319,7 @@ void OcppConnection::tick() {
     if (!connected) {
         status_notifications.clear();
         messages.clear();
+        next_response = QueueItem{};
         return;
     }
 
@@ -340,6 +337,12 @@ void OcppConnection::tick() {
 
     if (getIntConfigUnsigned(ConfigKey::WebSocketPingInterval) != 0 && deadline_elapsed(pong_deadline)) {
         platform_disconnect(platform_ctx);
+        return;
+    }
+
+    if (next_response.is_valid()) {
+        platform_ws_send(platform_ctx, next_response.buf.get(), next_response.len);
+        next_response = QueueItem{};
         return;
     }
 
