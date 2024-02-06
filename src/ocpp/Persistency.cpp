@@ -43,6 +43,7 @@ static_assert(((size_t)StopTransactionReason::NONE) < 255, "");
 
 void persistStartTxn(int32_t connector_id, const char id_tag[21], int32_t meter_start, int32_t reservation_id, time_t timestamp)
 {
+    log_info("Persisting StartTransaction.req at connector %d for tag %s at %.3f kWh as txn_msg/%ld.", connector_id, id_tag, meter_start / 1000.0f, timestamp);
     StartTxn txn;
     txn.connector_id = connector_id;
     txn.meter_start = meter_start;
@@ -63,6 +64,7 @@ void persistStartTxn(int32_t connector_id, const char id_tag[21], int32_t meter_
 
 void persistRunningTxn(int32_t connector_id, time_t timestamp, int32_t transaction_id)
 {
+    log_info("Persisting running transaction %d at connector %d as txn_msg/%ld.", transaction_id, connector_id, timestamp);
     RunningTxn txn;
     txn.connector_id = connector_id;
     txn.transaction_id = transaction_id;
@@ -78,6 +80,7 @@ void persistRunningTxn(int32_t connector_id, time_t timestamp, int32_t transacti
 
 void persistStopTxn(uint8_t reason, int32_t meter_stop, int32_t transaction_id, const char id_tag[21], time_t timestamp)
 {
+    log_info("Persisting StopTransaction.req for tag %s at %.3f kWh with StopReason %d as txn_msg/%d", id_tag, meter_stop / 1000.0f, reason, timestamp);
     StopTxn txn;
     txn.reason = reason;
     txn.meter_stop = meter_stop;
@@ -100,6 +103,7 @@ void persistStopTxn(uint8_t reason, int32_t meter_stop, int32_t transaction_id, 
 
 void onTxnMsgResponseReceived(time_t timestamp)
 {
+    log_info("Will remove persisted message txn_msg/%d if it exists", timestamp);
     constexpr size_t bufsize = NAME_BUF_SIZE + 8;
     char name_buf[bufsize] = "txn_msg/";
     snprintf(name_buf + 8, sizeof(name_buf) - 8, "%ld", timestamp);
