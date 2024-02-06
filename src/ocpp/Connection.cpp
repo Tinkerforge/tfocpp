@@ -209,13 +209,14 @@ void OcppConnection::sendCallError(const char *uid, CallErrorCode code, const ch
     size_t len = 0;
     {
         TFJsonSerializer json{nullptr, 0};
-        len = buildCallError(json, uid, code, desc) + 1; // null terminator
+        len = buildCallError(json, uid, code, desc);
     }
-    auto buf = heap_alloc_array<char>(len);
-    TFJsonSerializer json{buf.get(), len};
-    len = buildCallError(json, uid, code, desc);
+    // TFJson will write a null terminator if the buffer is big enough.
+    auto buf = heap_alloc_array<char>(len + 1);
+    TFJsonSerializer json{buf.get(), len + 1};
+    buildCallError(json, uid, code, desc);
 
-    platform_ws_send(platform_ctx, buf.get(), len - 1);
+    platform_ws_send(platform_ctx, buf.get(), len);
 }
 
 bool OcppConnection::sendCallResponse(const ICall &call)
@@ -391,10 +392,11 @@ QueueItem::QueueItem(const ICall &call, time_t timestamp, int32_t connector_id) 
         connector_id(connector_id),
         len(0),
         timestamp(timestamp) {
-    auto length = call.measureJson() + 1; // null terminator
-    this->buf = heap_alloc_array<char>(length);
-    call.serializeJson(this->buf.get(), length);
-    this->len = length - 1;
+    auto length = call.measureJson();
+    // TFJson will write a null terminator if the buffer is big enough.
+    this->buf = heap_alloc_array<char>(length + 1);
+    call.serializeJson(this->buf.get(), length + 1);
+    this->len = length;
 }
 
 bool QueueItem::is_valid()
