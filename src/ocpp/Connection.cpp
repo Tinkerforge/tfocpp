@@ -329,8 +329,9 @@ void OcppConnection::tick() {
     pong or the server initiates the ping and client
     responds with Pong.
     */
-    if (getIntConfigUnsigned(ConfigKey::WebSocketPingInterval) != 0 && deadline_elapsed(next_ping_deadline)) {
-        platform_ws_send_ping(platform_ctx);
+    if ((getIntConfigUnsigned(ConfigKey::WebSocketPingInterval) != 0)
+        && deadline_elapsed(next_ping_deadline)
+        && platform_ws_send_ping(platform_ctx)) {
         last_ping_sent = platform_now_ms();
         next_ping_deadline = last_ping_sent + getIntConfigUnsigned(ConfigKey::WebSocketPingInterval) * 1000;
     }
@@ -341,8 +342,8 @@ void OcppConnection::tick() {
     }
 
     if (next_response.is_valid()) {
-        platform_ws_send(platform_ctx, next_response.buf.get(), next_response.len);
-        next_response = QueueItem{};
+        if (platform_ws_send(platform_ctx, next_response.buf.get(), next_response.len))
+            next_response = QueueItem{};
         return;
     }
 
@@ -361,30 +362,38 @@ void OcppConnection::tick() {
         }
     }
 
+    std::deque<QueueItem> *to_pop = nullptr;
     /*
     The Charge Point SHOULD deliver transaction-related messages to the Central System in chronological order as
     soon as possible.
     */
     // TODO: do we want to prioritize status notifications over other messages or the other way around?
     if (!transaction_messages.empty()) {
-        message_in_flight = std::move(transaction_messages.front());
-        transaction_messages.pop_front();
+        to_pop = &transaction_messages;
     } else if (!status_notifications.empty()) {
-        message_in_flight = std::move(status_notifications.front());
-        status_notifications.pop_front();
+        to_pop = &status_notifications;
     } else if (!messages.empty()) {
-        message_in_flight = std::move(messages.front());
-        messages.pop_front();
+        to_pop = &messages;
     } else
         return;
 
-    message_timeout_deadline = platform_now_ms() + (is_transaction_related(message_in_flight.action) ?
-                                                        getIntConfigUnsigned(ConfigKey::TransactionMessageRetryInterval) :
-                                                        getIntConfigUnsigned(ConfigKey::MessageTimeout)) * 1000;
+    {
+        // Limit to_send scope because the item is popped from the queue below.
+        QueueItem *to_send = &to_pop->front();
 
-    log_info("Sending %s (id %" PRIu64 ")", CallActionStrings[(size_t) message_in_flight.action], message_in_flight.message_id);
+        auto new_deadline = platform_now_ms() + (is_transaction_related(to_send->action) ?
+                                                            getIntConfigUnsigned(ConfigKey::TransactionMessageRetryInterval) :
+                                                            getIntConfigUnsigned(ConfigKey::MessageTimeout)) * 1000;
 
-    platform_ws_send(platform_ctx, message_in_flight.buf.get(), message_in_flight.len);
+        if (!platform_ws_send(platform_ctx, to_send->buf.get(), to_send->len))
+            return;
+
+        log_info("Sent %s (id %" PRIu64 ")", CallActionStrings[(size_t) to_send->action], to_send->message_id);
+        this->message_timeout_deadline = new_deadline;
+    }
+
+    message_in_flight = std::move(to_pop->front());
+    to_pop->pop_front();
 }
 
 

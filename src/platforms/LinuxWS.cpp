@@ -130,13 +130,14 @@ bool platform_ws_connected(void *ctx)
     return connected;
 }
 
-void platform_ws_send(void *ctx, const char *buf, size_t buf_len)
+bool platform_ws_send(void *ctx, const char *buf, size_t buf_len)
 {
-    mg_ws_send(c, buf, buf_len, WEBSOCKET_OP_TEXT);
+    mg_ws_send(c, buf, buf_len, WEBSOCKET_OP_TEXT) == buf_len;
 }
 
-void platform_ws_send_ping(void *ctx) {
+bool platform_ws_send_ping(void *ctx) {
     mg_ws_send(c, "", 0, WEBSOCKET_OP_PING);
+    return true;
 }
 
 void platform_ws_register_receive_callback(void *ctx, void(*cb)(char *, size_t, void *), void *user_data)
