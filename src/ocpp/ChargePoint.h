@@ -77,7 +77,7 @@ public:
     void sendStatus();
     void forceSendStatus();
 
-    bool sendCallAction(const ICall &call, time_t timestamp = 0, int32_t connectorId = 0);
+    bool sendCallAction(const ICall &call, int32_t connectorId = 0);
     void onTimeout(CallAction action, uint64_t messageId, int32_t connectorId);
 
     ChangeConfigurationResponseStatus changeConfig(const char *key, const char *value);

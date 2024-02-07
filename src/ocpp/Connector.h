@@ -55,7 +55,7 @@ struct Connector {
     uint32_t tag_deadline = 0;
     uint32_t cable_deadline = 0;
     int32_t transaction_id = INT32_MAX;
-    time_t transaction_confirmed_timestamp = 0;
+    uint64_t transaction_confirmed_id = 0;
     time_t transaction_start_time = 0;
 
     uint32_t current_allowed = OCPP_MAX_CHARGING_CURRENT;
@@ -104,7 +104,7 @@ struct Connector {
     void applyState();
     void sendStatus();
     void forceSendStatus();
-    void sendCallAction(const ICall &call, time_t timestamp = 0);
+    void sendCallAction(const ICall &call);
 
     bool isSelectableForRemoteStartTxn();
     bool canHandleRemoteStartTxn();

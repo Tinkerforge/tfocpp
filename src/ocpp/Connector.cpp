@@ -69,7 +69,7 @@ void Connector::applyState() {
 
             transaction_id = INT32_MAX;
             transaction_start_time = 0;
-            transaction_confirmed_timestamp = 0;
+            transaction_confirmed_id = 0;
             transaction_with_non_accepted_tag_id = false;
             break;
 
@@ -84,7 +84,7 @@ void Connector::applyState() {
 
             transaction_id = INT32_MAX;
             transaction_start_time = 0;
-            transaction_confirmed_timestamp = 0;
+            transaction_confirmed_id = 0;
             transaction_with_non_accepted_tag_id = false;
             break;
 
@@ -99,7 +99,7 @@ void Connector::applyState() {
 
             transaction_id = INT32_MAX;
             transaction_start_time = 0;
-            transaction_confirmed_timestamp = 0;
+            transaction_confirmed_id = 0;
             transaction_with_non_accepted_tag_id = false;
             break;
 
@@ -116,7 +116,7 @@ void Connector::applyState() {
 
             transaction_id = INT32_MAX;
             transaction_start_time = 0;
-            transaction_confirmed_timestamp = 0;
+            transaction_confirmed_id = 0;
             transaction_with_non_accepted_tag_id = false;
             break;
 
@@ -129,7 +129,7 @@ void Connector::applyState() {
 
             transaction_id = INT32_MAX;
             transaction_start_time = 0;
-            transaction_confirmed_timestamp = 0;
+            transaction_confirmed_id = 0;
             transaction_with_non_accepted_tag_id = false;
             break;
 
@@ -143,7 +143,7 @@ void Connector::applyState() {
 
             transaction_id = INT32_MAX;
             transaction_start_time = 0;
-            transaction_confirmed_timestamp = 0;
+            transaction_confirmed_id = 0;
             transaction_with_non_accepted_tag_id = false;
             break;
 
@@ -167,7 +167,7 @@ void Connector::applyState() {
 
             transaction_id = INT32_MAX;
             transaction_start_time = 0;
-            transaction_confirmed_timestamp = 0;
+            transaction_confirmed_id = 0;
             transaction_with_non_accepted_tag_id = false;
             break;
     }
@@ -225,9 +225,13 @@ void Connector::setState(ConnectorState newState) {
 
                     this->transaction_start_time = platform_get_system_time(cp->platform_ctx);
                     auto energy = platform_get_energy(connectorId);
-                    persistStartTxn(connectorId, authorized_for.tagId, energy, OCPP_INTEGER_NOT_PASSED, this->transaction_start_time);
-                    log_info("Creating StartTransaction.req at connector %d for tag %s at %.3f kWh.", this->connectorId, authorized_for.tagId, energy / 1000.0f);
-                    this->sendCallAction(StartTransaction(connectorId, authorized_for.tagId, energy, this->transaction_start_time), this->transaction_start_time);
+
+                    StartTransaction msg{connectorId, authorized_for.tagId, energy, this->transaction_start_time};
+                    log_info("Created StartTransaction.req at connector %d for tag %s at %.3f kWh.", msg.connectorId, msg.idTag, msg.meterStart / 1000.0f);
+
+                    persistStartTxn(msg.connectorId, msg.idTag, msg.meterStart, msg.reservationId, (uint32_t)msg.ocppJmessageId, msg.timestamp);
+
+                    this->sendCallAction(msg);
                     break;
                 }
                 case ConnectorState::AUTH_STOP:
@@ -261,10 +265,14 @@ void Connector::setState(ConnectorState newState) {
 
                     this->meter_value_handler.onStopTransaction();
 
-                    onTxnMsgResponseReceived(this->transaction_confirmed_timestamp);
-                    persistStopTxn((uint8_t)this->next_stop_reason, energy, transaction_id, authorized_for.tagId, timestamp);
-                    log_info("Creating StopTransaction.req at connector %d for tag %s at %.3f kWh. StopReason %d", this->connectorId, authorized_for.tagId, energy / 1000.0f, (int)this->next_stop_reason);
-                    this->sendCallAction(StopTransaction(energy, timestamp, transaction_id, authorized_for.tagId, this->next_stop_reason), timestamp);
+                    onTxnMsgResponseReceived(this->transaction_confirmed_id);
+
+                    StopTransaction msg{energy, timestamp, transaction_id, authorized_for.tagId, this->next_stop_reason};
+                    log_info("Created StopTransaction.req at connector %d for tag %s at %.3f kWh. StopReason %d", this->connectorId, msg.idTag, msg.meterStop / 1000.0f, (int)msg.reason);
+
+                    persistStopTxn((uint8_t)msg.reason, msg.meterStop, msg.transactionId, msg.idTag, (uint32_t) msg.ocppJmessageId, msg.timestamp);
+
+                    this->sendCallAction(msg);
                     break;
                 }
                 case ConnectorState::IDLE:
@@ -336,9 +344,9 @@ void Connector::forceSendStatus()
     last_sent_status = newStatus;
 }
 
-void Connector::sendCallAction(const ICall &call, time_t timestamp)
+void Connector::sendCallAction(const ICall &call)
 {
-    cp->sendCallAction(call, timestamp, this->connectorId);
+    cp->sendCallAction(call, this->connectorId);
 }
 
 bool Connector::isSelectableForRemoteStartTxn()
@@ -856,7 +864,7 @@ void Connector::tick() {
     this->sendStatus();
     this->meter_value_handler.tick();
 #ifdef OCPP_STATE_CALLBACKS
-    platform_update_connector_state(connectorId, state, last_sent_status, authorized_for, tag_deadline, cable_deadline, transaction_id, transaction_confirmed_timestamp, transaction_start_time, current_allowed, transaction_with_non_accepted_tag_id, unavailable_requested);
+    platform_update_connector_state(connectorId, state, last_sent_status, authorized_for, tag_deadline, cable_deadline, transaction_id, transaction_confirmed_id, transaction_start_time, current_allowed, transaction_with_non_accepted_tag_id, unavailable_requested);
 #endif
 }
 
@@ -1013,8 +1021,8 @@ void Connector::onStartTransactionConf(IdTagInfo info, int32_t txn_id) {
     this->transaction_id = txn_id;
     this->meter_value_handler.transactionId = txn_id;
 
-    this->transaction_confirmed_timestamp = platform_get_system_time(cp->platform_ctx);
-    persistRunningTxn(this->connectorId, transaction_confirmed_timestamp, txn_id);
+    this->transaction_confirmed_id = next_call_id++;
+    persistRunningTxn(this->connectorId, transaction_confirmed_id, txn_id);
 
     if (info.status == ResponseIdTagInfoEntriesStatus::ACCEPTED) {
         return;

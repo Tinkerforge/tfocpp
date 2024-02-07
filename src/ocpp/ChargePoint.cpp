@@ -271,7 +271,7 @@ void OcppChargePoint::forceSendStatus()
     last_sent_status = newStatus;
 }
 
-bool OcppChargePoint::sendCallAction(const ICall &call, time_t timestamp, int32_t connectorId)
+bool OcppChargePoint::sendCallAction(const ICall &call, int32_t connectorId)
 {
     switch (state) {
         case OcppState::PowerOn:
@@ -289,7 +289,7 @@ bool OcppChargePoint::sendCallAction(const ICall &call, time_t timestamp, int32_
             break;
     }
 
-    connection.sendCallAction(call, timestamp, connectorId);
+    connection.sendCallAction(call, connectorId);
 
     if (call.action == CallAction::START_TRANSACTION || call.action == CallAction::STOP_TRANSACTION)
         this->triggerChargingProfileEval();
@@ -450,7 +450,7 @@ CallResponse OcppChargePoint::handleBootNotificationResponse(int32_t connectorId
             for(int32_t i = 0; i < OCPP_NUM_CONNECTORS; ++i)
                 connectors[i].forceSendStatus();
 
-            if (startRestore())
+            if (shouldRestore())
                 this->state = OcppState::FlushPersistentMessages;
 
             break;
@@ -1455,6 +1455,8 @@ bool OcppChargePoint::start(const char *websocket_endpoint_url, const char *char
     auto buf = heap_alloc_array<char>(encoded_len + 1);
 
     url_encode(buf.get(), encoded_len + 1, charge_point_name);
+
+    initRestore();
 
     platform_ctx = connection.start(websocket_endpoint_url, buf.get(), charge_point_name, basic_auth_pass, basic_auth_pass_length, this);
     if (platform_ctx == nullptr)

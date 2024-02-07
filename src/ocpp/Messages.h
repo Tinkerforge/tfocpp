@@ -13,6 +13,8 @@ class OcppChargePoint;
 #define OCPP_DECIMAL_NOT_PASSED NAN
 #define OCPP_DATETIME_NOT_PASSED 0
 
+extern uint64_t next_call_id;
+
 extern const char * const ChangeAvailabilityResponseStatusStrings[];
 
 enum class ChangeAvailabilityResponseStatus {

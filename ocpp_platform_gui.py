@@ -92,8 +92,8 @@ req_cable_deadline = QLabel("no packet received yet")
 layout.addRow("Cable deadline", req_cable_deadline)
 req_txn_id = QLabel("no packet received yet")
 layout.addRow("Transaction ID", req_txn_id)
-req_transaction_confirmed_timestamp = QLabel("no packet received yet")
-layout.addRow("Transaction confirmed timestamp", req_transaction_confirmed_timestamp)
+req_transaction_confirmed_id = QLabel("no packet received yet")
+layout.addRow("Transaction confirmed timestamp", req_transaction_confirmed_id)
 req_transaction_start_time = QLabel("no packet received yet")
 layout.addRow("Transaction start time", req_transaction_start_time)
 req_current_allowed = QLabel("no packet received yet")
@@ -236,7 +236,7 @@ def receive():
     tag_deadline, \
     cable_deadline, \
     txn_id, \
-    transaction_confirmed_timestamp, \
+    transaction_confirmed_id, \
     transaction_start_time, \
     current_allowed, \
     txn_with_invalid_id, \
@@ -283,7 +283,7 @@ def receive():
     req_tag_deadline.setText(str(tag_deadline))
     req_cable_deadline.setText(str(cable_deadline))
     req_txn_id.setText(str(txn_id))
-    req_transaction_confirmed_timestamp.setText(str(transaction_confirmed_timestamp))
+    req_transaction_confirmed_id.setText(str(transaction_confirmed_id))
     req_transaction_start_time.setText(str(transaction_start_time))
     req_current_allowed.setText(str(current_allowed))
     req_txn_with_invalid_id.setText(str(txn_with_invalid_id))

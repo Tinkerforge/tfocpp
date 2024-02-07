@@ -37,7 +37,7 @@ size_t ICall::measureJson() const {
     return this->serializeJson(nullptr, 0);
 }
 
-static uint64_t next_call_id = 0;
+uint64_t next_call_id = 0;
 
 const char * const ChangeAvailabilityResponseStatusStrings[] = {
     "Accepted",

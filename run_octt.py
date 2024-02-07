@@ -143,7 +143,7 @@ def handle_ocpp_platform_request(data, addr, sock):
     tag_deadline, \
     cable_deadline, \
     txn_id, \
-    transaction_confirmed_timestamp, \
+    transaction_confirmed_id, \
     transaction_start_time, \
     current_allowed, \
     txn_with_invalid_id, \

@@ -199,7 +199,7 @@ struct ConnectorMessage {
     uint32_t tag_deadline;
     uint32_t cable_deadline;
     int32_t txn_id;
-    time_t transaction_confirmed_timestamp;
+    uint64_t transaction_confirmed_id;
     time_t transaction_start_time;
     uint32_t current_allowed;
     bool txn_with_invalid_id;
@@ -242,7 +242,7 @@ connector_format = \
 "I"     + \
 "I"     + \
 "i"     + \
-"q"     + \
+"Q"     + \
 "q"     + \
 "I"     + \
 "?"     + \

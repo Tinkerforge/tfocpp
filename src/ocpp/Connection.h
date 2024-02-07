@@ -16,11 +16,10 @@ public:
     uint64_t message_id;
     int32_t connector_id;
     size_t len;
-    time_t timestamp;
 
-    QueueItem() : action(CallAction::AUTHORIZE), buf(nullptr), message_id(0), connector_id(0), len(0), timestamp(0) {}
+    QueueItem() : action(CallAction::AUTHORIZE), buf(nullptr), message_id(0), connector_id(0), len(0) {}
 
-    QueueItem(const ICall &call, time_t timestamp, int32_t connector_id);
+    QueueItem(const ICall &call, int32_t connector_id);
 
     bool is_valid();
 };
@@ -37,7 +36,7 @@ public:
 
     void sendCallError(const char *uid, CallErrorCode code, const char *desc);
 
-    bool sendCallAction(const ICall &call, time_t timestamp = 0, int32_t connectorId = 0);
+    bool sendCallAction(const ICall &call, int32_t connectorId = 0);
     bool sendCallResponse(const ICall &call);
 
     void *platform_ctx;

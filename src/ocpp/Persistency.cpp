@@ -21,6 +21,7 @@ struct StartTxn {
     int32_t meter_start;
     int32_t reservation_id;
     char id_tag[21];
+    time_t timestamp;
 } __attribute__((__packed__));
 
 struct RunningTxn {
@@ -35,19 +36,21 @@ struct StopTxn {
     int32_t meter_stop;
     int32_t transaction_id;
     char id_tag[21];
+    time_t timestamp;
 } __attribute__((__packed__));
 
 static_assert(((size_t)StopTransactionReason::NONE) < 255, "");
 
 #define NAME_BUF_SIZE 21 //len(INT64_MAX) = 20 + 1 for minus + for null terminator
 
-void persistStartTxn(int32_t connector_id, const char id_tag[21], int32_t meter_start, int32_t reservation_id, time_t timestamp)
+void persistStartTxn(int32_t connector_id, const char id_tag[21], int32_t meter_start, int32_t reservation_id, uint64_t call_id, time_t timestamp)
 {
-    log_info("Persisting StartTransaction.req at connector %d for tag %s at %.3f kWh as txn_msg/%ld.", connector_id, id_tag, meter_start / 1000.0f, timestamp);
+    log_info("Persisting StartTransaction.req at connector %d for tag %s at %.3f kWh as txn_msg/%llu.", connector_id, id_tag, meter_start / 1000.0f, call_id);
     StartTxn txn;
     txn.connector_id = connector_id;
     txn.meter_start = meter_start;
     txn.reservation_id = reservation_id;
+    txn.timestamp = timestamp;
     memset(txn.id_tag, 0, sizeof(txn.id_tag));
     // - 1 is not necessary here, because id_tag should be null terminated.
     // But it does not hurt to do this correctly.
@@ -58,13 +61,14 @@ void persistStartTxn(int32_t connector_id, const char id_tag[21], int32_t meter_
 
     constexpr size_t bufsize = NAME_BUF_SIZE + 8;
     char name_buf[bufsize] = "txn_msg/";
-    snprintf(name_buf + 8, sizeof(name_buf) - 8, "%ld", timestamp);
+    snprintf(name_buf + 8, sizeof(name_buf) - 8, "%llu", call_id);
+
     platform_write_file(name_buf, buf, sizeof(StartTxn));
 }
 
-void persistRunningTxn(int32_t connector_id, time_t timestamp, int32_t transaction_id)
+void persistRunningTxn(int32_t connector_id, uint64_t call_id, int32_t transaction_id)
 {
-    log_info("Persisting running transaction %d at connector %d as txn_msg/%ld.", transaction_id, connector_id, timestamp);
+    log_info("Persisting running transaction %d at connector %d as txn_msg/%llu.", transaction_id, connector_id, call_id);
     RunningTxn txn;
     txn.connector_id = connector_id;
     txn.transaction_id = transaction_id;
@@ -74,17 +78,19 @@ void persistRunningTxn(int32_t connector_id, time_t timestamp, int32_t transacti
 
     constexpr size_t bufsize = NAME_BUF_SIZE + 8;
     char name_buf[bufsize] = "txn_msg/";
-    snprintf(name_buf + 8, sizeof(name_buf) - 8, "%ld", timestamp);
+    snprintf(name_buf + 8, sizeof(name_buf) - 8, "%llu", call_id);
+
     platform_write_file(name_buf, buf, sizeof(RunningTxn));
 }
 
-void persistStopTxn(uint8_t reason, int32_t meter_stop, int32_t transaction_id, const char id_tag[21], time_t timestamp)
+void persistStopTxn(uint8_t reason, int32_t meter_stop, int32_t transaction_id, const char id_tag[21], uint64_t call_id, time_t timestamp)
 {
-    log_info("Persisting StopTransaction.req for tag %s at %.3f kWh with StopReason %d as txn_msg/%d", id_tag, meter_stop / 1000.0f, reason, timestamp);
+    log_info("Persisting StopTransaction.req for tag %s at %.3f kWh with StopReason %d as txn_msg/%llu", id_tag, meter_stop / 1000.0f, reason, call_id);
     StopTxn txn;
     txn.reason = reason;
     txn.meter_stop = meter_stop;
     txn.transaction_id = transaction_id;
+    txn.timestamp = timestamp;
     memset(txn.id_tag, 0, sizeof(txn.id_tag));
     if (id_tag != nullptr) {
         // - 1 is not necessary here, because id_tag should be null terminated.
@@ -97,27 +103,28 @@ void persistStopTxn(uint8_t reason, int32_t meter_stop, int32_t transaction_id, 
 
     constexpr size_t bufsize = NAME_BUF_SIZE + 8;
     char name_buf[bufsize] = "txn_msg/";
-    snprintf(name_buf + 8, sizeof(name_buf) - 8, "%ld", timestamp);
+    snprintf(name_buf + 8, sizeof(name_buf) - 8, "%llu", call_id);
+
     platform_write_file(name_buf, buf, sizeof(StopTxn));
 }
 
-void onTxnMsgResponseReceived(time_t timestamp)
+void onTxnMsgResponseReceived(uint64_t call_id)
 {
-    log_info("Will remove persisted message txn_msg/%d if it exists", timestamp);
+    log_info("Will remove persisted message txn_msg/%llu if it exists", call_id);
     constexpr size_t bufsize = NAME_BUF_SIZE + 8;
     char name_buf[bufsize] = "txn_msg/";
-    snprintf(name_buf + 8, sizeof(name_buf) - 8, "%ld", timestamp);
+    snprintf(name_buf + 8, sizeof(name_buf) - 8, "%llu", call_id);
     platform_remove_file(name_buf);
 }
 
-static std::unique_ptr<std::vector<time_t>> names;
+static std::unique_ptr<std::vector<uint64_t>> names;
 
-bool startRestore() {
+void initRestore() {
     auto dir_fd = platform_open_dir("txn_msg");
     if (dir_fd == nullptr)
-        return false;
+        return;
 
-    names = std::unique_ptr<std::vector<time_t>>(new std::vector<time_t>());
+    names = std::unique_ptr<std::vector<uint64_t>>(new std::vector<uint64_t>());
     names->reserve(OCPP_MAX_PERSISTENT_MESSAGES);
 
     OcppDirEnt *dirent = nullptr;
@@ -129,7 +136,7 @@ bool startRestore() {
             continue;
 
         char *endptr = nullptr;
-        auto x = strtoll(dirent->name, &endptr, 10);
+        auto x = strtoull(dirent->name, &endptr, 10);
         if (*endptr != '\0' || x <= 0) {
             platform_remove_file(dirent->name);
             continue;
@@ -140,14 +147,24 @@ bool startRestore() {
 
     platform_close_dir(dir_fd);
 
+    names->shrink_to_fit();
+
     if (names->size() == 0)
-        return false;
+        return;
 
     // sort descending: we can then always take the last element
     // and use push_back to remove it without memmoving the whole vector
-    std::sort(names->begin(), names->end(), std::greater<time_t>());
+    std::sort(names->begin(), names->end(), std::greater<uint64_t>());
 
-    return true;
+    // Start new call IDs one behind the last persisted call.
+    // This makes sure that we can reuse all persisted call IDs.
+    next_call_id = names->back() + 1;
+
+    return;
+}
+
+bool shouldRestore() {
+    return names->size() > 0;
 }
 
 void finishRestore() {
@@ -156,12 +173,12 @@ void finishRestore() {
 
 bool restoreNextTxnMessage(OcppConnection *conn) {
     while (names->size() > 0) {
-        time_t timestamp = (*names)[names->size() - 1];
+        uint64_t call_id = (*names)[names->size() - 1];
         names->pop_back();
 
         constexpr size_t bufsize = NAME_BUF_SIZE + 8;
         char name_buf[bufsize] = "txn_msg/";
-        snprintf(name_buf + 8, sizeof(name_buf) - 8, "%ld", timestamp);
+        snprintf(name_buf + 8, sizeof(name_buf) - 8, "%llu", call_id);
 
         char buf[100] = {0};
 
@@ -179,7 +196,11 @@ bool restoreNextTxnMessage(OcppConnection *conn) {
                     StartTxn start_txn;
                     memcpy(&start_txn, buf, sizeof(StartTxn));
                     log_info("Creating RESTORED StartTransaction.req at connector %d for tag %s at %.3f kWh.", start_txn.connector_id, start_txn.id_tag, start_txn.meter_start / 1000.0f);
-                    conn->sendCallAction(StartTransaction(start_txn.connector_id, start_txn.id_tag, start_txn.meter_start, timestamp, start_txn.reservation_id), timestamp, start_txn.connector_id);
+
+                    StartTransaction msg{start_txn.connector_id, start_txn.id_tag, start_txn.meter_start, start_txn.timestamp, start_txn.reservation_id};
+                    msg.ocppJmessageId = call_id;
+
+                    conn->sendCallAction(msg, start_txn.connector_id);
                     return true;
                 }
             case PERSISTENT_TYPE_STOP_TXN: {
@@ -189,7 +210,11 @@ bool restoreNextTxnMessage(OcppConnection *conn) {
                     StopTxn stop_txn;
                     memcpy(&stop_txn, buf, sizeof(StopTxn));
                     log_info("Creating RESTORED StopTransaction.req for tag %s at %.3f kWh. Reason %d", stop_txn.id_tag, stop_txn.meter_stop / 1000.0f, stop_txn.reason);
-                    conn->sendCallAction(StopTransaction(stop_txn.meter_stop, timestamp, stop_txn.transaction_id, stop_txn.id_tag[0] == '\0' ? nullptr : stop_txn.id_tag, (StopTransactionReason)stop_txn.reason), timestamp);
+
+                    StopTransaction msg{stop_txn.meter_stop, stop_txn.timestamp, stop_txn.transaction_id, stop_txn.id_tag[0] == '\0' ? nullptr : stop_txn.id_tag, (StopTransactionReason)stop_txn.reason};
+                    msg.ocppJmessageId = call_id;
+
+                    conn->sendCallAction(msg);
                     return true;
                 }
             case PERSISTENT_TYPE_RUNNING_TXN: {
@@ -202,10 +227,12 @@ bool restoreNextTxnMessage(OcppConnection *conn) {
                 auto new_timestamp = platform_get_system_time(conn->cp->platform_ctx);
                 auto new_energy = platform_get_energy(txn.connector_id);
 
-                persistStopTxn((uint8_t)StopTransactionReason::REBOOT, new_energy, txn.transaction_id, "", new_timestamp);
                 platform_remove_file(name_buf);
+
+                StopTransaction msg{new_energy, new_timestamp, txn.transaction_id, nullptr, StopTransactionReason::REBOOT};
+                persistStopTxn((uint8_t)StopTransactionReason::REBOOT, new_energy, txn.transaction_id, "", msg.ocppJmessageId, new_timestamp);
                 log_info("Creating RESTORED StopTransaction.req at connector %d for unknown tag at %.3f kWh. (Txn stopped on reboot)", txn.connector_id, new_energy / 1000.0f);
-                conn->sendCallAction(StopTransaction(new_energy, new_timestamp, txn.transaction_id, nullptr, StopTransactionReason::REBOOT), new_timestamp, txn.connector_id);
+                conn->sendCallAction(msg, txn.connector_id);
                 return true;
             }
             case PERSISTENT_TYPE_METER_VALUES:

@@ -120,7 +120,7 @@ void OcppConnection::handleMessage(char *message, size_t message_len)
         }
 
         if (is_transaction_related(message_in_flight.action))
-            onTxnMsgResponseReceived(message_in_flight.timestamp);
+            onTxnMsgResponseReceived(message_in_flight.message_id);
 
         log_info("Received result for %s (id %" PRIu64 ")", CallActionStrings[(size_t) message_in_flight.action], uid);
 
@@ -223,17 +223,13 @@ void OcppConnection::sendCallError(const char *uid, CallErrorCode code, const ch
 bool OcppConnection::sendCallResponse(const ICall &call)
 {
     log_info("Sending response for %s (id %s)", CallActionStrings[(size_t) call.action], call.ocppJcallId);
-    next_response = QueueItem{call, 0, 0};
+    next_response = QueueItem{call, 0};
     return true;
 }
 
-bool OcppConnection::sendCallAction(const ICall &call, time_t timestamp, int32_t connectorId)
+bool OcppConnection::sendCallAction(const ICall &call, int32_t connectorId)
 {
     if (is_transaction_related(call.action)) {
-        if (timestamp == 0) {
-            log_error("Attempted to send transaction related call action without valid timestamp!");
-            return false;
-        }
         // Meter values are transaction releated messages. However the amount of energy charged in a transaction
         // can be calculated with only the Start and StopTransaction.reqs. If we get a new transaction related message
         // and the queue is full, we drop the oldest meter values message. The queue should then always have enough room, because
@@ -249,7 +245,7 @@ bool OcppConnection::sendCallAction(const ICall &call, time_t timestamp, int32_t
                     break;
             transaction_messages.erase(transaction_messages.begin() + i);
         }
-        transaction_messages.emplace_back(call, timestamp, connectorId);
+        transaction_messages.emplace_back(call, connectorId);
         return true;
     }
 
@@ -261,12 +257,12 @@ bool OcppConnection::sendCallAction(const ICall &call, time_t timestamp, int32_t
     if (call.action == CallAction::STATUS_NOTIFICATION) {
         if (status_notifications.size() > 5)
             status_notifications.pop_front();
-        status_notifications.emplace_back(call, timestamp, connectorId);
+        status_notifications.emplace_back(call, connectorId);
     }
     else {
         if (messages.size() > 5)
             messages.pop_front();
-        messages.emplace_back(call, timestamp, connectorId);
+        messages.emplace_back(call, connectorId);
     }
 
     return true;
@@ -397,13 +393,12 @@ void OcppConnection::tick() {
 }
 
 
-QueueItem::QueueItem(const ICall &call, time_t timestamp, int32_t connector_id) :
+QueueItem::QueueItem(const ICall &call, int32_t connector_id) :
         action(call.action),
         buf(nullptr),
         message_id(call.ocppJmessageId),
         connector_id(connector_id),
-        len(0),
-        timestamp(timestamp) {
+        len(0) {
     auto length = call.measureJson();
     // TFJson will write a null terminator if the buffer is big enough.
     this->buf = heap_alloc_array<char>(length + 1);

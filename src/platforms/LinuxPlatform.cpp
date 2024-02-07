@@ -36,7 +36,7 @@ struct ConnectorMessage {
     uint32_t tag_deadline;
     uint32_t cable_deadline;
     int32_t txn_id;
-    time_t transaction_confirmed_timestamp;
+    uint64_t transaction_confirmed_id;
     time_t transaction_start_time;
     uint32_t current_allowed;
     bool txn_with_invalid_id;
@@ -222,7 +222,7 @@ void platform_update_connector_state(int32_t connector_id,
                                      uint32_t tag_deadline,
                                      uint32_t cable_deadline,
                                      int32_t txn_id,
-                                     time_t transaction_confirmed_timestamp,
+                                     uint64_t transaction_confirmed_id,
                                      time_t transaction_start_time,
                                      uint32_t current_allowed,
                                      bool txn_with_invalid_id,
@@ -237,7 +237,7 @@ void platform_update_connector_state(int32_t connector_id,
     cm.tag_deadline = tag_deadline;
     cm.cable_deadline = cable_deadline;
     cm.txn_id = txn_id;
-    cm.transaction_confirmed_timestamp = transaction_confirmed_timestamp;
+    cm.transaction_confirmed_id = transaction_confirmed_id;
     cm.transaction_start_time = transaction_start_time;
     cm.current_allowed = current_allowed;
     cm.txn_with_invalid_id = txn_with_invalid_id;
