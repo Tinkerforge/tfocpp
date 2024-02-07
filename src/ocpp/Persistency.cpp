@@ -224,8 +224,24 @@ bool restoreNextTxnMessage(OcppConnection *conn) {
                 RunningTxn txn;
                 memcpy(&txn, buf, sizeof(RunningTxn));
 
+                static uint32_t restoring_since_ms = 0;
+
                 auto new_timestamp = platform_get_system_time(conn->cp->platform_ctx);
                 auto new_energy = platform_get_energy(txn.connector_id);
+
+                if (new_timestamp < 1600000000 || new_energy == 0) {
+                    if (restoring_since_ms == 0) {
+                        log_info("Waiting for network time or energy meter.");
+                        restoring_since_ms = platform_now_ms();
+                    }
+                    else if (!deadline_elapsed(restoring_since_ms + 120 * 1000)) {
+                        return true;
+                    }
+                    else {
+                        // TODO: go to faulted here
+                        log_error("Tried to stop txn that was started before reboot, but no time sync or meter available");
+                    }
+                }
 
                 platform_remove_file(name_buf);
 
