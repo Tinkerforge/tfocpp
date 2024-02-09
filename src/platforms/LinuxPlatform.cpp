@@ -161,11 +161,29 @@ const char * const trt_string[] = {
 "ConcurrentTx",
 };
 
-void platform_tag_rejected(const char *tag, TagRejectionType trt) {
+void platform_tag_rejected(int32_t connectorId, const char *tag, TagRejectionType trt) {
     char buf[61] = {0};
 
     snprintf(buf, ARRAY_SIZE(buf), "Tag %s rejected: %s", tag, trt_string[(size_t)trt]);
     send_message(buf);
+}
+
+void platform_tag_expected(int32_t connectorId)
+{
+    send_message("Tag expected.");
+}
+
+void platform_tag_accepted(int32_t connectorId, const char *tag)
+{
+    char buf[61] = {0};
+
+    snprintf(buf, ARRAY_SIZE(buf), "Tag %s accepted", tag);
+    send_message(buf);
+}
+
+void platform_clear_tag_expected(int32_t connectorId)
+{
+    send_message("Clear tag expected");
 }
 
 void platform_tag_timed_out(int32_t connectorId)

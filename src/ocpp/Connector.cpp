@@ -14,12 +14,16 @@ void Connector::setTagDeadline()
     // The spec does not specify explicitly which timeout to use here:
     // The configuration spec only talks about inserting the cable, however
     // transition B9 says "time out (configured by the configuration key: ConnectionTimeOut) on expected user action"
-    if (tag_deadline == 0)
+    if (tag_deadline == 0) {
         tag_deadline = platform_now_ms() + getIntConfigUnsigned(ConfigKey::ConnectionTimeOut) * 1000;
+        platform_tag_expected(this->connectorId);
+    }
 }
 
 void Connector::clearTagDeadline()
 {
+    if (tag_deadline != 0)
+        platform_clear_tag_expected(this->connectorId);
     tag_deadline = 0;
 }
 
@@ -871,6 +875,8 @@ void Connector::tick() {
 // Handles TagSeen, SameTagSeen
 void Connector::onTagSeen(const char *tag_id) {
     if (authorized_for.is_same_tag(tag_id)) {
+        platform_tag_accepted(this->connectorId, tag_id);
+
         // Handle same tag.
         switch (state) {
             case ConnectorState::AUTH_START_NO_PLUG:
@@ -965,15 +971,35 @@ void Connector::onAuthorizeError() {
     this->onAuthorizeConf(IdTagInfo{});
 }
 
+static TagRejectionType statusToTRT(ResponseIdTagInfoEntriesStatus status) {
+    switch (status) {
+        case ResponseIdTagInfoEntriesStatus::ACCEPTED:
+            log_error("Cant convert ResponseIdTagInfoEntriesStatus::ACCEPTED to TagRejectionType!");
+            return TagRejectionType::Invalid;
+        case ResponseIdTagInfoEntriesStatus::BLOCKED:
+            return TagRejectionType::Blocked;
+        case ResponseIdTagInfoEntriesStatus::CONCURRENT_TX:
+            return TagRejectionType::ConcurrentTx;
+        case ResponseIdTagInfoEntriesStatus::EXPIRED:
+            return TagRejectionType::Expired;
+        case ResponseIdTagInfoEntriesStatus::INVALID:
+            return TagRejectionType::Invalid;
+    }
+    SILENCE_GCC_UNREACHABLE();
+}
+
 // Handles AuthSuccess, AuthFail
 void Connector::onAuthorizeConf(IdTagInfo info) {
     bool auth_success = info.status == ResponseIdTagInfoEntriesStatus::ACCEPTED;
     log_info("%successful auth", auth_success ? "S" : "Uns");
 
     if (auth_success) {
+        platform_tag_accepted(this->connectorId, tagIdInFlight);
         authorized_for.updateTagId(tagIdInFlight);
         memset(tagIdInFlight, 0, ARRAY_SIZE(tagIdInFlight));
         authorized_for.updateFromIdTagInfo(info);
+    } else {
+        platform_tag_rejected(this->connectorId, tagIdInFlight, statusToTRT(info.status));
     }
 
     // Don't deauth if authorize fails: This could have been an authorize for stopping, so we have to keep the old auth.

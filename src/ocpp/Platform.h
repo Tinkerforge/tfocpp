@@ -73,8 +73,12 @@ enum TagRejectionType {
     ConcurrentTx
 };
 
-void platform_tag_rejected(const char *tag, TagRejectionType trt);
+void platform_tag_expected(int32_t connectorId);
+void platform_tag_accepted(int32_t connectorId, const char *tag);
+void platform_tag_rejected(int32_t connectorId, const char *tag, TagRejectionType trt);
 void platform_tag_timed_out(int32_t connectorId);
+void platform_clear_tag_expected(int32_t connectorId);
+
 void platform_cable_timed_out(int32_t connectorId);
 
 bool platform_has_fixed_cable(int32_t connectorId);
