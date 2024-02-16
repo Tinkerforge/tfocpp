@@ -1,5 +1,7 @@
 .SILENT:
 
+MAKEFLAGS += --jobs=$(shell nproc)
+
 WITH_DEBUG ?= yes
 WITH_SANITIZERS ?= yes
 WITH_TLS ?= yes
