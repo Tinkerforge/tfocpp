@@ -196,7 +196,7 @@ ChangeAvailabilityResponseStatus OcppChargePoint::onChangeAvailability(ChangeAva
     SILENCE_GCC_UNREACHABLE();
 }
 // ("false" + ',') * (OCPP_NUM_CONNECTORS + 1) + '[' + ']' + '\0'
-#define AVAILABLE_STRING_BUF_SIZE 6 * (OCPP_NUM_CONNECTORS + 1) + 3
+#define AVAILABLE_STRING_BUF_SIZE (6 * (OCPP_NUM_CONNECTORS + 1) + 3)
 
 void OcppChargePoint::saveAvailability()
 {
@@ -227,7 +227,7 @@ void OcppChargePoint::loadAvailability()
         return;
 
     for(int32_t i = 0; i < OCPP_NUM_CONNECTORS; ++i) {
-        if (!doc[(size_t)(i + 1)].as<bool>())
+        if (!doc[i + 1].as<bool>())
             connectors[i].onChangeAvailability(ChangeAvailabilityType::INOPERATIVE);
     }
 }
@@ -300,7 +300,7 @@ bool OcppChargePoint::sendCallAction(const ICall &call, int32_t connectorId)
     the profile SHOULD be deleted.
     */
     if (call.action == CallAction::STOP_TRANSACTION) {
-        for(size_t stack_level = 0; stack_level <= OCPP_CHARGE_PROFILE_MAX_STACK_LEVEL; ++stack_level) {
+        for(int stack_level = 0; stack_level <= OCPP_CHARGE_PROFILE_MAX_STACK_LEVEL; ++stack_level) {
             removeChargingProfile(connectorId, ChargingProfilePurpose::TX_PROFILE, stack_level);
             connectors[connectorId - 1].txProfiles[stack_level].clear();
         }
@@ -901,9 +901,7 @@ CallResponse OcppChargePoint::handleUnlockConnector(const char *uid, UnlockConne
 
     int32_t conn_id = req.connectorId() - 1;
 
-    if (conn_id < 0 || conn_id >= OCPP_NUM_CONNECTORS)
-        result = UnlockConnectorResponseStatus::NOT_SUPPORTED;
-    else if (platform_has_fixed_cable(conn_id))
+    if (conn_id < 0 || conn_id >= OCPP_NUM_CONNECTORS || platform_has_fixed_cable(conn_id))
         result = UnlockConnectorResponseStatus::NOT_SUPPORTED;
     else
         result = connectors[conn_id].onUnlockConnector();
@@ -1331,8 +1329,9 @@ profiles_evaluated:
 
     if (result.nextCheck < std::numeric_limits<time_t>::max()) {
         char buf[OCPP_ISO_8601_MAX_LEN] = {0};
-        const tm *t = gmtime(&result.nextCheck);
-        strftime(buf, ARRAY_SIZE(buf), "%FT%TZ", t);
+        tm t;
+        gmtime_r(&result.nextCheck, &t);
+        strftime(buf, ARRAY_SIZE(buf), "%FT%TZ", &t);
         log_debug("    Next check: %s", buf);
     } else {
         log_debug("    Next check: never");

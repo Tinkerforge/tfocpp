@@ -24,9 +24,10 @@ static bool iso_string_to_unix_timestamp(const char *iso_string, time_t *t) {
 
 static void unix_timestamp_to_iso_string(time_t timestamp, TFJsonSerializer &json, const char *key) {
     char buf[OCPP_ISO_8601_MAX_LEN] = {0};
-    const tm *t = gmtime(&timestamp);
+    tm t;
+    gmtime_r(&timestamp, &t);
 
-    strftime(buf, ARRAY_SIZE(buf), "%FT%TZ", t);
+    strftime(buf, ARRAY_SIZE(buf), "%FT%TZ", &t);
 
     json.addMemberString(key, buf);
 }

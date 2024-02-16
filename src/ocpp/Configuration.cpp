@@ -138,7 +138,8 @@ ChangeConfigurationResponseStatus OcppConfiguration::setValue(const char *newVal
                         // Prefix indices are used for ConnectorPhaseRotation.
                         /* Values are reported in CSL, formatted: 0.RST, 1.RST, 2.RTS */
                         if (value.csl.prefix_index) {
-                            char *num = strtok(token, "."); // This inserts a null terminator. undo later
+                            char *_ignored = nullptr;
+                            char *num = strtok_r(token, ".", &_ignored); // This inserts a null terminator. undo later
                             Opt<int32_t> opt = parse_int(num);
                             if (!opt.is_set())
                                 return ChangeConfigurationResponseStatus::REJECTED;
