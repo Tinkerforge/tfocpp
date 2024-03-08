@@ -164,14 +164,23 @@ void initRestore() {
 }
 
 bool shouldRestore() {
+    if (names == nullptr)
+        return false;
+
     return names->size() > 0;
 }
 
 void finishRestore() {
+    if (names == nullptr)
+        return;
+
     names.reset();
 }
 
 bool restoreNextTxnMessage(OcppConnection *conn) {
+    if (names == nullptr)
+        return false;
+
     while (names->size() > 0) {
         uint64_t call_id = (*names)[names->size() - 1];
         names->pop_back();
