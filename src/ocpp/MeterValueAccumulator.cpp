@@ -187,7 +187,6 @@ void MeterValueAccumulator::reset()
 
             switch (measurand_type) {
                 case MeasurandType::Register:
-                    meter_values[value_offset] = 0;
                 case MeasurandType::Average:
                     meter_values[value_offset] = 0;
                     break;
