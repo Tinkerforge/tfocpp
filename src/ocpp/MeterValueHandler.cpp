@@ -8,7 +8,7 @@ void OcppMeterValueHandler::init(int32_t connId, OcppChargePoint *chargePoint) {
     this->cp = chargePoint;
     this->clock_aligned_meter_values.init(connId, true, chargePoint, ConfigKey::MeterValuesAlignedData);
     this->charging_session_meter_values.init(connId, false, chargePoint, ConfigKey::MeterValuesSampledData);
-    last_clock_aligned_send = platform_get_system_time(cp->platform_ctx);
+    last_clock_aligned_send_timestamp = platform_get_system_time(cp->platform_ctx);
 }
 
 void OcppMeterValueHandler::tick() {
@@ -59,6 +59,14 @@ void OcppMeterValueHandler::tick() {
     }
 }
 
+void OcppMeterValueHandler::onStartTransaction(int32_t txnId)
+{
+    charging_session_meter_values.reset();
+    last_charging_session_send = platform_now_ms();
+    last_charging_session_send_timestamp = platform_get_system_time(cp->platform_ctx);
+    this->transactionId = txnId;
+}
+
 bool OcppMeterValueHandler::clock_aligned_interval_crossed(time_t *timestamp) {
     uint32_t interval = getIntConfigUnsigned(ConfigKey::ClockAlignedDataInterval);
 
@@ -73,7 +81,7 @@ bool OcppMeterValueHandler::clock_aligned_interval_crossed(time_t *timestamp) {
     struct tm last_send_tm;
     struct tm now_tm;
 
-    gmtime_r(&last_clock_aligned_send, &last_send_tm);
+    gmtime_r(&last_clock_aligned_send_timestamp, &last_send_tm);
     gmtime_r(&now, &now_tm);
 
     // If !=, we just crossed midnight. This is an interval start in any case, as the intervals are aligned at midnight.
@@ -88,8 +96,8 @@ bool OcppMeterValueHandler::clock_aligned_interval_crossed(time_t *timestamp) {
             return false;
     }
 
-    *timestamp = last_clock_aligned_send;
-    last_clock_aligned_send = now;
+    *timestamp = last_clock_aligned_send_timestamp;
+    last_clock_aligned_send_timestamp = now;
     return true;
 }
 
@@ -105,7 +113,8 @@ bool OcppMeterValueHandler::charging_session_interval_crossed(time_t *timestamp)
     if (last_charging_session_send != 0 && !deadline_elapsed(last_charging_session_send + interval * 1000))
         return false;
 
+    *timestamp = last_charging_session_send_timestamp;
     last_charging_session_send = platform_now_ms();
-    *timestamp = platform_get_system_time(cp->platform_ctx);
+    last_charging_session_send_timestamp = platform_get_system_time(cp->platform_ctx);
     return true;
 }

@@ -78,7 +78,12 @@ void MeterValueAccumulator::tick()
                         continue;
                     }
 
-                    meter_values[value_offset] = platform_get_raw_meter_value(this->connectorId, measurand, m.phase, m.location);
+                    // Report the register value of the start of an interval, not of the end.
+                    // To do this, only write the register value once.
+                    // ::reset() sets the value back to 0, allowing
+                    // one write again.
+                    if (meter_values[value_offset] == 0)
+                        meter_values[value_offset] = platform_get_raw_meter_value(this->connectorId, measurand, m.phase, m.location);
                     break;
                 case MeasurandType::Interval:
                     // Use two values for intervals as a mini ring-buffer. Set the first one only on the first run after boot-up.
@@ -182,6 +187,7 @@ void MeterValueAccumulator::reset()
 
             switch (measurand_type) {
                 case MeasurandType::Register:
+                    meter_values[value_offset] = 0;
                 case MeasurandType::Average:
                     meter_values[value_offset] = 0;
                     break;

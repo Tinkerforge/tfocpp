@@ -8,11 +8,7 @@ struct OcppMeterValueHandler {
     void init(int32_t connId, OcppChargePoint *chargePoint);
 
     void tick();
-    void onStartTransaction(int32_t txnId) {
-        charging_session_meter_values.reset();
-        last_charging_session_send = 0;
-        this->transactionId = txnId;
-    }
+    void onStartTransaction(int32_t txnId);
 
     void onStopTransaction() {
         // TODO: add stoptxn meter values here.
@@ -34,8 +30,9 @@ struct OcppMeterValueHandler {
     MeterValueAccumulator charging_session_meter_values;
 
     uint32_t last_run = 0;
-    time_t last_clock_aligned_send = 0;
+    time_t last_clock_aligned_send_timestamp = 0;
     uint32_t last_charging_session_send = 0;
+    time_t last_charging_session_send_timestamp = 0;
 
     int32_t transactionId = INT32_MAX;
 };
