@@ -1,4 +1,4 @@
-#if defined(OCPP_PLATFORM_LINUX ) || defined(OCPP_PLATFORM_TEST)
+#if defined(OCPP_PLATFORM_LINUX) || defined(OCPP_PLATFORM_TEST)
 
 #include "LinuxWS.h"
 
@@ -48,7 +48,6 @@ static void fn(struct mg_connection *c, int ev, void *ev_data, void *fn_data) {
 
     auto useless_copy = std::unique_ptr<char[]>(new char[wm->data.len]);
     memcpy(useless_copy.get(), wm->data.ptr, wm->data.len);
-
     if (recv_cb != nullptr) {
         recv_cb(useless_copy.get(), wm->data.len, recv_cb_userdata);
     }
@@ -66,16 +65,18 @@ static void fn(struct mg_connection *c, int ev, void *ev_data, void *fn_data) {
 }
 
 std::unique_ptr<char[]> websocket_url_buf;
-std::unique_ptr<char[]> auth_header_buf;
+size_t next_auth_header = 0;
+std::vector<std::unique_ptr<char[]>> auth_header_bufs;
 
 static void platform_connect() {
-    if (auth_header_buf != nullptr)
-        c = mg_ws_connect(&mgr, websocket_url_buf.get(), fn, &done, "Sec-WebSocket-Protocol: ocpp1.6\r\nAuthorization: Basic %s\r\n", auth_header_buf.get());     // Create client
-    else
+    if (auth_header_bufs.size() > 0) {
+        c = mg_ws_connect(&mgr, websocket_url_buf.get(), fn, &done, "Sec-WebSocket-Protocol: ocpp1.6\r\nAuthorization: Basic %s\r\n", auth_header_bufs[next_auth_header].get());     // Create client
+        next_auth_header = (next_auth_header + 1) % auth_header_bufs.size();
+    } else
         c = mg_ws_connect(&mgr, websocket_url_buf.get(), fn, &done, "%s", "Sec-WebSocket-Protocol: ocpp1.6\r\n");     // Create client
 }
 
-void* platform_init(const char *websocket_url, const char *basic_auth_user, const uint8_t *basic_auth_pass, size_t basic_auth_pass_length)
+void* platform_init(const char *websocket_url, BasicAuthCredentials *credentials, size_t credentials_length)
 {
     mg_mgr_init(&mgr);        // Initialise event manager
     //mg_log_set("4");
@@ -85,19 +86,22 @@ void* platform_init(const char *websocket_url, const char *basic_auth_user, cons
     websocket_url_buf = heap_alloc_array<char>(url_len + 1);
     memcpy(websocket_url_buf.get(), websocket_url, url_len + 1); // copy with null-terminator
 
-    if (basic_auth_user != nullptr && basic_auth_pass != nullptr) {
-        auth_header_buf = heap_alloc_array<char>(2 * (strlen(basic_auth_user) + basic_auth_pass_length + 1) + 1);
+    if (credentials != nullptr) {
+        for (size_t cred_idx = 0; cred_idx < credentials_length; ++cred_idx) {
+            auto auth_header_buf = heap_alloc_array<char>(2 * (strlen(credentials[cred_idx].user) + credentials[cred_idx].pass_length + 1) + 1);
 
-        int offset = 0;
-        for(int i = 0; i < strlen(basic_auth_user); ++i)
-            offset = mg_base64_update(basic_auth_user[i], auth_header_buf.get(), offset);
+            int offset = 0;
+            for(int i = 0; i < strlen(credentials[cred_idx].user); ++i)
+                offset = mg_base64_update(credentials[cred_idx].user[i], auth_header_buf.get(), offset);
 
-        offset = mg_base64_update(':', auth_header_buf.get(), offset);
+            offset = mg_base64_update(':', auth_header_buf.get(), offset);
 
-        for(int i = 0; i < basic_auth_pass_length; ++i)
-            offset = mg_base64_update(basic_auth_pass[i], auth_header_buf.get(), offset);
+            for(int i = 0; i < credentials[cred_idx].pass_length; ++i)
+                offset = mg_base64_update(credentials[cred_idx].pass[i], auth_header_buf.get(), offset);
 
-        offset = mg_base64_final(auth_header_buf.get(), offset);
+            offset = mg_base64_final(auth_header_buf.get(), offset);
+            auth_header_bufs.push_back(std::move(auth_header_buf));
+        }
     }
 
     platform_connect();

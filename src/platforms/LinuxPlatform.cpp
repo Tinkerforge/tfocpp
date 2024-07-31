@@ -300,8 +300,8 @@ int main(int argc, char **argv) {
     argc_ = argc;
     argv_ = argv;
 
-    if (argc < 2 || argc > 3) {
-        printf("Usage %s ws[s]://central-host-or-ip:port/central/path [basic_auth_pass]\n", argv[0]);
+    if (argc != 2 && argc != 4) {
+        printf("Usage %s ws[s]://central-host-or-ip:port/central/path [basic_auth_pass] [basic_auth_pass_type (0 - hex, 1 - text, 2 - try both)]\n", argv[0]);
         return -1;
     }
 
@@ -319,7 +319,7 @@ int main(int argc, char **argv) {
 
     char buf[sizeof(PlatformResponse)] = {0};
 
-    cp.start(argv[1], "CP_4", argc == 3 ? (const uint8_t *)argv[2] : nullptr, argc == 3 ? strlen(argv[2]) : 0);
+    cp.start(argv[1], "warp2-X8D", argc == 4 ? (const uint8_t *)argv[2] : nullptr, argc == 4 ? strlen(argv[2]) : 0, (BasicAuthPassType)(argc == 4 ? strtol(argv[3], nullptr, 10) : 0));
 
     while(true) {
         cp.tick();
@@ -520,7 +520,7 @@ const char *platform_get_charge_point_model() {
 }
 
 const char *platform_get_charge_point_serial_number() {
-    return "warp2-X8A";
+    return "warp2-X8D";
 }
 const char *platform_get_firmware_version() {
     return nullptr;

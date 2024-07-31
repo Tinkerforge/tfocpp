@@ -150,7 +150,7 @@ OcppChargePoint *cp = nullptr;
 void ocpp_start(const char *ws_url, const char *charge_point_name)
 {
     cp = new OcppChargePoint();
-    cp->start(ws_url, charge_point_name, nullptr, 0);
+    cp->start(ws_url, charge_point_name, nullptr, 0, /*FIXME*/ BasicAuthPassType::TEXT);
 }
 
 void ocpp_tick()

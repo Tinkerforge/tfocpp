@@ -6,6 +6,7 @@
 #include <memory>
 
 #include "Messages.h"
+#include "Types.h"
 
 class OcppChargePoint;
 
@@ -24,9 +25,19 @@ public:
     bool is_valid();
 };
 
+
+enum class BasicAuthPassType {
+    // The given basic auth pass is 40 hex chars to be interpreted and send as 20 bytes as per the OCPPJ spec.
+    HEX_CHARS,
+    // The given basic auth pass should not be interpreted but sent as is.
+    TEXT,
+    // Interpret as hex chars first and if the server does not accept us, retry as text.
+    TRY_BOTH
+};
+
 class OcppConnection {
 public:
-    void* start(const char *websocket_endpoint_url, const char *charge_point_name_percent_encoded, const char *basic_auth_user, const uint8_t *basic_auth_pass, size_t basic_auth_pass_length, OcppChargePoint *ocpp_handle);
+    void* start(const char *websocket_endpoint_url, const char *charge_point_name_percent_encoded, const char *basic_auth_user, const uint8_t *basic_auth_pass, size_t basic_auth_pass_length, BasicAuthPassType basic_auth_pass_type, OcppChargePoint *ocpp_handle);
 
     void tick();
 
@@ -58,4 +69,6 @@ public:
     std::deque<QueueItem> transaction_messages;
     // As there can only be one call in flight, we don't need a queue here.
     QueueItem next_response;
+
+    std::unique_ptr<BasicAuthCredentials[]> basic_auth_credentials;
 };

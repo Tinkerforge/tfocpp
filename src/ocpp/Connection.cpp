@@ -411,7 +411,18 @@ bool QueueItem::is_valid()
     return buf != nullptr;
 }
 
-void* OcppConnection::start(const char *websocket_endpoint_url, const char *charge_point_name_percent_encoded, const char *basic_auth_user, const uint8_t *basic_auth_pass, size_t basic_auth_pass_length, OcppChargePoint *ocpp_handle) {
+static const char *lookup = "0123456789ABCDEFabcdef";
+
+static uint8_t hex_digit_to_byte(char digit)
+{
+    for (size_t i = 0; i < strlen(lookup); ++i) {
+        if (lookup[i] == digit)
+            return i > 15 ? (i - 6) : i;
+    }
+    return 0xFF;
+}
+
+void* OcppConnection::start(const char *websocket_endpoint_url, const char *charge_point_name_percent_encoded, const char *basic_auth_user, const uint8_t *basic_auth_pass, size_t basic_auth_pass_length, BasicAuthPassType basic_auth_pass_type, OcppChargePoint *ocpp_handle) {
     this->cp = ocpp_handle;
     std::string ws_url;
     ws_url.reserve(strlen(websocket_endpoint_url) + 1 + strlen(charge_point_name_percent_encoded));
@@ -419,7 +430,44 @@ void* OcppConnection::start(const char *websocket_endpoint_url, const char *char
     ws_url += '/';
     ws_url += charge_point_name_percent_encoded;
 
-    platform_ctx = platform_init(ws_url.c_str(), basic_auth_user, basic_auth_pass, basic_auth_pass_length);
+    this->basic_auth_credentials = heap_alloc_array<BasicAuthCredentials>(basic_auth_pass_type == BasicAuthPassType::TRY_BOTH ? 2 : 1);
+    size_t next_cred = 0;
+
+    if (basic_auth_pass_type == BasicAuthPassType::HEX_CHARS || basic_auth_pass_type == BasicAuthPassType::TRY_BOTH) {
+        bool pass_is_hex = basic_auth_pass_length == 40;
+        if (pass_is_hex) {
+            for (size_t i = 0; i < 40; ++i) {
+                if (!isxdigit(basic_auth_pass[i])) {
+                    pass_is_hex = false;
+                    break;
+                }
+            }
+        }
+        if (!pass_is_hex &&  basic_auth_pass_type == BasicAuthPassType::HEX_CHARS)
+            return nullptr;
+
+        if (pass_is_hex) {
+            this->basic_auth_credentials[next_cred].user = strdup(basic_auth_user);
+
+            this->basic_auth_credentials[next_cred].pass = new uint8_t[20];
+            for (size_t i = 0; i < 20; ++i) {
+                this->basic_auth_credentials[next_cred].pass[i] = hex_digit_to_byte(basic_auth_pass[2 * i]) << 4 | hex_digit_to_byte(basic_auth_pass[2 * i + 1]);
+            }
+            this->basic_auth_credentials[next_cred].pass_length = 20;
+            ++next_cred;
+        }
+    }
+
+    if (basic_auth_pass_type == BasicAuthPassType::TEXT || basic_auth_pass_type == BasicAuthPassType::TRY_BOTH) {
+        // FIXME: Currently there is no way to stop a connection. If we add this, this memory has to be freed!
+        this->basic_auth_credentials[next_cred].user = strdup(basic_auth_user);
+        this->basic_auth_credentials[next_cred].pass = new uint8_t[basic_auth_pass_length];
+        memcpy(this->basic_auth_credentials[next_cred].pass, basic_auth_pass, basic_auth_pass_length);
+        this->basic_auth_credentials[next_cred].pass_length = basic_auth_pass_length;
+        ++next_cred;
+    }
+
+    platform_ctx = platform_init(ws_url.c_str(), this->basic_auth_credentials.get(), next_cred);
     if (platform_ctx == nullptr)
         return nullptr;
 

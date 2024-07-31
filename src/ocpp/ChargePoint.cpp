@@ -1441,7 +1441,7 @@ static size_t url_encode(char *buf, size_t len, const char *url) {
     return offset;
 }
 
-bool OcppChargePoint::start(const char *websocket_endpoint_url, const char *charge_point_name, const uint8_t *basic_auth_pass, size_t basic_auth_pass_length) {
+bool OcppChargePoint::start(const char *websocket_endpoint_url, const char *charge_point_name, const uint8_t *basic_auth_pass, size_t basic_auth_pass_length, BasicAuthPassType basic_auth_pass_type) {
     loadConfig();
 #ifdef OCPP_STATE_CALLBACKS
     debugDumpConfig();
@@ -1457,7 +1457,7 @@ bool OcppChargePoint::start(const char *websocket_endpoint_url, const char *char
 
     initRestore();
 
-    platform_ctx = connection.start(websocket_endpoint_url, buf.get(), charge_point_name, basic_auth_pass, basic_auth_pass_length, this);
+    platform_ctx = connection.start(websocket_endpoint_url, buf.get(), charge_point_name, basic_auth_pass, basic_auth_pass_length, basic_auth_pass_type, this);
     if (platform_ctx == nullptr)
         return false;
 
