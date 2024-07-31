@@ -132,7 +132,14 @@ bool platform_ws_connected(void *ctx)
 
 bool platform_ws_send(void *ctx, const char *buf, size_t buf_len)
 {
-    mg_ws_send(c, buf, buf_len, WEBSOCKET_OP_TEXT) == buf_len;
+    // mg_ws_send returns the sent bytes including the (variable length) web socket frame header.
+    // Checking for success with mg_ws_send() == buf_len is thus not possible.
+    // As the ws header length is unknown, we can't check for == buf_len + [hardcoded] header len
+    // -> Detecting a short write is not possible.
+    // However ms_ws_send internally does not check for short writes and just reurns buf_len + header_len.
+    // Assume that sending data always succeeds.
+    mg_ws_send(c, buf, buf_len, WEBSOCKET_OP_TEXT);
+    return true;
 }
 
 bool platform_ws_send_ping(void *ctx) {
