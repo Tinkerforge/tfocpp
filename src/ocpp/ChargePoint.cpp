@@ -715,7 +715,10 @@ static bool is_charging_profile_valid(T prof, int32_t conn_id) {
     }
 
     // reject if either recurKind is set and kind is not recurring or if it is not set and kind is recurring.
-    if (prof.chargingProfileKind() == ChargingProfileKind::RECURRING != prof.recurrencyKind().is_set()) {
+    // If a charging profile is recurring, it MUST have some recurrencyKind set.
+    bool profileIsRecurring = prof.chargingProfileKind() == ChargingProfileKind::RECURRING;
+    bool recurrencyKindSet = prof.recurrencyKind().is_set();
+    if ((recurrencyKindSet && !profileIsRecurring) || (!recurrencyKindSet && profileIsRecurring)) {
         log_info("Rejected: RECURRING but recurrency set");
         return false;
     }
