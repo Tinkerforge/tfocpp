@@ -42,6 +42,7 @@ public:
     OcppChargePoint() {}
 
     OcppChargePoint (const OcppChargePoint&) = delete;
+    OcppChargePoint &operator=(const OcppChargePoint&) = delete;
 
     bool start(const char *websocket_endpoint_url, const char *charge_point_name, const uint8_t *basic_auth_pass, size_t basic_auth_pass_length, BasicAuthPassType basic_auth_pass_type);
 

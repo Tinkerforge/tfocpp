@@ -367,6 +367,7 @@ struct ICall {
     ICall(CallAction action, uint32_t messageId): action(action), ocppJmessageId(messageId), ocppJcallId(nullptr) {}
     ICall(CallAction action, const char *callId): action(action), ocppJmessageId(0), ocppJcallId(callId) {}
     ICall(const ICall &) = delete;
+    ICall& operator=(const ICall &) = delete;
 
     virtual ~ICall();
 
@@ -1038,6 +1039,8 @@ struct Authorize final : public ICall {
     const char *idTag;
 
     Authorize(const char idTag[21]);
+    Authorize(const Authorize&) = delete;
+    Authorize &operator=(const Authorize&) = delete;
 
     size_t serializeJson(char *buf, size_t buf_len) const override;
 };
@@ -1062,6 +1065,8 @@ struct BootNotification final : public ICall {
         const char imsi[21] = nullptr,
         const char meterType[26] = nullptr,
         const char meterSerialNumber[26] = nullptr);
+    BootNotification(const BootNotification&) = delete;
+    BootNotification &operator=(const BootNotification&) = delete;
 
     size_t serializeJson(char *buf, size_t buf_len) const override;
 };
@@ -1071,6 +1076,8 @@ struct ChangeAvailabilityResponse final : public ICall {
 
     ChangeAvailabilityResponse(const char *call_id,
         ChangeAvailabilityResponseStatus status);
+    ChangeAvailabilityResponse(const ChangeAvailabilityResponse&) = delete;
+    ChangeAvailabilityResponse &operator=(const ChangeAvailabilityResponse&) = delete;
 
     size_t serializeJson(char *buf, size_t buf_len) const override;
 };
@@ -1080,6 +1087,8 @@ struct ChangeConfigurationResponse final : public ICall {
 
     ChangeConfigurationResponse(const char *call_id,
         ChangeConfigurationResponseStatus status);
+    ChangeConfigurationResponse(const ChangeConfigurationResponse&) = delete;
+    ChangeConfigurationResponse &operator=(const ChangeConfigurationResponse&) = delete;
 
     size_t serializeJson(char *buf, size_t buf_len) const override;
 };
@@ -1089,6 +1098,8 @@ struct ClearCacheResponse final : public ICall {
 
     ClearCacheResponse(const char *call_id,
         ResponseStatus status);
+    ClearCacheResponse(const ClearCacheResponse&) = delete;
+    ClearCacheResponse &operator=(const ClearCacheResponse&) = delete;
 
     size_t serializeJson(char *buf, size_t buf_len) const override;
 };
@@ -1101,6 +1112,8 @@ struct DataTransfer final : public ICall {
     DataTransfer(const char vendorId[256],
         const char messageId[51] = nullptr,
         const char *data = nullptr);
+    DataTransfer(const DataTransfer&) = delete;
+    DataTransfer &operator=(const DataTransfer&) = delete;
 
     size_t serializeJson(char *buf, size_t buf_len) const override;
 };
@@ -1112,6 +1125,8 @@ struct DataTransferResponse final : public ICall {
     DataTransferResponse(const char *call_id,
         DataTransferResponseStatus status,
         const char *data = nullptr);
+    DataTransferResponse(const DataTransferResponse&) = delete;
+    DataTransferResponse &operator=(const DataTransferResponse&) = delete;
 
     size_t serializeJson(char *buf, size_t buf_len) const override;
 };
@@ -1123,6 +1138,8 @@ struct GetConfigurationResponse final : public ICall {
     GetConfigurationResponse(const char *call_id,
         GetConfigurationResponseConfigurationKey *configurationKey = nullptr, size_t configurationKey_length = 0,
         const char **unknownKey = nullptr, size_t unknownKey_length = 0);
+    GetConfigurationResponse(const GetConfigurationResponse&) = delete;
+    GetConfigurationResponse &operator=(const GetConfigurationResponse&) = delete;
 
     size_t serializeJson(char *buf, size_t buf_len) const override;
 };
@@ -1130,6 +1147,8 @@ struct GetConfigurationResponse final : public ICall {
 struct Heartbeat final : public ICall {
 
     Heartbeat();
+    Heartbeat(const Heartbeat&) = delete;
+    Heartbeat &operator=(const Heartbeat&) = delete;
 
     size_t serializeJson(char *buf, size_t buf_len) const override;
 };
@@ -1142,6 +1161,8 @@ struct MeterValues final : public ICall {
     MeterValues(int32_t connectorId,
         MeterValue *meterValue, size_t meterValue_length,
         int32_t transactionId = OCPP_INTEGER_NOT_PASSED);
+    MeterValues(const MeterValues&) = delete;
+    MeterValues &operator=(const MeterValues&) = delete;
 
     size_t serializeJson(char *buf, size_t buf_len) const override;
 };
@@ -1151,6 +1172,8 @@ struct RemoteStartTransactionResponse final : public ICall {
 
     RemoteStartTransactionResponse(const char *call_id,
         ResponseStatus status);
+    RemoteStartTransactionResponse(const RemoteStartTransactionResponse&) = delete;
+    RemoteStartTransactionResponse &operator=(const RemoteStartTransactionResponse&) = delete;
 
     size_t serializeJson(char *buf, size_t buf_len) const override;
 };
@@ -1160,6 +1183,8 @@ struct RemoteStopTransactionResponse final : public ICall {
 
     RemoteStopTransactionResponse(const char *call_id,
         ResponseStatus status);
+    RemoteStopTransactionResponse(const RemoteStopTransactionResponse&) = delete;
+    RemoteStopTransactionResponse &operator=(const RemoteStopTransactionResponse&) = delete;
 
     size_t serializeJson(char *buf, size_t buf_len) const override;
 };
@@ -1169,6 +1194,8 @@ struct ResetResponse final : public ICall {
 
     ResetResponse(const char *call_id,
         ResponseStatus status);
+    ResetResponse(const ResetResponse&) = delete;
+    ResetResponse &operator=(const ResetResponse&) = delete;
 
     size_t serializeJson(char *buf, size_t buf_len) const override;
 };
@@ -1185,6 +1212,8 @@ struct StartTransaction final : public ICall {
         int32_t meterStart,
         time_t timestamp,
         int32_t reservationId = OCPP_INTEGER_NOT_PASSED);
+    StartTransaction(const StartTransaction&) = delete;
+    StartTransaction &operator=(const StartTransaction&) = delete;
 
     size_t serializeJson(char *buf, size_t buf_len) const override;
 };
@@ -1205,6 +1234,8 @@ struct StatusNotification final : public ICall {
         time_t timestamp = OCPP_DATETIME_NOT_PASSED,
         const char vendorId[256] = nullptr,
         const char vendorErrorCode[51] = nullptr);
+    StatusNotification(const StatusNotification&) = delete;
+    StatusNotification &operator=(const StatusNotification&) = delete;
 
     size_t serializeJson(char *buf, size_t buf_len) const override;
 };
@@ -1223,6 +1254,8 @@ struct StopTransaction final : public ICall {
         const char idTag[21] = nullptr,
         StopTransactionReason reason = StopTransactionReason::NONE,
         MeterValue *transactionData = nullptr, size_t transactionData_length = 0);
+    StopTransaction(const StopTransaction&) = delete;
+    StopTransaction &operator=(const StopTransaction&) = delete;
 
     size_t serializeJson(char *buf, size_t buf_len) const override;
 };
@@ -1232,6 +1265,8 @@ struct UnlockConnectorResponse final : public ICall {
 
     UnlockConnectorResponse(const char *call_id,
         UnlockConnectorResponseStatus status);
+    UnlockConnectorResponse(const UnlockConnectorResponse&) = delete;
+    UnlockConnectorResponse &operator=(const UnlockConnectorResponse&) = delete;
 
     size_t serializeJson(char *buf, size_t buf_len) const override;
 };
@@ -1241,6 +1276,8 @@ struct ClearChargingProfileResponse final : public ICall {
 
     ClearChargingProfileResponse(const char *call_id,
         ClearChargingProfileResponseStatus status);
+    ClearChargingProfileResponse(const ClearChargingProfileResponse&) = delete;
+    ClearChargingProfileResponse &operator=(const ClearChargingProfileResponse&) = delete;
 
     size_t serializeJson(char *buf, size_t buf_len) const override;
 };
@@ -1256,6 +1293,8 @@ struct GetCompositeScheduleResponse final : public ICall {
         int32_t connectorId = OCPP_INTEGER_NOT_PASSED,
         time_t scheduleStart = OCPP_DATETIME_NOT_PASSED,
         GetCompositeScheduleResponseChargingSchedule *chargingSchedule = nullptr);
+    GetCompositeScheduleResponse(const GetCompositeScheduleResponse&) = delete;
+    GetCompositeScheduleResponse &operator=(const GetCompositeScheduleResponse&) = delete;
 
     size_t serializeJson(char *buf, size_t buf_len) const override;
 };
@@ -1265,6 +1304,8 @@ struct SetChargingProfileResponse final : public ICall {
 
     SetChargingProfileResponse(const char *call_id,
         SetChargingProfileResponseStatus status);
+    SetChargingProfileResponse(const SetChargingProfileResponse&) = delete;
+    SetChargingProfileResponse &operator=(const SetChargingProfileResponse&) = delete;
 
     size_t serializeJson(char *buf, size_t buf_len) const override;
 };

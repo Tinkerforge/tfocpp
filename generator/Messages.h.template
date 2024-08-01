@@ -21,6 +21,7 @@ struct ICall {
     ICall(CallAction action, uint32_t messageId): action(action), ocppJmessageId(messageId), ocppJcallId(nullptr) {}
     ICall(CallAction action, const char *callId): action(action), ocppJmessageId(0), ocppJcallId(callId) {}
     ICall(const ICall &) = delete;
+    ICall& operator=(const ICall &) = delete;
 
     virtual ~ICall();
 
