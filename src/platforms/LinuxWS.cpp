@@ -10,6 +10,7 @@
 #include "mongoose.h"
 
 #include <memory>
+#include <vector>
 
 struct mg_mgr mgr;        // Event manager
 struct mg_connection *c;  // Client connection

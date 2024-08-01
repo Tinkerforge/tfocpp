@@ -13,7 +13,7 @@
 #endif
 
 #ifndef OCPP_LINE_VOLTAGE
-#define OCPP_LINE_VOLTAGE 230
+#define OCPP_LINE_VOLTAGE 230.0f
 #endif
 
 #ifndef OCPP_MAX_CHARGING_CURRENT

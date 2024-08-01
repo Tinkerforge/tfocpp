@@ -5,6 +5,7 @@
 #include "ChargePoint.h"
 
 #include <string.h>
+#include <inttypes.h>
 
 #include <algorithm>
 #include <functional>
@@ -45,7 +46,7 @@ static_assert(((size_t)StopTransactionReason::NONE) < 255, "");
 
 void persistStartTxn(int32_t connector_id, const char id_tag[21], int32_t meter_start, int32_t reservation_id, uint64_t call_id, time_t timestamp)
 {
-    log_info("Persisting StartTransaction.req at connector %d for tag %s at %.3f kWh as txn_msg/%llu.", connector_id, id_tag, meter_start / 1000.0f, call_id);
+    log_info("Persisting StartTransaction.req at connector %d for tag %s at %.3f kWh as txn_msg/%" PRIu64 ".", connector_id, id_tag, meter_start / 1000.0f, call_id);
     StartTxn txn;
     txn.connector_id = connector_id;
     txn.meter_start = meter_start;
@@ -61,14 +62,14 @@ void persistStartTxn(int32_t connector_id, const char id_tag[21], int32_t meter_
 
     constexpr size_t bufsize = NAME_BUF_SIZE + 8;
     char name_buf[bufsize] = "txn_msg/";
-    snprintf(name_buf + 8, sizeof(name_buf) - 8, "%llu", call_id);
+    snprintf(name_buf + 8, sizeof(name_buf) - 8, "%" PRIu64, call_id);
 
     platform_write_file(name_buf, buf, sizeof(StartTxn));
 }
 
 void persistRunningTxn(int32_t connector_id, uint64_t call_id, int32_t transaction_id)
 {
-    log_info("Persisting running transaction %d at connector %d as txn_msg/%llu.", transaction_id, connector_id, call_id);
+    log_info("Persisting running transaction %d at connector %d as txn_msg/%" PRIu64 ".", transaction_id, connector_id, call_id);
     RunningTxn txn;
     txn.connector_id = connector_id;
     txn.transaction_id = transaction_id;
@@ -78,14 +79,14 @@ void persistRunningTxn(int32_t connector_id, uint64_t call_id, int32_t transacti
 
     constexpr size_t bufsize = NAME_BUF_SIZE + 8;
     char name_buf[bufsize] = "txn_msg/";
-    snprintf(name_buf + 8, sizeof(name_buf) - 8, "%llu", call_id);
+    snprintf(name_buf + 8, sizeof(name_buf) - 8, "%" PRIu64, call_id);
 
     platform_write_file(name_buf, buf, sizeof(RunningTxn));
 }
 
 void persistStopTxn(uint8_t reason, int32_t meter_stop, int32_t transaction_id, const char id_tag[21], uint64_t call_id, time_t timestamp)
 {
-    log_info("Persisting StopTransaction.req for tag %s at %.3f kWh with StopReason %d as txn_msg/%llu", id_tag, meter_stop / 1000.0f, reason, call_id);
+    log_info("Persisting StopTransaction.req for tag %s at %.3f kWh with StopReason %d as txn_msg/%" PRIu64 ".", id_tag, meter_stop / 1000.0f, reason, call_id);
     StopTxn txn;
     txn.reason = reason;
     txn.meter_stop = meter_stop;
@@ -103,17 +104,17 @@ void persistStopTxn(uint8_t reason, int32_t meter_stop, int32_t transaction_id, 
 
     constexpr size_t bufsize = NAME_BUF_SIZE + 8;
     char name_buf[bufsize] = "txn_msg/";
-    snprintf(name_buf + 8, sizeof(name_buf) - 8, "%llu", call_id);
+    snprintf(name_buf + 8, sizeof(name_buf) - 8, "%" PRIu64, call_id);
 
     platform_write_file(name_buf, buf, sizeof(StopTxn));
 }
 
 void onTxnMsgResponseReceived(uint64_t call_id)
 {
-    log_info("Will remove persisted message txn_msg/%llu if it exists", call_id);
+    log_info("Will remove persisted message txn_msg/%" PRIu64 " if it exists.", call_id);
     constexpr size_t bufsize = NAME_BUF_SIZE + 8;
     char name_buf[bufsize] = "txn_msg/";
-    snprintf(name_buf + 8, sizeof(name_buf) - 8, "%llu", call_id);
+    snprintf(name_buf + 8, sizeof(name_buf) - 8, "%" PRIu64, call_id);
     platform_remove_file(name_buf);
 }
 
@@ -187,7 +188,7 @@ bool restoreNextTxnMessage(OcppConnection *conn) {
 
         constexpr size_t bufsize = NAME_BUF_SIZE + 8;
         char name_buf[bufsize] = "txn_msg/";
-        snprintf(name_buf + 8, sizeof(name_buf) - 8, "%llu", call_id);
+        snprintf(name_buf + 8, sizeof(name_buf) - 8, "%" PRIu64, call_id);
 
         char buf[100] = {0};
 

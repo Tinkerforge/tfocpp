@@ -152,11 +152,11 @@ EvalChargingProfileResult ChargingProfile::eval(Opt<time_t> startTxnTime, time_t
         log_trace("    Setting number of phases to %d.", result.numberPhases);
     }
 
-    result.currentLimit = period.limit / (sched.unit == ChargingRateUnit::A ? 1 : (OCPP_LINE_VOLTAGE * result.numberPhases));
+    result.currentLimit = period.limit / (sched.unit == ChargingRateUnit::A ? 1.0f : (OCPP_LINE_VOLTAGE * (float)result.numberPhases));
     log_trace("    Setting current limit to %.3f.", result.currentLimit);
 
     if (sched.minChargingRate.is_set()) {
-        result.minChargingCurrent = sched.minChargingRate.get() / (sched.unit == ChargingRateUnit::A ? 1 : (OCPP_LINE_VOLTAGE * result.numberPhases));
+        result.minChargingCurrent = sched.minChargingRate.get() / (sched.unit == ChargingRateUnit::A ? 1 : (OCPP_LINE_VOLTAGE * (float)result.numberPhases));
         log_trace("    Setting min charging current to %.3f.", result.minChargingCurrent);
     }
 

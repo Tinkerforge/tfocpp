@@ -68,11 +68,11 @@ struct PlatformMessage {
     ConnectorMessage connector_messages[OCPP_NUM_CONNECTORS];
 }  __attribute__((__packed__));
 
-PlatformMessage pm;
-int sock;
-struct sockaddr_in addr;
+static PlatformMessage pm;
+static int sock;
+static struct sockaddr_in addr;
 
-void send_message(const char *message) {
+static void send_message(const char *message) {
     pm.seq_num = (pm.seq_num + 1) % 256;
     memset(pm.message, 0, ARRAY_SIZE(pm.message));
     strncpy(pm.message, message, ARRAY_SIZE(pm.message));
@@ -80,10 +80,10 @@ void send_message(const char *message) {
     sendto(sock, &pm, sizeof(pm), 0, (const sockaddr *) &addr, sizeof(addr));
 }
 
-PlatformResponse pr;
+static PlatformResponse pr;
 
-void (*stop_cb)(int32_t, StopReason, void *) = nullptr;
-void *stop_cb_userdata = nullptr;
+static void (*stop_cb)(int32_t, StopReason, void *) = nullptr;
+static void *stop_cb_userdata = nullptr;
 
 void platform_register_stop_callback(void *ctx, void(*cb)(int32_t, StopReason, void *), void *user_data)
 {
@@ -97,8 +97,8 @@ uint32_t platform_now_ms() {
     return (ts.tv_sec * 1000 + ts.tv_nsec / 1000000L);
 }
 
-time_t last_system_time = 0;
-uint32_t last_system_time_set_at = 0;
+static time_t last_system_time = 0;
+static uint32_t last_system_time_set_at = 0;
 
 void platform_set_system_time(void *ctx, time_t t)
 {
@@ -146,15 +146,15 @@ void platform_printfln(int level, const char *fmt, ...)
     puts("");
 }
 
-void(*tag_seen_cb)(int32_t, const char *, void *) = nullptr;
-void *tag_seen_cb_user_data = nullptr;
+static void(*tag_seen_cb)(int32_t, const char *, void *) = nullptr;
+static void *tag_seen_cb_user_data = nullptr;
 
 void platform_register_tag_seen_callback(void *ctx, void(*cb)(int32_t, const char *, void *), void *user_data) {
     tag_seen_cb = cb;
     tag_seen_cb_user_data = user_data;
 }
 
-const char * const trt_string[] = {
+static const char * const trt_string[] = {
 "Blocked",
 "Expired",
 "Invalid",
@@ -293,8 +293,8 @@ void platform_update_config_state(ConfigKey key,
 }
 #endif
 
-int argc_;
-char **argv_;
+static int argc_;
+static char **argv_;
 
 int main(int argc, char **argv) {
     argc_ = argc;
@@ -339,12 +339,12 @@ int main(int argc, char **argv) {
 }
 
 void platform_reset(bool hard) {
-    char *exec_argv[] = { argv_[0], 0 };
+    char *exec_argv[] = { argv_[0], nullptr };
 
     execv("/proc/self/exe", exec_argv);
 }
 
-SupportedMeasurand supported_measurands[] = {
+static SupportedMeasurand supported_measurands[] = {
     //ENERGY_ACTIVE_EXPORT_REGISTER
     {SampledValuePhase::L1, SampledValueLocation::OUTLET, SampledValueUnit::K_WH, false},
     {SampledValuePhase::L2, SampledValueLocation::OUTLET, SampledValueUnit::K_WH, false},
@@ -413,7 +413,7 @@ SupportedMeasurand supported_measurands[] = {
     {SampledValuePhase::NONE, SampledValueLocation::OUTLET, SampledValueUnit::NONE, false},
 };
 
-size_t supported_measurand_offsets[] = {
+static size_t supported_measurand_offsets[] = {
     0,  /*ENERGY_ACTIVE_EXPORT_REGISTER*/
     3,  /*ENERGY_ACTIVE_IMPORT_REGISTER*/
     6,  /*ENERGY_REACTIVE_EXPORT_REGISTER*/

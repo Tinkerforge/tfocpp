@@ -1004,7 +1004,7 @@ CallResponse OcppChargePoint::handleGetCompositeSchedule(const char *uid, GetCom
 
         periods[periods_used].limit = result.allocatedLimit[req.connectorId()];
         if (req.chargingRateUnit().is_set() && req.chargingRateUnit().get() == ChargingRateUnit::W)
-            periods[periods_used].limit *= OCPP_LINE_VOLTAGE * periods[periods_used].numberPhases;
+            periods[periods_used].limit *= OCPP_LINE_VOLTAGE * (float)periods[periods_used].numberPhases;
 
         if (periods_used > 0
          && periods[periods_used - 1].limit == periods[periods_used].limit
@@ -1038,7 +1038,7 @@ CallResponse OcppChargePoint::handleGetCompositeSchedule(const char *uid, GetCom
 
 static void clearProfileById(int32_t connectorId, int32_t id, Opt<ChargingProfile> *opt) {
     if (opt->is_set() && opt->get().id == id) {
-        log_info("New profile replaces %s level %u", ChargingProfilePurposeStrings[(size_t)opt->get().chargingProfilePurpose], opt->get().stackLevel);
+        log_info("New profile replaces %s level %d", ChargingProfilePurposeStrings[(size_t)opt->get().chargingProfilePurpose], opt->get().stackLevel);
         removeChargingProfile(connectorId, &opt->get());
         opt->clear();
     }

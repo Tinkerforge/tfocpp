@@ -11,7 +11,7 @@ bool deadline_elapsed(uint32_t deadline_ms)
 {
     uint32_t now = platform_now_ms();
 
-    return ((uint32_t)(now - deadline_ms)) < (UINT32_MAX / 2);
+    return (now - deadline_ms) < (UINT32_MAX / 2);
 }
 #endif
 
@@ -45,7 +45,7 @@ Opt<int32_t> parse_int(const char *c) {
     errno = 0;
 
     char *p;
-    int32_t parsed = strtol(c, &p, 10);
+    int64_t parsed = strtol(c, &p, 10);
 
     if (errno != 0 || c == p)
         return {false};
@@ -55,5 +55,8 @@ Opt<int32_t> parse_int(const char *c) {
     if (*p != '\0')
         return {false};
 
-    return {parsed};
+    if (parsed > INT32_MAX || parsed < INT32_MIN)
+        return {false};
+
+    return {(int32_t)parsed};
 }
