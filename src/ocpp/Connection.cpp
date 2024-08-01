@@ -239,11 +239,12 @@ bool OcppConnection::sendCallAction(const ICall &call, int32_t connectorId)
         // The worst case now is that we lose the connection directly after the Authorize message, and the transaction continues.
         // We then have enqueued at most two non-meter-value messages, one StartTxn and one StopTxn.
         if (transaction_messages.size() >= OCPP_TRANSACTION_RELATED_MESSAGE_QUEUE_SIZE) {
-            size_t i;
-            for(i = 0; i < transaction_messages.size(); ++i)
-                if (transaction_messages[i].action == CallAction::METER_VALUES)
+            for(size_t i = 0; i < transaction_messages.size(); ++i) {
+                if (transaction_messages[i].action == CallAction::METER_VALUES) {
+                    transaction_messages.erase(transaction_messages.begin() + i);
                     break;
-            transaction_messages.erase(transaction_messages.begin() + i);
+                }
+            }
         }
         transaction_messages.emplace_back(call, connectorId);
         return true;
