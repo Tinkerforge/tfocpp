@@ -1,7 +1,11 @@
 TFOCPP - Tinkerforge OCPP 1.6J Charge Point Implementation
 ==========================================================
 
-This is still in beta state. Do not use yet!
+This is the OCPP implementation used in Tinkerforge WARP Chargers. See http://github.com/Tinkerforge/esp32-firmware for the integration of this library in the WARP Charger's firmware.
+
+This library implements OCPP 1.6J and currently supports the Core and Smart Charging profiles. Support for other profiles will follow in the future as needed.
+
+To integrate this library into a charger firmware, you have to implement the platform interface defined in src/ocpp/Platform.h. See src/platforms and the http://github.com/Tinkerforge/esp32-firmware OCPP module for examples.
 
 Repository Content
 ------------------
