@@ -39,7 +39,8 @@ COMPILE_FLAGS = -DOCPP_LOG_LEVEL=4 \
 				-DOCPP_DEFAULT_METER_VALUES_ALIGNED_DATA="\"Energy.Active.Import.Register\"" \
 				-DOCPP_METER_VALUES_SAMPLED_DATA_MAX_LENGTH=20 \
 				-DOCPP_DEFAULT_METER_VALUE_SAMPLE_INTERVAL=60 \
-				-DOCPP_DEFAULT_METER_VALUES_SAMPLED_DATA="\"Energy.Active.Import.Register\""
+				-DOCPP_DEFAULT_METER_VALUES_SAMPLED_DATA="\"Energy.Active.Import.Register\"" \
+				-D_POSIX_C_SOURCE # for localtime_r and gmtime_r
 
 ifeq ($(WITH_SANITIZERS),yes)
 	COMPILE_FLAGS += -fsanitize=address,undefined,leak
