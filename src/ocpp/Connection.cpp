@@ -179,15 +179,22 @@ void OcppConnection::handleCallError(uint64_t uid, CallErrorCode code, const cha
         return;
     }
 
-    transaction_messages.push_front(std::move(message_in_flight));
-    ++transaction_message_attempts;
-    if (transaction_message_attempts >= getIntConfigUnsigned(ConfigKey::TransactionMessageAttempts)) {
+    auto max_attempts = getIntConfigUnsigned(ConfigKey::TransactionMessageAttempts);
+    if (transaction_message_attempts >= (max_attempts - 1)) {
+        log_warn("Transaction related message (id %" PRIu64 ") resulted in a call error %d of max %d times. Dropping.", message_in_flight.message_id, transaction_message_attempts + 1, max_attempts);
         cp->onTimeout(message_in_flight.action, message_in_flight.message_id, message_in_flight.connector_id);
         message_in_flight = QueueItem{};
+        transaction_message_attempts = 0;
         return;
-    }
+    } else {
+        transaction_messages.push_front(std::move(message_in_flight));
+        ++transaction_message_attempts;
 
-    transaction_message_retry_deadline = platform_now_ms() + transaction_message_attempts * getIntConfigUnsigned(ConfigKey::TransactionMessageRetryInterval) * 1000;
+        auto new_timeout_s = transaction_message_attempts * getIntConfigUnsigned(ConfigKey::TransactionMessageRetryInterval);
+        transaction_message_retry_deadline = platform_now_ms() + new_timeout_s * 1000;
+
+        log_warn("Transaction related message (id %" PRIu64 ") resulted in a call error %d of max %d times. Waiting %d seconds before resending.", message_in_flight.message_id, transaction_message_attempts, max_attempts, new_timeout_s);
+    }
 }
 
 static size_t buildCallError(TFJsonSerializer &json, const char *uid, CallErrorCode code, const char *desc) {
@@ -357,6 +364,9 @@ void OcppConnection::tick() {
             cp->onTimeout(message_in_flight.action, message_in_flight.message_id, message_in_flight.connector_id);
             message_in_flight = QueueItem{};
         }
+    } else {
+        if (!deadline_elapsed(transaction_message_retry_deadline))
+            return;
     }
 
     std::deque<QueueItem> *to_pop = nullptr;
