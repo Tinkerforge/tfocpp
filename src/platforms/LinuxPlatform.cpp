@@ -319,7 +319,9 @@ int main(int argc, char **argv) {
 
     char buf[sizeof(PlatformResponse)] = {0};
 
-    cp.start(argv[1], "warp2-X8D", argc == 4 ? (const uint8_t *)argv[2] : nullptr, argc == 4 ? strlen(argv[2]) : 0, (BasicAuthPassType)(argc == 4 ? strtol(argv[3], nullptr, 10) : 0));
+    cp.start(argv[1], "warp2-X8D", argc == 4 ? (const uint8_t *)argv[2] : nullptr, argc == 4 ? strlen(argv[2]) : 0, argc == 4 ? (BasicAuthPassType)strtol(argv[3], nullptr, 10) : BasicAuthPassType::NONE);
+
+    memset(&pr, 0, sizeof(pr));
 
     while(true) {
         cp.tick();

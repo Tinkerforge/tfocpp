@@ -27,6 +27,8 @@ public:
 
 
 enum class BasicAuthPassType {
+    // No credentials passed.
+    NONE,
     // The given basic auth pass is 40 hex chars to be interpreted and send as 20 bytes as per the OCPPJ spec.
     HEX_CHARS,
     // The given basic auth pass should not be interpreted but sent as is.
