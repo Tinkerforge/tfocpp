@@ -441,7 +441,6 @@ void* OcppConnection::start(const char *websocket_endpoint_url, const char *char
     ws_url += '/';
     ws_url += charge_point_name_percent_encoded;
 
-
     size_t cred_count = 0;
     switch (basic_auth_pass_type) {
         case BasicAuthPassType::HEX_CHARS:
@@ -451,6 +450,7 @@ void* OcppConnection::start(const char *websocket_endpoint_url, const char *char
         case BasicAuthPassType::TRY_BOTH:
             cred_count = 2;
     }
+
     if (cred_count > 0) {
         this->basic_auth_credentials = heap_alloc_array<BasicAuthCredentials>(basic_auth_pass_type == BasicAuthPassType::TRY_BOTH ? 2 : 1);
         size_t next_cred = 0;
@@ -465,7 +465,8 @@ void* OcppConnection::start(const char *websocket_endpoint_url, const char *char
                     }
                 }
             }
-            if (!pass_is_hex &&  basic_auth_pass_type == BasicAuthPassType::HEX_CHARS)
+
+            if (!pass_is_hex && basic_auth_pass_type == BasicAuthPassType::HEX_CHARS)
                 return nullptr;
 
             if (pass_is_hex) {
