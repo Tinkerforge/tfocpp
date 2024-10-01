@@ -72,7 +72,7 @@ struct OcppConfiguration {
                                  bool prefix_index = false,
                                  bool suffix_phase = false);
 
-    ChangeConfigurationResponseStatus setValue(const char *newValue);
+    ChangeConfigurationResponseStatus setValue(const char *newValue, bool force = false);
 };
 
 enum class ConnectorPhaseRotation {

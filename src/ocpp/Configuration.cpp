@@ -50,6 +50,9 @@ OcppConfiguration OcppConfiguration::csl(const char *value,
                                  size_t allowed_values_len,
                                  bool prefix_index,
                                  bool suffix_phase) {
+    if (allowed_values == nullptr || allowed_values_len == 0) {
+        log_error("Configuration of type CSL has no allowed values! This is probably not a good idea.");
+    }
     size_t len = sizeof(char) * max_len;
 
     OcppConfiguration result;
@@ -70,13 +73,13 @@ OcppConfiguration OcppConfiguration::csl(const char *value,
 
     memset(result.value.csl.c, 0, len);
 
-    result.setValue(value);
+    result.setValue(value, true);
 
     return result;
 }
 
-ChangeConfigurationResponseStatus OcppConfiguration::setValue(const char *newValue) {
-    if (readonly)
+ChangeConfigurationResponseStatus OcppConfiguration::setValue(const char *newValue, bool force) {
+    if (readonly && !force)
         return ChangeConfigurationResponseStatus::REJECTED;
 
     switch (type) {
@@ -270,6 +273,18 @@ const char * const config_keys[OCPP_CONFIG_COUNT] {
     "MaxChargingProfilesInstalled",
 };
 
+static constexpr int OCPP_FEATURE_PROFILE_COUNT = 2;
+static const char * const feature_profiles[OCPP_FEATURE_PROFILE_COUNT] {
+    "Core",
+    "SmartCharging",
+};
+
+static constexpr int OCPP_CHARGING_RATE_UNIT_COUNT = 2;
+static const char * const charging_rate_units[OCPP_CHARGING_RATE_UNIT_COUNT] {
+    "Current",
+    "Power",
+};
+
 //TODO: implement that CSL max_elements and the corresponding ...MaxLength value are kept in sync
 
 static OcppConfiguration config[OCPP_CONFIG_COUNT] = {
@@ -346,7 +361,7 @@ static OcppConfiguration config[OCPP_CONFIG_COUNT] = {
     /*StopTxnSampledData*/                OcppConfiguration::csl("", MAX_CONFIG_LENGTH, 0, false, STOP_TXN_SAMPLED_DATA_REQUIRES_REBOOT, SampledValueMeasurandStrings, (size_t)SampledValueMeasurand::NONE),
     /*StopTxnSampledDataMaxLength*/       OcppConfiguration::integer(0, true, false, 0),
 
-    /*SupportedFeatureProfiles*/          OcppConfiguration::csl(OCPP_SUPPORTED_FEATURE_PROFILES, strlen(OCPP_SUPPORTED_FEATURE_PROFILES) + 1, 2, true, false, nullptr, 0, false),
+    /*SupportedFeatureProfiles*/          OcppConfiguration::csl(OCPP_SUPPORTED_FEATURE_PROFILES, strlen(OCPP_SUPPORTED_FEATURE_PROFILES) + 1, 2, true, false, feature_profiles, OCPP_FEATURE_PROFILE_COUNT, false),
     /*SupportedFeatureProfilesMaxLength*/ //OcppConfiguration::integer(1, true), //errata 4.0: "This configuration key does not have to be implemented. It should not have been part of OCPP 1.6, "SupportedFeatureProfiles" is a readonly configuration key, false, 0."
     /*TransactionMessageAttempts*/        OcppConfiguration::integer(OCPP_DEFAULT_TRANSACTION_MESSAGE_ATTEMPTS, false, OCPP_TRANSACTION_MESSAGE_ATTEMPTS_REQUIRES_REBOOT, 0),
     /*TransactionMessageRetryInterval*/   OcppConfiguration::integer(OCPP_DEFAULT_TRANSACTION_MESSAGE_RETRY_INTERVAL, false, OCPP_TRANSACTION_MESSAGE_RETRY_INTERVAL_REQUIRES_REBOOT, 0, (UINT32_MAX / 2 - 1) / 1000),
@@ -364,7 +379,7 @@ static OcppConfiguration config[OCPP_CONFIG_COUNT] = {
 
     // SMART CHARGING PROFILE
     /*ChargeProfileMaxStackLevel*/        OcppConfiguration::integer(OCPP_CHARGE_PROFILE_MAX_STACK_LEVEL, true, false, 0),
-    /*ChargingScheduleAllowedChargingRateUnit*/ OcppConfiguration::csl(OCPP_CHARGING_SCHEDULE_ALLOWED_CHARGING_RATE_UNIT, strlen(OCPP_CHARGING_SCHEDULE_ALLOWED_CHARGING_RATE_UNIT) + 1, 1, true, false, nullptr, 0, false),
+    /*ChargingScheduleAllowedChargingRateUnit*/ OcppConfiguration::csl(OCPP_CHARGING_SCHEDULE_ALLOWED_CHARGING_RATE_UNIT, strlen(OCPP_CHARGING_SCHEDULE_ALLOWED_CHARGING_RATE_UNIT) + 1, 1, true, false, charging_rate_units, OCPP_CHARGING_RATE_UNIT_COUNT, false),
     /*ChargingScheduleMaxPeriods*/        OcppConfiguration::integer(OCPP_CHARGING_SCHEDULE_MAX_PERIODS, true, false, 0),
     /*ConnectorSwitch3to1PhaseSupported*/ OcppConfiguration::boolean(OCPP_CONNECTOR_SWITCH3TO1_PHASE_SUPPORTED, true, false),
     /*MaxChargingProfilesInstalled*/      OcppConfiguration::integer(OCPP_MAX_CHARGING_PROFILES_INSTALLED, true, false, 0),
