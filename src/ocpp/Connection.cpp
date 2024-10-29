@@ -449,6 +449,10 @@ void* OcppConnection::start(const char *websocket_endpoint_url, const char *char
             break;
         case BasicAuthPassType::TRY_BOTH:
             cred_alloc_count = 2;
+            break;
+        case BasicAuthPassType::NONE:
+            cred_alloc_count = 0;
+            break;
     }
 
     size_t cred_used_count = 0;
