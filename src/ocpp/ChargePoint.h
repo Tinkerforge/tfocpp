@@ -138,8 +138,8 @@ public:
     Connector connectors[OCPP_NUM_CONNECTORS];
 
     // +1 as stack levels 0 up to (including) OCPP_CHARGE_PROFILE_MAX_STACK_LEVEL are allowed.
-    Opt<ChargingProfile> chargePointMaxProfiles[OCPP_CHARGE_PROFILE_MAX_STACK_LEVEL + 1];
-    Opt<ChargingProfile> txDefaultProfiles[OCPP_CHARGE_PROFILE_MAX_STACK_LEVEL + 1];
+    Option<ChargingProfile> chargePointMaxProfiles[OCPP_CHARGE_PROFILE_MAX_STACK_LEVEL + 1];
+    Option<ChargingProfile> txDefaultProfiles[OCPP_CHARGE_PROFILE_MAX_STACK_LEVEL + 1];
     void loadProfiles();
 
     time_t next_profile_eval = 0;

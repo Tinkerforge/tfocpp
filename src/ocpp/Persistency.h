@@ -19,6 +19,6 @@ bool restoreNextTxnMessage(OcppConnection *conn);
 void finishRestore();
 
 void persistChargingProfile(int32_t connectorId, ChargingProfile *profile);
-void restoreChargingProfile(int32_t connectorId, ChargingProfilePurpose purpose, int32_t stackLevel, Opt<ChargingProfile> *profile);
+void restoreChargingProfile(int32_t connectorId, ChargingProfilePurpose purpose, int32_t stackLevel, Option<ChargingProfile> *profile);
 void removeChargingProfile(int32_t connectorId, ChargingProfile *profile);
 void removeChargingProfile(int32_t connectorId, ChargingProfilePurpose purpose, int32_t stackLevel);

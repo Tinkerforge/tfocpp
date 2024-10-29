@@ -531,7 +531,7 @@ CallResponse OcppChargePoint::handleClearCache(const char *uid, ClearCacheView r
 
 CallResponse OcppChargePoint::handleDataTransfer(const char *uid, DataTransferView req)
 {
-    log_info("Processing DataTransfer.req vendorId %s messageId %s", req.vendorId(), req.messageId().is_set() ? req.messageId().get() : "[NOT SET]");
+    log_info("Processing DataTransfer.req vendorId %s messageId %s", req.vendorId(), req.messageId().is_some() ? req.messageId().unwrap() : "[NOT SET]");
     (void) req;
     /*
     If the recipient of the request has no implementation for the specific vendorId it SHALL return a status
@@ -567,7 +567,7 @@ CallResponse OcppChargePoint::handleGetConfiguration(const char *uid, GetConfigu
     } else {
         for(size_t i = 0; i < req.key_count(); ++i) {
             size_t result;
-            if (lookup_key(&result, req.key(i).get(), config_keys, OCPP_CONFIG_COUNT)) {
+            if (lookup_key(&result, req.key(i).unwrap(), config_keys, OCPP_CONFIG_COUNT)) {
                 ++known_keys;
                 switch(getConfig(result).type) {
                     case OcppConfigurationValueType::Boolean:
@@ -628,7 +628,7 @@ CallResponse OcppChargePoint::handleGetConfiguration(const char *uid, GetConfigu
     } else {
         for(size_t i = 0; i < req.key_count(); ++i) {
             size_t result = i;
-            if (lookup_key(&result, req.key(i).get(), config_keys, ARRAY_SIZE(config_keys))) {
+            if (lookup_key(&result, req.key(i).unwrap(), config_keys, ARRAY_SIZE(config_keys))) {
                 const char *config_value = "";
                 OcppConfiguration &config = getConfig(result);
                 switch(config.type) {
@@ -657,9 +657,9 @@ CallResponse OcppChargePoint::handleGetConfiguration(const char *uid, GetConfigu
                 ++known_idx;
             }
             else {
-                unknown[unknown_idx] = req.key(i).get();
+                unknown[unknown_idx] = req.key(i).unwrap();
                 ++unknown_idx;
-                log_info("    %s: [UNKNOWN KEY]", req.key(i).get());
+                log_info("    %s: [UNKNOWN KEY]", req.key(i).unwrap());
             }
         }
     }
@@ -717,7 +717,7 @@ static bool is_charging_profile_valid(T prof, int32_t conn_id) {
     // reject if either recurKind is set and kind is not recurring or if it is not set and kind is recurring.
     // If a charging profile is recurring, it MUST have some recurrencyKind set.
     bool profileIsRecurring = prof.chargingProfileKind() == ChargingProfileKind::RECURRING;
-    bool recurrencyKindSet = prof.recurrencyKind().is_set();
+    bool recurrencyKindSet = prof.recurrencyKind().is_some();
     if ((recurrencyKindSet && !profileIsRecurring) || (!recurrencyKindSet && profileIsRecurring)) {
         log_info("Rejected: RECURRING but recurrency set");
         return false;
@@ -728,10 +728,10 @@ static bool is_charging_profile_valid(T prof, int32_t conn_id) {
 
 CallResponse OcppChargePoint::handleRemoteStartTransaction(const char *uid, RemoteStartTransactionView req)
 {
-    log_info("Processing RemoteStartTransaction.req for connector %d%s and tag %s", req.connectorId().is_set() ? req.connectorId().get() : 0, req.connectorId().is_set() ? "" : "[ANY CONNECTOR]", req.idTag());
+    log_info("Processing RemoteStartTransaction.req for connector %d%s and tag %s", req.connectorId().is_some() ? req.connectorId().unwrap() : 0, req.connectorId().is_some() ? "" : "[ANY CONNECTOR]", req.idTag());
     int conn_idx = -1;
 
-    if (!req.connectorId().is_set()) {
+    if (!req.connectorId().is_some()) {
         for(int32_t i = 0; i < OCPP_NUM_CONNECTORS; ++i) {
             if (!connectors[i].isSelectableForRemoteStartTxn())
                 continue;
@@ -747,7 +747,7 @@ CallResponse OcppChargePoint::handleRemoteStartTransaction(const char *uid, Remo
             conn_idx = i;
         }
     } else
-        conn_idx = req.connectorId().get() - 1;
+        conn_idx = req.connectorId().unwrap() - 1;
 
     if (conn_idx < 0 || conn_idx >= OCPP_NUM_CONNECTORS) {
         log_info("Creating RemoteStartTransaction.conf Rejected (unknown connector id)");
@@ -762,10 +762,10 @@ CallResponse OcppChargePoint::handleRemoteStartTransaction(const char *uid, Remo
         return CallResponse{CallErrorCode::OK, ""};
     }
 
-    if (req.chargingProfile().is_set()) {
+    if (req.chargingProfile().is_some()) {
         log_info("RemoteStartTransaction.req contains charging profile");
 
-        auto prof = req.chargingProfile().get();
+        auto prof = req.chargingProfile().unwrap();
 
         if (!is_charging_profile_valid(prof, conn_idx + 1)) {
             connection.sendCallResponse(RemoteStartTransactionResponse(uid, ResponseStatus::REJECTED));
@@ -782,7 +782,7 @@ CallResponse OcppChargePoint::handleRemoteStartTransaction(const char *uid, Remo
         If the Central System includes a ChargingProfile, the ChargingProfilePurpose MUST be set to TxProfile and the
         transactionId SHALL NOT be set.
         */
-        if(prof.transactionId().is_set())  {
+        if(prof.transactionId().is_some())  {
             log_info("Rejected: Transaction ID of charging profile in RemoteStartTransaction.req shall not be set.");
             connection.sendCallResponse(RemoteStartTransactionResponse(uid, ResponseStatus::REJECTED));
             return CallResponse{CallErrorCode::OK, ""};
@@ -800,7 +800,7 @@ CallResponse OcppChargePoint::handleRemoteStartTransaction(const char *uid, Remo
         // This is probably not necessary, as there should not be another (older) TxProfile.
         removeChargingProfile(conn_idx + 1, ChargingProfilePurpose::TX_PROFILE, prof.stackLevel());
 
-        persistChargingProfile(conn_idx + 1, &connectors[conn_idx].txProfiles[prof.stackLevel()].get());
+        persistChargingProfile(conn_idx + 1, &connectors[conn_idx].txProfiles[prof.stackLevel()].unwrap());
     }
 
     // TODO: We could also reject here if the selected connector is faulted, unavailable or in an transaction.
@@ -914,17 +914,17 @@ CallResponse OcppChargePoint::handleUnlockConnector(const char *uid, UnlockConne
     return CallResponse{CallErrorCode::OK, ""};
 }
 
-static bool handleClearProfile(ClearChargingProfileView req, Opt<ChargingProfile> &opt, int connector_id) {
-    if (!opt.is_set())
+static bool handleClearProfile(ClearChargingProfileView req, Option<ChargingProfile> &opt, int connector_id) {
+    if (!opt.is_some())
         return false;
 
-    auto &prof = opt.get();
+    auto &prof = opt.unwrap();
 
     /*
     (Errata 4.0) If id is specified, then all other fields are ignored.
     */
-    if (req.id().is_set()) {
-        if (req.id().get() == prof.id) {
+    if (req.id().is_some()) {
+        if (req.id().unwrap() == prof.id) {
             removeChargingProfile(connector_id, &prof);
             opt.clear();
             return true;
@@ -942,9 +942,9 @@ static bool handleClearProfile(ClearChargingProfileView req, Opt<ChargingProfile
 
     bool clear = true;
 
-    clear &= (!req.connectorId().is_set() || req.connectorId().get() == connector_id);
-    clear &= (!req.stackLevel().is_set() || req.stackLevel().get() == prof.stackLevel);
-    clear &= (!req.chargingProfilePurpose().is_set() || req.chargingProfilePurpose().get() == prof.chargingProfilePurpose);
+    clear &= (!req.connectorId().is_some() || req.connectorId().unwrap() == connector_id);
+    clear &= (!req.stackLevel().is_some() || req.stackLevel().unwrap() == prof.stackLevel);
+    clear &= (!req.chargingProfilePurpose().is_some() || req.chargingProfilePurpose().unwrap() == prof.chargingProfilePurpose);
 
     if (clear) {
         removeChargingProfile(connector_id, &prof);
@@ -1006,7 +1006,7 @@ CallResponse OcppChargePoint::handleGetCompositeSchedule(const char *uid, GetCom
         periods[periods_used].numberPhases = result.allocatedPhases[req.connectorId()];
 
         periods[periods_used].limit = result.allocatedLimit[req.connectorId()];
-        if (req.chargingRateUnit().is_set() && req.chargingRateUnit().get() == ChargingRateUnit::W)
+        if (req.chargingRateUnit().is_some() && req.chargingRateUnit().unwrap() == ChargingRateUnit::W)
             periods[periods_used].limit *= OCPP_LINE_VOLTAGE * (float)periods[periods_used].numberPhases;
 
         if (periods_used > 0
@@ -1027,7 +1027,7 @@ CallResponse OcppChargePoint::handleGetCompositeSchedule(const char *uid, GetCom
 
     sched.chargingSchedulePeriod = periods;
     sched.chargingSchedulePeriod_length = periods_used;
-    sched.chargingRateUnit = (req.chargingRateUnit().is_set() && req.chargingRateUnit().get() == ChargingRateUnit::W) ?
+    sched.chargingRateUnit = (req.chargingRateUnit().is_some() && req.chargingRateUnit().unwrap() == ChargingRateUnit::W) ?
                              GetCompositeScheduleResponseChargingScheduleChargingRateUnit::W :
                              GetCompositeScheduleResponseChargingScheduleChargingRateUnit::A;
     sched.duration = req.duration();
@@ -1039,11 +1039,11 @@ CallResponse OcppChargePoint::handleGetCompositeSchedule(const char *uid, GetCom
     return CallResponse{CallErrorCode::OK, ""};
 }
 
-static void clearProfileById(int32_t connectorId, int32_t id, Opt<ChargingProfile> *opt) {
-    if (opt->is_set() && opt->get().id == id) {
-        log_info("New profile replaces %s level %d", ChargingProfilePurposeStrings[(size_t)opt->get().chargingProfilePurpose], opt->get().stackLevel);
-        removeChargingProfile(connectorId, &opt->get());
         opt->clear();
+static void clearProfileById(int32_t connectorId, int32_t id, Option<ChargingProfile> *opt) {
+    if (opt->is_some() && opt->unwrap().id == id) {
+        log_info("New profile replaces %s level %d", ChargingProfilePurposeStrings[(size_t)opt->unwrap().chargingProfilePurpose], opt->unwrap().stackLevel);
+        removeChargingProfile(connectorId, &opt->unwrap());
     }
 }
 
@@ -1077,14 +1077,14 @@ CallResponse OcppChargePoint::handleSetChargingProfile(const char *uid, SetCharg
 
     /* To prevent mismatch between transactions and a TxProfile, The Central System SHALL include
        the transactionId in a SetChargingProfile.req if the profile applies to a specific transaction. */
-    if (purpose == ChargingProfilePurpose::TX_PROFILE && !prof.transactionId().is_set()) {
+    if (purpose == ChargingProfilePurpose::TX_PROFILE && !prof.transactionId().is_some()) {
         log_info("Rejected: TX_PROFILE but no transaction id passed");
         connection.sendCallResponse(SetChargingProfileResponse(uid, SetChargingProfileResponseStatus::REJECTED));
         return CallResponse{CallErrorCode::OK, ""};
     }
 
     // The test tool expects us to reject here. The spec only implies this via the requirement to include a transaction ID.
-    if (purpose == ChargingProfilePurpose::TX_PROFILE && connectors[conn_id - 1].transaction_id != prof.transactionId().get()) {
+    if (purpose == ChargingProfilePurpose::TX_PROFILE && connectors[conn_id - 1].transaction_id != prof.transactionId().unwrap()) {
         log_info("Rejected: TX_PROFILE but no transaction active on connector %d", conn_id);
         connection.sendCallResponse(SetChargingProfileResponse(uid, SetChargingProfileResponseStatus::REJECTED));
         return CallResponse{CallErrorCode::OK, ""};
@@ -1109,7 +1109,7 @@ CallResponse OcppChargePoint::handleSetChargingProfile(const char *uid, SetCharg
 
     removeChargingProfile(conn_id, purpose, prof.stackLevel());
 
-    Opt<ChargingProfile> *target = nullptr;
+    Option<ChargingProfile> *target = nullptr;
 
     if (conn_id == 0) {
         if (purpose == ChargingProfilePurpose::CHARGE_POINT_MAX_PROFILE)
@@ -1129,7 +1129,7 @@ CallResponse OcppChargePoint::handleSetChargingProfile(const char *uid, SetCharg
     }
 
     *target = {ChargingProfile(prof)};
-    persistChargingProfile(conn_id, &target->get());
+    persistChargingProfile(conn_id, &target->unwrap());
 
     log_info("Creating SetChargingProfile.conf.");
     connection.sendCallResponse(SetChargingProfileResponse(uid, SetChargingProfileResponseStatus::ACCEPTED));
@@ -1172,12 +1172,12 @@ OcppChargePoint::EvalChargingProfilesResult OcppChargePoint::evalChargingProfile
     }
 
     for(int stackLevel = OCPP_CHARGE_PROFILE_MAX_STACK_LEVEL; stackLevel >= 0; --stackLevel) {
-        if (!this->chargePointMaxProfiles[stackLevel].is_set()) {
+        if (!this->chargePointMaxProfiles[stackLevel].is_some()) {
             log_trace("    ChargePointMaxProfiles[%d] not set", stackLevel);
             continue;
         }
 
-        auto result = this->chargePointMaxProfiles[stackLevel].get().eval(Opt<time_t>(), timeToEval);
+        auto result = this->chargePointMaxProfiles[stackLevel].unwrap().eval(Option<time_t>(), timeToEval);
         nextCheck = std::min(nextCheck, result.nextCheck);
         if (!result.applied) {
             log_trace("    ChargePointMaxProfiles[%d] did not apply", stackLevel);
@@ -1198,7 +1198,7 @@ OcppChargePoint::EvalChargingProfilesResult OcppChargePoint::evalChargingProfile
         log_debug("    Connector %d", connectorIdx + 1);
 
         for(int stackLevel = OCPP_CHARGE_PROFILE_MAX_STACK_LEVEL; stackLevel >= 0; --stackLevel) {
-            if (!conn.txProfiles[stackLevel].is_set()) {
+            if (!conn.txProfiles[stackLevel].is_some()) {
                 log_trace("    TxProfiles[%d] not set", stackLevel);
                 continue;
             }
@@ -1207,9 +1207,9 @@ OcppChargePoint::EvalChargingProfilesResult OcppChargePoint::evalChargingProfile
                 continue;
             }
 
-            if (conn.txProfiles[stackLevel].get().transactionId.is_set()) {
+            if (conn.txProfiles[stackLevel].unwrap().transactionId.is_some()) {
                 auto connTxnId = conn.transaction_id;
-                auto profTxnId = conn.txProfiles[stackLevel].get().transactionId.get();
+                auto profTxnId = conn.txProfiles[stackLevel].unwrap().transactionId.unwrap();
 
                 if (connTxnId != profTxnId){
                     log_trace("    TxProfiles[%d] txn ID %d != running txn ID %d", stackLevel, profTxnId, connTxnId);
@@ -1217,7 +1217,7 @@ OcppChargePoint::EvalChargingProfilesResult OcppChargePoint::evalChargingProfile
                 }
             }
 
-            auto result = conn.txProfiles[stackLevel].get().eval(Opt<time_t>{conn.transaction_start_time}, timeToEval);
+            auto result = conn.txProfiles[stackLevel].unwrap().eval(Option<time_t>{conn.transaction_start_time}, timeToEval);
 
             nextCheck = std::min(nextCheck, result.nextCheck);
             if (!result.applied) {
@@ -1242,12 +1242,12 @@ OcppChargePoint::EvalChargingProfilesResult OcppChargePoint::evalChargingProfile
         // of the whole charge point, but only for this connector.
         for(int stackLevel = OCPP_CHARGE_PROFILE_MAX_STACK_LEVEL; stackLevel >= 0; --stackLevel) {
             ChargingProfile *prof = nullptr;
-            if (conn.txDefaultProfiles[stackLevel].is_set()) {
-                prof = &conn.txDefaultProfiles[stackLevel].get();
+            if (conn.txDefaultProfiles[stackLevel].is_some()) {
+                prof = &conn.txDefaultProfiles[stackLevel].unwrap();
                 log_trace("    TxDefaultProfiles[%d] set at connector", stackLevel);
             }
-            else if (this->txDefaultProfiles[stackLevel].is_set()) {
-                prof = &this->txDefaultProfiles[stackLevel].get();
+            else if (this->txDefaultProfiles[stackLevel].is_some()) {
+                prof = &this->txDefaultProfiles[stackLevel].unwrap();
                 log_trace("    TxDefaultProfiles[%d] set at charge point", stackLevel);
             }
 
@@ -1256,11 +1256,11 @@ OcppChargePoint::EvalChargingProfilesResult OcppChargePoint::evalChargingProfile
                 continue;
             }
 
-            Opt<time_t> txnTime;
+            Option<time_t> txnTime;
             if (conn.isTransactionActive())
-                txnTime = Opt<time_t>{conn.transaction_start_time};
+                txnTime = Option<time_t>{conn.transaction_start_time};
             else
-                txnTime = Opt<time_t>{};
+                txnTime = Option<time_t>{};
 
             auto result = prof->eval(txnTime, timeToEval);
 

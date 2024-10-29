@@ -600,7 +600,7 @@ def generate_view(name: str, obj: Object):
     def add_opt(ret_type, param):
         if param.required:
             return ret_type
-        return "Opt<{}>".format(ret_type)
+        return "Option<{}>".format(ret_type)
 
     def opt_check(param_name, param):
         if param.required:

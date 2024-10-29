@@ -514,6 +514,11 @@ void platform_remove_file(const char *name)
     unlink(name);
 }
 
+void platform_abort(const char *message) {
+    fprintf(stderr, "%s\n", message);
+    abort();
+}
+
 const char *platform_get_charge_point_vendor() {
     return "Tinkerforge GmbH";
 }

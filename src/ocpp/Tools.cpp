@@ -41,7 +41,7 @@ bool lookup_key(size_t *result, const char *key, const char * const *array, size
     return false;
 }
 
-Opt<int32_t> parse_int(const char *c) {
+Option<int32_t> parse_int(const char *c) {
     errno = 0;
 
     char *p;

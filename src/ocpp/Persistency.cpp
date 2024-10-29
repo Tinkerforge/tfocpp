@@ -282,7 +282,7 @@ void persistChargingProfile(int32_t connectorId, ChargingProfile *profile) {
     platform_write_file(name_buf, buf, sizeof(buf));
 }
 
-void restoreChargingProfile(int32_t connectorId, ChargingProfilePurpose purpose, int32_t stackLevel, Opt<ChargingProfile> *profile) {
+void restoreChargingProfile(int32_t connectorId, ChargingProfilePurpose purpose, int32_t stackLevel, Option<ChargingProfile> *profile) {
     char name_buf[64] = {0};
     snprintf(name_buf, sizeof(name_buf), "profiles/%d-%d-%d", connectorId, (int32_t)purpose, stackLevel);
 

@@ -162,6 +162,8 @@ void platform_close_dir(void *dir_fd);
 
 void platform_remove_file(const char *name);
 
+void platform_abort(const char *message);
+
 // Required
 const char *platform_get_charge_point_vendor();
 const char *platform_get_charge_point_model();

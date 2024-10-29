@@ -12,17 +12,17 @@ class PeriodItem {
 public:
     int32_t startPeriod;
     float limit;
-    Opt<int32_t> numberPhases;
+    Option<int32_t> numberPhases;
 };
 
 class ChargingSchedule {
 public:
-    Opt<int32_t> duration;
-    Opt<time_t> startSchedule;
+    Option<int32_t> duration;
+    Option<time_t> startSchedule;
     ChargingRateUnit unit;
     PeriodItem chargingSchedulePeriod[OCPP_CHARGING_SCHEDULE_MAX_PERIODS];
     size_t chargingSchedulePeriodCount;
-    Opt<float> minChargingRate;
+    Option<float> minChargingRate;
 };
 
 struct EvalChargingProfileResult {
@@ -36,13 +36,13 @@ struct EvalChargingProfileResult {
 class ChargingProfile {
 public:
     int32_t id;
-    Opt<int32_t> transactionId;
+    Option<int32_t> transactionId;
     int32_t stackLevel;
     ChargingProfilePurpose chargingProfilePurpose;
     ChargingProfileKind chargingProfileKind;
-    Opt<RecurrencyKind> recurrencyKind;
-    Opt<time_t> validFrom;
-    Opt<time_t> validTo;
+    Option<RecurrencyKind> recurrencyKind;
+    Option<time_t> validFrom;
+    Option<time_t> validTo;
     ChargingSchedule chargingSchedule;
 
     ChargingProfile() {}
@@ -51,5 +51,5 @@ public:
 
     ChargingProfile(RemoteStartTransactionChargingProfileEntriesView view);
 
-    EvalChargingProfileResult eval(Opt<time_t> startTxnTime, time_t now);
+    EvalChargingProfileResult eval(Option<time_t> startTxnTime, time_t now);
 };

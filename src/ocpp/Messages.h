@@ -392,7 +392,7 @@ struct SetChargingProfileCsChargingProfilesEntriesChargingScheduleEntriesChargin
         return _obj["limit"].as<float>();
     }
 
-    Opt<int32_t> numberPhases() {
+    Option<int32_t> numberPhases() {
         if (!_obj.containsKey("numberPhases"))
                 return {};
 
@@ -404,14 +404,14 @@ struct SetChargingProfileCsChargingProfilesEntriesChargingScheduleEntriesChargin
 struct SetChargingProfileCsChargingProfilesEntriesChargingScheduleEntriesView {
     JsonObject _obj;
 
-    Opt<int32_t> duration() {
+    Option<int32_t> duration() {
         if (!_obj.containsKey("duration"))
                 return {};
 
         return _obj["duration"].as<int32_t>();
     }
 
-    Opt<time_t> startSchedule() {
+    Option<time_t> startSchedule() {
         if (!_obj.containsKey("startSchedule"))
                 return {};
 
@@ -433,7 +433,7 @@ struct SetChargingProfileCsChargingProfilesEntriesChargingScheduleEntriesView {
         return SetChargingProfileCsChargingProfilesEntriesChargingScheduleEntriesChargingSchedulePeriodEntryEntriesView{_obj["chargingSchedulePeriod"][i]};
     }
 
-    Opt<float> minChargingRate() {
+    Option<float> minChargingRate() {
         if (!_obj.containsKey("minChargingRate"))
                 return {};
 
@@ -450,7 +450,7 @@ struct SetChargingProfileCsChargingProfilesEntriesView {
         return _obj["chargingProfileId"].as<int32_t>();
     }
 
-    Opt<int32_t> transactionId() {
+    Option<int32_t> transactionId() {
         if (!_obj.containsKey("transactionId"))
                 return {};
 
@@ -472,21 +472,21 @@ struct SetChargingProfileCsChargingProfilesEntriesView {
         return (ChargingProfileKind)_obj["chargingProfileKind"].as<size_t>();
     }
 
-    Opt<RecurrencyKind> recurrencyKind() {
+    Option<RecurrencyKind> recurrencyKind() {
         if (!_obj.containsKey("recurrencyKind"))
                 return {};
 
-        return Opt<RecurrencyKind>{(RecurrencyKind)_obj["recurrencyKind"].as<size_t>()};
+        return Option<RecurrencyKind>{(RecurrencyKind)_obj["recurrencyKind"].as<size_t>()};
     }
 
-    Opt<time_t> validFrom() {
+    Option<time_t> validFrom() {
         if (!_obj.containsKey("validFrom"))
                 return {};
 
         return _obj["validFrom"].as<time_t>();
     }
 
-    Opt<time_t> validTo() {
+    Option<time_t> validTo() {
         if (!_obj.containsKey("validTo"))
                 return {};
 
@@ -528,11 +528,11 @@ struct GetCompositeScheduleView {
         return _obj["duration"].as<int32_t>();
     }
 
-    Opt<ChargingRateUnit> chargingRateUnit() {
+    Option<ChargingRateUnit> chargingRateUnit() {
         if (!_obj.containsKey("chargingRateUnit"))
                 return {};
 
-        return Opt<ChargingRateUnit>{(ChargingRateUnit)_obj["chargingRateUnit"].as<size_t>()};
+        return Option<ChargingRateUnit>{(ChargingRateUnit)_obj["chargingRateUnit"].as<size_t>()};
     }
 
 };
@@ -540,28 +540,28 @@ struct GetCompositeScheduleView {
 struct ClearChargingProfileView {
     JsonObject _obj;
 
-    Opt<int32_t> id() {
+    Option<int32_t> id() {
         if (!_obj.containsKey("id"))
                 return {};
 
         return _obj["id"].as<int32_t>();
     }
 
-    Opt<int32_t> connectorId() {
+    Option<int32_t> connectorId() {
         if (!_obj.containsKey("connectorId"))
                 return {};
 
         return _obj["connectorId"].as<int32_t>();
     }
 
-    Opt<ChargingProfilePurpose> chargingProfilePurpose() {
+    Option<ChargingProfilePurpose> chargingProfilePurpose() {
         if (!_obj.containsKey("chargingProfilePurpose"))
                 return {};
 
-        return Opt<ChargingProfilePurpose>{(ChargingProfilePurpose)_obj["chargingProfilePurpose"].as<size_t>()};
+        return Option<ChargingProfilePurpose>{(ChargingProfilePurpose)_obj["chargingProfilePurpose"].as<size_t>()};
     }
 
-    Opt<int32_t> stackLevel() {
+    Option<int32_t> stackLevel() {
         if (!_obj.containsKey("stackLevel"))
                 return {};
 
@@ -583,14 +583,14 @@ struct UnlockConnectorView {
 struct StopTransactionResponseIdTagInfoEntriesView {
     JsonObject _obj;
 
-    Opt<time_t> expiryDate() {
+    Option<time_t> expiryDate() {
         if (!_obj.containsKey("expiryDate"))
                 return {};
 
         return _obj["expiryDate"].as<time_t>();
     }
 
-    Opt<const char *> parentIdTag() {
+    Option<const char *> parentIdTag() {
         if (!_obj.containsKey("parentIdTag"))
                 return {};
 
@@ -607,11 +607,11 @@ struct StopTransactionResponseIdTagInfoEntriesView {
 struct StopTransactionResponseView {
     JsonObject _obj;
 
-    Opt<StopTransactionResponseIdTagInfoEntriesView> idTagInfo() {
+    Option<StopTransactionResponseIdTagInfoEntriesView> idTagInfo() {
         if (!_obj.containsKey("idTagInfo"))
                 return {};
 
-        return Opt<StopTransactionResponseIdTagInfoEntriesView>{StopTransactionResponseIdTagInfoEntriesView{_obj["idTagInfo"].as<JsonObject>()}};
+        return Option<StopTransactionResponseIdTagInfoEntriesView>{StopTransactionResponseIdTagInfoEntriesView{_obj["idTagInfo"].as<JsonObject>()}};
     }
 
 };
@@ -624,14 +624,14 @@ struct StatusNotificationResponseView {
 struct StartTransactionResponseIdTagInfoEntriesView {
     JsonObject _obj;
 
-    Opt<time_t> expiryDate() {
+    Option<time_t> expiryDate() {
         if (!_obj.containsKey("expiryDate"))
                 return {};
 
         return _obj["expiryDate"].as<time_t>();
     }
 
-    Opt<const char *> parentIdTag() {
+    Option<const char *> parentIdTag() {
         if (!_obj.containsKey("parentIdTag"))
                 return {};
 
@@ -693,7 +693,7 @@ struct RemoteStartTransactionChargingProfileEntriesChargingScheduleEntriesChargi
         return _obj["limit"].as<float>();
     }
 
-    Opt<int32_t> numberPhases() {
+    Option<int32_t> numberPhases() {
         if (!_obj.containsKey("numberPhases"))
                 return {};
 
@@ -705,14 +705,14 @@ struct RemoteStartTransactionChargingProfileEntriesChargingScheduleEntriesChargi
 struct RemoteStartTransactionChargingProfileEntriesChargingScheduleEntriesView {
     JsonObject _obj;
 
-    Opt<int32_t> duration() {
+    Option<int32_t> duration() {
         if (!_obj.containsKey("duration"))
                 return {};
 
         return _obj["duration"].as<int32_t>();
     }
 
-    Opt<time_t> startSchedule() {
+    Option<time_t> startSchedule() {
         if (!_obj.containsKey("startSchedule"))
                 return {};
 
@@ -734,7 +734,7 @@ struct RemoteStartTransactionChargingProfileEntriesChargingScheduleEntriesView {
         return RemoteStartTransactionChargingProfileEntriesChargingScheduleEntriesChargingSchedulePeriodEntryEntriesView{_obj["chargingSchedulePeriod"][i]};
     }
 
-    Opt<float> minChargingRate() {
+    Option<float> minChargingRate() {
         if (!_obj.containsKey("minChargingRate"))
                 return {};
 
@@ -751,7 +751,7 @@ struct RemoteStartTransactionChargingProfileEntriesView {
         return _obj["chargingProfileId"].as<int32_t>();
     }
 
-    Opt<int32_t> transactionId() {
+    Option<int32_t> transactionId() {
         if (!_obj.containsKey("transactionId"))
                 return {};
 
@@ -773,21 +773,21 @@ struct RemoteStartTransactionChargingProfileEntriesView {
         return (ChargingProfileKind)_obj["chargingProfileKind"].as<size_t>();
     }
 
-    Opt<RecurrencyKind> recurrencyKind() {
+    Option<RecurrencyKind> recurrencyKind() {
         if (!_obj.containsKey("recurrencyKind"))
                 return {};
 
-        return Opt<RecurrencyKind>{(RecurrencyKind)_obj["recurrencyKind"].as<size_t>()};
+        return Option<RecurrencyKind>{(RecurrencyKind)_obj["recurrencyKind"].as<size_t>()};
     }
 
-    Opt<time_t> validFrom() {
+    Option<time_t> validFrom() {
         if (!_obj.containsKey("validFrom"))
                 return {};
 
         return _obj["validFrom"].as<time_t>();
     }
 
-    Opt<time_t> validTo() {
+    Option<time_t> validTo() {
         if (!_obj.containsKey("validTo"))
                 return {};
 
@@ -804,7 +804,7 @@ struct RemoteStartTransactionChargingProfileEntriesView {
 struct RemoteStartTransactionView {
     JsonObject _obj;
 
-    Opt<int32_t> connectorId() {
+    Option<int32_t> connectorId() {
         if (!_obj.containsKey("connectorId"))
                 return {};
 
@@ -816,11 +816,11 @@ struct RemoteStartTransactionView {
         return _obj["idTag"].as<const char *>();
     }
 
-    Opt<RemoteStartTransactionChargingProfileEntriesView> chargingProfile() {
+    Option<RemoteStartTransactionChargingProfileEntriesView> chargingProfile() {
         if (!_obj.containsKey("chargingProfile"))
                 return {};
 
-        return Opt<RemoteStartTransactionChargingProfileEntriesView>{RemoteStartTransactionChargingProfileEntriesView{_obj["chargingProfile"].as<JsonObject>()}};
+        return Option<RemoteStartTransactionChargingProfileEntriesView>{RemoteStartTransactionChargingProfileEntriesView{_obj["chargingProfile"].as<JsonObject>()}};
     }
 
 };
@@ -848,7 +848,7 @@ struct GetConfigurationView {
         return _obj["key"].size();
     }
 
-    Opt<const char *> key(size_t i) {
+    Option<const char *> key(size_t i) {
         if (!_obj.containsKey("key"))
                 return {};
 
@@ -865,7 +865,7 @@ struct DataTransferResponseView {
         return (DataTransferResponseStatus)_obj["status"].as<size_t>();
     }
 
-    Opt<const char *> data() {
+    Option<const char *> data() {
         if (!_obj.containsKey("data"))
                 return {};
 
@@ -882,14 +882,14 @@ struct DataTransferView {
         return _obj["vendorId"].as<const char *>();
     }
 
-    Opt<const char *> messageId() {
+    Option<const char *> messageId() {
         if (!_obj.containsKey("messageId"))
                 return {};
 
         return _obj["messageId"].as<const char *>();
     }
 
-    Opt<const char *> data() {
+    Option<const char *> data() {
         if (!_obj.containsKey("data"))
                 return {};
 
@@ -956,14 +956,14 @@ struct BootNotificationResponseView {
 struct AuthorizeResponseIdTagInfoEntriesView {
     JsonObject _obj;
 
-    Opt<time_t> expiryDate() {
+    Option<time_t> expiryDate() {
         if (!_obj.containsKey("expiryDate"))
                 return {};
 
         return _obj["expiryDate"].as<time_t>();
     }
 
-    Opt<const char *> parentIdTag() {
+    Option<const char *> parentIdTag() {
         if (!_obj.containsKey("parentIdTag"))
                 return {};
 
@@ -1374,28 +1374,28 @@ struct IdTagInfo {
 
     void updateFromIdTagInfo(StopTransactionResponseIdTagInfoEntriesView view) {
         memset(parentTagId, 0, ARRAY_SIZE(parentTagId));
-        if (view.parentIdTag().is_set())
-            strncpy(parentTagId, view.parentIdTag().get(), ARRAY_SIZE(parentTagId) - 1);
+        if (view.parentIdTag().is_some())
+            strncpy(parentTagId, view.parentIdTag().unwrap(), ARRAY_SIZE(parentTagId) - 1);
 
-        expiryDate = view.expiryDate().is_set() ? view.expiryDate().get() : 0;
+        expiryDate = view.expiryDate().is_some() ? view.expiryDate().unwrap() : 0;
         status = view.status();
     }
 
     void updateFromIdTagInfo(StartTransactionResponseIdTagInfoEntriesView view) {
         memset(parentTagId, 0, ARRAY_SIZE(parentTagId));
-        if (view.parentIdTag().is_set())
-            strncpy(parentTagId, view.parentIdTag().get(), ARRAY_SIZE(parentTagId) - 1);
+        if (view.parentIdTag().is_some())
+            strncpy(parentTagId, view.parentIdTag().unwrap(), ARRAY_SIZE(parentTagId) - 1);
 
-        expiryDate = view.expiryDate().is_set() ? view.expiryDate().get() : 0;
+        expiryDate = view.expiryDate().is_some() ? view.expiryDate().unwrap() : 0;
         status = view.status();
     }
 
     void updateFromIdTagInfo(AuthorizeResponseIdTagInfoEntriesView view) {
         memset(parentTagId, 0, ARRAY_SIZE(parentTagId));
-        if (view.parentIdTag().is_set())
-            strncpy(parentTagId, view.parentIdTag().get(), ARRAY_SIZE(parentTagId) - 1);
+        if (view.parentIdTag().is_some())
+            strncpy(parentTagId, view.parentIdTag().unwrap(), ARRAY_SIZE(parentTagId) - 1);
 
-        expiryDate = view.expiryDate().is_set() ? view.expiryDate().get() : 0;
+        expiryDate = view.expiryDate().is_some() ? view.expiryDate().unwrap() : 0;
         status = view.status();
     }
 

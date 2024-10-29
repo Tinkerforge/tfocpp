@@ -58,28 +58,28 @@ struct IdTagInfo {
 
     void updateFromIdTagInfo(StopTransactionResponseIdTagInfoEntriesView view) {
         memset(parentTagId, 0, ARRAY_SIZE(parentTagId));
-        if (view.parentIdTag().is_set())
-            strncpy(parentTagId, view.parentIdTag().get(), ARRAY_SIZE(parentTagId) - 1);
+        if (view.parentIdTag().is_some())
+            strncpy(parentTagId, view.parentIdTag().unwrap(), ARRAY_SIZE(parentTagId) - 1);
 
-        expiryDate = view.expiryDate().is_set() ? view.expiryDate().get() : 0;
+        expiryDate = view.expiryDate().is_some() ? view.expiryDate().unwrap() : 0;
         status = view.status();
     }
 
     void updateFromIdTagInfo(StartTransactionResponseIdTagInfoEntriesView view) {
         memset(parentTagId, 0, ARRAY_SIZE(parentTagId));
-        if (view.parentIdTag().is_set())
-            strncpy(parentTagId, view.parentIdTag().get(), ARRAY_SIZE(parentTagId) - 1);
+        if (view.parentIdTag().is_some())
+            strncpy(parentTagId, view.parentIdTag().unwrap(), ARRAY_SIZE(parentTagId) - 1);
 
-        expiryDate = view.expiryDate().is_set() ? view.expiryDate().get() : 0;
+        expiryDate = view.expiryDate().is_some() ? view.expiryDate().unwrap() : 0;
         status = view.status();
     }
 
     void updateFromIdTagInfo(AuthorizeResponseIdTagInfoEntriesView view) {
         memset(parentTagId, 0, ARRAY_SIZE(parentTagId));
-        if (view.parentIdTag().is_set())
-            strncpy(parentTagId, view.parentIdTag().get(), ARRAY_SIZE(parentTagId) - 1);
+        if (view.parentIdTag().is_some())
+            strncpy(parentTagId, view.parentIdTag().unwrap(), ARRAY_SIZE(parentTagId) - 1);
 
-        expiryDate = view.expiryDate().is_set() ? view.expiryDate().get() : 0;
+        expiryDate = view.expiryDate().is_some() ? view.expiryDate().unwrap() : 0;
         status = view.status();
     }
 

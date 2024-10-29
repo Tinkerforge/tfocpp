@@ -84,11 +84,11 @@ ChangeConfigurationResponseStatus OcppConfiguration::setValue(const char *newVal
 
     switch (type) {
         case OcppConfigurationValueType::Integer: {
-                Opt<int32_t> opt = parse_int(newValue);
-                if (!opt.is_set())
+                Option<int32_t> opt = parse_int(newValue);
+                if (!opt.is_some())
                     return ChangeConfigurationResponseStatus::REJECTED;
 
-                int32_t parsed = opt.get();
+                int32_t parsed = opt.unwrap();
 
                 if (!(parsed >= value.integer.min_ && parsed <= value.integer.max_))
                     return ChangeConfigurationResponseStatus::REJECTED;
@@ -143,14 +143,14 @@ ChangeConfigurationResponseStatus OcppConfiguration::setValue(const char *newVal
                         if (value.csl.prefix_index) {
                             char *_ignored = nullptr;
                             char *num = strtok_r(token, ".", &_ignored); // This inserts a null terminator. undo later
-                            Opt<int32_t> opt = parse_int(num);
-                            if (!opt.is_set())
+                            Option<int32_t> opt = parse_int(num);
+                            if (!opt.is_some())
                                 return ChangeConfigurationResponseStatus::REJECTED;
 
-                            if (opt.get() < 0 || (size_t)opt.get() >= value.csl.allowed_values_len)
+                            if (opt.unwrap() < 0 || (size_t)opt.unwrap() >= value.csl.allowed_values_len)
                                 return ChangeConfigurationResponseStatus::REJECTED;
 
-                            next_parsed_buf_insert = (size_t)opt.get();
+                            next_parsed_buf_insert = (size_t)opt.unwrap();
                             token += strlen(num) + 1; // Skip over number and .
                             num[strlen(num)] = '.'; // Reinsert . so that the next strtok_r call does not trip over the null terminator.
                         }

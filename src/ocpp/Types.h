@@ -33,18 +33,38 @@ struct CallResponse {
     //JsonObject details;
 };
 
-template<typename T>
-struct Opt {
-public:
-    Opt(T t): val(t), have_val(true) {}
-    Opt() : val(), have_val(false) {}
+extern void platform_abort(const char *);
 
-    T &get() {
+template<typename T>
+struct Option {
+public:
+    template<typename U = std::is_trivially_copy_constructible<T>, typename std::enable_if<U::value>::type...>
+    Option(T t): val(t), have_val(true) {}
+
+    Option() : have_val(false) {}
+
+    T &unwrap() {
+        return expect("unwrapped Option without value!");
+    }
+
+    T &unwrap_or(T &default_value) {
+        if (!have_val)
+            return default_value;
         return val;
     }
 
-    bool is_set() {
+    T &expect(const char *message) {
+        if (!have_val)
+            platform_abort(message);
+        return val;
+    }
+
+    bool is_some() {
         return have_val;
+    }
+
+    bool is_none() {
+        return !have_val;
     }
 
     void clear() {

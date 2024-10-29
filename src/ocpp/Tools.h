@@ -18,7 +18,7 @@ bool lookup_key(size_t *result, // Result pointer. May be null if you only need 
                 size_t alias_length = 0) // Length of alias and alias_indices arrays.
                 OCPP_NODISCARD;
 
-Opt<int32_t> parse_int(const char *c);
+Option<int32_t> parse_int(const char *c);
 
 #ifndef HEAP_ALLOC_ARRAY_DEFINED
 #define HEAP_ALLOC_ARRAY_DEFINED
