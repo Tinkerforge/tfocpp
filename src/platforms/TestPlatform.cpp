@@ -133,6 +133,9 @@ entire Charge Point. If the connectorId is 0 and the Measurand is energy related
 taken from the main energy meter.
 */
 const char *platform_get_meter_value(int32_t connectorId, SampledValueMeasurand measurant, SampledValuePhase phase, SampledValueLocation location, bool *is_signed) {
+    (void)phase;
+    (void)location;
+    (void)is_signed;
     return platform_get_meter_value_cb(connectorId, measurant);
 }
 
@@ -145,7 +148,7 @@ void platform_register_stop_callback(void *ctx, void (*cb)(int32_t, StopReason, 
     return platform_register_stop_callback_cb(ctx, cb, user_data);
 }
 
-OcppChargePoint *cp = nullptr;
+static OcppChargePoint *cp = nullptr;
 
 void ocpp_start(const char *ws_url, const char *charge_point_name)
 {
@@ -188,6 +191,11 @@ const SupportedMeasurand *platform_get_supported_measurands(int32_t connector_id
 }
 
 bool platform_get_signed_meter_value(int32_t connectorId, SampledValueMeasurand measurant, SampledValuePhase phase, SampledValueLocation location, char buf[OCPP_PLATFORM_MEASURAND_MAX_DATA_LEN]) {
+    (void)connectorId;
+    (void)measurant;
+    (void)phase;
+    (void)location;
+    (void)buf;
     //return platform_get_signed_meter_value_cb(connectorId, measurant, phase, location, buf);
     return false;
 }
@@ -199,18 +207,22 @@ float platform_get_raw_meter_value(int32_t connectorId, SampledValueMeasurand me
 
 // return nullptr if name does not exist or is not a directory
 void *platform_open_dir(const char *name){
+    (void)name;
     return nullptr;
 }
 
 // return nullptr if no more files
 OcppDirEnt *platform_read_dir(void *dir_fd){
+    (void)dir_fd;
     return nullptr;
 }
 void platform_close_dir(void *dir_fd){
+    (void)dir_fd;
     return;
 }
 
 void platform_remove_file(const char *name){
+    (void)name;
     return;
 }
 

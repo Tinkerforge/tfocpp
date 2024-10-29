@@ -87,6 +87,7 @@ static void *stop_cb_userdata = nullptr;
 
 void platform_register_stop_callback(void *ctx, void(*cb)(int32_t, StopReason, void *), void *user_data)
 {
+    (void)ctx;
     stop_cb = cb;
     stop_cb_userdata = user_data;
 }
@@ -102,11 +103,13 @@ static uint32_t last_system_time_set_at = 0;
 
 void platform_set_system_time(void *ctx, time_t t)
 {
+    (void)ctx;
     last_system_time = t;
     last_system_time_set_at = platform_now_ms();
 }
 
 time_t platform_get_system_time(void *ctx) {
+    (void)ctx;
     return last_system_time + (platform_now_ms() - last_system_time_set_at) / 1000;
 }
 
@@ -150,6 +153,7 @@ static void(*tag_seen_cb)(int32_t, const char *, void *) = nullptr;
 static void *tag_seen_cb_user_data = nullptr;
 
 void platform_register_tag_seen_callback(void *ctx, void(*cb)(int32_t, const char *, void *), void *user_data) {
+    (void)ctx;
     tag_seen_cb = cb;
     tag_seen_cb_user_data = user_data;
 }
@@ -162,6 +166,7 @@ static const char * const trt_string[] = {
 };
 
 void platform_tag_rejected(int32_t connectorId, const char *tag, TagRejectionType trt) {
+    (void)connectorId;
     char buf[61] = {0};
 
     snprintf(buf, ARRAY_SIZE(buf), "Tag %s rejected: %s", tag, trt_string[(size_t)trt]);
@@ -170,11 +175,13 @@ void platform_tag_rejected(int32_t connectorId, const char *tag, TagRejectionTyp
 
 void platform_tag_expected(int32_t connectorId)
 {
+    (void)connectorId;
     send_message("Tag expected.");
 }
 
 void platform_tag_accepted(int32_t connectorId, const char *tag)
 {
+    (void)connectorId;
     char buf[61] = {0};
 
     snprintf(buf, ARRAY_SIZE(buf), "Tag %s accepted", tag);
@@ -183,16 +190,19 @@ void platform_tag_accepted(int32_t connectorId, const char *tag)
 
 void platform_clear_tag_expected(int32_t connectorId)
 {
+    (void)connectorId;
     send_message("Clear tag expected");
 }
 
 void platform_tag_timed_out(int32_t connectorId)
 {
+    (void)connectorId;
     send_message("Tag timeout!");
 }
 
 void platform_cable_timed_out(int32_t connectorId)
 {
+    (void)connectorId;
     send_message("Cable timeout!");
 }
 
@@ -202,6 +212,7 @@ EVSEState platform_get_evse_state(int32_t connectorId) {
 
 // This is the Energy.Active.Import.Register measurant in Wh
 int32_t platform_get_energy(int32_t connectorId) {
+    (void)connectorId;
     return 1234;
 }
 
@@ -274,6 +285,11 @@ void platform_update_connection_state(CallAction message_in_flight_type,
                                       time_t connected_change_time,
                                       uint32_t last_ping_sent,
                                       uint32_t pong_deadline) {
+    (void)connected;
+    (void)connected_change_time;
+    (void)last_ping_sent;
+    (void)pong_deadline;
+
     pm.message_in_flight_type = (uint8_t) message_in_flight_type;
     pm.message_in_flight_id = message_in_flight_id;
     pm.message_in_flight_len = message_in_flight_len;
@@ -341,6 +357,7 @@ int main(int argc, char **argv) {
 }
 
 void platform_reset(bool hard) {
+    (void)hard;
     char *exec_argv[] = { argv_[0], nullptr };
 
     execv("/proc/self/exe", exec_argv);
@@ -458,11 +475,20 @@ const SupportedMeasurand *platform_get_supported_measurands(int32_t connector_id
 }
 
 bool platform_get_signed_meter_value(int32_t connectorId, SampledValueMeasurand measurant, SampledValuePhase phase, SampledValueLocation location, char buf[OCPP_PLATFORM_MEASURAND_MAX_DATA_LEN]) {
+    (void)connectorId;
+    (void)measurant;
+    (void)phase;
+    (void)location;
+    (void)buf;
     log_warn("signed values not supported yet!");
     return false;
 }
 
 float platform_get_raw_meter_value(int32_t connectorId, SampledValueMeasurand measurant, SampledValuePhase phase, SampledValueLocation location) {
+    (void)connectorId;
+    (void)measurant;
+    (void)phase;
+    (void)location;
     return 123.456f;
 }
 
@@ -546,6 +572,7 @@ const char *platform_get_meter_serial_number() {
 }
 
 uint32_t platform_get_maximum_charging_current(int32_t connectorId) {
+    (void)connectorId;
     return 32000;
 }
 
