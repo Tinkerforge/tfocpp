@@ -1039,11 +1039,11 @@ CallResponse OcppChargePoint::handleGetCompositeSchedule(const char *uid, GetCom
     return CallResponse{CallErrorCode::OK, ""};
 }
 
-        opt->clear();
 static void clearProfileById(int32_t connectorId, int32_t id, Option<ChargingProfile> *opt) {
     if (opt->is_some() && opt->unwrap().id == id) {
         log_info("New profile replaces %s level %d", ChargingProfilePurposeStrings[(size_t)opt->unwrap().chargingProfilePurpose], opt->unwrap().stackLevel);
         removeChargingProfile(connectorId, &opt->unwrap());
+        opt->clear();
     }
 }
 
