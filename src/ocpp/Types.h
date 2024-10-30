@@ -47,7 +47,17 @@ public:
         return expect("unwrapped Option without value!");
     }
 
+    const T &unwrap() const {
+        return expect("unwrapped Option without value!");
+    }
+
     T &unwrap_or(T &default_value) {
+        if (!have_val)
+            return default_value;
+        return val;
+    }
+
+    const T &unwrap_or(const T &default_value) const {
         if (!have_val)
             return default_value;
         return val;
@@ -59,11 +69,23 @@ public:
         return val;
     }
 
-    bool is_some() {
+    const T &expect(const char *message) const {
+        if (!have_val)
+            platform_abort(message);
+        return val;
+    }
+
+    T &insert(const T &default_value) {
+        val = default_value;
+        have_val = true;
+        return val;
+    }
+
+    bool is_some() const {
         return have_val;
     }
 
-    bool is_none() {
+    bool is_none() const {
         return !have_val;
     }
 
