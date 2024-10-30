@@ -40,8 +40,8 @@ struct Option {
 public:
     template<typename U = std::is_trivially_copy_constructible<T>, typename std::enable_if<U::value>::type...>
     Option(T t): val(t), have_val(true) {}
-
-    Option() : have_val(false) {}
+               // val has to be initialized if it is a primitive type.
+    Option() : val(), have_val(false) {}
 
     T &unwrap() {
         return expect("unwrapped Option without value!");
