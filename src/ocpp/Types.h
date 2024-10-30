@@ -1,8 +1,9 @@
 #pragma once
-#include "stdint.h"
-#include "stddef.h"
-#include "time.h"
-#include "ArduinoJson.h"
+#include <stdint.h>
+#include <stddef.h>
+#include <time.h>
+#include <ArduinoJson.h>
+#include <TFTools/Option.h>
 
 #define OCPP_INTEGER_NOT_PASSED INT32_MAX
 #define OCPP_DATETIME_NOT_PASSED 0
@@ -31,71 +32,6 @@ struct CallResponse {
     CallErrorCode result;
     const char *error_description;
     //JsonObject details;
-};
-
-extern void platform_abort(const char *);
-
-template<typename T>
-struct Option {
-public:
-    template<typename U = std::is_trivially_copy_constructible<T>, typename std::enable_if<U::value>::type...>
-    Option(T t): val(t), have_val(true) {}
-               // val has to be initialized if it is a primitive type.
-    Option() : val(), have_val(false) {}
-
-    T &unwrap() {
-        return expect("unwrapped Option without value!");
-    }
-
-    const T &unwrap() const {
-        return expect("unwrapped Option without value!");
-    }
-
-    T &unwrap_or(T &default_value) {
-        if (!have_val)
-            return default_value;
-        return val;
-    }
-
-    const T &unwrap_or(const T &default_value) const {
-        if (!have_val)
-            return default_value;
-        return val;
-    }
-
-    T &expect(const char *message) {
-        if (!have_val)
-            platform_abort(message);
-        return val;
-    }
-
-    const T &expect(const char *message) const {
-        if (!have_val)
-            platform_abort(message);
-        return val;
-    }
-
-    T &insert(const T &default_value) {
-        val = default_value;
-        have_val = true;
-        return val;
-    }
-
-    bool is_some() const {
-        return have_val;
-    }
-
-    bool is_none() const {
-        return !have_val;
-    }
-
-    void clear() {
-        have_val = false;
-    }
-
-private:
-    T val;
-    bool have_val;
 };
 
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))

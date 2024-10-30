@@ -19,6 +19,10 @@
         {
             "name": "TFJson",
             "version": "https://github.com/Tinkerforge/tfjson#06f871c0c096cc96cb1b7ec75277696da9973461"
+        },
+        {
+            "name": "TFTools",
+            "version": "https://github.com/Tinkerforge/tftools#4ecaa8977ff18dd8ccd47e17b405b54429ffa13f"
         }
     ],
     "license": "LGPL-2.1",
