@@ -15,6 +15,11 @@ bool deadline_elapsed(uint32_t deadline_ms)
 }
 #endif
 
+uint32_t set_deadline(uint32_t timeout) {
+    uint32_t result = platform_now_ms() + timeout;
+    return result == 0 ? 1 : result;
+}
+
 bool lookup_key(size_t *result, const char *key, const char * const *array, size_t array_length, const char * const *aliases, const size_t * const alias_indices, size_t alias_length) {
     for(size_t i = 0; i < array_length; ++i) {
         if (strcmp(key, array[i]) != 0)

@@ -15,7 +15,7 @@ void Connector::setTagDeadline()
     // The configuration spec only talks about inserting the cable, however
     // transition B9 says "time out (configured by the configuration key: ConnectionTimeOut) on expected user action"
     if (tag_deadline == 0) {
-        tag_deadline = platform_now_ms() + getIntConfigUnsigned(ConfigKey::ConnectionTimeOut) * 1000;
+        tag_deadline = set_deadline(getIntConfigUnsigned(ConfigKey::ConnectionTimeOut) * 1000);
         platform_tag_expected(this->connectorId);
     }
 }
@@ -30,7 +30,7 @@ void Connector::clearTagDeadline()
 void Connector::setCableDeadline()
 {
     if (cable_deadline == 0)
-        cable_deadline = platform_now_ms() + getIntConfigUnsigned(ConfigKey::ConnectionTimeOut) * 1000;
+        cable_deadline = set_deadline(getIntConfigUnsigned(ConfigKey::ConnectionTimeOut) * 1000);
 }
 
 void Connector::clearCableDeadline()

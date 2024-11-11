@@ -191,7 +191,7 @@ void OcppConnection::handleCallError(uint64_t uid, CallErrorCode code, const cha
         ++transaction_message_attempts;
 
         auto new_timeout_s = transaction_message_attempts * getIntConfigUnsigned(ConfigKey::TransactionMessageRetryInterval);
-        transaction_message_retry_deadline = platform_now_ms() + new_timeout_s * 1000;
+        transaction_message_retry_deadline = set_deadline(new_timeout_s * 1000);
 
         log_warn("Transaction related message (id %" PRIu64 ") resulted in a call error %d of max %d times. Waiting %d seconds before resending.", message_in_flight.message_id, transaction_message_attempts, max_attempts, new_timeout_s);
     }
@@ -289,16 +289,16 @@ void OcppConnection::tick() {
 
         // Connection establishment counts as successful ping/pong
         last_ping_sent = platform_now_ms();
-        pong_deadline = platform_now_ms() + OCPP_WEBSOCKET_PING_PONG_TIMEOUT * 1000;
+        pong_deadline = set_deadline(OCPP_WEBSOCKET_PING_PONG_TIMEOUT * 1000);
 
         // Stop reconnects
         next_reconnect_deadline = 0;
     } else if (!connected && !was_connected) {
         if (next_reconnect_deadline == 0) {
-            next_reconnect_deadline = platform_now_ms() + OCPP_RECONNECT_WEBSOCKET_INTERVAL_S * 1000;
+            next_reconnect_deadline = set_deadline(OCPP_RECONNECT_WEBSOCKET_INTERVAL_S * 1000);
         } else if (deadline_elapsed(next_reconnect_deadline)) {
             platform_reconnect(platform_ctx);
-            next_reconnect_deadline = platform_now_ms() + OCPP_RECONNECT_WEBSOCKET_INTERVAL_S * 1000;
+            next_reconnect_deadline = set_deadline(OCPP_RECONNECT_WEBSOCKET_INTERVAL_S * 1000);
         }
     }
 
@@ -348,6 +348,7 @@ void OcppConnection::tick() {
     if (next_response.is_valid()) {
         if (platform_ws_send(platform_ctx, next_response.buf.get(), next_response.len))
             next_response = QueueItem{};
+        // TODO: make this robust against platform_ws_send always returning false. Use a timeout?
         return;
     }
 
@@ -365,7 +366,7 @@ void OcppConnection::tick() {
             message_in_flight = QueueItem{};
         }
     } else {
-        if (!deadline_elapsed(transaction_message_retry_deadline))
+        if (transaction_message_retry_deadline != 0 && !deadline_elapsed(transaction_message_retry_deadline))
             return;
     }
 
@@ -388,7 +389,7 @@ void OcppConnection::tick() {
         // Limit to_send scope because the item is popped from the queue below.
         QueueItem *to_send = &to_pop->front();
 
-        auto new_deadline = platform_now_ms() + (is_transaction_related(to_send->action) ?
+        auto new_deadline = set_deadline(is_transaction_related(to_send->action) ?
                                                             getIntConfigUnsigned(ConfigKey::TransactionMessageRetryInterval) :
                                                             getIntConfigUnsigned(ConfigKey::MessageTimeout)) * 1000;
 
@@ -500,7 +501,7 @@ void* OcppConnection::start(const char *websocket_endpoint_url, const char *char
         return nullptr;
 
     platform_ws_register_receive_callback(platform_ctx, [](char *c, size_t s, void *user_data){((OcppConnection*)user_data)->handleMessage(c, s);}, this);
-    platform_ws_register_pong_callback(platform_ctx, [](void *user_data){((OcppConnection*)user_data)->pong_deadline = platform_now_ms() + OCPP_WEBSOCKET_PING_PONG_TIMEOUT * 1000;}, this);
+    platform_ws_register_pong_callback(platform_ctx, [](void *user_data){((OcppConnection*)user_data)->pong_deadline = set_deadline(OCPP_WEBSOCKET_PING_PONG_TIMEOUT * 1000);}, this);
 
     return platform_ctx;
 }

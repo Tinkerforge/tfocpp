@@ -9,6 +9,8 @@
 
 bool deadline_elapsed(uint32_t deadline_ms);
 
+uint32_t set_deadline(uint32_t timeout);
+
 bool lookup_key(size_t *result, // Result pointer. May be null if you only need to know if the key was found
                 const char *key, // Key to look for
                 const char * const *array, // Array of keys to search in
