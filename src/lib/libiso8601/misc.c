@@ -180,7 +180,7 @@ void iso8601_to_timeval(const iso8601_time *time, struct timeval *tv)
 
     tv->tv_usec = time->usecond;
     if (!time->localtime)
-        tv->tv_sec = timegm(&tm);
+        tv->tv_sec = timegm(&tm) - time->tzminutes * 60;
     else
         tv->tv_sec = mktime(&tm);
 }
