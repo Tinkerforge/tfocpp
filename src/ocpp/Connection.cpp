@@ -16,10 +16,14 @@ static bool is_transaction_related(CallAction action) {
         || action == CallAction::METER_VALUES;
 }
 
+static void log_payload(const char *prefix, const char *buf, size_t buf_len) {
+    log_debug("%s (len %zu) %.*s%s", prefix, buf_len, (int)std::min(buf_len, (size_t)100), buf, buf_len > 96 ? " ..." : "");
+}
+
 void OcppConnection::handleMessage(char *message, size_t message_len)
 {
     (void) message_len;
-    log_trace("Received message %.*s (len %lu)", (int)std::min(message_len, (size_t)40), message, message_len);
+    log_payload("Received message", message, message_len);
     DynamicJsonDocument doc{4096};
     // TODO: we should use
     // https://arduinojson.org/v6/how-to/deserialize-a-very-large-document/#deserialization-in-chunks
@@ -346,6 +350,7 @@ void OcppConnection::tick() {
     }
 
     if (next_response.is_valid()) {
+        log_payload("Sending response", next_response.buf.get(), next_response.len);
         if (platform_ws_send(platform_ctx, next_response.buf.get(), next_response.len))
             next_response = QueueItem{};
         // TODO: make this robust against platform_ws_send always returning false. Use a timeout?
@@ -393,6 +398,7 @@ void OcppConnection::tick() {
                                                             getIntConfigUnsigned(ConfigKey::TransactionMessageRetryInterval) :
                                                             getIntConfigUnsigned(ConfigKey::MessageTimeout)) * 1000;
 
+        log_payload("Sending request", to_send->buf.get(), to_send->len);
         if (!platform_ws_send(platform_ctx, to_send->buf.get(), to_send->len))
             return;
 
