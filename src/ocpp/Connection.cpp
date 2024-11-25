@@ -394,9 +394,9 @@ void OcppConnection::tick() {
         // Limit to_send scope because the item is popped from the queue below.
         QueueItem *to_send = &to_pop->front();
 
-        auto new_deadline = set_deadline(is_transaction_related(to_send->action) ?
+        auto new_deadline = set_deadline(1000 * (is_transaction_related(to_send->action) ?
                                                             getIntConfigUnsigned(ConfigKey::TransactionMessageRetryInterval) :
-                                                            getIntConfigUnsigned(ConfigKey::MessageTimeout)) * 1000;
+                                                            getIntConfigUnsigned(ConfigKey::MessageTimeout)));
 
         log_payload("Sending request", to_send->buf.get(), to_send->len);
         if (!platform_ws_send(platform_ctx, to_send->buf.get(), to_send->len))
