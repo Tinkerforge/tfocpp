@@ -29,8 +29,6 @@ void OcppChargePoint::tick_power_on() {
     if (last_bn_send_ms != 0 && !deadline_elapsed(last_bn_send_ms + 1000 * interval))
         return;
 
-    log_info("Creating BootNotification.req.");
-
     last_bn_send_ms = platform_now_ms();
 
     this->sendCallAction(BootNotification(
@@ -54,8 +52,6 @@ void OcppChargePoint::tick_idle() {
         return;
 
     last_bn_send_ms = platform_now_ms();
-
-    log_info("Creating Heartbeat.req.");
 
     this->sendCallAction(Heartbeat());
 }
@@ -265,7 +261,6 @@ void OcppChargePoint::sendStatus()
 void OcppChargePoint::forceSendStatus()
 {
     StatusNotificationStatus newStatus = getStatus();
-    log_info("Creating StatusNotification.req: Status %s for connector 0", StatusNotificationStatusStrings[(size_t)newStatus]);
 
     this->sendCallAction(StatusNotification(0, StatusNotificationErrorCode::NO_ERROR, newStatus, nullptr, platform_get_system_time(this->platform_ctx)));
     last_sent_status = newStatus;
@@ -412,7 +407,6 @@ ChangeConfigurationResponseStatus OcppChargePoint::changeConfig(const char *key,
 
 CallResponse OcppChargePoint::handleAuthorizeResponse(int32_t connectorId, AuthorizeResponseView conf)
 {
-    log_info("Processing Authorize.conf for connector %d", connectorId);
     IdTagInfo info;
     info.updateFromIdTagInfo(conf.idTagInfo());
 
@@ -424,7 +418,6 @@ CallResponse OcppChargePoint::handleAuthorizeResponse(int32_t connectorId, Autho
 
 CallResponse OcppChargePoint::handleBootNotificationResponse(int32_t connectorId, BootNotificationResponseView conf) {
     (void) connectorId;
-    log_info("Processing BootNotification.conf for connector %d. Interval %d", connectorId, conf.interval());
 
     if ((state != OcppState::PowerOn) &&
         (state != OcppState::Pending) &&
@@ -470,7 +463,6 @@ CallResponse OcppChargePoint::handleBootNotificationResponse(int32_t connectorId
 
 CallResponse OcppChargePoint::handleChangeAvailability(const char *uid, ChangeAvailabilityView req)
 {
-    log_info("Processing ChangeAvilability.req connector %d to %s", req.connectorId(), ChangeAvailabilityTypeStrings[(size_t)req.type()]);
     int conn_id = req.connectorId();
     auto resp = ChangeAvailabilityResponseStatus::NONE;
 
@@ -491,7 +483,6 @@ CallResponse OcppChargePoint::handleChangeAvailability(const char *uid, ChangeAv
     else
         resp = connectors[conn_id - 1].onChangeAvailability(req.type());
 
-    log_info("Creating ChangeAvailablility.conf %s", ChangeAvailabilityResponseStatusStrings[(size_t)resp]);
     connection.sendCallResponse(ChangeAvailabilityResponse(uid, resp));
 
     if (resp != ChangeAvailabilityResponseStatus::REJECTED)
@@ -502,11 +493,8 @@ CallResponse OcppChargePoint::handleChangeAvailability(const char *uid, ChangeAv
 
 CallResponse OcppChargePoint::handleChangeConfiguration(const char *uid, ChangeConfigurationView req)
 {
-    log_info("Processing ChangeConfiguration.req %s to %s", req.key(), req.value());
-
     ChangeConfigurationResponseStatus status = this->changeConfig(req.key(), req.value());
 
-    log_info("Creating ChangeConfiguration.conf %s", ChangeConfigurationResponseStatusStrings[(size_t)status]);
     connection.sendCallResponse(ChangeConfigurationResponse(uid, status));
 
     return CallResponse{CallErrorCode::OK, ""};
@@ -514,7 +502,6 @@ CallResponse OcppChargePoint::handleChangeConfiguration(const char *uid, ChangeC
 
 CallResponse OcppChargePoint::handleClearCache(const char *uid, ClearCacheView req)
 {
-    log_info("Processing ClearCache.req");
     (void) req;
     /* Errata 4.0 3.23:
     In OCPP 1.6, the Cache is not required, but the message: ClearCache.req is required to be implemented. OCPP
@@ -523,7 +510,6 @@ CallResponse OcppChargePoint::handleClearCache(const char *uid, ClearCacheView r
     When the Authorization Cache is not implemented and the Charge Point receives a ClearCache.req message. The Charge Point
     SHALL response with ClearCache.conf with the status: Rejected.
     */
-    log_info("Creating ClearCache.conf Rejected");
     connection.sendCallResponse(ClearCacheResponse(uid, ResponseStatus::REJECTED));
 
     return CallResponse{CallErrorCode::OK, ""};
@@ -531,13 +517,11 @@ CallResponse OcppChargePoint::handleClearCache(const char *uid, ClearCacheView r
 
 CallResponse OcppChargePoint::handleDataTransfer(const char *uid, DataTransferView req)
 {
-    log_info("Processing DataTransfer.req vendorId %s messageId %s", req.vendorId(), req.messageId().is_some() ? req.messageId().unwrap() : "[NOT SET]");
     (void) req;
     /*
     If the recipient of the request has no implementation for the specific vendorId it SHALL return a status
     ‘UnknownVendor’ and the data element SHALL not be present.
     */
-    log_info("Creating DataTransfer.conf UnknownVendorId");
     connection.sendCallResponse(DataTransferResponse(uid, DataTransferResponseStatus::UNKNOWN_VENDOR_ID));
 
     return CallResponse{CallErrorCode::OK, ""};
@@ -545,7 +529,6 @@ CallResponse OcppChargePoint::handleDataTransfer(const char *uid, DataTransferVi
 
 CallResponse OcppChargePoint::handleDataTransferResponse(int32_t connectorId, DataTransferResponseView conf)
 {
-    log_info("Processing DataTransfer.conf for connector %d. Status %s", connectorId, DataTransferResponseStatusStrings[(size_t)conf.status()]);
     (void) connectorId;
     (void) conf;
 
@@ -554,7 +537,6 @@ CallResponse OcppChargePoint::handleDataTransferResponse(int32_t connectorId, Da
 
 CallResponse OcppChargePoint::handleGetConfiguration(const char *uid, GetConfigurationView req)
 {
-    log_info("Processing GetConfiguration.req with %lu keys", req.key_count());
     size_t known_keys = 0;
     size_t scratch_buf_size = 0;
     size_t unknown_keys = 0;
@@ -672,7 +654,6 @@ CallResponse OcppChargePoint::handleGetConfiguration(const char *uid, GetConfigu
 
 CallResponse OcppChargePoint::handleHeartbeatResponse(int32_t connectorId, HeartbeatResponseView conf)
 {
-    log_info("Processing Heartbeat.conf for connector %d", connectorId);
     (void)connectorId;
     platform_set_system_time(platform_ctx, conf.currentTime());
     return CallResponse{CallErrorCode::OK, ""};
@@ -681,7 +662,6 @@ CallResponse OcppChargePoint::handleHeartbeatResponse(int32_t connectorId, Heart
 
 CallResponse OcppChargePoint::handleMeterValuesResponse(int32_t connectorId, MeterValuesResponseView conf)
 {
-    log_info("Processing MeterValues.conf for connector %d", connectorId);
     (void) connectorId;
     (void) conf;
     return CallResponse{CallErrorCode::OK, ""};
@@ -728,7 +708,6 @@ static bool is_charging_profile_valid(T prof, int32_t conn_id) {
 
 CallResponse OcppChargePoint::handleRemoteStartTransaction(const char *uid, RemoteStartTransactionView req)
 {
-    log_info("Processing RemoteStartTransaction.req for connector %d%s and tag %s", req.connectorId().is_some() ? req.connectorId().unwrap() : 0, req.connectorId().is_some() ? "" : "[ANY CONNECTOR]", req.idTag());
     int conn_idx = -1;
 
     if (!req.connectorId().is_some()) {
@@ -809,7 +788,6 @@ CallResponse OcppChargePoint::handleRemoteStartTransaction(const char *uid, Remo
     // can handle the request just as if the user starts interacting with the connector with a tag (i.e.
     // the IDLE -> AUTH_START_NO_PLUG transistion)
 
-    log_info("Creating RemoteStartTransaction.conf Accepted");
     connection.sendCallResponse(RemoteStartTransactionResponse(uid, ResponseStatus::ACCEPTED));
 
     if (getBoolConfig(ConfigKey::AuthorizeRemoteTxRequests)) {
@@ -823,13 +801,11 @@ CallResponse OcppChargePoint::handleRemoteStartTransaction(const char *uid, Remo
 
 CallResponse OcppChargePoint::handleRemoteStopTransaction(const char *uid, RemoteStopTransactionView req)
 {
-    log_info("Processing RemoteStopTransaction.req for txn %d", req.transactionId());
     for(int32_t i = 0; i < OCPP_NUM_CONNECTORS; ++i) {
         if (!connectors[i].canHandleRemoteStopTxn(req.transactionId()))
             continue;
 
         connectors[i].onRemoteStopTransaction();
-        log_info("Creating RemoteStopTransaction.conf Accepted (connector %d)", i);
         connection.sendCallResponse(RemoteStopTransactionResponse(uid, ResponseStatus::ACCEPTED));
         return CallResponse{CallErrorCode::OK, ""};
     }
@@ -841,11 +817,9 @@ CallResponse OcppChargePoint::handleRemoteStopTransaction(const char *uid, Remot
 
 CallResponse OcppChargePoint::handleReset(const char *uid, ResetView req)
 {
-    log_info("Processing Reset.req");
     (void) uid;
     (void) req;
 
-    log_info("Creating Request.conf Accepted");
     connection.sendCallResponse(ResetResponse(uid, ResponseStatus::ACCEPTED));
 
     for(int32_t i = 0; i < OCPP_NUM_CONNECTORS; ++i) {
@@ -864,7 +838,6 @@ CallResponse OcppChargePoint::handleReset(const char *uid, ResetView req)
 
 CallResponse OcppChargePoint::handleStartTransactionResponse(int32_t connectorId, StartTransactionResponseView conf)
 {
-    log_info("Processing StartTransaction.conf for connector %d", connectorId);
     IdTagInfo info;
     info.updateFromIdTagInfo(conf.idTagInfo());
 
@@ -879,7 +852,6 @@ CallResponse OcppChargePoint::handleStartTransactionResponse(int32_t connectorId
 
 CallResponse OcppChargePoint::handleStatusNotificationResponse(int32_t connectorId, StatusNotificationResponseView conf)
 {
-    log_info("Processing StatusNotification.conf for connector %d", connectorId);
     (void) connectorId;
     (void) conf;
 
@@ -888,7 +860,6 @@ CallResponse OcppChargePoint::handleStatusNotificationResponse(int32_t connector
 
 CallResponse OcppChargePoint::handleStopTransactionResponse(int32_t connectorId, StopTransactionResponseView conf)
 {
-    log_info("Processing StopTransaction.conf for connector %d", connectorId);
     (void) connectorId;
     (void) conf;
 
@@ -898,8 +869,6 @@ CallResponse OcppChargePoint::handleStopTransactionResponse(int32_t connectorId,
 
 CallResponse OcppChargePoint::handleUnlockConnector(const char *uid, UnlockConnectorView req)
 {
-    log_info("Processing UnlockConnector.req");
-
     auto result = UnlockConnectorResponseStatus::NONE;
 
     int32_t conn_id = req.connectorId() - 1;
@@ -909,7 +878,6 @@ CallResponse OcppChargePoint::handleUnlockConnector(const char *uid, UnlockConne
     else
         result = connectors[conn_id].onUnlockConnector();
 
-    log_info("Creating UnlockConnector.conf %s", UnlockConnectorResponseStatusStrings[(size_t)result]);
     connection.sendCallResponse(UnlockConnectorResponse(uid, result));
     return CallResponse{CallErrorCode::OK, ""};
 }
@@ -956,8 +924,6 @@ static bool handleClearProfile(ClearChargingProfileView req, Option<ChargingProf
 
 CallResponse OcppChargePoint::handleClearChargingProfile(const char *uid, ClearChargingProfileView req)
 {
-    log_info("Processing ClearChargingProfile.req");
-
     bool accepted = false;
 
     for(size_t stack_level = 0; stack_level <= OCPP_CHARGE_PROFILE_MAX_STACK_LEVEL; ++stack_level) {
@@ -980,8 +946,6 @@ CallResponse OcppChargePoint::handleClearChargingProfile(const char *uid, ClearC
 
 CallResponse OcppChargePoint::handleGetCompositeSchedule(const char *uid, GetCompositeScheduleView req)
 {
-    log_info("Processing GetCompositeSchedule.req");
-
     int32_t conn_id = req.connectorId();
     if (conn_id < 0 || conn_id > OCPP_NUM_CONNECTORS) {
         connection.sendCallResponse(GetCompositeScheduleResponse(uid, ResponseStatus::REJECTED));
@@ -1049,8 +1013,6 @@ static void clearProfileById(int32_t connectorId, int32_t id, Option<ChargingPro
 
 CallResponse OcppChargePoint::handleSetChargingProfile(const char *uid, SetChargingProfileView req)
 {
-    log_info("Processing SetChargingProfile.req stacklevel %d", req.csChargingProfiles().stackLevel());
-
     int32_t conn_id = req.connectorId();
     if (conn_id < 0 || conn_id > OCPP_NUM_CONNECTORS) {
         log_info("Rejected: connector ID %d out of range", conn_id);
@@ -1131,7 +1093,6 @@ CallResponse OcppChargePoint::handleSetChargingProfile(const char *uid, SetCharg
     *target = {ChargingProfile(prof)};
     persistChargingProfile(conn_id, &target->unwrap());
 
-    log_info("Creating SetChargingProfile.conf.");
     connection.sendCallResponse(SetChargingProfileResponse(uid, SetChargingProfileResponseStatus::ACCEPTED));
 
     this->triggerChargingProfileEval();

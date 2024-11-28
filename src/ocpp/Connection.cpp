@@ -399,10 +399,11 @@ void OcppConnection::tick() {
                                                             getIntConfigUnsigned(ConfigKey::MessageTimeout)));
 
         log_payload("Sending request", to_send->buf.get(), to_send->len);
-        if (!platform_ws_send(platform_ctx, to_send->buf.get(), to_send->len))
+        if (!platform_ws_send(platform_ctx, to_send->buf.get(), to_send->len)) {
+            log_info("Send failed");
             return;
+        }
 
-        log_info("Sent %s (id %" PRIu64 ")", CallActionStrings[(size_t) to_send->action], to_send->message_id);
         this->message_timeout_deadline = new_deadline;
     }
 

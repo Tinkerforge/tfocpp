@@ -342,7 +342,6 @@ void Connector::sendStatus() {
 void Connector::forceSendStatus()
 {
     StatusNotificationStatus newStatus = getStatus();
-    log_info("Creating StatusNotification.req: Status %s for connector %d", StatusNotificationStatusStrings[(size_t)newStatus], connectorId);
 
     this->sendCallAction(StatusNotification(connectorId, StatusNotificationErrorCode::NO_ERROR, newStatus, nullptr, platform_get_system_time(cp->platform_ctx)));
     last_sent_status = newStatus;
