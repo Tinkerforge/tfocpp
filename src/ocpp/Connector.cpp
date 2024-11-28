@@ -178,7 +178,7 @@ void Connector::applyState() {
 }
 
 void Connector::setState(ConnectorState newState) {
-    log_debug("%s -> %s", ConnectorStateStrings[(int)state], ConnectorStateStrings[(int)newState]);
+    log_debug("C%d %s -> %s", this->connectorId, ConnectorStateStrings[(int)state], ConnectorStateStrings[(int)newState]);
     ConnectorState oldState = state;
     state = newState;
 
@@ -192,7 +192,6 @@ void Connector::setState(ConnectorState newState) {
                 case ConnectorState::NO_TAG:
                 case ConnectorState::FINISHING_UNLOCKED:
                 case ConnectorState::FINISHING_NO_CABLE_UNLOCKED:
-                    log_info("Creating Authorize.req connector %d for tag %s (Authorizing for start)", this->connectorId, tagIdInFlight);
                     this->sendCallAction(Authorize(tagIdInFlight));
                     break;
                 case ConnectorState::TRANSACTION:
@@ -946,7 +945,6 @@ void Connector::onTagSeen(const char *tag_id) {
             strncpy(tagIdInFlight, tag_id, ARRAY_SIZE(tagIdInFlight) - 1);
 
             // We still need the tag ID that started the transaction, so don't override authorized_for here, but send the AUTH request immediately.
-            log_info("Creating Authorize.req connector %d for tag %s (Authorizing for stop)", this->connectorId, tag_id);
             this->sendCallAction(Authorize(tag_id));
             setState(ConnectorState::AUTH_STOP);
             break;

@@ -63,8 +63,9 @@ public:
 
     void tick_clock_aligned_meter_values();
 
-
     void tick();
+
+    void setState(OcppState newState);
 
     void onConnect();
     void onDisconnect();
@@ -115,7 +116,7 @@ public:
 
     EvalChargingProfilesResult evalChargingProfiles(time_t timeToEval);
     void evalAndApplyChargingProfiles();
-    void triggerChargingProfileEval();
+    void triggerChargingProfileEval(const char *reason);
 
     OcppState state = OcppState::PowerOn;
 

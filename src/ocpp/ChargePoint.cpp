@@ -81,7 +81,7 @@ void OcppChargePoint::tick_flush_persistent_messages() {
         return;
 
     finishRestore();
-    this->state = OcppState::Idle;
+    this->setState(OcppState::Idle);
 }
 
 void OcppChargePoint::tick() {
@@ -126,6 +126,11 @@ void OcppChargePoint::tick() {
 #endif
 }
 
+void OcppChargePoint::setState(OcppState newState) {
+    log_debug("CP %s -> %s", OcppStateStrings[(size_t)this->state], OcppStateStrings[(size_t)newState]);
+    this->state = newState;
+}
+
 void OcppChargePoint::onConnect()
 {
     log_warn("OCPP connected");
@@ -164,7 +169,7 @@ ChangeAvailabilityResponseStatus OcppChargePoint::onChangeAvailability(ChangeAva
                     return ChangeAvailabilityResponseStatus::ACCEPTED;
 
                 case OcppState::Unavailable:
-                    this->state = OcppState::Idle;
+                    this->setState(OcppState::Idle);
                     return ChangeAvailabilityResponseStatus::ACCEPTED;
             }
             break;
@@ -184,7 +189,7 @@ ChangeAvailabilityResponseStatus OcppChargePoint::onChangeAvailability(ChangeAva
                     return ChangeAvailabilityResponseStatus::ACCEPTED;
 
                 case OcppState::Idle:
-                    this->state = OcppState::Unavailable;
+                    this->setState(OcppState::Unavailable);
                     return ChangeAvailabilityResponseStatus::ACCEPTED;
             }
             break;
@@ -287,7 +292,7 @@ bool OcppChargePoint::sendCallAction(const ICall &call, int32_t connectorId)
     connection.sendCallAction(call, connectorId);
 
     if (call.action == CallAction::START_TRANSACTION || call.action == CallAction::STOP_TRANSACTION)
-        this->triggerChargingProfileEval();
+        this->triggerChargingProfileEval(call.action == CallAction::START_TRANSACTION ? "Txn started" : "Txn stopped");
 
     /*
     If a transaction-specific profile with purpose TxProfile is present, it SHALL overrule the default charging profile
@@ -436,7 +441,7 @@ CallResponse OcppChargePoint::handleBootNotificationResponse(int32_t connectorId
         case BootNotificationResponseStatus::ACCEPTED: {
             platform_set_system_time(platform_ctx, conf.currentTime());
 
-            state = OcppState::Idle;
+            this->setState(OcppState::Idle);
 
             this->forceSendStatus();
 
@@ -444,16 +449,16 @@ CallResponse OcppChargePoint::handleBootNotificationResponse(int32_t connectorId
                 connectors[i].forceSendStatus();
 
             if (shouldRestore())
-                this->state = OcppState::FlushPersistentMessages;
+                this->setState(OcppState::FlushPersistentMessages);
 
             break;
         }
         case BootNotificationResponseStatus::PENDING: {
-            state = OcppState::Pending;
+            this->setState(OcppState::Pending);
             break;
         }
         case BootNotificationResponseStatus::REJECTED: {
-            state = OcppState::Rejected;
+            this->setState(OcppState::Rejected);
             break;
         }
     }
@@ -828,9 +833,9 @@ CallResponse OcppChargePoint::handleReset(const char *uid, ResetView req)
     }
 
     if (req.type() == ResetType::SOFT) {
-        this->state = OcppState::SoftReset;
+        this->setState(OcppState::SoftReset);
     } else {
-        this->state = OcppState::HardReset;
+        this->setState(OcppState::HardReset);
     }
 
     return CallResponse{CallErrorCode::OK, ""};
@@ -845,7 +850,7 @@ CallResponse OcppChargePoint::handleStartTransactionResponse(int32_t connectorId
         connectors[connectorId - 1].onStartTransactionConf(info, conf.transactionId());
 
     // We received the txn-ID, so maybe now a TxProfile applies.
-    this->triggerChargingProfileEval();
+    this->triggerChargingProfileEval("Received TxnID");
 
     return CallResponse{CallErrorCode::OK, ""};
 }
@@ -939,7 +944,7 @@ CallResponse OcppChargePoint::handleClearChargingProfile(const char *uid, ClearC
     connection.sendCallResponse(ClearChargingProfileResponse(uid, accepted ? ClearChargingProfileResponseStatus::ACCEPTED : ClearChargingProfileResponseStatus::UNKNOWN));
 
     if (accepted)
-        this->triggerChargingProfileEval();
+        this->triggerChargingProfileEval("Cleared charging profile(s)");
 
     return CallResponse{CallErrorCode::OK, ""};
 }
@@ -1095,7 +1100,7 @@ CallResponse OcppChargePoint::handleSetChargingProfile(const char *uid, SetCharg
 
     connection.sendCallResponse(SetChargingProfileResponse(uid, SetChargingProfileResponseStatus::ACCEPTED));
 
-    this->triggerChargingProfileEval();
+    this->triggerChargingProfileEval("Added charging profile");
 
     return CallResponse{CallErrorCode::OK, ""};
 }
@@ -1317,8 +1322,9 @@ void OcppChargePoint::evalAndApplyChargingProfiles()
     }
 }
 
-void OcppChargePoint::triggerChargingProfileEval()
+void OcppChargePoint::triggerChargingProfileEval(const char *reason)
 {
+    log_trace("Trigger ChargingProfile evaluation: %s");
     this->next_profile_eval = platform_get_system_time(this->platform_ctx);
 }
 
@@ -1337,7 +1343,7 @@ void OcppChargePoint::loadProfiles()
 
 void OcppChargePoint::handleTagSeen(int32_t connectorId, const char *tagId)
 {
-    log_info("Seen tag %s at connector %d. State is %d", tagId, connectorId, (int)this->state);
+    log_info("Seen tag %s at connector %d. ChargePointState is %s", tagId, connectorId, OcppStateStrings[(size_t)this->state]);
 
     // Don't allow tags at connector 0 (i.e. the charge point itself)
     if (connectorId <= 0)
