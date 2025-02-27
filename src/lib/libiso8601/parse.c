@@ -36,9 +36,9 @@
 
 static bool convert(char *str, int offset, int digits,
                     int min, int max, const char *end,
-                    int32_t *out)
+                    int *out)
 {
-    int32_t tmp = 0;
+    int tmp = 0;
 
     for (int i = 0; i < digits; i++) {
         if (!isdigit(str[offset + i]))
@@ -62,7 +62,7 @@ static bool convert_uint8(char *str, int offset, int digits,
                           int min, int max, const char *end,
                           uint8_t *out)
 {
-    int32_t tmp;
+    int tmp;
     bool retval;
 
     retval = convert(str, offset, digits, min, max, end, &tmp);
@@ -72,7 +72,7 @@ static bool convert_uint8(char *str, int offset, int digits,
 
 static bool parse_ordinal(char *buf, iso8601_time *time)
 {
-    int32_t ordinal;
+    int ordinal;
 
     if (!convert(buf, 0, 3, 1, length_year_days(time->year), "T", &ordinal))
         return false;
@@ -82,8 +82,8 @@ static bool parse_ordinal(char *buf, iso8601_time *time)
 
 static bool parse_weekdate(char *buf, iso8601_time *time)
 {
-    int32_t wday = 1;
-    int32_t week = 1;
+    int wday = 1;
+    int week = 1;
 
     /* Convert the week. */
     if (!convert(buf, 1, 2, 1, length_year_weeks(time->year), "-", &week))
@@ -397,9 +397,11 @@ static bool parse_year(char *buf, iso8601_time *time)
 
 convert:
     /* Convert the year. */
-    if (!convert(buf, sign, digits, 0, -1, "-", &time->year))
+    int year = 0;
+    if (!convert(buf, sign, digits, 0, -1, "-", &year))
         return false;
 
+    time->year = year;
     time->year *= multiplier;
     time->month = 1;
     time->day = 1;
