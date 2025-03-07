@@ -113,7 +113,7 @@ enum class ConfigKey {
     ResetRetries,
     StopTransactionOnEVSideDisconnect,
     StopTransactionOnInvalidId,
-    StopTransactionMeterMaxValues,
+    StopTransactionMaxMeterValues,
     StopTxnAlignedData,
     StopTxnAlignedDataMaxLength,
     StopTxnSampledData,
