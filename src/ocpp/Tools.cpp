@@ -6,14 +6,12 @@
 #include <stdlib.h>
 #include <errno.h>
 
-#ifndef OCPP_PLATFORM_ESP32
 bool deadline_elapsed(uint32_t deadline_ms)
 {
     uint32_t now = platform_now_ms();
 
     return (now - deadline_ms) < (UINT32_MAX / 2);
 }
-#endif
 
 uint32_t set_deadline(uint32_t timeout) {
     uint32_t result = platform_now_ms() + timeout;
