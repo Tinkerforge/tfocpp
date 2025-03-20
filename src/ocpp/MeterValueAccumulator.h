@@ -6,6 +6,8 @@
 
 class OcppChargePoint;
 
+struct SupportedMeasurand;
+
 struct ValueToSend {
     std::unique_ptr<MeterValueSampledValue[]> sampled_values;
     size_t sampled_value_count;
@@ -14,13 +16,18 @@ struct ValueToSend {
 
 struct MeterValueAccumulator {
     void init(int32_t connId, bool average_values, OcppChargePoint *chargePoint, ConfigKey data_to_sample);
+    void initMeter();
     void reset();
     void tick();
     std::unique_ptr<float[]> meter_values = nullptr;
+
     std::unique_ptr<SampledValueMeasurand[]> measurands = nullptr;
     std::unique_ptr<SampledValuePhase[]> measurand_phases = nullptr;
     size_t measurand_count;
+
+    SupportedMeasurand *supported_measurands = nullptr;
     size_t supported_measurand_count;
+
     size_t meter_values_len = 0;
     uint32_t samples_this_run = 0;
     bool first_run = true;
