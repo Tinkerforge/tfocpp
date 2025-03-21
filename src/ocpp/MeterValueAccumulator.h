@@ -25,10 +25,11 @@ struct MeterValueAccumulator {
     std::unique_ptr<SampledValuePhase[]> measurand_phases = nullptr;
     size_t measurand_count;
 
+    void * platform_meter_cache = nullptr;
+
     SupportedMeasurand *supported_measurands = nullptr;
     size_t supported_measurand_count;
 
-    size_t meter_values_len = 0;
     uint32_t samples_this_run = 0;
     bool first_run = true;
 

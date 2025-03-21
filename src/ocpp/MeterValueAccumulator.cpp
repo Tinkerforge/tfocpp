@@ -77,19 +77,19 @@ void MeterValueAccumulator::tick()
                 // ::reset() sets the value back to 0, allowing
                 // one write again.
                 if (meter_values[supported_idx] == 0)
-                    meter_values[supported_idx] = platform_get_raw_meter_value(this->connectorId, supported_idx);
+                    meter_values[supported_idx] = platform_get_raw_meter_value(this->connectorId, supported_idx, this->platform_meter_cache);
                 break;
             case MeasurandType::Interval:
                 /*// Use two values for intervals as a mini ring-buffer. Set the first one only on the first run after boot-up.
                 // ::reset() "rotates" the ring buffer.
                 if (first_run)
-                    meter_values[value_offset] = platform_get_raw_meter_value(this->connectorId, supported_idx);
+                    meter_values[value_offset] = platform_get_raw_meter_value(this->connectorId, supported_idx, this->platform_meter_cache);
                 else
-                    meter_values[value_offset + 1] = platform_get_raw_meter_value(this->connectorId, supported_idx);
+                    meter_values[value_offset + 1] = platform_get_raw_meter_value(this->connectorId, supported_idx, this->platform_meter_cache);
                 ++value_offset;*/
                 break;
             case MeasurandType::Average:
-                float new_value = platform_get_raw_meter_value(this->connectorId, supported_idx);
+                float new_value = platform_get_raw_meter_value(this->connectorId, supported_idx, this->platform_meter_cache);
                 // TODO: store value "undivided" here and divide by samples_this_run only in get()
                 meter_values[supported_idx] = ((meter_values[supported_idx] * samples_this_run) + new_value) / ((float)samples_this_run + 1);
                 break;
@@ -173,16 +173,15 @@ void MeterValueAccumulator::reset()
 }
 
 void MeterValueAccumulator::initMeter() {
-    if (!platform_meter_available(this->connectorId))
+    if (!platform_prepare_meter(this->connectorId, this->measurands.get(), this->measurand_phases.get(), measurand_count, &this->supported_measurands, &this->supported_measurand_count, &this->platform_meter_cache))
         return;
 
-    this->supported_measurand_count = platform_get_supported_measurand_count(this->connectorId, this->measurands.get(), this->measurand_phases.get(), measurand_count);
-    this->supported_measurands = heap_alloc_array<SupportedMeasurand>(this->supported_measurand_count).release();
-    this->meter_values_len = platform_prepare_meter_cache(this->connectorId, this->measurands.get(), this->measurand_phases.get(), measurand_count, this->supported_measurands, this->supported_measurand_count);
     // Drop measurands and phases. All info is contained in supported_measurands.
     this->measurands = nullptr;
     this->measurand_phases = nullptr;
-    this->meter_values = heap_alloc_array<float>(this->meter_values_len);
+    this->measurand_count = 0;
+
+    this->meter_values = heap_alloc_array<float>(this->supported_measurand_count);
 
     reset();
 }

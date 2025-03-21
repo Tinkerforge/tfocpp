@@ -126,7 +126,7 @@ taken from the main energy meter.
 // We must calculate the average over all non-energy values
 // this cannot be done if they are signed (intransparent) binary blobs.
 bool platform_get_signed_meter_value(int32_t connectorId, SampledValueMeasurand measurand, SampledValuePhase phase, SampledValueLocation location, char buf[OCPP_PLATFORM_MEASURAND_MAX_DATA_LEN]);
-float platform_get_raw_meter_value(int32_t connectorId, size_t measurand_idx);
+float platform_get_raw_meter_value(int32_t connectorId, size_t measurand_idx, void *out_platform_meter_cache);
 
 // This is the Energy.Active.Import.Register measurand in Wh
 int32_t platform_get_energy(int32_t connectorId);
@@ -141,14 +141,7 @@ struct SupportedMeasurand {
     bool is_signed;
 };
 
-bool platform_meter_available(int32_t connector_id);
-
-size_t platform_prepare_meter_cache(int32_t connector_id, SampledValueMeasurand *measurands, SampledValuePhase *phases, size_t len, SupportedMeasurand *result, size_t result_len);
-
-// Return number of ALL supported measurands if measurand == NONE
-size_t platform_get_supported_measurand_count(int32_t connector_id, SampledValueMeasurand *measurands, SampledValuePhase *phases, size_t len);
-// Return ALL supported measurands if measurand == NONE
-const SupportedMeasurand *platform_get_supported_measurands(int32_t connector_id, SampledValueMeasurand *measurands, SampledValuePhase *phases, size_t len);
+bool platform_prepare_meter(int32_t connector_id, SampledValueMeasurand *measurands, SampledValuePhase *phases, size_t measurand_count, SupportedMeasurand **out_supported_measurands, size_t *out_supported_measurand_count, void **out_platform_meter_cache);
 
 size_t platform_read_file(const char *name, char *buf, size_t len);
 bool platform_write_file(const char *name, char *buf, size_t len);
