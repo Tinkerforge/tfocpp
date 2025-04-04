@@ -280,6 +280,11 @@ bool OcppConnection::sendCallAction(const ICall &call, int32_t connectorId)
     return true;
 }
 
+void OcppConnection::setPongDeadline() {
+    auto ping_interval = getIntConfigUnsigned(ConfigKey::WebSocketPingInterval);
+    this->pong_deadline = ping_interval == 0 ? 0 : set_deadline(1000 * (ping_interval * 3 + ping_interval / 2));
+}
+
 void OcppConnection::tick() {
     static bool was_connected = false;
     bool connected = platform_ws_connected(platform_ctx);
@@ -293,7 +298,7 @@ void OcppConnection::tick() {
 
         // Connection establishment counts as successful ping/pong
         last_ping_sent = platform_now_ms();
-        pong_deadline = set_deadline(OCPP_WEBSOCKET_PING_PONG_TIMEOUT * 1000);
+        this->setPongDeadline();
 
         // Stop reconnects
         next_reconnect_deadline = 0;
@@ -338,13 +343,17 @@ void OcppConnection::tick() {
     responds with Pong.
     */
     if ((getIntConfigUnsigned(ConfigKey::WebSocketPingInterval) != 0)
-        && deadline_elapsed(next_ping_deadline)
-        && platform_ws_send_ping(platform_ctx)) {
-        last_ping_sent = platform_now_ms();
-        next_ping_deadline = last_ping_sent + getIntConfigUnsigned(ConfigKey::WebSocketPingInterval) * 1000;
+        && deadline_elapsed(next_ping_deadline)) {
+        if (platform_ws_send_ping(platform_ctx)) {
+            last_ping_sent = platform_now_ms();
+            next_ping_deadline = last_ping_sent + getIntConfigUnsigned(ConfigKey::WebSocketPingInterval) * 1000;
+        } else {
+            log_info("Failed to send ping");
+        }
     }
 
     if (getIntConfigUnsigned(ConfigKey::WebSocketPingInterval) != 0 && deadline_elapsed(pong_deadline)) {
+        log_info("Pong timeout");
         platform_disconnect(platform_ctx);
         return;
     }
@@ -508,7 +517,7 @@ void* OcppConnection::start(const char *websocket_endpoint_url, const char *char
         return nullptr;
 
     platform_ws_register_receive_callback(platform_ctx, [](char *c, size_t s, void *user_data){((OcppConnection*)user_data)->handleMessage(c, s);}, this);
-    platform_ws_register_pong_callback(platform_ctx, [](void *user_data){((OcppConnection*)user_data)->pong_deadline = set_deadline(OCPP_WEBSOCKET_PING_PONG_TIMEOUT * 1000);}, this);
+    platform_ws_register_pong_callback(platform_ctx, [](void *user_data){((OcppConnection*)user_data)->setPongDeadline();}, this);
 
     return platform_ctx;
 }
