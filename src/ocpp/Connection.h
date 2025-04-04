@@ -52,6 +52,8 @@ public:
     bool sendCallAction(const ICall &call, int32_t connectorId = 0);
     bool sendCallResponse(const ICall &call);
 
+    void setPongDeadline();
+
     void *platform_ctx;
     OcppChargePoint *cp;
 
