@@ -1324,7 +1324,7 @@ void OcppChargePoint::evalAndApplyChargingProfiles()
 
 void OcppChargePoint::triggerChargingProfileEval(const char *reason)
 {
-    log_trace("Trigger ChargingProfile evaluation: %s");
+    log_trace("Trigger ChargingProfile evaluation: %s", reason);
     this->next_profile_eval = platform_get_system_time(this->platform_ctx);
 }
 
