@@ -46,7 +46,7 @@ static_assert(((size_t)StopTransactionReason::NONE) < 255, "");
 
 void persistStartTxn(int32_t connector_id, const char id_tag[21], int32_t meter_start, int32_t reservation_id, uint64_t call_id, time_t timestamp)
 {
-    log_info("Persisting StartTransaction.req at connector %d for tag %s at %.3f kWh as txn_msg/%" PRIu64 ".", connector_id, id_tag, meter_start / 1000.0f, call_id);
+    log_info("Persisting StartTransaction.req at connector %" PRId32 " for tag %s at %.3f kWh as txn_msg/%" PRIu64 ".", connector_id, id_tag, meter_start / 1000.0f, call_id);
     StartTxn txn;
     txn.connector_id = connector_id;
     txn.meter_start = meter_start;
@@ -69,7 +69,7 @@ void persistStartTxn(int32_t connector_id, const char id_tag[21], int32_t meter_
 
 void persistRunningTxn(int32_t connector_id, uint64_t call_id, int32_t transaction_id)
 {
-    log_info("Persisting running transaction %d at connector %d as txn_msg/%" PRIu64 ".", transaction_id, connector_id, call_id);
+    log_info("Persisting running transaction %" PRId32 " at connector %" PRId32 " as txn_msg/%" PRIu64 ".", transaction_id, connector_id, call_id);
     RunningTxn txn;
     txn.connector_id = connector_id;
     txn.transaction_id = transaction_id;
@@ -205,7 +205,7 @@ bool restoreNextTxnMessage(OcppConnection *conn) {
 
                     StartTxn start_txn;
                     memcpy(&start_txn, buf, sizeof(StartTxn));
-                    log_info("Creating RESTORED StartTransaction.req at connector %d for tag %s at %.3f kWh.", start_txn.connector_id, start_txn.id_tag, start_txn.meter_start / 1000.0f);
+                    log_info("Creating RESTORED StartTransaction.req at connector %" PRId32 " for tag %s at %.3f kWh.", start_txn.connector_id, start_txn.id_tag, start_txn.meter_start / 1000.0f);
 
                     StartTransaction msg{start_txn.connector_id, start_txn.id_tag, start_txn.meter_start, start_txn.timestamp, start_txn.reservation_id};
                     msg.ocppJmessageId = call_id;
@@ -257,7 +257,7 @@ bool restoreNextTxnMessage(OcppConnection *conn) {
 
                 StopTransaction msg{new_energy, new_timestamp, txn.transaction_id, nullptr, StopTransactionReason::REBOOT};
                 persistStopTxn((uint8_t)StopTransactionReason::REBOOT, new_energy, txn.transaction_id, "", msg.ocppJmessageId, new_timestamp);
-                log_info("Creating RESTORED StopTransaction.req at connector %d for unknown tag at %.3f kWh. (Txn stopped on reboot)", txn.connector_id, new_energy / 1000.0f);
+                log_info("Creating RESTORED StopTransaction.req at connector %" PRId32 " for unknown tag at %.3f kWh. (Txn stopped on reboot)", txn.connector_id, new_energy / 1000.0f);
                 conn->sendCallAction(msg, txn.connector_id);
                 return true;
             }
@@ -274,7 +274,7 @@ bool restoreNextTxnMessage(OcppConnection *conn) {
 
 void persistChargingProfile(int32_t connectorId, ChargingProfile *profile) {
     char name_buf[64] = {0};
-    snprintf(name_buf, sizeof(name_buf), "profiles/%d-%d-%d", connectorId, (int32_t)profile->chargingProfilePurpose, profile->stackLevel);
+    snprintf(name_buf, sizeof(name_buf), "profiles/%" PRId32 "-%" PRId32 "-%" PRId32, connectorId, (int32_t)profile->chargingProfilePurpose, profile->stackLevel);
 
     char buf[sizeof(ChargingProfile)] = {0};
     memcpy(buf, profile, sizeof(ChargingProfile));
@@ -284,7 +284,7 @@ void persistChargingProfile(int32_t connectorId, ChargingProfile *profile) {
 
 void restoreChargingProfile(int32_t connectorId, ChargingProfilePurpose purpose, int32_t stackLevel, Option<ChargingProfile> *profile) {
     char name_buf[64] = {0};
-    snprintf(name_buf, sizeof(name_buf), "profiles/%d-%d-%d", connectorId, (int32_t)purpose, stackLevel);
+    snprintf(name_buf, sizeof(name_buf), "profiles/%" PRId32 "-%" PRId32 "-%" PRId32, connectorId, (int32_t)purpose, stackLevel);
 
     char buf[sizeof(ChargingProfile)] = {0};
     auto len = platform_read_file(name_buf, buf, sizeof(ChargingProfile));
@@ -306,7 +306,7 @@ void removeChargingProfile(int32_t connectorId, ChargingProfile *profile) {
 
 void removeChargingProfile(int32_t connectorId, ChargingProfilePurpose purpose, int32_t stackLevel) {
     char name_buf[64] = {0};
-    snprintf(name_buf, sizeof(name_buf), "profiles/%d-%d-%d", connectorId, (int32_t)purpose, stackLevel);
+    snprintf(name_buf, sizeof(name_buf), "profiles/%" PRId32 "-%" PRId32 "-%" PRId32 "", connectorId, (int32_t)purpose, stackLevel);
 
     platform_remove_file(name_buf);
 }

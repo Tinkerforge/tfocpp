@@ -178,7 +178,7 @@ void Connector::applyState() {
 }
 
 void Connector::setState(ConnectorState newState) {
-    log_debug("C%d %s -> %s", this->connectorId, ConnectorStateStrings[(int)state], ConnectorStateStrings[(int)newState]);
+    log_debug("C%" PRId32 " %s -> %s", this->connectorId, ConnectorStateStrings[(int)state], ConnectorStateStrings[(int)newState]);
     ConnectorState oldState = state;
     state = newState;
 
@@ -230,7 +230,7 @@ void Connector::setState(ConnectorState newState) {
                     auto energy = platform_get_energy(connectorId);
 
                     StartTransaction msg{connectorId, authorized_for.tagId, energy, this->transaction_start_time};
-                    log_info("Created StartTransaction.req at connector %d for tag %s at %.3f kWh.", msg.connectorId, msg.idTag, msg.meterStart / 1000.0f);
+                    log_info("Created StartTransaction.req at connector %" PRId32 " for tag %s at %.3f kWh.", msg.connectorId, msg.idTag, msg.meterStart / 1000.0f);
 
                     persistStartTxn(msg.connectorId, msg.idTag, msg.meterStart, msg.reservationId, (uint32_t)msg.ocppJmessageId, msg.timestamp);
 
@@ -271,7 +271,7 @@ void Connector::setState(ConnectorState newState) {
                     onTxnMsgResponseReceived(this->transaction_confirmed_id);
 
                     StopTransaction msg{energy, timestamp, transaction_id, authorized_for.tagId, this->next_stop_reason};
-                    log_info("Created StopTransaction.req at connector %d for tag %s at %.3f kWh. StopReason %d", this->connectorId, msg.idTag, msg.meterStop / 1000.0f, (int)msg.reason);
+                    log_info("Created StopTransaction.req at connector %" PRId32 " for tag %s at %.3f kWh. StopReason %d", this->connectorId, msg.idTag, msg.meterStop / 1000.0f, (int)msg.reason);
 
                     persistStopTxn((uint8_t)msg.reason, msg.meterStop, msg.transactionId, msg.idTag, (uint32_t) msg.ocppJmessageId, msg.timestamp);
 

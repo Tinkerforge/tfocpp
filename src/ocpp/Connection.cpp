@@ -89,7 +89,7 @@ void OcppConnection::handleMessage(char *message, size_t message_len)
     }
 
     if (messageType != (int32_t)OcppRpcMessageType::CALLRESULT && messageType != (int32_t)OcppRpcMessageType::CALLERROR) {
-        log_error("received unknown message type %d", messageType);
+        log_error("received unknown message type %" PRId32, messageType);
         return;
     }
 
@@ -185,7 +185,7 @@ void OcppConnection::handleCallError(uint64_t uid, CallErrorCode code, const cha
 
     auto max_attempts = getIntConfigUnsigned(ConfigKey::TransactionMessageAttempts);
     if (transaction_message_attempts >= (max_attempts - 1)) {
-        log_warn("Transaction related message (id %" PRIu64 ") resulted in a call error %d of max %d times. Dropping.", message_in_flight.message_id, transaction_message_attempts + 1, max_attempts);
+        log_warn("Transaction related message (id %" PRIu64 ") resulted in a call error %" PRIu32 " of max %" PRIu32 " times. Dropping.", message_in_flight.message_id, transaction_message_attempts + 1, max_attempts);
         cp->onTimeout(message_in_flight.action, message_in_flight.message_id, message_in_flight.connector_id);
         message_in_flight = QueueItem{};
         transaction_message_attempts = 0;
@@ -197,7 +197,7 @@ void OcppConnection::handleCallError(uint64_t uid, CallErrorCode code, const cha
         auto new_timeout_s = transaction_message_attempts * getIntConfigUnsigned(ConfigKey::TransactionMessageRetryInterval);
         transaction_message_retry_deadline = set_deadline(new_timeout_s * 1000);
 
-        log_warn("Transaction related message (id %" PRIu64 ") resulted in a call error %d of max %d times. Waiting %d seconds before resending.", message_in_flight.message_id, transaction_message_attempts, max_attempts, new_timeout_s);
+        log_warn("Transaction related message (id %" PRIu64 ") resulted in a call error %" PRIu32 " of max %" PRIu32 " times. Waiting %" PRIu32 " seconds before resending.", message_in_flight.message_id, transaction_message_attempts, max_attempts, new_timeout_s);
     }
 }
 

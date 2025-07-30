@@ -45,7 +45,7 @@ ChargingProfile::ChargingProfile(RemoteStartTransactionChargingProfileEntriesVie
 }
 
 EvalChargingProfileResult ChargingProfile::eval(Option<time_t> startTxnTime, time_t now) {
-    log_trace("Evaluating charging profile %d", this->id);
+    log_trace("Evaluating charging profile %" PRId32, this->id);
 
     EvalChargingProfileResult result;
 
@@ -149,7 +149,7 @@ EvalChargingProfileResult ChargingProfile::eval(Option<time_t> startTxnTime, tim
 
     if (period.numberPhases.is_some()) {
         result.numberPhases = period.numberPhases.unwrap();
-        log_trace("    Setting number of phases to %d.", result.numberPhases);
+        log_trace("    Setting number of phases to %" PRId32 ".", result.numberPhases);
     }
 
     result.currentLimit = period.limit / (sched.unit == ChargingRateUnit::A ? 1.0f : (OCPP_LINE_VOLTAGE * (float)result.numberPhases));

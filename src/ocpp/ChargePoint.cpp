@@ -593,7 +593,7 @@ CallResponse OcppChargePoint::handleGetConfiguration(const char *uid, GetConfigu
                     break;
                 case OcppConfigurationValueType::Integer: {
                         config_value = (const char *)&scratch_buf[scratch_buf_idx];
-                        int written = snprintf(&scratch_buf[scratch_buf_idx], scratch_buf_size - scratch_buf_idx, "%d", config.value.integer.i);
+                        int written = snprintf(&scratch_buf[scratch_buf_idx], scratch_buf_size - scratch_buf_idx, "%" PRId32, config.value.integer.i);
                         if (written < 0) {
                             log_error("Failed to dump all configuration: value of key %s: Error %d", config_keys[i], written);
                             return CallResponse{CallErrorCode::InternalError, "Failed to dump all configuration."};
@@ -624,7 +624,7 @@ CallResponse OcppChargePoint::handleGetConfiguration(const char *uid, GetConfigu
                         break;
                     case OcppConfigurationValueType::Integer: {
                             config_value = (const char *)&scratch_buf[scratch_buf_idx];
-                            int written = snprintf(&scratch_buf[scratch_buf_idx], scratch_buf_size - scratch_buf_idx, "%d", config.value.integer.i);
+                            int written = snprintf(&scratch_buf[scratch_buf_idx], scratch_buf_size - scratch_buf_idx, "%" PRId32, config.value.integer.i);
                             if (written < 0) {
                                 log_error("Failed to write int config %s: %d", config_keys[result], written);
                                 return CallResponse{CallErrorCode::InternalError, "Failed to write int config value."};
@@ -651,7 +651,7 @@ CallResponse OcppChargePoint::handleGetConfiguration(const char *uid, GetConfigu
         }
     }
 
-    log_info("Creating GetConfiguration.conf with %lu known and %lu unknown keys", known_keys, unknown_keys);
+    log_info("Creating GetConfiguration.conf with %zu known and %zu unknown keys", known_keys, unknown_keys);
     connection.sendCallResponse(GetConfigurationResponse(uid, known.get(), known_keys, unknown.get(), unknown_keys));
 
     return CallResponse{CallErrorCode::OK, ""};
@@ -675,7 +675,7 @@ CallResponse OcppChargePoint::handleMeterValuesResponse(int32_t connectorId, Met
 template<typename T>
 static bool is_charging_profile_valid(T prof, int32_t conn_id) {
     if (prof.stackLevel() < 0 || prof.stackLevel() > OCPP_CHARGE_PROFILE_MAX_STACK_LEVEL) {
-        log_info("Rejected: stack level %d out of range", prof.stackLevel());
+        log_info("Rejected: stack level %" PRId32 " out of range", prof.stackLevel());
         return false;
     }
 
@@ -689,7 +689,7 @@ static bool is_charging_profile_valid(T prof, int32_t conn_id) {
     auto purpose = prof.chargingProfilePurpose();
     /* ChargePointMaxProfile can only be set at Charge Point ConnectorId 0.*/
     if (purpose == ChargingProfilePurpose::CHARGE_POINT_MAX_PROFILE && conn_id != 0) {
-        log_info("Rejected: CHARGE_POINT_MAX_PROFILE for connector id %d != 0 not allowed", conn_id);
+        log_info("Rejected: CHARGE_POINT_MAX_PROFILE for connector id %" PRId32 " != 0 not allowed", conn_id);
         return false;
     }
 
@@ -1010,7 +1010,7 @@ CallResponse OcppChargePoint::handleGetCompositeSchedule(const char *uid, GetCom
 
 static void clearProfileById(int32_t connectorId, int32_t id, Option<ChargingProfile> *opt) {
     if (opt->is_some() && opt->unwrap().id == id) {
-        log_info("New profile replaces %s level %d", ChargingProfilePurposeStrings[(size_t)opt->unwrap().chargingProfilePurpose], opt->unwrap().stackLevel);
+        log_info("New profile replaces %s level %" PRId32, ChargingProfilePurposeStrings[(size_t)opt->unwrap().chargingProfilePurpose], opt->unwrap().stackLevel);
         removeChargingProfile(connectorId, &opt->unwrap());
         opt->clear();
     }
@@ -1020,7 +1020,7 @@ CallResponse OcppChargePoint::handleSetChargingProfile(const char *uid, SetCharg
 {
     int32_t conn_id = req.connectorId();
     if (conn_id < 0 || conn_id > OCPP_NUM_CONNECTORS) {
-        log_info("Rejected: connector ID %d out of range", conn_id);
+        log_info("Rejected: connector ID %" PRId32 " out of range", conn_id);
         connection.sendCallResponse(SetChargingProfileResponse(uid, SetChargingProfileResponseStatus::REJECTED));
         return CallResponse{CallErrorCode::OK, ""};
     }
@@ -1037,7 +1037,7 @@ CallResponse OcppChargePoint::handleSetChargingProfile(const char *uid, SetCharg
     /* If there is no transaction active on the connector specified in a charging profile
        of type TxProfile, then the Charge Point SHALL discard it and return an error status in SetChargingProfile.conf. */
     if (purpose == ChargingProfilePurpose::TX_PROFILE && !connectors[conn_id - 1].isTransactionActive()) {
-        log_info("Rejected: TX_PROFILE but no transaction active on connector %d", conn_id);
+        log_info("Rejected: TX_PROFILE but no transaction active on connector %" PRId32, conn_id);
         connection.sendCallResponse(SetChargingProfileResponse(uid, SetChargingProfileResponseStatus::REJECTED));
         return CallResponse{CallErrorCode::OK, ""};
     }
@@ -1052,12 +1052,12 @@ CallResponse OcppChargePoint::handleSetChargingProfile(const char *uid, SetCharg
 
     // The test tool expects us to reject here. The spec only implies this via the requirement to include a transaction ID.
     if (purpose == ChargingProfilePurpose::TX_PROFILE && connectors[conn_id - 1].transaction_id != prof.transactionId().unwrap()) {
-        log_info("Rejected: TX_PROFILE but no transaction active on connector %d", conn_id);
+        log_info("Rejected: TX_PROFILE but no transaction active on connector %" PRId32, conn_id);
         connection.sendCallResponse(SetChargingProfileResponse(uid, SetChargingProfileResponseStatus::REJECTED));
         return CallResponse{CallErrorCode::OK, ""};
     }
 
-    log_info("Charging profile accepted as %s level %d", ChargingProfilePurposeStrings[(size_t) purpose], prof.stackLevel());
+    log_info("Charging profile accepted as %s level %" PRId32, ChargingProfilePurposeStrings[(size_t) purpose], prof.stackLevel());
 
     /*
     If a charging profile
@@ -1115,9 +1115,9 @@ static void debug_print_limits(float *allowedLimit,
         log_debug("    \tConnID\tAllowed\tPhases\tMinRate");
     for(int32_t i = 0; i < OCPP_NUM_CONNECTORS + 1; ++i) {
         if (trace)
-            log_trace("    \t%d\t%.3f\t%d\t%.3f", i, allowedLimit[i], allowedPhases[i], minChargingRate[i]);
+            log_trace("    \t%" PRId32 "\t%.3f\t%" PRId32 "\t%.3f", i, allowedLimit[i], allowedPhases[i], minChargingRate[i]);
         else
-            log_debug("    \t%d\t%.3f\t%d\t%.3f", i, allowedLimit[i], allowedPhases[i], minChargingRate[i]);
+            log_debug("    \t%" PRId32 "\t%.3f\t%" PRId32 "\t%.3f", i, allowedLimit[i], allowedPhases[i], minChargingRate[i]);
     }
 }
 
@@ -1161,7 +1161,7 @@ OcppChargePoint::EvalChargingProfilesResult OcppChargePoint::evalChargingProfile
 
     for(int32_t connectorIdx = 0; connectorIdx < OCPP_NUM_CONNECTORS; ++connectorIdx) {
         auto &conn = connectors[connectorIdx];
-        log_debug("    Connector %d", connectorIdx + 1);
+        log_debug("    Connector %" PRId32, connectorIdx + 1);
 
         for(int stackLevel = OCPP_CHARGE_PROFILE_MAX_STACK_LEVEL; stackLevel >= 0; --stackLevel) {
             if (!conn.txProfiles[stackLevel].is_some()) {
@@ -1178,7 +1178,7 @@ OcppChargePoint::EvalChargingProfilesResult OcppChargePoint::evalChargingProfile
                 auto profTxnId = conn.txProfiles[stackLevel].unwrap().transactionId.unwrap();
 
                 if (connTxnId != profTxnId){
-                    log_trace("    TxProfiles[%d] txn ID %d != running txn ID %d", stackLevel, profTxnId, connTxnId);
+                    log_trace("    TxProfiles[%d] txn ID %" PRId32 " != running txn ID %" PRId32, stackLevel, profTxnId, connTxnId);
                     continue;
                 }
             }
@@ -1317,7 +1317,7 @@ void OcppChargePoint::evalAndApplyChargingProfiles()
 
     for(int32_t i = 0; i < OCPP_NUM_CONNECTORS; ++i) {
         uint32_t limit = (uint32_t)(result.allocatedLimit[i + 1] * 1000);
-        log_debug("Setting connector %d limit to %u", i + 1, limit);
+        log_debug("Setting connector %" PRId32 " limit to %" PRIu32, i + 1, limit);
         connectors[i].current_allowed = limit;
     }
 }
@@ -1343,7 +1343,7 @@ void OcppChargePoint::loadProfiles()
 
 void OcppChargePoint::handleTagSeen(int32_t connectorId, const char *tagId)
 {
-    log_info("Seen tag %s at connector %d. ChargePointState is %s", tagId, connectorId, OcppStateStrings[(size_t)this->state]);
+    log_info("Seen tag %s at connector %" PRId32 ". ChargePointState is %s", tagId, connectorId, OcppStateStrings[(size_t)this->state]);
 
     // Don't allow tags at connector 0 (i.e. the charge point itself)
     if (connectorId <= 0)
@@ -1357,7 +1357,7 @@ void OcppChargePoint::handleTagSeen(int32_t connectorId, const char *tagId)
 }
 
 void OcppChargePoint::handleStop(int32_t connectorId, StopReason reason) {
-    log_info("connector %d wants to stop with reason %d", connectorId, (int)reason);
+    log_info("connector %" PRId32 " wants to stop with reason %d", connectorId, (int)reason);
 
     // Don't allow tags at connector 0 (i.e. the charge point itself)
     if (connectorId <= 0)
