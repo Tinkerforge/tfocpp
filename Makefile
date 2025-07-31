@@ -29,6 +29,7 @@ COMPILE_FLAGS = -DOCPP_LOG_LEVEL=4 \
 				${CLANG_WARNINGS} \
 				-fdiagnostics-color=always \
 				-I../tfjson/src \
+				-I../tftools/src \
 				-Ilib/ArduinoJson \
 				-Ilib/mongoose \
 				-Isrc \
