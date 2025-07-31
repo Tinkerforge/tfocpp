@@ -17,6 +17,7 @@
  */
 
 #pragma once
+#pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Weverything"
 
 #include <stdbool.h>
@@ -166,3 +167,4 @@ void iso8601_add_seconds(iso8601_time *time, int seconds);
  * Add the specified number of useconds to the time.
  */
 void iso8601_add_useconds(iso8601_time *time, int useconds);
+#pragma clang diagnostic pop
