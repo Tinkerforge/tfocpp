@@ -33,12 +33,6 @@ void OcppMeterValueHandler::tick() {
         mv.sampledValue = to_send.sampled_values.get();
         mv.sampledValue_length = to_send.sampled_value_count;
         if (mv.sampledValue_length > 0) {
-            {
-                char buf[100] = {0};
-                struct tm timeinfo;
-                gmtime_r(&timestamp, &timeinfo);
-                size_t written = strftime(buf, 100, "%FT%T", &timeinfo);
-            }
             // Don't pass transaction ID here:
             // Sampled values are also called charging session meter values,
             // so we relate those to a transaction, not the clock aligned values.
@@ -56,12 +50,6 @@ void OcppMeterValueHandler::tick() {
         mv.sampledValue = to_send.sampled_values.get();
         mv.sampledValue_length = to_send.sampled_value_count;
         if (mv.sampledValue_length > 0) {
-            {
-                char buf[100] = {0};
-                struct tm timeinfo;
-                gmtime_r(&timestamp, &timeinfo);
-                size_t written = strftime(buf, 100, "%FT%T", &timeinfo);
-            }
             /* Errata 4.0 3.16: When reporting Meter Values for connectorId 0 (the main energy meter) it is RECOMMENDED NOT to add a TransactionId. */
             cp->sendCallAction(MeterValues(this->connectorId, &mv, 1, (this->connectorId == 0 || !this->transaction_active()) ? OCPP_INTEGER_NOT_PASSED : this->transactionId), this->connectorId);
         }
