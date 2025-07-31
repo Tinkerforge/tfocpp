@@ -76,7 +76,10 @@ void MeterValueAccumulator::tick()
                 // To do this, only write the register value once.
                 // ::reset() sets the value back to 0, allowing
                 // one write again.
+                #pragma clang diagnostic push
+                #pragma clang diagnostic ignored "-Wfloat-equal" // This checks for the 0 written by ::reset(). Comparing to 0 is safe here.
                 if (meter_values[supported_idx] == 0)
+                #pragma clang diagnostic pop
                     meter_values[supported_idx] = platform_get_raw_meter_value(this->connectorId, supported_idx, this->platform_meter_cache);
                 break;
             case MeasurandType::Interval:
