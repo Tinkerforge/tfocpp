@@ -13,6 +13,7 @@
 #include <array>
 #include <algorithm>
 #include <numeric>
+#include <math.h>
 
 extern "C" {
     #include "lib/libiso8601/iso8601.h"
@@ -979,7 +980,8 @@ CallResponse OcppChargePoint::handleGetCompositeSchedule(const char *uid, GetCom
             periods[periods_used].limit *= OCPP_LINE_VOLTAGE * (float)periods[periods_used].numberPhases;
 
         if (periods_used > 0
-         && periods[periods_used - 1].limit == periods[periods_used].limit
+            /*Accepts at most one digit fraction (e.g. 8.1).*/
+         && (int)(roundf(periods[periods_used - 1].limit * 10)) == (int)(roundf(periods[periods_used].limit * 10))
          && periods[periods_used - 1].numberPhases == periods[periods_used].numberPhases)
             // If this period and the last one have exactly the same limits, we don't have to report the second period.
             // This can happen, as evalChargingProfiles only returns the next time to check, not the next time a limit

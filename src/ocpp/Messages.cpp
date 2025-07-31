@@ -335,7 +335,7 @@ void GetCompositeScheduleResponseChargingSchedule::serializeInto(TFJsonSerialize
         if (startSchedule != OCPP_DATETIME_NOT_PASSED) unix_timestamp_to_iso_string(startSchedule, json, "startSchedule");
         if (chargingRateUnit != GetCompositeScheduleResponseChargingScheduleChargingRateUnit::NONE) json.addMemberString("chargingRateUnit", GetCompositeScheduleResponseChargingScheduleChargingRateUnitStrings[(size_t)chargingRateUnit]);
         if (chargingSchedulePeriod != nullptr) { json.addMemberArray("chargingSchedulePeriod"); for(size_t i = 0; i < chargingSchedulePeriod_length; ++i) { json.addObject(); chargingSchedulePeriod[i].serializeInto(json); json.endObject(); } json.endArray(); }
-        if (!isnan(minChargingRate)) json.addMemberNumber("minChargingRate", minChargingRate);
+        if (!isnan(minChargingRate)) json.addMemberNumber("minChargingRate", minChargingRate, "%.1f");
     }
 
 void MeterValueSampledValue::serializeInto(TFJsonSerializer &json) {
@@ -350,7 +350,7 @@ void MeterValueSampledValue::serializeInto(TFJsonSerializer &json) {
 
 void GetCompositeScheduleResponseChargingScheduleChargingSchedulePeriod::serializeInto(TFJsonSerializer &json) {
         if (startPeriod != OCPP_INTEGER_NOT_PASSED) json.addMemberNumber("startPeriod", startPeriod);
-        if (!isnan(limit)) json.addMemberNumber("limit", limit);
+        if (!isnan(limit)) json.addMemberNumber("limit", limit, "%.1f");
         if (numberPhases != OCPP_INTEGER_NOT_PASSED) json.addMemberNumber("numberPhases", numberPhases);
     }
 

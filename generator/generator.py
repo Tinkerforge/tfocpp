@@ -270,7 +270,7 @@ def param_insertion(message: str, name: str, p: Property):
     elif isinstance(p.element, Integer):
         return 'if ({name} != OCPP_INTEGER_NOT_PASSED) json.addMemberNumber("{name}", {name});'.format(name=name)
     elif isinstance(p.element, Number):
-        return 'if (!isnan({name})) json.addMemberNumber("{name}", {name});'.format(name=name)
+        return 'if (!isnan({name})) json.addMemberNumber("{name}", {name}, "%.1f");'.format(name=name)
     elif isinstance(p.element, Boolean):
         if not p.required:
             raise Exception("Non-required bools are not supported")
