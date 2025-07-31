@@ -1388,7 +1388,7 @@ static size_t url_encode(char *buf, size_t len, const char *url) {
     size_t offset = 0;
     const char * const hex = "0123456789abcdef";
 
-    for(int i = 0; i < url_len; ++i) {
+    for(size_t i = 0; i < url_len; ++i) {
         // We want a logical right shift below, so use unsigned char here.
         unsigned char c = url[i];
         if (is_url_safe(c)) {

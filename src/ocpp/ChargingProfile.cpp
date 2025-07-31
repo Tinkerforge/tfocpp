@@ -137,7 +137,7 @@ EvalChargingProfileResult ChargingProfile::eval(Option<time_t> startTxnTime, tim
 
     for(size_t i = 1; i < sched.chargingSchedulePeriodCount; ++i) {
         if (schedStart + sched.chargingSchedulePeriod[i].startPeriod > now) {
-            log_trace("    Period %d not reached yet. Using period %d", i, i - 1);
+            log_trace("    Period %zu not reached yet. Using period %zu", i, i - 1);
             result.nextCheck = std::min(result.nextCheck, schedStart + sched.chargingSchedulePeriod[i].startPeriod);
             break;
         }
