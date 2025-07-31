@@ -60,7 +60,7 @@ void MeterValueAccumulator::tick()
     if (meter_values == nullptr)
         return;
 
-    size_t value_offset = 0;
+    //size_t value_offset = 0;
 
     for(size_t supported_idx = 0; supported_idx < this->supported_measurand_count; ++supported_idx) {
         auto measurand = supported_measurands[supported_idx];
@@ -109,7 +109,7 @@ ValueToSend MeterValueAccumulator::get(SampledValueContext context)
 
     for(size_t supported_idx = 0; supported_idx < this->supported_measurand_count; ++supported_idx) {
         auto measurand = supported_measurands[supported_idx];
-        auto measurand_type = get_measurand_type(measurand.measurand, this->average);
+        //auto measurand_type = get_measurand_type(measurand.measurand, this->average);
 
         bool is_signed = false;
 
