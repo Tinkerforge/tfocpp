@@ -254,6 +254,7 @@ const char * const SampledValueUnitStrings[] = {
     "A",
     "V",
     "K",
+    "Celcius",
     "Celsius",
     "Fahrenheit",
     "Percent"

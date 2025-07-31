@@ -19,7 +19,7 @@ class SampledValueItem(Object, additionalProperties=False):
 
     location: Maybe[str] = Property(String(enum=['Cable', 'EV', 'Inlet', 'Outlet', 'Body']))
 
-    unit: Maybe[str] = Property(String(enum=['Wh', 'kWh', 'varh', 'kvarh', 'W', 'kW', 'VA', 'kVA', 'var', 'kvar', 'A', 'V', 'K', 'Celsius', 'Fahrenheit', 'Percent']))
+    unit: Maybe[str] = Property(String(enum=['Wh', 'kWh', 'varh', 'kvarh', 'W', 'kW', 'VA', 'kVA', 'var', 'kvar', 'A', 'V', 'K', 'Celcius', 'Celsius', 'Fahrenheit', 'Percent']))
 
 
 class TransactionDataItem(Object, additionalProperties=False):

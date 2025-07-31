@@ -295,6 +295,7 @@ enum class SampledValueUnit {
     A,
     V,
     K,
+    CELCIUS,
     CELSIUS,
     FAHRENHEIT,
     PERCENT,
