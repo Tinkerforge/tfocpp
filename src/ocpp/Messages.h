@@ -17,7 +17,7 @@ extern uint64_t next_call_id;
 
 extern const char * const ChangeAvailabilityResponseStatusStrings[];
 
-enum class ChangeAvailabilityResponseStatus {
+enum class ChangeAvailabilityResponseStatus : uint8_t {
     ACCEPTED,
     REJECTED,
     SCHEDULED,
@@ -26,7 +26,7 @@ enum class ChangeAvailabilityResponseStatus {
 
 extern const char * const ChangeConfigurationResponseStatusStrings[];
 
-enum class ChangeConfigurationResponseStatus {
+enum class ChangeConfigurationResponseStatus : uint8_t {
     ACCEPTED,
     REJECTED,
     REBOOT_REQUIRED,
@@ -36,7 +36,7 @@ enum class ChangeConfigurationResponseStatus {
 
 extern const char * const ResponseStatusStrings[];
 
-enum class ResponseStatus {
+enum class ResponseStatus : uint8_t {
     ACCEPTED,
     REJECTED,
     NONE
@@ -44,7 +44,7 @@ enum class ResponseStatus {
 
 extern const char * const DataTransferResponseStatusStrings[];
 
-enum class DataTransferResponseStatus {
+enum class DataTransferResponseStatus : uint8_t {
     ACCEPTED,
     REJECTED,
     UNKNOWN_MESSAGE_ID,
@@ -54,7 +54,7 @@ enum class DataTransferResponseStatus {
 
 extern const char * const StatusNotificationErrorCodeStrings[];
 
-enum class StatusNotificationErrorCode {
+enum class StatusNotificationErrorCode : uint8_t {
     CONNECTOR_LOCK_FAILURE,
     EV_COMMUNICATION_ERROR,
     GROUND_FAILURE,
@@ -76,7 +76,7 @@ enum class StatusNotificationErrorCode {
 
 extern const char * const StatusNotificationStatusStrings[];
 
-enum class StatusNotificationStatus {
+enum class StatusNotificationStatus : uint8_t {
     AVAILABLE,
     PREPARING,
     CHARGING,
@@ -91,7 +91,7 @@ enum class StatusNotificationStatus {
 
 extern const char * const StopTransactionReasonStrings[];
 
-enum class StopTransactionReason {
+enum class StopTransactionReason : uint8_t {
     EMERGENCY_STOP,
     EV_DISCONNECTED,
     HARD_RESET,
@@ -108,7 +108,7 @@ enum class StopTransactionReason {
 
 extern const char * const UnlockConnectorResponseStatusStrings[];
 
-enum class UnlockConnectorResponseStatus {
+enum class UnlockConnectorResponseStatus : uint8_t {
     UNLOCKED,
     UNLOCK_FAILED,
     NOT_SUPPORTED,
@@ -117,7 +117,7 @@ enum class UnlockConnectorResponseStatus {
 
 extern const char * const ResponseIdTagInfoEntriesStatusStrings[];
 
-enum class ResponseIdTagInfoEntriesStatus {
+enum class ResponseIdTagInfoEntriesStatus : uint8_t {
     ACCEPTED,
     BLOCKED,
     EXPIRED,
@@ -127,7 +127,7 @@ enum class ResponseIdTagInfoEntriesStatus {
 
 extern const char * const BootNotificationResponseStatusStrings[];
 
-enum class BootNotificationResponseStatus {
+enum class BootNotificationResponseStatus : uint8_t {
     ACCEPTED,
     PENDING,
     REJECTED
@@ -135,14 +135,14 @@ enum class BootNotificationResponseStatus {
 
 extern const char * const ChangeAvailabilityTypeStrings[];
 
-enum class ChangeAvailabilityType {
+enum class ChangeAvailabilityType : uint8_t {
     INOPERATIVE,
     OPERATIVE
 };
 
 extern const char * const ChargingProfilePurposeStrings[];
 
-enum class ChargingProfilePurpose {
+enum class ChargingProfilePurpose : uint8_t {
     CHARGE_POINT_MAX_PROFILE,
     TX_DEFAULT_PROFILE,
     TX_PROFILE
@@ -150,7 +150,7 @@ enum class ChargingProfilePurpose {
 
 extern const char * const ChargingProfileKindStrings[];
 
-enum class ChargingProfileKind {
+enum class ChargingProfileKind : uint8_t {
     ABSOLUTE,
     RECURRING,
     RELATIVE
@@ -158,28 +158,28 @@ enum class ChargingProfileKind {
 
 extern const char * const RecurrencyKindStrings[];
 
-enum class RecurrencyKind {
+enum class RecurrencyKind : uint8_t {
     DAILY,
     WEEKLY
 };
 
 extern const char * const ChargingRateUnitStrings[];
 
-enum class ChargingRateUnit {
+enum class ChargingRateUnit : uint8_t {
     A,
     W
 };
 
 extern const char * const ResetTypeStrings[];
 
-enum class ResetType {
+enum class ResetType : uint8_t {
     HARD,
     SOFT
 };
 
 extern const char * const ClearChargingProfileResponseStatusStrings[];
 
-enum class ClearChargingProfileResponseStatus {
+enum class ClearChargingProfileResponseStatus : uint8_t {
     ACCEPTED,
     UNKNOWN,
     NONE
@@ -187,7 +187,7 @@ enum class ClearChargingProfileResponseStatus {
 
 extern const char * const SetChargingProfileResponseStatusStrings[];
 
-enum class SetChargingProfileResponseStatus {
+enum class SetChargingProfileResponseStatus : uint8_t {
     ACCEPTED,
     REJECTED,
     NOT_SUPPORTED,
@@ -196,7 +196,7 @@ enum class SetChargingProfileResponseStatus {
 
 extern const char * const GetCompositeScheduleResponseChargingScheduleChargingRateUnitStrings[];
 
-enum class GetCompositeScheduleResponseChargingScheduleChargingRateUnit {
+enum class GetCompositeScheduleResponseChargingScheduleChargingRateUnit : uint8_t {
     A,
     W,
     NONE
@@ -204,7 +204,7 @@ enum class GetCompositeScheduleResponseChargingScheduleChargingRateUnit {
 
 extern const char * const SampledValueContextStrings[];
 
-enum class SampledValueContext {
+enum class SampledValueContext : uint8_t {
     INTERRUPTION_BEGIN,
     INTERRUPTION_END,
     SAMPLE_CLOCK,
@@ -218,7 +218,7 @@ enum class SampledValueContext {
 
 extern const char * const SampledValueFormatStrings[];
 
-enum class SampledValueFormat {
+enum class SampledValueFormat : uint8_t {
     RAW,
     SIGNED_DATA,
     NONE
@@ -226,7 +226,7 @@ enum class SampledValueFormat {
 
 extern const char * const SampledValueMeasurandStrings[];
 
-enum class SampledValueMeasurand {
+enum class SampledValueMeasurand : uint8_t {
     ENERGY_ACTIVE_EXPORT_REGISTER,
     ENERGY_ACTIVE_IMPORT_REGISTER,
     ENERGY_REACTIVE_EXPORT_REGISTER,
@@ -254,7 +254,7 @@ enum class SampledValueMeasurand {
 
 extern const char * const SampledValuePhaseStrings[];
 
-enum class SampledValuePhase {
+enum class SampledValuePhase : uint8_t {
     L1,
     L2,
     L3,
@@ -270,7 +270,7 @@ enum class SampledValuePhase {
 
 extern const char * const SampledValueLocationStrings[];
 
-enum class SampledValueLocation {
+enum class SampledValueLocation : uint8_t {
     CABLE,
     EV,
     INLET,
@@ -281,7 +281,7 @@ enum class SampledValueLocation {
 
 extern const char * const SampledValueUnitStrings[];
 
-enum class SampledValueUnit {
+enum class SampledValueUnit : uint8_t {
     WH,
     K_WH,
     VARH,
@@ -304,7 +304,7 @@ enum class SampledValueUnit {
 
 extern const char * const CallActionStrings[];
 
-enum class CallAction {
+enum class CallAction : uint8_t {
     AUTHORIZE,
     BOOT_NOTIFICATION,
     CHANGE_AVAILABILITY_RESPONSE,

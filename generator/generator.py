@@ -344,9 +344,17 @@ def generate_enum(name: str, entries: List[str], add_none=True):
             continue
         entries_set.append(x)
 
+    s = len(entries_set) + (1 if add_none else 0)
+    if s <= 255:
+        type_ = 'uint8_t'
+    elif s <= 65535:
+        type_ = 'uint16_t'
+    else:
+        type_ = 'uint32_t'
+
     template = """extern const char * const {name}Strings[];
 
-enum class {name} {{
+enum class {name} : {type_} {{
     {entries}{none}
 }};
 """
@@ -354,7 +362,7 @@ enum class {name} {{
     {entry_strings}
 }};
 """
-    h_content = template.format(name=name, entries=",\n    ".join(camel_to_upper_snake(x) for x in entries_set), none=",\n    NONE" if add_none else "")
+    h_content = template.format(name=name, type_=type_, entries=",\n    ".join(camel_to_upper_snake(x) for x in entries_set), none=",\n    NONE" if add_none else "")
     cpp_content = string_template.format(name=name, entry_strings=",\n    ".join('"{}"'.format(x) for x in entries_set))
 
     return h_content, cpp_content
