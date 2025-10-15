@@ -59,6 +59,7 @@ struct Connector {
     time_t transaction_start_time = 0;
 
     uint32_t current_allowed = OCPP_MAX_CHARGING_CURRENT;
+    uint32_t phases_allowed = 3;
 
     // +1 as stack levels 0 up to (including) OCPP_CHARGE_PROFILE_MAX_STACK_LEVEL are allowed.
     Option<ChargingProfile> txProfiles[OCPP_CHARGE_PROFILE_MAX_STACK_LEVEL + 1];

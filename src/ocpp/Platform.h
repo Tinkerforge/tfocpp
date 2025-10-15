@@ -104,6 +104,7 @@ EVSEState platform_get_evse_state(int32_t connectorId);
 uint32_t platform_get_maximum_charging_current(int32_t connectorId);
 
 void platform_set_charging_current(int32_t connectorId, uint32_t milliAmps);
+void platform_set_charging_phases(int32_t connectorId, uint8_t phases);
 
 // Calling the stop callback will _never_ unlock the cable if it is currently locked. The same tag (or one in the same group) is required to unlock the cable.
 // For example to implement a remote stop that unlocks immediately, use platform_unlock_cable.

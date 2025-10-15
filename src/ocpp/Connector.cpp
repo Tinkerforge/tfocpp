@@ -64,6 +64,7 @@ void Connector::applyState() {
         case ConnectorState::FINISHING_NO_CABLE_UNLOCKED:
         case ConnectorState::UNAVAILABLE:
             platform_set_charging_current(connectorId, 0);
+            platform_set_charging_phases(connectorId, this->phases_allowed);
             platform_unlock_cable(connectorId);
 
             clearTagDeadline();
@@ -79,6 +80,7 @@ void Connector::applyState() {
 
         case ConnectorState::NO_CABLE_NO_TAG:
             platform_set_charging_current(connectorId, 0);
+            platform_set_charging_phases(connectorId, this->phases_allowed);
             platform_unlock_cable(connectorId);
 
             setTagDeadline();
@@ -94,6 +96,7 @@ void Connector::applyState() {
 
         case ConnectorState::NO_TAG:
             platform_set_charging_current(connectorId, 0);
+            platform_set_charging_phases(connectorId, this->phases_allowed);
             platform_unlock_cable(connectorId);
 
             setTagDeadline();
@@ -110,6 +113,7 @@ void Connector::applyState() {
         case ConnectorState::AUTH_START_NO_PLUG:
         case ConnectorState::AUTH_START_NO_CABLE:
             platform_set_charging_current(connectorId, 0);
+            platform_set_charging_phases(connectorId, this->phases_allowed);
             platform_unlock_cable(connectorId);
 
             // We have to set the timeout here: The spec says
@@ -126,6 +130,7 @@ void Connector::applyState() {
 
         case ConnectorState::AUTH_START:
             platform_set_charging_current(connectorId, 0);
+            platform_set_charging_phases(connectorId, this->phases_allowed);
             platform_unlock_cable(connectorId);
 
             setTagDeadline();
@@ -140,6 +145,7 @@ void Connector::applyState() {
         case ConnectorState::NO_PLUG:
         case ConnectorState::NO_CABLE:
             platform_set_charging_current(connectorId, 0);
+            platform_set_charging_phases(connectorId, this->phases_allowed);
             platform_unlock_cable(connectorId);
 
             clearTagDeadline();
@@ -156,6 +162,7 @@ void Connector::applyState() {
             platform_lock_cable(connectorId);
             // TODO: implement MaxEnergyOnInvalidId here
             platform_set_charging_current(connectorId, transaction_with_non_accepted_tag_id ? 0 : this->current_allowed);
+            platform_set_charging_phases(connectorId, this->phases_allowed);
 
             clearTagDeadline();
             clearCableDeadline();
@@ -165,6 +172,7 @@ void Connector::applyState() {
         case ConnectorState::FINISHING_NO_SAME_TAG:
             platform_lock_cable(connectorId);
             platform_set_charging_current(connectorId, 0);
+            platform_set_charging_phases(connectorId, this->phases_allowed);
 
             clearTagDeadline();
             clearCableDeadline();

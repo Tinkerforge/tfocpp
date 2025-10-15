@@ -1259,12 +1259,15 @@ profiles_evaluated:
 
     EvalChargingProfilesResult result;
     result.nextCheck = nextCheck;
+
     result.allocatedLimit[0] = allowedCurrent[0];
     result.allocatedPhases[0] = allowedPhases[0];
 
     for(int32_t i = 1; i < OCPP_NUM_CONNECTORS + 1; ++i) {
         result.allocatedLimit[i] = 0;
-        result.allocatedPhases[i] = 3;
+        // If the whole charge point is only allowed to use one phase,
+        // each connector is only allowed to use one phase.
+        result.allocatedPhases[i] = std::min(result.allocatedPhases[0], allowedPhases[i]);
     }
 
 
@@ -1319,8 +1322,10 @@ void OcppChargePoint::evalAndApplyChargingProfiles()
 
     for(int32_t i = 0; i < OCPP_NUM_CONNECTORS; ++i) {
         uint32_t limit = (uint32_t)(result.allocatedLimit[i + 1] * 1000);
-        log_debug("Setting connector %" PRId32 " limit to %" PRIu32, i + 1, limit);
+        uint32_t phases = result.allocatedPhases[i + 1];
+        log_debug("Setting connector %" PRId32 " limit to %" PRIu32 "@%" PRIu32 "p", i + 1, limit, phases);
         connectors[i].current_allowed = limit;
+        connectors[i].phases_allowed = phases;
     }
 }
 

@@ -30,6 +30,9 @@ struct EvalChargingProfileResult {
     time_t nextCheck = std::numeric_limits<time_t>::max();
     float currentLimit = std::numeric_limits<float>::max();
     float minChargingCurrent = 0;
+    /*
+    If a number of phases is needed, numberPhases=3 will be assumed unless another number is given.
+    */
     int32_t numberPhases = 3;
 };
 
