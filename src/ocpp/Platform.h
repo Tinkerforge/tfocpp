@@ -103,6 +103,8 @@ EVSEState platform_get_evse_state(int32_t connectorId);
 // of the charge point.
 uint32_t platform_get_maximum_charging_current(int32_t connectorId);
 
+bool platform_supports_phase_switch();
+
 void platform_set_charging_current(int32_t connectorId, uint32_t milliAmps);
 void platform_set_charging_phases(int32_t connectorId, uint8_t phases);
 

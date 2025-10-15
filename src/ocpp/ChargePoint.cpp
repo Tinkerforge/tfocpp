@@ -1420,6 +1420,11 @@ static size_t url_encode(char *buf, size_t len, const char *url) {
 
 bool OcppChargePoint::start(const char *websocket_endpoint_url, const char *charge_point_name, const uint8_t *basic_auth_pass, size_t basic_auth_pass_length, BasicAuthPassType basic_auth_pass_type) {
     loadConfig();
+
+    // TODO: Refactor this later.
+    // This is ugly but the currently only case where we detect config from the platform.
+    getConfig(ConfigKey::ConnectorSwitch3to1PhaseSupported).setValue(platform_supports_phase_switch() ? "true" : "false", true);
+
 #ifdef OCPP_STATE_CALLBACKS
     debugDumpConfig();
 #endif
