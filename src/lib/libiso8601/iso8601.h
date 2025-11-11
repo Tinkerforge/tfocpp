@@ -169,4 +169,7 @@ void iso8601_add_seconds(iso8601_time *time, int seconds);
  * Add the specified number of useconds to the time.
  */
 void iso8601_add_useconds(iso8601_time *time, int useconds);
+
+#if defined(__clang__)
 #pragma clang diagnostic pop
+#endif
