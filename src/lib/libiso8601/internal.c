@@ -16,7 +16,9 @@
  * limitations under the License.
  */
 
+#if defined(__clang__)
 #pragma clang diagnostic ignored "-Weverything"
+#endif
 
 #include "internal.h"
 #include <assert.h>

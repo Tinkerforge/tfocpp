@@ -1,4 +1,6 @@
+#if defined(__clang__)
 #pragma clang diagnostic ignored "-Weverything"
+#endif
 
 // Copyright (c) 2004-2013 Sergey Lyubka
 // Copyright (c) 2013-2022 Cesanta Software Limited

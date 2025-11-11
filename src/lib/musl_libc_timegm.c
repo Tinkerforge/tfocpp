@@ -1,4 +1,6 @@
+#if defined(__clang__)
 #pragma clang diagnostic ignored "-Weverything"
+#endif
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE

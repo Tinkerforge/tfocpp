@@ -17,7 +17,9 @@
  */
 
 #pragma once
+#if defined(__clang__)
 #pragma clang diagnostic ignored "-Weverything"
+#endif
 
 #include <stdbool.h>
 #include <stdint.h>
