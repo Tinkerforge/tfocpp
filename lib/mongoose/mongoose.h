@@ -1,4 +1,5 @@
 #if defined(__clang__)
+#pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Weverything"
 #endif
 
@@ -1301,3 +1302,7 @@ void mip_init(struct mg_mgr *, struct mip_ipcfg *, struct mip_driver *);
 }
 #endif
 #endif  // MONGOOSE_H
+
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
