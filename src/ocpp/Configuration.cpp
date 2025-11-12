@@ -6,9 +6,9 @@
 
 #include <string.h>
 
-// This is all configs specified in the OCPP spec (43) + Errata 4.0 (3).
+// This is all configs specified in the OCPP spec (43) + Errata 4.0 (3) + "Signed Meter Values in OCPP"(8).
 // Errata 4.0 removed one config, but we ignore that here.
-#define MAX_SPECIFIED_CONFIGS 46
+#define MAX_SPECIFIED_CONFIGS 54
 static_assert(MAX_SPECIFIED_CONFIGS >= (size_t) ConfigKey::CONFIG_KEY_MAX, "MAX_SPECIFIED_CONFIGS must always be more than the number of supported configs!");
 #define MAX_CONFIG_LENGTH 501 // the spec does not specify a maximum length. however the payload of a change configuration message has a max length of 500
 
@@ -308,6 +308,15 @@ const char * const config_keys[OCPP_CONFIG_COUNT] {
     // FIRMWARE MANAGEMENT PROFILE
     //"SupportedFileTransferProtocols", // 9.5.1 (errata sheet v4.0 3.90)
 
+    // SIGNED METER VALUES
+    "MeterPublicKey1", // Signed Meter Values in OCPP 3.3.1
+    "PublicKeyWIthSignedMeterValue", // Signed Meter Values in OCPP 3.3.2
+    "SampledDataSignReadings", // Signed Meter Values in OCPP 3.3.3
+    //"StartTxnSampledData", // Signed Meter Values in OCPP 3.3.4
+    //"SampledDataSignStartedReadings", // Signed Meter Values in OCPP 3.3.5
+    "SampledDataSignUpdatedReadings", // Signed Meter Values in OCPP 3.3.6
+    "AlignedDataSignReadings", // Signed Meter Values in OCPP 3.3.7
+    "AlignedDataSignUpdatedReadings", // Signed Meter Values in OCPP 3.3.8
 };
 
 static constexpr int OCPP_FEATURE_PROFILE_COUNT = 2;
@@ -331,6 +340,13 @@ static const char * const file_transfer_protocols[OCPP_FILE_TRANSFER_PROTOCOLS] 
     "HTTPS",
 };
 */
+
+static constexpr int OCPP_SEND_PUB_KEY_COUNT = 4;
+static const char * const send_pub_key[OCPP_SEND_PUB_KEY_COUNT] {
+    "Never",
+    "OncePerTransaction",
+    "EveryMetervalue",
+};
 
 //TODO: implement that CSL max_elements and the corresponding ...MaxLength value are kept in sync
 
@@ -434,6 +450,15 @@ static OcppConfiguration config[OCPP_CONFIG_COUNT] = {
     // FIRMWARE MANAGEMENT PROFILE
     /*SupportedFileTransferProtocols*/    //OcppConfiguration::csl(OCPP_SUPPORTED_FILE_TRANSFER_PROTOCOL, strlen(OCPP_SUPPORTED_FILE_TRANSFER_PROTOCOL) + 1, 1, true, false, file_transfer_protocols, OCPP_FILE_TRANSFER_PROTOCOLS, false),
 
+    // SIGNED METER VALUES
+    /*MeterPublicKey1*/                   OcppConfiguration::string("", MAX_CONFIG_LENGTH, true, false),
+    /*PublicKeyWIthSignedMeterValue*/     OcppConfiguration::csl(OCPP_DEFAULT_PUBLIC_KEY_WITH_SIGNED_METER_VALUE, MAX_CONFIG_LENGTH, 1, false, true, send_pub_key, OCPP_SEND_PUB_KEY_COUNT),
+    /*SampledDataSignReadings*/           OcppConfiguration::boolean(true, false, true),
+    /*StartTxnSampledData*/               //OcppConfiguration::csl(OCPP_DEFAULT_START_TXN_SAMPLED_DATA, MAX_CONFIG_LENGTH, OCPP_START_TXN_SAMPLED_DATA_MAX_LENGTH, false, true/*OCPP_METER_VALUES_SAMPLED_DATA_REQUIRES_REBOOT*/, SampledValueMeasurandStrings, (size_t)SampledValueMeasurand::NONE, false, true),
+    /*SampledDataSignStartedReadings*/    //OcppConfiguration::boolean(true, false, true),
+    /*SampledDataSignUpdatedReadings*/    OcppConfiguration::boolean(true, false, true),
+    /*AlignedDataSignReadings*/           OcppConfiguration::boolean(true, false, true),
+    /*AlignedDataSignUpdatedReadings*/    OcppConfiguration::boolean(true, false, true),
 };
 
 OcppConfiguration& getConfig(ConfigKey key) {

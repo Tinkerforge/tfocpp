@@ -7,6 +7,7 @@
 #include <limits>
 
 #include "Messages.h"
+#include "Defines.h"
 
 enum class OcppConfigurationValueType : uint8_t {
     Integer,
@@ -101,6 +102,8 @@ enum class ConnectorPhaseRotation {
     TSR,
 };
 
+static_assert(OCPP_NUM_CONNECTORS == 1, "only one connector is supported for now: each connector requires a separate MeterPublicKey[ConnectorID] ConfigKey");
+
 enum class ConfigKey {
     // CORE PROFILE
     //AllowOfflineTxForUnknownId, // 9.1.1
@@ -157,6 +160,16 @@ enum class ConfigKey {
 
     // FIRMWARE MANAGEMENT PROFILE
     //SupportedFileTransferProtocols, // 9.5.1 (errata sheet v4.0 3.90)
+
+    // SIGNED METER VALUES
+    MeterPublicKey1, // Signed Meter Values in OCPP 3.3.1
+    PublicKeyWIthSignedMeterValue, // Signed Meter Values in OCPP 3.3.2
+    SampledDataSignReadings, // Signed Meter Values in OCPP 3.3.3
+    //StartTxnSampledData, // Signed Meter Values in OCPP 3.3.4
+    //SampledDataSignStartedReadings, // Signed Meter Values in OCPP 3.3.5
+    SampledDataSignUpdatedReadings, // Signed Meter Values in OCPP 3.3.6
+    AlignedDataSignReadings, // Signed Meter Values in OCPP 3.3.7
+    AlignedDataSignUpdatedReadings, // Signed Meter Values in OCPP 3.3.8
 
     CONFIG_KEY_MAX
 };
