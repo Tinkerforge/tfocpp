@@ -11,7 +11,8 @@
 enum class OcppConfigurationValueType : uint8_t {
     Integer,
     Boolean,
-    CSL
+    CSL,
+    String
 };
 
 struct OcppConfiguration {
@@ -29,6 +30,9 @@ struct OcppConfiguration {
             bool b;
         } boolean;
         struct {
+            // Can't use std::unique_ptr here as this requires a non-trivial constructor.
+            // c, parsed and phases are owned by csl.
+
             // csl as string ready to be sent with getconfiguration etc.
             char *c;
             size_t len;
@@ -50,6 +54,12 @@ struct OcppConfiguration {
             // is every value prefixed with the index? See ConnectorPhaseRotation
             bool prefix_index;
         } csl;
+        struct {
+            // string ready to be sent with getconfiguration etc.
+            char *s;
+            size_t len;
+            size_t max_len;
+        } string;
     } value;
 
     static OcppConfiguration integer(int32_t value,
@@ -71,6 +81,11 @@ struct OcppConfiguration {
                                  size_t allowed_values_len,
                                  bool prefix_index = false,
                                  bool suffix_phase = false);
+
+    static OcppConfiguration string(const char *value,
+                                    size_t max_len,
+                                    bool readonly,
+                                    bool requires_reboot);
 
     ChangeConfigurationResponseStatus setValue(const char *newValue, bool force = false);
 };

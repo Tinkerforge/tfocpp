@@ -78,6 +78,25 @@ OcppConfiguration OcppConfiguration::csl(const char *value,
     return result;
 }
 
+OcppConfiguration OcppConfiguration::string(const char *value,
+                                            size_t max_len,
+                                            bool readonly,
+                                            bool requires_reboot) {
+    // designated initializers are a C++20 extension, so we have to do this manually.
+    OcppConfiguration result;
+    result.type = OcppConfigurationValueType::String;
+    result.value.string.s = (char *)malloc(max_len);
+    result.value.string.len = strlen(value);
+    result.value.string.max_len = max_len;
+    result.readonly = readonly;
+    result.requires_reboot = requires_reboot;
+
+    memcpy(result.value.string.s, value, result.value.string.len);
+    result.value.string.s[result.value.string.len] = '\0';
+
+    return result;
+}
+
 ChangeConfigurationResponseStatus OcppConfiguration::setValue(const char *newValue, bool force) {
     if (readonly && !force)
         return ChangeConfigurationResponseStatus::REJECTED;
@@ -202,6 +221,18 @@ ChangeConfigurationResponseStatus OcppConfiguration::setValue(const char *newVal
                 value.csl.parsed_len = new_parsed_len;
                 return requires_reboot ? ChangeConfigurationResponseStatus::REBOOT_REQUIRED : ChangeConfigurationResponseStatus::ACCEPTED;
             }
+        case OcppConfigurationValueType::String: {
+            size_t len = strlen(newValue);
+
+            if (len >= value.string.max_len) // >= because we always want to null-terminate the buffer.
+                return ChangeConfigurationResponseStatus::REJECTED;
+
+            value.string.len = len;
+
+            memcpy(value.string.s, newValue, value.string.len);
+            value.string.s[value.string.len] = '\0';
+            return requires_reboot ? ChangeConfigurationResponseStatus::REBOOT_REQUIRED : ChangeConfigurationResponseStatus::ACCEPTED;
+        }
     }
     return ChangeConfigurationResponseStatus::REJECTED;
 }
@@ -510,6 +541,9 @@ void debugDumpConfig() {
             case OcppConfigurationValueType::CSL:
                 platform_update_config_state((ConfigKey)i, (const char *)cfg.value.csl.c);
                 break;
+            case OcppConfigurationValueType::String:
+                platform_update_config_state((ConfigKey)i, (const char *)cfg.value.string.s);
+                break;
             case OcppConfigurationValueType::Integer:
                 char *val = scratch_buf.get() + scratch_buf_idx;
 
@@ -545,6 +579,9 @@ void saveConfig()
                 break;
             case OcppConfigurationValueType::CSL:
                 doc[config_keys[i]] = (const char *)cfg.value.csl.c;
+                break;
+            case OcppConfigurationValueType::String:
+                doc[config_keys[i]] = (const char *)cfg.value.string.s;
                 break;
             case OcppConfigurationValueType::Integer:
                 char *val = scratch_buf.get() + scratch_buf_idx;

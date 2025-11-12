@@ -558,13 +558,12 @@ CallResponse OcppChargePoint::handleGetConfiguration(const char *uid, GetConfigu
             if (lookup_key(&result, req.key(i).unwrap(), config_keys, OCPP_CONFIG_COUNT)) {
                 ++known_keys;
                 switch(getConfig(result).type) {
-                    case OcppConfigurationValueType::Boolean:
-                        scratch_buf_size += 0;
-                        break;
                     case OcppConfigurationValueType::Integer:
                         scratch_buf_size += 20;
                         break;
+                    case OcppConfigurationValueType::Boolean:
                     case OcppConfigurationValueType::CSL:
+                    case OcppConfigurationValueType::String:
                         scratch_buf_size += 0;
                         break;
                 }
@@ -606,6 +605,9 @@ CallResponse OcppChargePoint::handleGetConfiguration(const char *uid, GetConfigu
                 case OcppConfigurationValueType::CSL:
                     config_value = config.value.csl.c;
                     break;
+                case OcppConfigurationValueType::String:
+                    config_value = config.value.string.s;
+                    break;
             }
             known[known_idx].key = config_keys[i];
             known[known_idx].readonly = config.readonly;
@@ -636,6 +638,9 @@ CallResponse OcppChargePoint::handleGetConfiguration(const char *uid, GetConfigu
                         break;
                     case OcppConfigurationValueType::CSL:
                         config_value = config.value.csl.c;
+                        break;
+                    case OcppConfigurationValueType::String:
+                        config_value = config.value.string.s;
                         break;
                 }
                 known[known_idx].key = config_keys[result];
