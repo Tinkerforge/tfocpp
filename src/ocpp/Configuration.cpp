@@ -6,8 +6,10 @@
 
 #include <string.h>
 
-// This is all configs specified in the OCPP spec.
+// This is all configs specified in the OCPP spec (43) + Errata 4.0 (3).
+// Errata 4.0 removed one config, but we ignore that here.
 #define MAX_SPECIFIED_CONFIGS 46
+static_assert(MAX_SPECIFIED_CONFIGS >= (size_t) ConfigKey::CONFIG_KEY_MAX, "MAX_SPECIFIED_CONFIGS must always be more than the number of supported configs!");
 #define MAX_CONFIG_LENGTH 501 // the spec does not specify a maximum length. however the payload of a change configuration message has a max length of 500
 
 
@@ -251,57 +253,61 @@ static const char * const connectorPhaseRotationStrings[] = {
 // keep in sync with ocpp_plaform_gui.py config_key_strings
 const char * const config_keys[OCPP_CONFIG_COUNT] {
     // CORE PROFILE
-    //"AllowOfflineTxForUnknownId",
-    //"AuthorizationCacheEnabled",
-    "AuthorizeRemoteTxRequests",
-    //"BlinkRepeat",
-    "ClockAlignedDataInterval",
-    "ConnectionTimeOut",
-    "ConnectorPhaseRotation",
-    "ConnectorPhaseRotationMaxLength",
-    "GetConfigurationMaxKeys",
-    "HeartbeatInterval",
-    //"LightIntensity",
-    "LocalAuthorizeOffline",
-    "LocalPreAuthorize",
-    //"MaxEnergyOnInvalidId",
-    "MessageTimeout",
-    "MeterValuesAlignedData",
-    "MeterValuesAlignedDataMaxLength",
-    "MeterValuesSampledData",
-    "MeterValuesSampledDataMaxLength",
-    "MeterValueSampleInterval",
-    //"MinimumStatusDuration",
-    "NumberOfConnectors",
-    "ResetRetries",
-    "StopTransactionOnEVSideDisconnect",
-    "StopTransactionOnInvalidId",
-    "StopTransactionMaxMeterValues",
-    "StopTxnAlignedData",
-    "StopTxnAlignedDataMaxLength",
-    "StopTxnSampledData",
-    "StopTxnSampledDataMaxLength",
-    "SupportedFeatureProfiles",
-    //"SupportedFeatureProfilesMaxLength",
-    "TransactionMessageAttempts",
-    "TransactionMessageRetryInterval",
-    "UnlockConnectorOnEVSideDisconnect",
-    "WebSocketPingInterval",
+    //"AllowOfflineTxForUnknownId", // 9.1.1
+    //"AuthorizationCacheEnabled", // 9.1.2
+    "AuthorizeRemoteTxRequests", // 9.1.3
+    //"BlinkRepeat", // 9.1.4
+    "ClockAlignedDataInterval", // 9.1.5
+    "ConnectionTimeOut", // 9.1.6
+    "ConnectorPhaseRotation", // 9.1.7
+    "ConnectorPhaseRotationMaxLength", // 9.1.8
+    "GetConfigurationMaxKeys", // 9.1.9
+    "HeartbeatInterval", // 9.1.10
+    //"LightIntensity", // 9.1.11
+    "LocalAuthorizeOffline", // 9.1.12
+    "LocalPreAuthorize", // 9.1.13
+    //"MaxEnergyOnInvalidId", // 9.1.14
+    "MessageTimeout", // errata sheet v4.0 3.83 (there defined as 9.1.15)
+    "MeterValuesAlignedData", // 9.1.15
+    "MeterValuesAlignedDataMaxLength", // 9.1.16
+    "MeterValuesSampledData", // 9.1.17
+    "MeterValuesSampledDataMaxLength", // 9.1.18
+    "MeterValueSampleInterval", // 9.1.19
+    //"MinimumStatusDuration", // 9.1.20
+    "NumberOfConnectors", // 9.1.21
+    "ResetRetries", // 9.1.22
+    "StopTransactionMaxMeterValues", // errata sheet v4.0 3.91 (there defined as 9.1.23)
+    "StopTransactionOnEVSideDisconnect", // 9.1.23
+    "StopTransactionOnInvalidId", // 9.1.24
+    "StopTxnAlignedData", // 9.1.25
+    "StopTxnAlignedDataMaxLength", // 9.1.26
+    "StopTxnSampledData", // 9.1.27
+    "StopTxnSampledDataMaxLength", // 9.1.28
+    "SupportedFeatureProfiles", // 9.1.29
+    //"SupportedFeatureProfilesMaxLength", // 9.1.30 (removed in errata sheet v4.0)
+    "TransactionMessageAttempts", // 9.1.31
+    "TransactionMessageRetryInterval", // 9.1.32
+    "UnlockConnectorOnEVSideDisconnect", // 9.1.33
+    "WebSocketPingInterval", // 9.1.34
 
     // // LOCAL AUTH LIST MANAGEMENT PROFILE
-    //"LocalAuthListEnabled",
-    //"LocalAuthListMaxLength",
-    //"SendLocalListMaxLength",
+    // "LocalAuthListEnabled", // 9.2.1
+    // "LocalAuthListMaxLength", // 9.2.2
+    // "SendLocalListMaxLength", // 9.2.3
 
     // // RESERVATION PROFILE
-    //"ReserveConnectorZeroSupported",
+    // "ReserveConnectorZeroSupported", // 9.3.1
 
     // SMART CHARGING PROFILE
-    "ChargeProfileMaxStackLevel",
-    "ChargingScheduleAllowedChargingRateUnit",
-    "ChargingScheduleMaxPeriods",
-    "ConnectorSwitch3to1PhaseSupported",
-    "MaxChargingProfilesInstalled",
+    "ChargeProfileMaxStackLevel", // 9.4.1
+    "ChargingScheduleAllowedChargingRateUnit", // 9.4.2
+    "ChargingScheduleMaxPeriods", // 9.4.3
+    "ConnectorSwitch3to1PhaseSupported", // 9.4.4
+    "MaxChargingProfilesInstalled", // 9.4.5
+
+    // FIRMWARE MANAGEMENT PROFILE
+    //"SupportedFileTransferProtocols", // 9.5.1 (errata sheet v4.0 3.90)
+
 };
 
 static constexpr int OCPP_FEATURE_PROFILE_COUNT = 2;
@@ -315,6 +321,16 @@ static const char * const charging_rate_units[OCPP_CHARGING_RATE_UNIT_COUNT] {
     "Current",
     "Power",
 };
+
+/*
+static constexpr int OCPP_FILE_TRANSFER_PROTOCOLS = 4;
+static const char * const file_transfer_protocols[OCPP_FILE_TRANSFER_PROTOCOLS] {
+    "FTP",
+    "FTPS",
+    "HTTP",
+    "HTTPS",
+};
+*/
 
 //TODO: implement that CSL max_elements and the corresponding ...MaxLength value are kept in sync
 
@@ -360,6 +376,13 @@ static OcppConfiguration config[OCPP_CONFIG_COUNT] = {
     /*NumberOfConnectors*/                OcppConfiguration::integer(OCPP_NUM_CONNECTORS, true, false, 0),
     /*ResetRetries*/                      OcppConfiguration::integer(OCPP_DEFAULT_RESET_RETRIES, false, OCPP_RESET_RETRIES_REQUIRES_REBOOT, 0),
 
+    // Hardcode 2: This is the maximum amount of _meter values_ to send in a stoptxn.
+    // However the size of the packet depends on which values to sample _per_ meter value.
+    // To make sure we don't have to recalculate this if the configuration which values to sample changes,
+    // we just abuse that the spec (errata 4.0) rules "The Start and Stop meter values SHALL never be dropped."
+    // This should be sufficient in real-life, as we still periodically send meter values anyway.
+    /*StopTransactionMaxMeterValues*/     OcppConfiguration::integer(OCPP_STOP_TRANSACTION_MAX_METER_VALUES, true, false),
+
     /*
     The description of the configuration key: StopTransactionOnEVSideDisconnect is required. It was added to
     OCPP to support EVs without lock at the car side. But this is now never the case, it was only the case with the
@@ -368,13 +391,6 @@ static OcppConfiguration config[OCPP_CONFIG_COUNT] = {
     */
     /*StopTransactionOnEVSideDisconnect*/ OcppConfiguration::boolean(true, true, false),
     /*StopTransactionOnInvalidId*/        OcppConfiguration::boolean(OCPP_DEFAULT_STOP_TRANSACTION_ON_INVALID_ID, false, OCPP_STOP_TRANSACTION_ON_INVALID_ID_REQUIRES_REBOOT),
-
-    // Hardcode 2: This is the maximum amount of _meter values_ to send in a stoptxn.
-    // However the size of the packet depends on which values to sample _per_ meter value.
-    // To make sure we don't have to recalculate this if the configuration which values to sample changes,
-    // we just abuse that the spec (errata 4.0) rules "The Start and Stop meter values SHALL never be dropped."
-    // This should be sufficient in real-life, as we still periodically send meter values anyway.
-    /*StopTransactionMaxMeterValues*/     OcppConfiguration::integer(OCPP_STOP_TRANSACTION_MAX_METER_VALUES, true, false),
 
     // Same reasoning as with MeterValuesAlignedData.
     /*StopTxnAlignedData*/                OcppConfiguration::csl("", MAX_CONFIG_LENGTH, 0, false, STOP_TXN_ALIGNED_DATA_REQUIRES_REBOOT, SampledValueMeasurandStrings, (size_t)SampledValueMeasurand::NONE),
@@ -400,12 +416,12 @@ static OcppConfiguration config[OCPP_CONFIG_COUNT] = {
     /*WebSocketPingInterval*/             OcppConfiguration::integer(OCPP_DEFAULT_WEB_SOCKET_PING_INTERVAL, false, OCPP_WEB_SOCKET_PING_INTERVAL_REQUIRES_REBOOT, 0, (UINT32_MAX / 2 - 1) / 1000),
 
 
-    // // LOCAL AUTH LIST MANAGEMENT PROFILE
+    // LOCAL AUTH LIST MANAGEMENT PROFILE
     /*LocalAuthListEnabled*/
     /*LocalAuthListMaxLength*/
     /*SendLocalListMaxLength*/
 
-    // // RESERVATION PROFILE
+    // RESERVATION PROFILE
     /*ReserveConnectorZeroSupported*/
 
     // SMART CHARGING PROFILE
@@ -414,6 +430,10 @@ static OcppConfiguration config[OCPP_CONFIG_COUNT] = {
     /*ChargingScheduleMaxPeriods*/        OcppConfiguration::integer(OCPP_CHARGING_SCHEDULE_MAX_PERIODS, true, false, 0),
     /*ConnectorSwitch3to1PhaseSupported*/ OcppConfiguration::boolean(OCPP_CONNECTOR_SWITCH3TO1_PHASE_SUPPORTED, true, false),
     /*MaxChargingProfilesInstalled*/      OcppConfiguration::integer(OCPP_MAX_CHARGING_PROFILES_INSTALLED, true, false, 0),
+
+    // FIRMWARE MANAGEMENT PROFILE
+    /*SupportedFileTransferProtocols*/    //OcppConfiguration::csl(OCPP_SUPPORTED_FILE_TRANSFER_PROTOCOL, strlen(OCPP_SUPPORTED_FILE_TRANSFER_PROTOCOL) + 1, 1, true, false, file_transfer_protocols, OCPP_FILE_TRANSFER_PROTOCOLS, false),
+
 };
 
 OcppConfiguration& getConfig(ConfigKey key) {
