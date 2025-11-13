@@ -163,7 +163,7 @@ enum class ConfigKey {
 
     // SIGNED METER VALUES
     MeterPublicKey1, // Signed Meter Values in OCPP 3.3.1
-    PublicKeyWIthSignedMeterValue, // Signed Meter Values in OCPP 3.3.2
+    PublicKeyWithSignedMeterValue, // Signed Meter Values in OCPP 3.3.2
     SampledDataSignReadings, // Signed Meter Values in OCPP 3.3.3
     //StartTxnSampledData, // Signed Meter Values in OCPP 3.3.4
     //SampledDataSignStartedReadings, // Signed Meter Values in OCPP 3.3.5

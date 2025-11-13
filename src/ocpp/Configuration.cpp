@@ -310,7 +310,7 @@ const char * const config_keys[OCPP_CONFIG_COUNT] {
 
     // SIGNED METER VALUES
     "MeterPublicKey1", // Signed Meter Values in OCPP 3.3.1
-    "PublicKeyWIthSignedMeterValue", // Signed Meter Values in OCPP 3.3.2
+    "PublicKeyWithSignedMeterValue", // Signed Meter Values in OCPP 3.3.2
     "SampledDataSignReadings", // Signed Meter Values in OCPP 3.3.3
     //"StartTxnSampledData", // Signed Meter Values in OCPP 3.3.4
     //"SampledDataSignStartedReadings", // Signed Meter Values in OCPP 3.3.5
@@ -452,7 +452,7 @@ static OcppConfiguration config[OCPP_CONFIG_COUNT] = {
 
     // SIGNED METER VALUES
     /*MeterPublicKey1*/                   OcppConfiguration::string("", MAX_CONFIG_LENGTH, true, false),
-    /*PublicKeyWIthSignedMeterValue*/     OcppConfiguration::csl(OCPP_DEFAULT_PUBLIC_KEY_WITH_SIGNED_METER_VALUE, MAX_CONFIG_LENGTH, 1, false, true, send_pub_key, OCPP_SEND_PUB_KEY_COUNT),
+    /*PublicKeyWithSignedMeterValue*/     OcppConfiguration::csl(OCPP_DEFAULT_PUBLIC_KEY_WITH_SIGNED_METER_VALUE, MAX_CONFIG_LENGTH, 1, false, true, send_pub_key, OCPP_SEND_PUB_KEY_COUNT),
     /*SampledDataSignReadings*/           OcppConfiguration::boolean(true, false, true),
     /*StartTxnSampledData*/               //OcppConfiguration::csl(OCPP_DEFAULT_START_TXN_SAMPLED_DATA, MAX_CONFIG_LENGTH, OCPP_START_TXN_SAMPLED_DATA_MAX_LENGTH, false, true/*OCPP_METER_VALUES_SAMPLED_DATA_REQUIRES_REBOOT*/, SampledValueMeasurandStrings, (size_t)SampledValueMeasurand::NONE, false, true),
     /*SampledDataSignStartedReadings*/    //OcppConfiguration::boolean(true, false, true),
