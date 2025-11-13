@@ -1107,7 +1107,7 @@ bool Connector::isTransactionActive()
     SILENCE_GCC_UNREACHABLE();
 }
 
-void Connector::onRemoteStartTransaction(const char *tag_id)
+void Connector::onAuthorizedRemoteStartTransaction(const char *tag_id)
 {
     switch (state) {
         case ConnectorState::IDLE:

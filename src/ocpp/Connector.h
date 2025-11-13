@@ -121,7 +121,7 @@ struct Connector {
 
     bool isTransactionActive();
 
-    void onRemoteStartTransaction(const char *tag_id);
+    void onAuthorizedRemoteStartTransaction(const char *tag_id);
     void onRemoteStopTransaction();
 
     UnlockConnectorResponseStatus onUnlockConnector();

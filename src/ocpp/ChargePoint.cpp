@@ -804,7 +804,7 @@ CallResponse OcppChargePoint::handleRemoteStartTransaction(const char *uid, Remo
     if (getBoolConfig(ConfigKey::AuthorizeRemoteTxRequests)) {
         connectors[conn_idx].onTagSeen(req.idTag());
     } else {
-        connectors[conn_idx].onRemoteStartTransaction(req.idTag());
+        connectors[conn_idx].onAuthorizedRemoteStartTransaction(req.idTag());
     }
 
     return CallResponse{CallErrorCode::OK, ""};
