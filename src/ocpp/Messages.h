@@ -202,6 +202,28 @@ enum class GetCompositeScheduleResponseChargingScheduleChargingRateUnit : uint8_
     NONE
 };
 
+extern const char * const ExtSMVSignedMeterValueTypeSigningMethodStrings[];
+
+enum class ExtSMVSignedMeterValueTypeSigningMethod : uint8_t {
+    EMPTY_STRING,
+    ECDSASECP192K1_SHA256,
+    ECDSASECP256K1_SHA256,
+    ECDSASECP192R1_SHA256,
+    ECDSASECP256R1_SHA256,
+    ECDSABRAINPOOL256R1_SHA256,
+    ECDSASECP384R1_SHA256,
+    ECDSABRAINPOOL384R1_SHA256,
+    NONE
+};
+
+extern const char * const ExtSMVSignedMeterValueTypeEncodingMethodStrings[];
+
+enum class ExtSMVSignedMeterValueTypeEncodingMethod : uint8_t {
+    OCMF,
+    EDL,
+    NONE
+};
+
 extern const char * const SampledValueContextStrings[];
 
 enum class SampledValueContext : uint8_t {
@@ -360,7 +382,8 @@ enum class CallAction : uint8_t {
     GET_COMPOSITE_SCHEDULE,
     SET_CHARGING_PROFILE,
     TRIGGER_MESSAGE_RESPONSE,
-    TRIGGER_MESSAGE
+    TRIGGER_MESSAGE,
+    EXT_SMV
 };
 
 
@@ -1008,6 +1031,15 @@ struct MeterValueSampledValue {
     void serializeInto(TFJsonSerializer &json);
 };
 
+struct ExtSMVSignedMeterValueType {
+    const char *signedMeterData;
+    ExtSMVSignedMeterValueTypeSigningMethod signingMethod;
+    ExtSMVSignedMeterValueTypeEncodingMethod encodingMethod;
+    const char *publicKey;
+
+    void serializeInto(TFJsonSerializer &json);
+};
+
 struct GetCompositeScheduleResponseChargingSchedule {
     int32_t duration = OCPP_INTEGER_NOT_PASSED;
     time_t startSchedule = OCPP_DATETIME_NOT_PASSED;
@@ -1307,6 +1339,17 @@ struct SetChargingProfileResponse final : public ICall {
         SetChargingProfileResponseStatus status);
     SetChargingProfileResponse(const SetChargingProfileResponse&) = delete;
     SetChargingProfileResponse &operator=(const SetChargingProfileResponse&) = delete;
+
+    size_t serializeJson(char *buf, size_t buf_len) const override;
+};
+
+struct ExtSMV final : public ICall {
+    ExtSMVSignedMeterValueType *signedMeterValueType;
+
+    ExtSMV(const char *call_id,
+        ExtSMVSignedMeterValueType *signedMeterValueType = nullptr);
+    ExtSMV(const ExtSMV&) = delete;
+    ExtSMV &operator=(const ExtSMV&) = delete;
 
     size_t serializeJson(char *buf, size_t buf_len) const override;
 };

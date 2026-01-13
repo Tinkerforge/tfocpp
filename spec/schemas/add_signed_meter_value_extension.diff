@@ -1,0 +1,56 @@
+diff --git i/spec/schemas/json/ExtSMV.json w/spec/schemas/json/ExtSMV.json
+new file mode 100644
+index 0000000..a9f2d52
+--- /dev/null
++++ w/spec/schemas/json/ExtSMV.json
+@@ -0,0 +1,50 @@
++{
++    "$schema": "http://json-schema.org/draft-04/schema#",
++    "id": "urn:OCPP:1.6:2019:12:ExtSMV",
++    "title": "ExtSMV",
++    "type": "object",
++    "properties": {
++        "signedMeterValueType": {
++            "type": "object",
++            "properties": {
++                "signedMeterData": {
++                    "type": "string",
++                    "maxLength": 2500
++                },
++                "signingMethod": {
++                    "type": "string",
++                    "additionalProperties": false,
++                    "enum": [
++                        "",
++                        "ECDSA-secp192k1-SHA256",
++                        "ECDSA-secp256k1-SHA256",
++                        "ECDSA-secp192r1-SHA256",
++                        "ECDSA-secp256r1-SHA256",
++                        "ECDSA-brainpool256r1-SHA256",
++                        "ECDSA-secp384r1-SHA256",
++                        "ECDSA-brainpool384r1-SHA256"
++                    ]
++                },
++                "encodingMethod": {
++                    "type": "string",
++                    "additionalProperties": false,
++                    "enum": [
++                        "OCMF",
++                        "EDL"
++                    ]
++                },
++                "publicKey": {
++                    "type": "string",
++                    "maxLength": 2500
++                }
++            },
++            "additionalProperties": false,
++            "required": [
++                "signedMeterData",
++                "signingMethod",
++                "encodingMethod",
++                "publicKey"
++            ]
++        }
++    }
++}

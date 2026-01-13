@@ -54,3 +54,4 @@ import schema.StatusNotification
 import schema.TriggerMessage
 import schema.UnlockConnector
 import schema.StopTransaction
+import schema.ExtSMV

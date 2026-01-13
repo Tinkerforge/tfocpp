@@ -123,14 +123,19 @@ remote_trigger_profile = [[ #send
 ]]
 
 
+signed_meter_values = [[ #send
+        schema.ExtSMV.ExtSMV
+    ], []]
+
 all_profiles = [core_profile,
                 firmware_management_profile,
                 local_auth_list_management_profile,
                 reservation_profile,
                 smart_charging_profile,
-                remote_trigger_profile]
+                remote_trigger_profile,
+                signed_meter_values]
 
-supported_profiles = [core_profile, smart_charging_profile]
+supported_profiles = [core_profile, smart_charging_profile, signed_meter_values]
 
 # String:
 # - enum
@@ -371,7 +376,7 @@ enum class {name} : {type_} {{
     {entry_strings}
 }};
 """
-    h_content = template.format(name=name, type_=type_, entries=",\n    ".join(camel_to_upper_snake(x) for x in entries_set), none=",\n    NONE" if add_none else "")
+    h_content = template.format(name=name, type_=type_, entries=",\n    ".join(camel_to_upper_snake(x) if len(x) > 0 else "EMPTY_STRING" for x in entries_set), none=",\n    NONE" if add_none else "")
     cpp_content = string_template.format(name=name, entry_strings=",\n    ".join('"{}"'.format(x) for x in entries_set))
 
     return h_content, cpp_content

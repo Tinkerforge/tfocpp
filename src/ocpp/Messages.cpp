@@ -178,6 +178,22 @@ const char * const GetCompositeScheduleResponseChargingScheduleChargingRateUnitS
     "W"
 };
 
+const char * const ExtSMVSignedMeterValueTypeSigningMethodStrings[] = {
+    "",
+    "ECDSA-secp192k1-SHA256",
+    "ECDSA-secp256k1-SHA256",
+    "ECDSA-secp192r1-SHA256",
+    "ECDSA-secp256r1-SHA256",
+    "ECDSA-brainpool256r1-SHA256",
+    "ECDSA-secp384r1-SHA256",
+    "ECDSA-brainpool384r1-SHA256"
+};
+
+const char * const ExtSMVSignedMeterValueTypeEncodingMethodStrings[] = {
+    "OCMF",
+    "EDL"
+};
+
 const char * const SampledValueContextStrings[] = {
     "Interruption.Begin",
     "Interruption.End",
@@ -316,7 +332,8 @@ const char * const CallActionStrings[] = {
     "GetCompositeSchedule",
     "SetChargingProfile",
     "TriggerMessageResponse",
-    "TriggerMessage"
+    "TriggerMessage",
+    "ExtSMV"
 };
 
 
@@ -337,6 +354,13 @@ void GetCompositeScheduleResponseChargingSchedule::serializeInto(TFJsonSerialize
         if (chargingRateUnit != GetCompositeScheduleResponseChargingScheduleChargingRateUnit::NONE) json.addMemberString("chargingRateUnit", GetCompositeScheduleResponseChargingScheduleChargingRateUnitStrings[(size_t)chargingRateUnit]);
         if (chargingSchedulePeriod != nullptr) { json.addMemberArray("chargingSchedulePeriod"); for(size_t i = 0; i < chargingSchedulePeriod_length; ++i) { json.addObject(); chargingSchedulePeriod[i].serializeInto(json); json.endObject(); } json.endArray(); }
         if (!isnan(minChargingRate)) json.addMemberNumber("minChargingRate", minChargingRate, "%.1f");
+    }
+
+void ExtSMVSignedMeterValueType::serializeInto(TFJsonSerializer &json) {
+        if (signedMeterData != nullptr) json.addMemberString("signedMeterData", signedMeterData);
+        if (signingMethod != ExtSMVSignedMeterValueTypeSigningMethod::NONE) json.addMemberString("signingMethod", ExtSMVSignedMeterValueTypeSigningMethodStrings[(size_t)signingMethod]);
+        if (encodingMethod != ExtSMVSignedMeterValueTypeEncodingMethod::NONE) json.addMemberString("encodingMethod", ExtSMVSignedMeterValueTypeEncodingMethodStrings[(size_t)encodingMethod]);
+        if (publicKey != nullptr) json.addMemberString("publicKey", publicKey);
     }
 
 void MeterValueSampledValue::serializeInto(TFJsonSerializer &json) {
@@ -842,6 +866,26 @@ size_t SetChargingProfileResponse::serializeJson(char *buf, size_t buf_len) cons
 
         json.addObject();
             if (status != SetChargingProfileResponseStatus::NONE) json.addMemberString("status", SetChargingProfileResponseStatusStrings[(size_t)status]);
+        json.endObject();
+    json.endArray();
+
+    return json.end();
+}
+
+ExtSMV::ExtSMV(const char *call_id,
+        ExtSMVSignedMeterValueType *signedMeterValueType) :
+    ICall(CallAction::EXT_SMV, call_id),
+    signedMeterValueType(signedMeterValueType)
+{}
+
+size_t ExtSMV::serializeJson(char *buf, size_t buf_len) const {
+    TFJsonSerializer json{buf, buf_len};
+    json.addArray();
+        json.addNumber((int32_t)OcppRpcMessageType::CALLRESULT);
+        json.addString(this->ocppJcallId);
+
+        json.addObject();
+            if (signedMeterValueType != nullptr) { json.addMemberObject("signedMeterValueType"); signedMeterValueType->serializeInto(json); json.endObject(); }
         json.endObject();
     json.endArray();
 
@@ -3029,6 +3073,7 @@ CallResponse callHandler(const char *uid, const char *action_string, JsonObject 
         case CallAction::SET_CHARGING_PROFILE_RESPONSE:
         case CallAction::TRIGGER_MESSAGE_RESPONSE:
         case CallAction::TRIGGER_MESSAGE:
+        case CallAction::EXT_SMV:
             return CallResponse{CallErrorCode::NotSupported, "action not supported"};
     }
 
@@ -3150,6 +3195,7 @@ CallResponse callResultHandler(int32_t connectorId, CallAction resultTo, JsonObj
         case CallAction::SET_CHARGING_PROFILE:
         case CallAction::TRIGGER_MESSAGE_RESPONSE:
         case CallAction::TRIGGER_MESSAGE:
+        case CallAction::EXT_SMV:
             return CallResponse{CallErrorCode::NotSupported, "action not supported"};
     }
 
