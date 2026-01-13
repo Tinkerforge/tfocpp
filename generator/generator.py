@@ -1,3 +1,12 @@
+#!/usr/bin/env -S uv run --script
+#
+# /// script
+# requires-python = ">=3.12"
+# dependencies = [
+#     "statham-schema>=0.15.1",
+# ]
+# ///
+
 from statham.schema.elements import Element, Object, Array, String, Integer, Number, Boolean
 from statham.schema.property import Property
 from typing import List
