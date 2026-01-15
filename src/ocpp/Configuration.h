@@ -186,6 +186,7 @@ bool getBoolConfig(ConfigKey key);
 size_t getCSLConfigLen(ConfigKey key);
 size_t *getCSLConfig(ConfigKey key);
 size_t *getCSLPhases(ConfigKey key);
+const char *getStringConfig(ConfigKey key);
 bool setIntConfig(ConfigKey key, int32_t i);
 bool setBoolConfig(ConfigKey key, bool b);
 

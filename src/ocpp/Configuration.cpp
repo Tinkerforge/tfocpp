@@ -535,6 +535,15 @@ size_t *getCSLPhases(ConfigKey key) {
     return cfg.value.csl.phases;
 }
 
+const char *getStringConfig(ConfigKey key) {
+    OcppConfiguration &cfg = config[(size_t)key];
+    if (cfg.type != OcppConfigurationValueType::String) {
+        log_error("Tried to read config %s (%d) as string, but it is of type %s", config_keys[(size_t) key], (int)key, OcppConfigurationValueType_strings[(size_t)cfg.type]);
+        return nullptr;
+    }
+    return cfg.value.string.s;
+}
+
 bool setIntConfig(ConfigKey key, int32_t i) {
     OcppConfiguration &cfg = config[(size_t)key];
     if (cfg.type != OcppConfigurationValueType::Integer) {
