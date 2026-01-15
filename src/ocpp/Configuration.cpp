@@ -469,10 +469,18 @@ OcppConfiguration& getConfig(size_t key) {
     return config[key];
 }
 
+static constexpr int OCPP_CONFIGURATION_VALUE_TYPE_COUNT = 4;
+static const char * const OcppConfigurationValueType_strings[OCPP_CONFIGURATION_VALUE_TYPE_COUNT] {
+    "Integer",
+    "Boolean",
+    "CSL",
+    "String",
+};
+
 uint32_t getIntConfigUnsigned(ConfigKey key) {
     OcppConfiguration &cfg = config[(size_t)key];
     if (cfg.type != OcppConfigurationValueType::Integer) {
-        log_error("Tried to read config %s (%d) as int, but it is of type %s", config_keys[(size_t) key], (int)key, cfg.type == OcppConfigurationValueType::CSL ? "CSL" : "boolean");
+        log_error("Tried to read config %s (%d) as int, but it is of type %s", config_keys[(size_t) key], (int)key, OcppConfigurationValueType_strings[(size_t)cfg.type]);
         return 0xFFFFFFFF;
     }
     if (cfg.value.integer.min_ < 0)  {
@@ -485,7 +493,7 @@ uint32_t getIntConfigUnsigned(ConfigKey key) {
 int32_t getIntConfig(ConfigKey key) {
     OcppConfiguration &cfg = config[(size_t)key];
     if (cfg.type != OcppConfigurationValueType::Integer) {
-        log_error("Tried to read config %s (%d) as int, but it is of type %s", config_keys[(size_t) key], (int)key, cfg.type == OcppConfigurationValueType::CSL ? "CSL" : "boolean");
+        log_error("Tried to read config %s (%d) as int, but it is of type %s", config_keys[(size_t) key], (int)key, OcppConfigurationValueType_strings[(size_t)cfg.type]);
         return -1;
     }
     return cfg.value.integer.i;
@@ -494,7 +502,7 @@ int32_t getIntConfig(ConfigKey key) {
 bool getBoolConfig(ConfigKey key) {
     OcppConfiguration &cfg = config[(size_t)key];
     if (cfg.type != OcppConfigurationValueType::Boolean) {
-        log_error("Tried to read config %s (%d) as bool, but it is of type %s", config_keys[(size_t) key], (int)key, cfg.type == OcppConfigurationValueType::CSL ? "CSL" : "integer");
+        log_error("Tried to read config %s (%d) as bool, but it is of type %s", config_keys[(size_t) key], (int)key, OcppConfigurationValueType_strings[(size_t)cfg.type]);
         return false;
     }
     return cfg.value.boolean.b;
@@ -503,7 +511,7 @@ bool getBoolConfig(ConfigKey key) {
 size_t getCSLConfigLen(ConfigKey key) {
     OcppConfiguration &cfg = config[(size_t)key];
     if (cfg.type != OcppConfigurationValueType::CSL) {
-        log_error("Tried to read config %s (%d) as csl, but it is of type %s", config_keys[(size_t) key], (int)key, cfg.type == OcppConfigurationValueType::Integer ? "integer" : "boolean");
+        log_error("Tried to read config %s (%d) as csl, but it is of type %s", config_keys[(size_t) key], (int)key, OcppConfigurationValueType_strings[(size_t)cfg.type]);
         return 0;
     }
     return cfg.value.csl.parsed_len;
@@ -512,7 +520,7 @@ size_t getCSLConfigLen(ConfigKey key) {
 size_t *getCSLConfig(ConfigKey key) {
     OcppConfiguration &cfg = config[(size_t)key];
     if (cfg.type != OcppConfigurationValueType::CSL) {
-        log_error("Tried to read config %s (%d) as csl, but it is of type %s", config_keys[(size_t) key], (int)key, cfg.type == OcppConfigurationValueType::Integer ? "integer" : "boolean");
+        log_error("Tried to read config %s (%d) as csl, but it is of type %s", config_keys[(size_t) key], (int)key, OcppConfigurationValueType_strings[(size_t)cfg.type]);
         return nullptr;
     }
     return cfg.value.csl.parsed;
@@ -521,7 +529,7 @@ size_t *getCSLConfig(ConfigKey key) {
 size_t *getCSLPhases(ConfigKey key) {
     OcppConfiguration &cfg = config[(size_t)key];
     if (cfg.type != OcppConfigurationValueType::CSL) {
-        log_error("Tried to read config %s (%d) as csl, but it is of type %s", config_keys[(size_t) key], (int)key, cfg.type == OcppConfigurationValueType::Integer ? "integer" : "boolean");
+        log_error("Tried to read config %s (%d) as csl, but it is of type %s", config_keys[(size_t) key], (int)key, OcppConfigurationValueType_strings[(size_t)cfg.type]);
         return nullptr;
     }
     return cfg.value.csl.phases;
@@ -530,7 +538,7 @@ size_t *getCSLPhases(ConfigKey key) {
 bool setIntConfig(ConfigKey key, int32_t i) {
     OcppConfiguration &cfg = config[(size_t)key];
     if (cfg.type != OcppConfigurationValueType::Integer) {
-        log_error("Tried to write config %s (%d) as int, but it is of type %s", config_keys[(size_t) key], (int)key, cfg.type == OcppConfigurationValueType::CSL ? "CSL" : "boolean");
+        log_error("Tried to write config %s (%d) as int, but it is of type %s", config_keys[(size_t) key], (int)key, OcppConfigurationValueType_strings[(size_t)cfg.type]);
         return false;
     }
 
@@ -541,7 +549,7 @@ bool setIntConfig(ConfigKey key, int32_t i) {
 bool setBoolConfig(ConfigKey key, bool b) {
     OcppConfiguration &cfg = config[(size_t)key];
     if (cfg.type != OcppConfigurationValueType::Boolean) {
-        log_error("Tried to write config %s (%d) as bool, but it is of type %s", config_keys[(size_t) key], (int)key, cfg.type == OcppConfigurationValueType::CSL ? "CSL" : "integer");
+        log_error("Tried to write config %s (%d) as bool, but it is of type %s", config_keys[(size_t) key], (int)key, OcppConfigurationValueType_strings[(size_t)cfg.type]);
         return false;
     }
     cfg.value.boolean.b = b;
