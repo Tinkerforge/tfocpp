@@ -102,6 +102,12 @@ enum class ConnectorPhaseRotation {
     TSR,
 };
 
+enum class PublicKeyWithSignedMeterValue : uint8_t {
+    Never,
+    OncePerTransaction,
+    EveryMeterValue
+};
+
 static_assert(OCPP_NUM_CONNECTORS == 1, "only one connector is supported for now: each connector requires a separate MeterPublicKey[ConnectorID] ConfigKey");
 
 enum class ConfigKey {
@@ -165,8 +171,8 @@ enum class ConfigKey {
     MeterPublicKey1, // Signed Meter Values in OCPP 3.3.1
     PublicKeyWithSignedMeterValue, // Signed Meter Values in OCPP 3.3.2
     SampledDataSignReadings, // Signed Meter Values in OCPP 3.3.3
-    //StartTxnSampledData, // Signed Meter Values in OCPP 3.3.4
-    //SampledDataSignStartedReadings, // Signed Meter Values in OCPP 3.3.5
+    StartTxnSampledData, // Signed Meter Values in OCPP 3.3.4
+    SampledDataSignStartedReadings, // Signed Meter Values in OCPP 3.3.5
     SampledDataSignUpdatedReadings, // Signed Meter Values in OCPP 3.3.6
     AlignedDataSignReadings, // Signed Meter Values in OCPP 3.3.7
     AlignedDataSignUpdatedReadings, // Signed Meter Values in OCPP 3.3.8

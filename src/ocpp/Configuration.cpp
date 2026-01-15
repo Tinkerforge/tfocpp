@@ -312,8 +312,8 @@ const char * const config_keys[OCPP_CONFIG_COUNT] {
     "MeterPublicKey1", // Signed Meter Values in OCPP 3.3.1
     "PublicKeyWithSignedMeterValue", // Signed Meter Values in OCPP 3.3.2
     "SampledDataSignReadings", // Signed Meter Values in OCPP 3.3.3
-    //"StartTxnSampledData", // Signed Meter Values in OCPP 3.3.4
-    //"SampledDataSignStartedReadings", // Signed Meter Values in OCPP 3.3.5
+    "StartTxnSampledData", // Signed Meter Values in OCPP 3.3.4
+    "SampledDataSignStartedReadings", // Signed Meter Values in OCPP 3.3.5
     "SampledDataSignUpdatedReadings", // Signed Meter Values in OCPP 3.3.6
     "AlignedDataSignReadings", // Signed Meter Values in OCPP 3.3.7
     "AlignedDataSignUpdatedReadings", // Signed Meter Values in OCPP 3.3.8
@@ -341,11 +341,11 @@ static const char * const file_transfer_protocols[OCPP_FILE_TRANSFER_PROTOCOLS] 
 };
 */
 
-static constexpr int OCPP_SEND_PUB_KEY_COUNT = 4;
-static const char * const send_pub_key[OCPP_SEND_PUB_KEY_COUNT] {
+static constexpr int OCPP_SEND_PUB_KEY_COUNT = 3;
+static const char * const PublicKeyWithSignedMeterValue_strings[OCPP_SEND_PUB_KEY_COUNT] {
     "Never",
     "OncePerTransaction",
-    "EveryMetervalue",
+    "EveryMeterValue",
 };
 
 //TODO: implement that CSL max_elements and the corresponding ...MaxLength value are kept in sync
@@ -452,13 +452,16 @@ static OcppConfiguration config[OCPP_CONFIG_COUNT] = {
 
     // SIGNED METER VALUES
     /*MeterPublicKey1*/                   OcppConfiguration::string("", MAX_CONFIG_LENGTH, true, false),
-    /*PublicKeyWithSignedMeterValue*/     OcppConfiguration::csl(OCPP_DEFAULT_PUBLIC_KEY_WITH_SIGNED_METER_VALUE, MAX_CONFIG_LENGTH, 1, false, true, send_pub_key, OCPP_SEND_PUB_KEY_COUNT),
+    /*PublicKeyWithSignedMeterValue*/     OcppConfiguration::csl(OCPP_DEFAULT_PUBLIC_KEY_WITH_SIGNED_METER_VALUE, MAX_CONFIG_LENGTH, 1, false, true, PublicKeyWithSignedMeterValue_strings, OCPP_SEND_PUB_KEY_COUNT),
     /*SampledDataSignReadings*/           OcppConfiguration::boolean(true, false, true),
-    /*StartTxnSampledData*/               //OcppConfiguration::csl(OCPP_DEFAULT_START_TXN_SAMPLED_DATA, MAX_CONFIG_LENGTH, OCPP_START_TXN_SAMPLED_DATA_MAX_LENGTH, false, true/*OCPP_METER_VALUES_SAMPLED_DATA_REQUIRES_REBOOT*/, SampledValueMeasurandStrings, (size_t)SampledValueMeasurand::NONE, false, true),
-    /*SampledDataSignStartedReadings*/    //OcppConfiguration::boolean(true, false, true),
-    /*SampledDataSignUpdatedReadings*/    OcppConfiguration::boolean(true, false, true),
+    // Completely hard-coded for now: We only support sending Energy.Active.Import.Register signed. We always send it directly after the txn starts (in a MeterValues.req) and both the txn start and end value when the txn ends (in a StopTransaction.req)
+    /*StartTxnSampledData*/               OcppConfiguration::csl("Energy.Active.Import.Register", strlen("Energy.Active.Import.Register") + 1, 1, true, true, SampledValueMeasurandStrings, (size_t)SampledValueMeasurand::NONE, false, false),
+    /*SampledDataSignStartedReadings*/    OcppConfiguration::boolean(true, false, true),
+    // Hard-code updated readings to always be unsigned for now.
+    /*SampledDataSignUpdatedReadings*/    OcppConfiguration::boolean(false, true, true),
     /*AlignedDataSignReadings*/           OcppConfiguration::boolean(true, false, true),
-    /*AlignedDataSignUpdatedReadings*/    OcppConfiguration::boolean(true, false, true),
+    // Hard-code updated readings to always be unsigned for now.
+    /*AlignedDataSignUpdatedReadings*/    OcppConfiguration::boolean(false, true, true),
 };
 
 OcppConfiguration& getConfig(ConfigKey key) {
