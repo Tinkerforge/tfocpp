@@ -1453,8 +1453,20 @@ bool OcppChargePoint::start(const char *websocket_endpoint_url, const char *char
     debugDumpConfig();
 #endif
 
-    platform_register_tag_seen_callback(platform_ctx, [](int32_t connectorId, const char *tagId, void *user_data){((OcppChargePoint*)user_data)->handleTagSeen(connectorId, tagId);}, this);
-    platform_register_stop_callback(platform_ctx, [](int32_t connectorId, StopReason reason, void *user_data){((OcppChargePoint*)user_data)->handleStop(connectorId, reason);}, this);
+    platform_register_tag_seen_callback(
+        platform_ctx,
+        [](int32_t connectorId, const char *tagId, void *user_data){
+            ((OcppChargePoint*)user_data)->handleTagSeen(connectorId, tagId);
+        },
+        this);
+
+    platform_register_stop_callback(
+        platform_ctx,
+        [](int32_t connectorId, StopReason reason, void *user_data){
+            ((OcppChargePoint*)user_data)->handleStop(connectorId, reason);
+        },
+        this);
+
     return true;
 }
 
