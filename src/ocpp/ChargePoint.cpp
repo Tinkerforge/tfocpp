@@ -1430,9 +1430,6 @@ bool OcppChargePoint::start(const char *websocket_endpoint_url, const char *char
     // This is ugly but the currently only case where we detect config from the platform.
     getConfig(ConfigKey::ConnectorSwitch3to1PhaseSupported).setValue(platform_supports_phase_switch() ? "true" : "false", true);
 
-#ifdef OCPP_STATE_CALLBACKS
-    debugDumpConfig();
-#endif
     loadAvailability();
     loadProfiles();
 
@@ -1451,6 +1448,10 @@ bool OcppChargePoint::start(const char *websocket_endpoint_url, const char *char
     for(int32_t i = 0; i < OCPP_NUM_CONNECTORS; ++i) {
         connectors[i].init(i + 1, this);
     }
+
+#ifdef OCPP_STATE_CALLBACKS
+    debugDumpConfig();
+#endif
 
     platform_register_tag_seen_callback(platform_ctx, [](int32_t connectorId, const char *tagId, void *user_data){((OcppChargePoint*)user_data)->handleTagSeen(connectorId, tagId);}, this);
     platform_register_stop_callback(platform_ctx, [](int32_t connectorId, StopReason reason, void *user_data){((OcppChargePoint*)user_data)->handleStop(connectorId, reason);}, this);
