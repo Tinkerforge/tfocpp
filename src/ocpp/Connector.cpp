@@ -319,6 +319,7 @@ void Connector::setState(ConnectorState newState) {
             case ConnectorState::AUTH_STOP:
             case ConnectorState::FINISHING_NO_CABLE_LOCKED:
             case ConnectorState::FINISHING_NO_SAME_TAG:
+            case ConnectorState::UNAVAILABLE:
                 break;
 
             case ConnectorState::IDLE:
@@ -327,11 +328,10 @@ void Connector::setState(ConnectorState newState) {
             case ConnectorState::AUTH_START_NO_PLUG:
             case ConnectorState::AUTH_START_NO_CABLE:
             case ConnectorState::AUTH_START:
-            case ConnectorState::FINISHING_UNLOCKED:
-            case ConnectorState::FINISHING_NO_CABLE_UNLOCKED:
             case ConnectorState::NO_PLUG:
             case ConnectorState::NO_CABLE:
-            case ConnectorState::UNAVAILABLE:
+            case ConnectorState::FINISHING_UNLOCKED:
+            case ConnectorState::FINISHING_NO_CABLE_UNLOCKED:
                 this->unavailable_requested = false;
                 state = ConnectorState::UNAVAILABLE;
         }
