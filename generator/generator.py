@@ -372,7 +372,7 @@ enum class {name} : {type_} {{
     {entries}{none}
 }};
 """
-    string_template =  """const char * const {name}Strings[] = {{
+    string_template =  """constexpr const char * const {name}Strings[] = {{
     {entry_strings}
 }};
 """

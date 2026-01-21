@@ -40,32 +40,32 @@ size_t ICall::measureJson() const {
 
 uint64_t next_call_id = 0;
 
-const char * const ChangeAvailabilityResponseStatusStrings[] = {
+constexpr const char * const ChangeAvailabilityResponseStatusStrings[] = {
     "Accepted",
     "Rejected",
     "Scheduled"
 };
 
-const char * const ChangeConfigurationResponseStatusStrings[] = {
+constexpr const char * const ChangeConfigurationResponseStatusStrings[] = {
     "Accepted",
     "Rejected",
     "RebootRequired",
     "NotSupported"
 };
 
-const char * const ResponseStatusStrings[] = {
+constexpr const char * const ResponseStatusStrings[] = {
     "Accepted",
     "Rejected"
 };
 
-const char * const DataTransferResponseStatusStrings[] = {
+constexpr const char * const DataTransferResponseStatusStrings[] = {
     "Accepted",
     "Rejected",
     "UnknownMessageId",
     "UnknownVendorId"
 };
 
-const char * const StatusNotificationErrorCodeStrings[] = {
+constexpr const char * const StatusNotificationErrorCodeStrings[] = {
     "ConnectorLockFailure",
     "EVCommunicationError",
     "GroundFailure",
@@ -84,7 +84,7 @@ const char * const StatusNotificationErrorCodeStrings[] = {
     "WeakSignal"
 };
 
-const char * const StatusNotificationStatusStrings[] = {
+constexpr const char * const StatusNotificationStatusStrings[] = {
     "Available",
     "Preparing",
     "Charging",
@@ -96,7 +96,7 @@ const char * const StatusNotificationStatusStrings[] = {
     "Faulted"
 };
 
-const char * const StopTransactionReasonStrings[] = {
+constexpr const char * const StopTransactionReasonStrings[] = {
     "EmergencyStop",
     "EVDisconnected",
     "HardReset",
@@ -110,13 +110,13 @@ const char * const StopTransactionReasonStrings[] = {
     "DeAuthorized"
 };
 
-const char * const UnlockConnectorResponseStatusStrings[] = {
+constexpr const char * const UnlockConnectorResponseStatusStrings[] = {
     "Unlocked",
     "UnlockFailed",
     "NotSupported"
 };
 
-const char * const ResponseIdTagInfoEntriesStatusStrings[] = {
+constexpr const char * const ResponseIdTagInfoEntriesStatusStrings[] = {
     "Accepted",
     "Blocked",
     "Expired",
@@ -124,61 +124,61 @@ const char * const ResponseIdTagInfoEntriesStatusStrings[] = {
     "ConcurrentTx"
 };
 
-const char * const BootNotificationResponseStatusStrings[] = {
+constexpr const char * const BootNotificationResponseStatusStrings[] = {
     "Accepted",
     "Pending",
     "Rejected"
 };
 
-const char * const ChangeAvailabilityTypeStrings[] = {
+constexpr const char * const ChangeAvailabilityTypeStrings[] = {
     "Inoperative",
     "Operative"
 };
 
-const char * const ChargingProfilePurposeStrings[] = {
+constexpr const char * const ChargingProfilePurposeStrings[] = {
     "ChargePointMaxProfile",
     "TxDefaultProfile",
     "TxProfile"
 };
 
-const char * const ChargingProfileKindStrings[] = {
+constexpr const char * const ChargingProfileKindStrings[] = {
     "Absolute",
     "Recurring",
     "Relative"
 };
 
-const char * const RecurrencyKindStrings[] = {
+constexpr const char * const RecurrencyKindStrings[] = {
     "Daily",
     "Weekly"
 };
 
-const char * const ChargingRateUnitStrings[] = {
+constexpr const char * const ChargingRateUnitStrings[] = {
     "A",
     "W"
 };
 
-const char * const ResetTypeStrings[] = {
+constexpr const char * const ResetTypeStrings[] = {
     "Hard",
     "Soft"
 };
 
-const char * const ClearChargingProfileResponseStatusStrings[] = {
+constexpr const char * const ClearChargingProfileResponseStatusStrings[] = {
     "Accepted",
     "Unknown"
 };
 
-const char * const SetChargingProfileResponseStatusStrings[] = {
+constexpr const char * const SetChargingProfileResponseStatusStrings[] = {
     "Accepted",
     "Rejected",
     "NotSupported"
 };
 
-const char * const GetCompositeScheduleResponseChargingScheduleChargingRateUnitStrings[] = {
+constexpr const char * const GetCompositeScheduleResponseChargingScheduleChargingRateUnitStrings[] = {
     "A",
     "W"
 };
 
-const char * const ExtSMVSignedMeterValueTypeSigningMethodStrings[] = {
+constexpr const char * const ExtSMVSignedMeterValueTypeSigningMethodStrings[] = {
     "",
     "ECDSA-secp192k1-SHA256",
     "ECDSA-secp256k1-SHA256",
@@ -189,12 +189,12 @@ const char * const ExtSMVSignedMeterValueTypeSigningMethodStrings[] = {
     "ECDSA-brainpool384r1-SHA256"
 };
 
-const char * const ExtSMVSignedMeterValueTypeEncodingMethodStrings[] = {
+constexpr const char * const ExtSMVSignedMeterValueTypeEncodingMethodStrings[] = {
     "OCMF",
     "EDL"
 };
 
-const char * const SampledValueContextStrings[] = {
+constexpr const char * const SampledValueContextStrings[] = {
     "Interruption.Begin",
     "Interruption.End",
     "Sample.Clock",
@@ -205,12 +205,12 @@ const char * const SampledValueContextStrings[] = {
     "Other"
 };
 
-const char * const SampledValueFormatStrings[] = {
+constexpr const char * const SampledValueFormatStrings[] = {
     "Raw",
     "SignedData"
 };
 
-const char * const SampledValueMeasurandStrings[] = {
+constexpr const char * const SampledValueMeasurandStrings[] = {
     "Energy.Active.Export.Register",
     "Energy.Active.Import.Register",
     "Energy.Reactive.Export.Register",
@@ -235,7 +235,7 @@ const char * const SampledValueMeasurandStrings[] = {
     "RPM"
 };
 
-const char * const SampledValuePhaseStrings[] = {
+constexpr const char * const SampledValuePhaseStrings[] = {
     "L1",
     "L2",
     "L3",
@@ -248,7 +248,7 @@ const char * const SampledValuePhaseStrings[] = {
     "L3-L1"
 };
 
-const char * const SampledValueLocationStrings[] = {
+constexpr const char * const SampledValueLocationStrings[] = {
     "Cable",
     "EV",
     "Inlet",
@@ -256,7 +256,7 @@ const char * const SampledValueLocationStrings[] = {
     "Body"
 };
 
-const char * const SampledValueUnitStrings[] = {
+constexpr const char * const SampledValueUnitStrings[] = {
     "Wh",
     "kWh",
     "varh",
@@ -276,7 +276,7 @@ const char * const SampledValueUnitStrings[] = {
     "Percent"
 };
 
-const char * const CallActionStrings[] = {
+constexpr const char * const CallActionStrings[] = {
     "Authorize",
     "BootNotification",
     "ChangeAvailabilityResponse",
