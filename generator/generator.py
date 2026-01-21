@@ -843,7 +843,7 @@ size_t {action}::serializeJson(char *buf, size_t buf_len) const {{
 
 def newline_remove(s):
     for i in range(10):
-        s = re.sub("\n\s*\n\s*\n", "\n\n", s)
+        s = re.sub(r"\n\s*\n\s*\n", "\n\n", s)
     return s
 
 def generate_on_call(all_messages: List[Object], supported_to_recv: List[Object]):
