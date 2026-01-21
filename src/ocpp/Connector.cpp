@@ -425,7 +425,7 @@ void Connector::setState(ConnectorState newState) {
     }
 
     // Directly go to unavailable if new state allows this.
-    if (this->unavailable_requested && state_machine[newState][ConnectorState::UNAVAILABLE] != TransitionAction::FORBIDDEN) {
+    if (this->unavailable_requested && state_machine[(size_t)newState][(size_t)ConnectorState::UNAVAILABLE] != TransitionAction::FORBIDDEN) {
          this->setState(ConnectorState::UNAVAILABLE);
     }
 }
@@ -1567,7 +1567,7 @@ ChangeAvailabilityResponseStatus Connector::onChangeAvailability(ChangeAvailabil
                 return ChangeAvailabilityResponseStatus::ACCEPTED;
             }
 
-            if (state_machine[state][ConnectorState::UNAVAILABLE] == TransitionAction::FORBIDDEN) {
+            if (state_machine[(size_t)state][(size_t)ConnectorState::UNAVAILABLE] == TransitionAction::FORBIDDEN) {
                 // We can't switch to unavailable right now. Schedule for later
                 this->unavailable_requested = true;
                 return ChangeAvailabilityResponseStatus::SCHEDULED;
