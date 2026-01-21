@@ -127,27 +127,30 @@ enum class RFIDIdentificationFlag : uint8_t {
     NONE,
     PLAIN,
     RELATED,
-    PSK
+    PSK,
+    _max = PSK
 };
 
 enum class OCPPIdentificationFlag : uint8_t {
-    NONE,
+    NONE = (size_t)RFIDIdentificationFlag::_max + 1,
     RS,
     AUTH,
     RS_TLS,
     AUTH_TLS,
     CACHE,
     WHITELIST,
-    CERTIFIED
+    CERTIFIED,
+    _max = CERTIFIED
 };
 
 enum class ISO15118IdentificationFlag : uint8_t {
-    NONE,
-    PNC
+    NONE = (size_t)OCPPIdentificationFlag::_max + 1,
+    PNC,
+    _max = PNC
 };
 
 enum class PLMNIdentificationFlag : uint8_t {
-    NONE,
+    NONE = (size_t)ISO15118IdentificationFlag::_max + 1,
     RING,
     SMS
 };
