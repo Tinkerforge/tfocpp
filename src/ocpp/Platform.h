@@ -196,6 +196,8 @@ enum SignatureEncoding : uint8_t {
     BASE64
 };
 
+bool platform_supports_signed_meter_values(void *ctx, int32_t connectorId);
+
 void platform_notify_txn_start(
     void *ctx,
 
