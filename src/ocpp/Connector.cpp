@@ -259,7 +259,7 @@ static constexpr TransitionAction state_machine[(size_t)ConnectorState::_max + 1
 /*                  NO_CABLE */ {   _   ,   _   ,   _   ,   _   ,   _   ,   _   ,  NOP  ,   _   ,  NMB  ,   _   ,   _   ,   _   ,   _   ,  NOP  ,   _   ,   _   ,  UNA  },
 
 /*                 START_TXN */ {   _   ,   _   ,   _   ,   _   ,   _   ,   _   ,   _   ,   _   ,   _   ,  STX  ,   _   ,  NIY  ,   _   ,   _   ,   _   ,   _   ,   _   },
-/*               TRANSACTION */ {   _   ,   _   ,   _   ,   _   ,   _   ,   _   ,   _   ,   _   ,   _   ,   _   ,  NOP  ,  NME  ,   _   ,   _   ,   _   ,   _   ,   _   },
+/*               TRANSACTION */ {   _   ,   _   ,   _   ,   _   ,   _   ,   _   ,   _   ,   _   ,   _   ,   _   ,  AUT  ,  NME  ,   _   ,   _   ,   _   ,   _   ,   _   },
 /*                 AUTH_STOP */ {   _   ,   _   ,   _   ,   _   ,   _   ,   _   ,   _   ,   _   ,   _   ,  NOP  ,   _   ,  NME  ,   _   ,   _   ,   _   ,   _   ,   _   },
 /*                  STOP_TXN */ {   _   ,   _   ,   _   ,   _   ,   _   ,   _   ,   _   ,   _   ,   _   ,   _   ,   _   ,   _   ,  SPX  ,  SPX  ,  SPX  ,  SPX  ,   _   },
 
@@ -1024,7 +1024,7 @@ void Connector::onTagSeen(const char *tag_id) {
     if (authorized_for.is_same_tag(tag_id)) {
         platform_tag_accepted(this->connectorId, tag_id);
 
-        // Handle same tag.
+        // Handle same tag. This will always de-authenticate.
         switch (state) {
             case ConnectorState::AUTH_START_NO_PLUG:
                 setState(ConnectorState::IDLE);
@@ -1077,7 +1077,6 @@ void Connector::onTagSeen(const char *tag_id) {
             memset(tagIdInFlight, 0, ARRAY_SIZE(tagIdInFlight));
             strncpy(tagIdInFlight, tag_id, ARRAY_SIZE(tagIdInFlight) - 1);
 
-            //authorized_for.updateTagId(tag_id);
             setState(ConnectorState::AUTH_START_NO_PLUG);
             break;
         case ConnectorState::NO_CABLE_NO_TAG:
@@ -1085,7 +1084,6 @@ void Connector::onTagSeen(const char *tag_id) {
             memset(tagIdInFlight, 0, ARRAY_SIZE(tagIdInFlight));
             strncpy(tagIdInFlight, tag_id, ARRAY_SIZE(tagIdInFlight) - 1);
 
-            //authorized_for.updateTagId(tag_id);
             setState(ConnectorState::AUTH_START_NO_CABLE);
             break;
         case ConnectorState::NO_TAG:
@@ -1093,7 +1091,6 @@ void Connector::onTagSeen(const char *tag_id) {
             memset(tagIdInFlight, 0, ARRAY_SIZE(tagIdInFlight));
             strncpy(tagIdInFlight, tag_id, ARRAY_SIZE(tagIdInFlight) - 1);
 
-            //authorized_for.updateTagId(tag_id);
             setState(ConnectorState::AUTH_START);
             break;
 
@@ -1101,8 +1098,6 @@ void Connector::onTagSeen(const char *tag_id) {
             memset(tagIdInFlight, 0, ARRAY_SIZE(tagIdInFlight));
             strncpy(tagIdInFlight, tag_id, ARRAY_SIZE(tagIdInFlight) - 1);
 
-            // We still need the tag ID that started the transaction, so don't override authorized_for here, but send the AUTH request immediately.
-            this->sendCallAction(Authorize(tag_id));
             setState(ConnectorState::AUTH_STOP);
             break;
 
