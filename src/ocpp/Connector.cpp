@@ -1067,40 +1067,29 @@ void Connector::onTagSeen(const char *tag_id) {
                 log_warn("Unexpected same tag in state %s. Was auth not cleared?", ConnectorStateStrings[(size_t)state]);
                 break;
         }
+
         return;
     }
 
+    ConnectorState next_state = this->state;
 
     // Handle non-same tag.
     switch (state) {
         case ConnectorState::IDLE:
-            memset(tagIdInFlight, 0, ARRAY_SIZE(tagIdInFlight));
-            strncpy(tagIdInFlight, tag_id, ARRAY_SIZE(tagIdInFlight) - 1);
-
-            setState(ConnectorState::AUTH_START_NO_PLUG);
+            next_state = ConnectorState::AUTH_START_NO_PLUG;
             break;
         case ConnectorState::NO_CABLE_NO_TAG:
         case ConnectorState::FINISHING_NO_CABLE_UNLOCKED:
-            memset(tagIdInFlight, 0, ARRAY_SIZE(tagIdInFlight));
-            strncpy(tagIdInFlight, tag_id, ARRAY_SIZE(tagIdInFlight) - 1);
-
-            setState(ConnectorState::AUTH_START_NO_CABLE);
+            next_state = ConnectorState::AUTH_START_NO_CABLE;
             break;
         case ConnectorState::NO_TAG:
         case ConnectorState::FINISHING_UNLOCKED:
-            memset(tagIdInFlight, 0, ARRAY_SIZE(tagIdInFlight));
-            strncpy(tagIdInFlight, tag_id, ARRAY_SIZE(tagIdInFlight) - 1);
-
-            setState(ConnectorState::AUTH_START);
+            next_state = ConnectorState::AUTH_START;
             break;
 
         case ConnectorState::TRANSACTION:
-            memset(tagIdInFlight, 0, ARRAY_SIZE(tagIdInFlight));
-            strncpy(tagIdInFlight, tag_id, ARRAY_SIZE(tagIdInFlight) - 1);
-
-            setState(ConnectorState::AUTH_STOP);
+            next_state = ConnectorState::AUTH_STOP;
             break;
-
 
         case ConnectorState::AUTH_START_NO_PLUG:
         case ConnectorState::AUTH_START_NO_CABLE:
@@ -1114,8 +1103,18 @@ void Connector::onTagSeen(const char *tag_id) {
         case ConnectorState::START_TXN:
         case ConnectorState::STOP_TXN:
             log_debug("Ignoring other tag in state %s", ConnectorStateStrings[(size_t)state]);
-            break;
+            return;
     }
+
+    // sanity-check
+    auto action = state_machine[(size_t)this->state][(size_t)next_state];
+    if (action != TransitionAction::SEND_AUTHENTICATE)
+        log_warn("Transition from %s to %s should send authenticate but TransitionAction is %d!", ConnectorStateStrings[(size_t)this->state], ConnectorStateStrings[(size_t)next_state], action);
+
+    memset(tagIdInFlight, 0, ARRAY_SIZE(tagIdInFlight));
+    strncpy(tagIdInFlight, tag_id, ARRAY_SIZE(tagIdInFlight) - 1);
+
+    setState(next_state);
 }
 
 void Connector::onAuthorizeError() {
@@ -1438,32 +1437,30 @@ bool Connector::isTransactionActive()
 
 void Connector::onAuthorizedRemoteStartTransaction(const char *tag_id)
 {
+    ConnectorState next_state = this->state;
+
     switch (state) {
         case ConnectorState::IDLE:
         case ConnectorState::AUTH_START_NO_PLUG:
-            authorized_for.updateTagId(tag_id);
-            setState(ConnectorState::NO_PLUG);
+            next_state = ConnectorState::NO_PLUG;
             break;
 
         case ConnectorState::NO_CABLE_NO_TAG:
         case ConnectorState::AUTH_START_NO_CABLE:
         case ConnectorState::FINISHING_NO_CABLE_UNLOCKED:
         case ConnectorState::FINISHING_NO_CABLE_LOCKED:
-            authorized_for.updateTagId(tag_id);
-            setState(ConnectorState::NO_CABLE);
+            next_state = ConnectorState::NO_CABLE;
             break;
 
         case ConnectorState::NO_TAG:
         case ConnectorState::AUTH_START:
         case ConnectorState::FINISHING_UNLOCKED:
         case ConnectorState::FINISHING_NO_SAME_TAG:
-            authorized_for.updateTagId(tag_id);
-            setState(ConnectorState::START_TXN);
+            next_state = ConnectorState::START_TXN;
             break;
 
         case ConnectorState::NO_PLUG:
         case ConnectorState::NO_CABLE:
-            authorized_for.updateTagId(tag_id);
             // stay in this state, only change tag id
             break;
 
@@ -1473,8 +1470,11 @@ void Connector::onAuthorizedRemoteStartTransaction(const char *tag_id)
         case ConnectorState::STOP_TXN:
         case ConnectorState::UNAVAILABLE:
             log_debug("Ignoring remote start transaction in state %s", ConnectorStateStrings[(size_t)state]);
-            break;
+            return;
     }
+
+    authorized_for.updateTagId(tag_id);
+    setState(next_state);
 }
 
 void Connector::onRemoteStopTransaction()
