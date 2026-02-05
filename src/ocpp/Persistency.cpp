@@ -159,7 +159,8 @@ void initRestore() {
 
     // Start new call IDs one behind the last persisted call.
     // This makes sure that we can reuse all persisted call IDs.
-    next_call_id = names->back() + 1;
+    // This is sorted descending, so the first entry has the largest ID.
+    next_call_id = names->front() + 1;
 
     return;
 }
