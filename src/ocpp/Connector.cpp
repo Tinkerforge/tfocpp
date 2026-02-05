@@ -369,6 +369,9 @@ void Connector::setState(ConnectorState newState) {
 
                 // TODO: persist signed meter value if available
                 persistStartTxn(msg.connectorId, msg.idTag, msg.meterStart, msg.reservationId, (uint32_t)msg.ocppJmessageId, msg.timestamp);
+
+                this->transaction_confirmed_id = next_call_id++;
+                persistRunningTxn(this->connectorId, transaction_confirmed_id, -1); // Persist running txn with txn-ID -1 until we've received the StartTransaction.conf.
                 this->sendCallAction(msg);
             }
             break;
@@ -1311,6 +1314,11 @@ void Connector::onStartTransactionConf(IdTagInfo info, int32_t txn_id) {
 
     this->transaction_id = txn_id;
     this->meter_value_handler.transactionId = txn_id;
+
+    // We've already persisted a running txn with the message ID transaction_confirmed_id and transaction ID -1
+    // when we've created the StartTransaction.Req.
+    // Replace that persisted information with a new running txn with the correct transaction ID.
+    onTxnMsgResponseReceived(this->transaction_confirmed_id);
 
     this->transaction_confirmed_id = next_call_id++;
     persistRunningTxn(this->connectorId, transaction_confirmed_id, txn_id);
