@@ -420,6 +420,8 @@ struct ICall {
     ICall(CallAction action, const char *callId): action(action), ocppJmessageId(0), ocppJcallId(callId) {}
     ICall(const ICall &) = delete;
     ICall& operator=(const ICall &) = delete;
+    ICall(ICall&&) = default;
+    ICall& operator=(ICall&&) = default;
 
     virtual ~ICall();
 
