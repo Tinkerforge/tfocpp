@@ -555,7 +555,6 @@ CallResponse OcppChargePoint::handleGetConfiguration(const char *uid, GetConfigu
 
     if (req.key_count() == 0) {
         for(size_t i = 0; i < OCPP_CONFIG_COUNT; ++i) {
-            const char *config_value;
             OcppConfiguration &config = getConfig(i);
             if (!config.hidden)
                 ++known_keys;

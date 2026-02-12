@@ -317,8 +317,8 @@ void Connector::setState(ConnectorState newState) {
 
                 bool from_rfid = this->authorized_for_level == IdentificationLevel::HEARSAY;
 
-                static_assert((size_t) OCPPIdentificationFlag::AUTH + 2 == (size_t) OCPPIdentificationFlag::AUTH_TLS);
-                static_assert((size_t) OCPPIdentificationFlag::RS + 2 == (size_t) OCPPIdentificationFlag::RS_TLS);
+                static_assert((size_t) OCPPIdentificationFlag::AUTH + 2 == (size_t) OCPPIdentificationFlag::AUTH_TLS, "OCPPIdentificationFlag layout not as expected");
+                static_assert((size_t) OCPPIdentificationFlag::RS + 2 == (size_t) OCPPIdentificationFlag::RS_TLS, "OCPPIdentificationFlag layout not as expected");
 
                 char ci[38]; // serial (25 bytes) + ' ' + connector id (11 byte) + '\0'
                 snprintf(ci, ARRAY_SIZE(ci), "%.25s %d", platform_get_charge_point_serial_number(), this->connectorId);
@@ -1124,7 +1124,7 @@ void Connector::onTagSeen(const char *tag_id, bool from_remote_start_txn) {
     // sanity-check
     auto action = state_machine[(size_t)this->state][(size_t)next_state];
     if (action != TransitionAction::SEND_AUTHENTICATE)
-        log_warn("Transition from %s to %s should send authenticate but TransitionAction is %d!", ConnectorStateStrings[(size_t)this->state], ConnectorStateStrings[(size_t)next_state], action);
+        log_warn("Transition from %s to %s should send authenticate but TransitionAction is %d!", ConnectorStateStrings[(size_t)this->state], ConnectorStateStrings[(size_t)next_state], (int)action);
 
     memset(tagIdInFlight, 0, ARRAY_SIZE(tagIdInFlight));
     strncpy(tagIdInFlight, tag_id, ARRAY_SIZE(tagIdInFlight) - 1);
@@ -1209,7 +1209,7 @@ void Connector::onAuthorizeConf(IdTagInfo info) {
     }
 }
 
-constexpr size_t constexpr_strlen(const char *s) {
+static constexpr size_t constexpr_strlen(const char *s) {
     return (s == nullptr || s[0] == '\0') ? 0
             : (constexpr_strlen(&s[1]) + 1);
 }
