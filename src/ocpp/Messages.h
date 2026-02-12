@@ -15,7 +15,8 @@ class OcppChargePoint;
 
 extern uint64_t next_call_id;
 
-extern const char * const ChangeAvailabilityResponseStatusStrings[];
+extern const char * const ChangeAvailabilityResponseStatusStrings[3];
+constexpr size_t ChangeAvailabilityResponseStatusStringsMaxLength = 9;
 
 enum class ChangeAvailabilityResponseStatus : uint8_t {
     ACCEPTED,
@@ -24,7 +25,8 @@ enum class ChangeAvailabilityResponseStatus : uint8_t {
     NONE
 };
 
-extern const char * const ChangeConfigurationResponseStatusStrings[];
+extern const char * const ChangeConfigurationResponseStatusStrings[4];
+constexpr size_t ChangeConfigurationResponseStatusStringsMaxLength = 14;
 
 enum class ChangeConfigurationResponseStatus : uint8_t {
     ACCEPTED,
@@ -34,7 +36,8 @@ enum class ChangeConfigurationResponseStatus : uint8_t {
     NONE
 };
 
-extern const char * const ResponseStatusStrings[];
+extern const char * const ResponseStatusStrings[2];
+constexpr size_t ResponseStatusStringsMaxLength = 8;
 
 enum class ResponseStatus : uint8_t {
     ACCEPTED,
@@ -42,7 +45,8 @@ enum class ResponseStatus : uint8_t {
     NONE
 };
 
-extern const char * const DataTransferResponseStatusStrings[];
+extern const char * const DataTransferResponseStatusStrings[4];
+constexpr size_t DataTransferResponseStatusStringsMaxLength = 16;
 
 enum class DataTransferResponseStatus : uint8_t {
     ACCEPTED,
@@ -52,7 +56,8 @@ enum class DataTransferResponseStatus : uint8_t {
     NONE
 };
 
-extern const char * const StatusNotificationErrorCodeStrings[];
+extern const char * const StatusNotificationErrorCodeStrings[16];
+constexpr size_t StatusNotificationErrorCodeStringsMaxLength = 20;
 
 enum class StatusNotificationErrorCode : uint8_t {
     CONNECTOR_LOCK_FAILURE,
@@ -74,7 +79,8 @@ enum class StatusNotificationErrorCode : uint8_t {
     NONE
 };
 
-extern const char * const StatusNotificationStatusStrings[];
+extern const char * const StatusNotificationStatusStrings[9];
+constexpr size_t StatusNotificationStatusStringsMaxLength = 13;
 
 enum class StatusNotificationStatus : uint8_t {
     AVAILABLE,
@@ -89,7 +95,8 @@ enum class StatusNotificationStatus : uint8_t {
     NONE
 };
 
-extern const char * const StopTransactionReasonStrings[];
+extern const char * const StopTransactionReasonStrings[11];
+constexpr size_t StopTransactionReasonStringsMaxLength = 14;
 
 enum class StopTransactionReason : uint8_t {
     EMERGENCY_STOP,
@@ -106,7 +113,8 @@ enum class StopTransactionReason : uint8_t {
     NONE
 };
 
-extern const char * const UnlockConnectorResponseStatusStrings[];
+extern const char * const UnlockConnectorResponseStatusStrings[3];
+constexpr size_t UnlockConnectorResponseStatusStringsMaxLength = 12;
 
 enum class UnlockConnectorResponseStatus : uint8_t {
     UNLOCKED,
@@ -115,7 +123,8 @@ enum class UnlockConnectorResponseStatus : uint8_t {
     NONE
 };
 
-extern const char * const ResponseIdTagInfoEntriesStatusStrings[];
+extern const char * const ResponseIdTagInfoEntriesStatusStrings[5];
+constexpr size_t ResponseIdTagInfoEntriesStatusStringsMaxLength = 12;
 
 enum class ResponseIdTagInfoEntriesStatus : uint8_t {
     ACCEPTED,
@@ -125,7 +134,8 @@ enum class ResponseIdTagInfoEntriesStatus : uint8_t {
     CONCURRENT_TX
 };
 
-extern const char * const BootNotificationResponseStatusStrings[];
+extern const char * const BootNotificationResponseStatusStrings[3];
+constexpr size_t BootNotificationResponseStatusStringsMaxLength = 8;
 
 enum class BootNotificationResponseStatus : uint8_t {
     ACCEPTED,
@@ -133,14 +143,16 @@ enum class BootNotificationResponseStatus : uint8_t {
     REJECTED
 };
 
-extern const char * const ChangeAvailabilityTypeStrings[];
+extern const char * const ChangeAvailabilityTypeStrings[2];
+constexpr size_t ChangeAvailabilityTypeStringsMaxLength = 11;
 
 enum class ChangeAvailabilityType : uint8_t {
     INOPERATIVE,
     OPERATIVE
 };
 
-extern const char * const ChargingProfilePurposeStrings[];
+extern const char * const ChargingProfilePurposeStrings[3];
+constexpr size_t ChargingProfilePurposeStringsMaxLength = 21;
 
 enum class ChargingProfilePurpose : uint8_t {
     CHARGE_POINT_MAX_PROFILE,
@@ -148,7 +160,8 @@ enum class ChargingProfilePurpose : uint8_t {
     TX_PROFILE
 };
 
-extern const char * const ChargingProfileKindStrings[];
+extern const char * const ChargingProfileKindStrings[3];
+constexpr size_t ChargingProfileKindStringsMaxLength = 9;
 
 enum class ChargingProfileKind : uint8_t {
     ABSOLUTE,
@@ -156,28 +169,32 @@ enum class ChargingProfileKind : uint8_t {
     RELATIVE
 };
 
-extern const char * const RecurrencyKindStrings[];
+extern const char * const RecurrencyKindStrings[2];
+constexpr size_t RecurrencyKindStringsMaxLength = 6;
 
 enum class RecurrencyKind : uint8_t {
     DAILY,
     WEEKLY
 };
 
-extern const char * const ChargingRateUnitStrings[];
+extern const char * const ChargingRateUnitStrings[2];
+constexpr size_t ChargingRateUnitStringsMaxLength = 1;
 
 enum class ChargingRateUnit : uint8_t {
     A,
     W
 };
 
-extern const char * const ResetTypeStrings[];
+extern const char * const ResetTypeStrings[2];
+constexpr size_t ResetTypeStringsMaxLength = 4;
 
 enum class ResetType : uint8_t {
     HARD,
     SOFT
 };
 
-extern const char * const ClearChargingProfileResponseStatusStrings[];
+extern const char * const ClearChargingProfileResponseStatusStrings[2];
+constexpr size_t ClearChargingProfileResponseStatusStringsMaxLength = 8;
 
 enum class ClearChargingProfileResponseStatus : uint8_t {
     ACCEPTED,
@@ -185,7 +202,8 @@ enum class ClearChargingProfileResponseStatus : uint8_t {
     NONE
 };
 
-extern const char * const SetChargingProfileResponseStatusStrings[];
+extern const char * const SetChargingProfileResponseStatusStrings[3];
+constexpr size_t SetChargingProfileResponseStatusStringsMaxLength = 12;
 
 enum class SetChargingProfileResponseStatus : uint8_t {
     ACCEPTED,
@@ -194,7 +212,8 @@ enum class SetChargingProfileResponseStatus : uint8_t {
     NONE
 };
 
-extern const char * const GetCompositeScheduleResponseChargingScheduleChargingRateUnitStrings[];
+extern const char * const GetCompositeScheduleResponseChargingScheduleChargingRateUnitStrings[2];
+constexpr size_t GetCompositeScheduleResponseChargingScheduleChargingRateUnitStringsMaxLength = 1;
 
 enum class GetCompositeScheduleResponseChargingScheduleChargingRateUnit : uint8_t {
     A,
@@ -202,7 +221,8 @@ enum class GetCompositeScheduleResponseChargingScheduleChargingRateUnit : uint8_
     NONE
 };
 
-extern const char * const ExtSMVSignedMeterValueTypeSigningMethodStrings[];
+extern const char * const ExtSMVSignedMeterValueTypeSigningMethodStrings[8];
+constexpr size_t ExtSMVSignedMeterValueTypeSigningMethodStringsMaxLength = 27;
 
 enum class ExtSMVSignedMeterValueTypeSigningMethod : uint8_t {
     EMPTY_STRING,
@@ -216,7 +236,8 @@ enum class ExtSMVSignedMeterValueTypeSigningMethod : uint8_t {
     NONE
 };
 
-extern const char * const ExtSMVSignedMeterValueTypeEncodingMethodStrings[];
+extern const char * const ExtSMVSignedMeterValueTypeEncodingMethodStrings[2];
+constexpr size_t ExtSMVSignedMeterValueTypeEncodingMethodStringsMaxLength = 4;
 
 enum class ExtSMVSignedMeterValueTypeEncodingMethod : uint8_t {
     OCMF,
@@ -224,7 +245,8 @@ enum class ExtSMVSignedMeterValueTypeEncodingMethod : uint8_t {
     NONE
 };
 
-extern const char * const SampledValueContextStrings[];
+extern const char * const SampledValueContextStrings[8];
+constexpr size_t SampledValueContextStringsMaxLength = 18;
 
 enum class SampledValueContext : uint8_t {
     INTERRUPTION_BEGIN,
@@ -238,7 +260,8 @@ enum class SampledValueContext : uint8_t {
     NONE
 };
 
-extern const char * const SampledValueFormatStrings[];
+extern const char * const SampledValueFormatStrings[2];
+constexpr size_t SampledValueFormatStringsMaxLength = 10;
 
 enum class SampledValueFormat : uint8_t {
     RAW,
@@ -246,7 +269,8 @@ enum class SampledValueFormat : uint8_t {
     NONE
 };
 
-extern const char * const SampledValueMeasurandStrings[];
+extern const char * const SampledValueMeasurandStrings[22];
+constexpr size_t SampledValueMeasurandStringsMaxLength = 31;
 
 enum class SampledValueMeasurand : uint8_t {
     ENERGY_ACTIVE_EXPORT_REGISTER,
@@ -274,7 +298,8 @@ enum class SampledValueMeasurand : uint8_t {
     NONE
 };
 
-extern const char * const SampledValuePhaseStrings[];
+extern const char * const SampledValuePhaseStrings[10];
+constexpr size_t SampledValuePhaseStringsMaxLength = 5;
 
 enum class SampledValuePhase : uint8_t {
     L1,
@@ -290,7 +315,8 @@ enum class SampledValuePhase : uint8_t {
     NONE
 };
 
-extern const char * const SampledValueLocationStrings[];
+extern const char * const SampledValueLocationStrings[5];
+constexpr size_t SampledValueLocationStringsMaxLength = 6;
 
 enum class SampledValueLocation : uint8_t {
     CABLE,
@@ -301,7 +327,8 @@ enum class SampledValueLocation : uint8_t {
     NONE
 };
 
-extern const char * const SampledValueUnitStrings[];
+extern const char * const SampledValueUnitStrings[17];
+constexpr size_t SampledValueUnitStringsMaxLength = 10;
 
 enum class SampledValueUnit : uint8_t {
     WH,
@@ -324,7 +351,8 @@ enum class SampledValueUnit : uint8_t {
     NONE
 };
 
-extern const char * const CallActionStrings[];
+extern const char * const CallActionStrings[57];
+constexpr size_t CallActionStringsMaxLength = 37;
 
 enum class CallAction : uint8_t {
     AUTHORIZE,

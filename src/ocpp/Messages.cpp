@@ -40,32 +40,32 @@ size_t ICall::measureJson() const {
 
 uint64_t next_call_id = 0;
 
-constexpr const char * const ChangeAvailabilityResponseStatusStrings[] = {
+constexpr const char * const ChangeAvailabilityResponseStatusStrings[3] = {
     "Accepted",
     "Rejected",
     "Scheduled"
 };
 
-constexpr const char * const ChangeConfigurationResponseStatusStrings[] = {
+constexpr const char * const ChangeConfigurationResponseStatusStrings[4] = {
     "Accepted",
     "Rejected",
     "RebootRequired",
     "NotSupported"
 };
 
-constexpr const char * const ResponseStatusStrings[] = {
+constexpr const char * const ResponseStatusStrings[2] = {
     "Accepted",
     "Rejected"
 };
 
-constexpr const char * const DataTransferResponseStatusStrings[] = {
+constexpr const char * const DataTransferResponseStatusStrings[4] = {
     "Accepted",
     "Rejected",
     "UnknownMessageId",
     "UnknownVendorId"
 };
 
-constexpr const char * const StatusNotificationErrorCodeStrings[] = {
+constexpr const char * const StatusNotificationErrorCodeStrings[16] = {
     "ConnectorLockFailure",
     "EVCommunicationError",
     "GroundFailure",
@@ -84,7 +84,7 @@ constexpr const char * const StatusNotificationErrorCodeStrings[] = {
     "WeakSignal"
 };
 
-constexpr const char * const StatusNotificationStatusStrings[] = {
+constexpr const char * const StatusNotificationStatusStrings[9] = {
     "Available",
     "Preparing",
     "Charging",
@@ -96,7 +96,7 @@ constexpr const char * const StatusNotificationStatusStrings[] = {
     "Faulted"
 };
 
-constexpr const char * const StopTransactionReasonStrings[] = {
+constexpr const char * const StopTransactionReasonStrings[11] = {
     "EmergencyStop",
     "EVDisconnected",
     "HardReset",
@@ -110,13 +110,13 @@ constexpr const char * const StopTransactionReasonStrings[] = {
     "DeAuthorized"
 };
 
-constexpr const char * const UnlockConnectorResponseStatusStrings[] = {
+constexpr const char * const UnlockConnectorResponseStatusStrings[3] = {
     "Unlocked",
     "UnlockFailed",
     "NotSupported"
 };
 
-constexpr const char * const ResponseIdTagInfoEntriesStatusStrings[] = {
+constexpr const char * const ResponseIdTagInfoEntriesStatusStrings[5] = {
     "Accepted",
     "Blocked",
     "Expired",
@@ -124,61 +124,61 @@ constexpr const char * const ResponseIdTagInfoEntriesStatusStrings[] = {
     "ConcurrentTx"
 };
 
-constexpr const char * const BootNotificationResponseStatusStrings[] = {
+constexpr const char * const BootNotificationResponseStatusStrings[3] = {
     "Accepted",
     "Pending",
     "Rejected"
 };
 
-constexpr const char * const ChangeAvailabilityTypeStrings[] = {
+constexpr const char * const ChangeAvailabilityTypeStrings[2] = {
     "Inoperative",
     "Operative"
 };
 
-constexpr const char * const ChargingProfilePurposeStrings[] = {
+constexpr const char * const ChargingProfilePurposeStrings[3] = {
     "ChargePointMaxProfile",
     "TxDefaultProfile",
     "TxProfile"
 };
 
-constexpr const char * const ChargingProfileKindStrings[] = {
+constexpr const char * const ChargingProfileKindStrings[3] = {
     "Absolute",
     "Recurring",
     "Relative"
 };
 
-constexpr const char * const RecurrencyKindStrings[] = {
+constexpr const char * const RecurrencyKindStrings[2] = {
     "Daily",
     "Weekly"
 };
 
-constexpr const char * const ChargingRateUnitStrings[] = {
+constexpr const char * const ChargingRateUnitStrings[2] = {
     "A",
     "W"
 };
 
-constexpr const char * const ResetTypeStrings[] = {
+constexpr const char * const ResetTypeStrings[2] = {
     "Hard",
     "Soft"
 };
 
-constexpr const char * const ClearChargingProfileResponseStatusStrings[] = {
+constexpr const char * const ClearChargingProfileResponseStatusStrings[2] = {
     "Accepted",
     "Unknown"
 };
 
-constexpr const char * const SetChargingProfileResponseStatusStrings[] = {
+constexpr const char * const SetChargingProfileResponseStatusStrings[3] = {
     "Accepted",
     "Rejected",
     "NotSupported"
 };
 
-constexpr const char * const GetCompositeScheduleResponseChargingScheduleChargingRateUnitStrings[] = {
+constexpr const char * const GetCompositeScheduleResponseChargingScheduleChargingRateUnitStrings[2] = {
     "A",
     "W"
 };
 
-constexpr const char * const ExtSMVSignedMeterValueTypeSigningMethodStrings[] = {
+constexpr const char * const ExtSMVSignedMeterValueTypeSigningMethodStrings[8] = {
     "",
     "ECDSA-secp192k1-SHA256",
     "ECDSA-secp256k1-SHA256",
@@ -189,12 +189,12 @@ constexpr const char * const ExtSMVSignedMeterValueTypeSigningMethodStrings[] = 
     "ECDSA-brainpool384r1-SHA256"
 };
 
-constexpr const char * const ExtSMVSignedMeterValueTypeEncodingMethodStrings[] = {
+constexpr const char * const ExtSMVSignedMeterValueTypeEncodingMethodStrings[2] = {
     "OCMF",
     "EDL"
 };
 
-constexpr const char * const SampledValueContextStrings[] = {
+constexpr const char * const SampledValueContextStrings[8] = {
     "Interruption.Begin",
     "Interruption.End",
     "Sample.Clock",
@@ -205,12 +205,12 @@ constexpr const char * const SampledValueContextStrings[] = {
     "Other"
 };
 
-constexpr const char * const SampledValueFormatStrings[] = {
+constexpr const char * const SampledValueFormatStrings[2] = {
     "Raw",
     "SignedData"
 };
 
-constexpr const char * const SampledValueMeasurandStrings[] = {
+constexpr const char * const SampledValueMeasurandStrings[22] = {
     "Energy.Active.Export.Register",
     "Energy.Active.Import.Register",
     "Energy.Reactive.Export.Register",
@@ -235,7 +235,7 @@ constexpr const char * const SampledValueMeasurandStrings[] = {
     "RPM"
 };
 
-constexpr const char * const SampledValuePhaseStrings[] = {
+constexpr const char * const SampledValuePhaseStrings[10] = {
     "L1",
     "L2",
     "L3",
@@ -248,7 +248,7 @@ constexpr const char * const SampledValuePhaseStrings[] = {
     "L3-L1"
 };
 
-constexpr const char * const SampledValueLocationStrings[] = {
+constexpr const char * const SampledValueLocationStrings[5] = {
     "Cable",
     "EV",
     "Inlet",
@@ -256,7 +256,7 @@ constexpr const char * const SampledValueLocationStrings[] = {
     "Body"
 };
 
-constexpr const char * const SampledValueUnitStrings[] = {
+constexpr const char * const SampledValueUnitStrings[17] = {
     "Wh",
     "kWh",
     "varh",
@@ -276,7 +276,7 @@ constexpr const char * const SampledValueUnitStrings[] = {
     "Percent"
 };
 
-constexpr const char * const CallActionStrings[] = {
+constexpr const char * const CallActionStrings[57] = {
     "Authorize",
     "BootNotification",
     "ChangeAvailabilityResponse",

@@ -366,18 +366,21 @@ def generate_enum(name: str, entries: List[str], add_none=True):
     else:
         type_ = 'uint32_t'
 
-    template = """extern const char * const {name}Strings[];
+    template = """extern const char * const {name}Strings[{count}];
+constexpr size_t {name}StringsMaxLength = {max_len};
 
 enum class {name} : {type_} {{
     {entries}{none}
 }};
 """
-    string_template =  """constexpr const char * const {name}Strings[] = {{
+    string_template =  """constexpr const char * const {name}Strings[{count}] = {{
     {entry_strings}
 }};
 """
-    h_content = template.format(name=name, type_=type_, entries=",\n    ".join(camel_to_upper_snake(x) if len(x) > 0 else "EMPTY_STRING" for x in entries_set), none=",\n    NONE" if add_none else "")
-    cpp_content = string_template.format(name=name, entry_strings=",\n    ".join('"{}"'.format(x) for x in entries_set))
+    entries_strings = ['"{}"'.format(x) for x in entries_set]
+    cpp_content = string_template.format(name=name, count=len(entries_set), entry_strings=",\n    ".join(entries_strings))
+
+    h_content = template.format(name=name, count=len(entries_set), max_len = max(len(x) - 2 for x in entries_strings), type_=type_, entries=",\n    ".join(camel_to_upper_snake(x) if len(x) > 0 else "EMPTY_STRING" for x in entries_set), none=",\n    NONE" if add_none else "")
 
     return h_content, cpp_content
 
