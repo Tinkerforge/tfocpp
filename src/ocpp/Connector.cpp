@@ -292,7 +292,6 @@ void Connector::setState(ConnectorState newState) {
     switch (action) {
         case TransitionAction::FORBIDDEN:
             log_error("Unexpected transition from %s to %s!", ConnectorStateStrings[(size_t)oldState], ConnectorStateStrings[(size_t)newState]);
-            assert(false);
             break;
         case TransitionAction::NO_ACTION:
             break;
