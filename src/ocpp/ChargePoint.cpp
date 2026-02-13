@@ -1399,7 +1399,7 @@ void OcppChargePoint::handleTagSeen(int32_t connectorId, const char *tagId)
 void OcppChargePoint::handleStop(int32_t connectorId, StopReason reason) {
     log_info("connector %" PRId32 " wants to stop with reason %d", connectorId, (int)reason);
 
-    // Don't allow tags at connector 0 (i.e. the charge point itself)
+    // Don't allow stops at connector 0 (i.e. the charge point itself)
     if (connectorId <= 0)
         return;
 
@@ -1411,7 +1411,7 @@ void OcppChargePoint::handleStop(int32_t connectorId, StopReason reason) {
 }
 
 void OcppChargePoint::handleSignedMeterValue(int32_t connectorId, ExtSMVSignedMeterValueTypeSigningMethod signing_method, ExtSMVSignedMeterValueTypeEncodingMethod encoding_method, const char *data, size_t data_len, int energy_wh) {
-    // Don't allow tags at connector 0 (i.e. the charge point itself)
+    // Don't allow signed meter values at connector 0 (i.e. the charge point itself)
     if (connectorId <= 0)
         return;
 
