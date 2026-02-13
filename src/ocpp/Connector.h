@@ -52,7 +52,7 @@ struct Connector {
     OcppMeterValueHandler meter_value_handler;
 
     ConnectorState state = ConnectorState::IDLE;
-    StatusNotificationStatus last_sent_status = StatusNotificationStatus::NONE;
+    StatusNotificationStatus last_sent_status = StatusNotificationStatus::NONE_;
 
     char tagIdInFlight[21] = {0};
     IdentificationLevel authLevelInFlight = IdentificationLevel::NONE;
@@ -104,7 +104,7 @@ struct Connector {
     // so without sending an Authorize.req.
     bool unavailable_requested = false;
 
-    StopTransactionReason next_stop_reason = StopTransactionReason::NONE;
+    StopTransactionReason next_stop_reason = StopTransactionReason::NONE_;
 
     // This is the signed Energy.Active.Import.Register value that will be sent
     // - via a MeterValues.req directly after starting a transaction

@@ -75,7 +75,7 @@ public:
     void loadAvailability();
 
 
-    StatusNotificationStatus last_sent_status = StatusNotificationStatus::NONE;
+    StatusNotificationStatus last_sent_status = StatusNotificationStatus::NONE_;
     StatusNotificationStatus getStatus();
     void sendStatus();
     void forceSendStatus();

@@ -375,7 +375,7 @@ void Connector::setState(ConnectorState newState) {
             }
             break;
         case TransitionAction::NOTIFY_METER_END: {
-                if (this->next_stop_reason == StopTransactionReason::NONE) {
+                if (this->next_stop_reason == StopTransactionReason::NONE_) {
                     log_warn("Attempting to send stop transaction but next stop reason is none!");
                 }
 
@@ -415,7 +415,7 @@ void Connector::setState(ConnectorState newState) {
                     sv.context = SampledValueContext::TRANSACTION_END;
                     sv.location = SampledValueLocation::OUTLET;
                     sv.measurand = SampledValueMeasurand::ENERGY_ACTIVE_IMPORT_REGISTER;
-                    sv.phase = SampledValuePhase::NONE;
+                    sv.phase = SampledValuePhase::NONE_;
                     sv.unit = SampledValueUnit::K_WH; // TODO: should be reported by platform
                     sv.value = signed_meter_value.get();
                     sv.format = SampledValueFormat::SIGNED_DATA;
@@ -630,7 +630,7 @@ StatusNotificationStatus Connector::getStatus() {
         case ConnectorState::UNAVAILABLE:
             return StatusNotificationStatus::UNAVAILABLE;
     }
-    return StatusNotificationStatus::NONE;
+    return StatusNotificationStatus::NONE_;
 }
 
 // Handles PlugIn, PlugOut, CableIn, CableOut, TagDeadlineElapsed, CableDeadlineElapsed
@@ -792,7 +792,7 @@ void Connector::tick() {
                 case EVSEState::PlugDetected:
                     this->next_stop_reason = StopTransactionReason::EV_DISCONNECTED;
                     setState(getBoolConfig(ConfigKey::UnlockConnectorOnEVSideDisconnect) ? ConnectorState::FINISHING_NO_CABLE_UNLOCKED : ConnectorState::FINISHING_NO_CABLE_LOCKED);
-                    this->next_stop_reason = StopTransactionReason::NONE;
+                    this->next_stop_reason = StopTransactionReason::NONE_;
                     break;
                 case EVSEState::Connected:
                 case EVSEState::ReadyToCharge:
@@ -1338,7 +1338,7 @@ void Connector::onStartTransactionConf(IdTagInfo info, int32_t txn_id) {
         sv.context = SampledValueContext::TRANSACTION_BEGIN;
         sv.location = SampledValueLocation::OUTLET;
         sv.measurand = SampledValueMeasurand::ENERGY_ACTIVE_IMPORT_REGISTER;
-        sv.phase = SampledValuePhase::NONE;
+        sv.phase = SampledValuePhase::NONE_;
         sv.unit = SampledValueUnit::K_WH; // TODO: should be reported by platform
         sv.value = signed_meter_value.get();
 

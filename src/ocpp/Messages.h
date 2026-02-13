@@ -22,7 +22,7 @@ enum class ChangeAvailabilityResponseStatus : uint8_t {
     ACCEPTED,
     REJECTED,
     SCHEDULED,
-    NONE
+    NONE_
 };
 
 extern const char * const ChangeConfigurationResponseStatusStrings[4];
@@ -33,7 +33,7 @@ enum class ChangeConfigurationResponseStatus : uint8_t {
     REJECTED,
     REBOOT_REQUIRED,
     NOT_SUPPORTED,
-    NONE
+    NONE_
 };
 
 extern const char * const ResponseStatusStrings[2];
@@ -42,7 +42,7 @@ constexpr size_t ResponseStatusStringsMaxLength = 8;
 enum class ResponseStatus : uint8_t {
     ACCEPTED,
     REJECTED,
-    NONE
+    NONE_
 };
 
 extern const char * const DataTransferResponseStatusStrings[4];
@@ -53,7 +53,7 @@ enum class DataTransferResponseStatus : uint8_t {
     REJECTED,
     UNKNOWN_MESSAGE_ID,
     UNKNOWN_VENDOR_ID,
-    NONE
+    NONE_
 };
 
 extern const char * const StatusNotificationErrorCodeStrings[16];
@@ -76,7 +76,7 @@ enum class StatusNotificationErrorCode : uint8_t {
     UNDER_VOLTAGE,
     OVER_VOLTAGE,
     WEAK_SIGNAL,
-    NONE
+    NONE_
 };
 
 extern const char * const StatusNotificationStatusStrings[9];
@@ -92,7 +92,7 @@ enum class StatusNotificationStatus : uint8_t {
     RESERVED,
     UNAVAILABLE,
     FAULTED,
-    NONE
+    NONE_
 };
 
 extern const char * const StopTransactionReasonStrings[11];
@@ -110,7 +110,7 @@ enum class StopTransactionReason : uint8_t {
     SOFT_RESET,
     UNLOCK_COMMAND,
     DE_AUTHORIZED,
-    NONE
+    NONE_
 };
 
 extern const char * const UnlockConnectorResponseStatusStrings[3];
@@ -120,7 +120,7 @@ enum class UnlockConnectorResponseStatus : uint8_t {
     UNLOCKED,
     UNLOCK_FAILED,
     NOT_SUPPORTED,
-    NONE
+    NONE_
 };
 
 extern const char * const ResponseIdTagInfoEntriesStatusStrings[5];
@@ -199,7 +199,7 @@ constexpr size_t ClearChargingProfileResponseStatusStringsMaxLength = 8;
 enum class ClearChargingProfileResponseStatus : uint8_t {
     ACCEPTED,
     UNKNOWN,
-    NONE
+    NONE_
 };
 
 extern const char * const SetChargingProfileResponseStatusStrings[3];
@@ -209,7 +209,7 @@ enum class SetChargingProfileResponseStatus : uint8_t {
     ACCEPTED,
     REJECTED,
     NOT_SUPPORTED,
-    NONE
+    NONE_
 };
 
 extern const char * const GetCompositeScheduleResponseChargingScheduleChargingRateUnitStrings[2];
@@ -218,7 +218,7 @@ constexpr size_t GetCompositeScheduleResponseChargingScheduleChargingRateUnitStr
 enum class GetCompositeScheduleResponseChargingScheduleChargingRateUnit : uint8_t {
     A,
     W,
-    NONE
+    NONE_
 };
 
 extern const char * const ExtSMVSignedMeterValueTypeSigningMethodStrings[8];
@@ -233,7 +233,7 @@ enum class ExtSMVSignedMeterValueTypeSigningMethod : uint8_t {
     ECDSABRAINPOOL256R1_SHA256,
     ECDSASECP384R1_SHA256,
     ECDSABRAINPOOL384R1_SHA256,
-    NONE
+    NONE_
 };
 
 extern const char * const ExtSMVSignedMeterValueTypeEncodingMethodStrings[2];
@@ -242,7 +242,7 @@ constexpr size_t ExtSMVSignedMeterValueTypeEncodingMethodStringsMaxLength = 4;
 enum class ExtSMVSignedMeterValueTypeEncodingMethod : uint8_t {
     OCMF,
     EDL,
-    NONE
+    NONE_
 };
 
 extern const char * const SampledValueContextStrings[8];
@@ -257,7 +257,7 @@ enum class SampledValueContext : uint8_t {
     TRANSACTION_END,
     TRIGGER,
     OTHER,
-    NONE
+    NONE_
 };
 
 extern const char * const SampledValueFormatStrings[2];
@@ -266,7 +266,7 @@ constexpr size_t SampledValueFormatStringsMaxLength = 10;
 enum class SampledValueFormat : uint8_t {
     RAW,
     SIGNED_DATA,
-    NONE
+    NONE_
 };
 
 extern const char * const SampledValueMeasurandStrings[22];
@@ -295,7 +295,7 @@ enum class SampledValueMeasurand : uint8_t {
     TEMPERATURE,
     SO_C,
     RPM,
-    NONE
+    NONE_
 };
 
 extern const char * const SampledValuePhaseStrings[10];
@@ -312,7 +312,7 @@ enum class SampledValuePhase : uint8_t {
     L1_L2,
     L2_L3,
     L3_L1,
-    NONE
+    NONE_
 };
 
 extern const char * const SampledValueLocationStrings[5];
@@ -324,7 +324,7 @@ enum class SampledValueLocation : uint8_t {
     INLET,
     OUTLET,
     BODY,
-    NONE
+    NONE_
 };
 
 extern const char * const SampledValueUnitStrings[17];
@@ -348,7 +348,7 @@ enum class SampledValueUnit : uint8_t {
     CELSIUS,
     FAHRENHEIT,
     PERCENT,
-    NONE
+    NONE_
 };
 
 extern const char * const CallActionStrings[57];
@@ -1051,12 +1051,12 @@ struct GetCompositeScheduleResponseChargingScheduleChargingSchedulePeriod {
 
 struct MeterValueSampledValue {
     const char *value;
-    SampledValueContext context = SampledValueContext::NONE;
-    SampledValueFormat format = SampledValueFormat::NONE;
-    SampledValueMeasurand measurand = SampledValueMeasurand::NONE;
-    SampledValuePhase phase = SampledValuePhase::NONE;
-    SampledValueLocation location = SampledValueLocation::NONE;
-    SampledValueUnit unit = SampledValueUnit::NONE;
+    SampledValueContext context = SampledValueContext::NONE_;
+    SampledValueFormat format = SampledValueFormat::NONE_;
+    SampledValueMeasurand measurand = SampledValueMeasurand::NONE_;
+    SampledValuePhase phase = SampledValuePhase::NONE_;
+    SampledValueLocation location = SampledValueLocation::NONE_;
+    SampledValueUnit unit = SampledValueUnit::NONE_;
 
     void serializeInto(TFJsonSerializer &json);
 };
@@ -1315,7 +1315,7 @@ struct StopTransaction final : public ICall {
         time_t timestamp,
         int32_t transactionId,
         const char idTag[21] = nullptr,
-        StopTransactionReason reason = StopTransactionReason::NONE,
+        StopTransactionReason reason = StopTransactionReason::NONE_,
         MeterValue *transactionData = nullptr, size_t transactionData_length = 0);
     StopTransaction(const StopTransaction&) = delete;
     StopTransaction &operator=(const StopTransaction&) = delete;

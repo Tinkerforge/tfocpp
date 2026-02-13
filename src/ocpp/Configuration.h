@@ -43,7 +43,7 @@ struct OcppConfiguration {
             size_t *parsed;
             size_t parsed_len;
             /* Where applicable, the Measurand is combined with the optional phase; for instance: Voltage.L1 */
-            // For MeterValuesSampledData. Has length of parsed_len (one phase per parsed value, SampledValuePhase::NONE if no phase was passed)
+            // For MeterValuesSampledData. Has length of parsed_len (one phase per parsed value, SampledValuePhase::NONE_ if no phase was passed)
             size_t *phases;
 
             // valid enum value strings

@@ -475,7 +475,7 @@ CallResponse OcppChargePoint::handleBootNotificationResponse(int32_t connectorId
 CallResponse OcppChargePoint::handleChangeAvailability(const char *uid, ChangeAvailabilityView req)
 {
     int conn_id = req.connectorId();
-    auto resp = ChangeAvailabilityResponseStatus::NONE;
+    auto resp = ChangeAvailabilityResponseStatus::NONE_;
 
     if (conn_id == 0) {
         resp = this->onChangeAvailability(req.type());
@@ -908,7 +908,7 @@ CallResponse OcppChargePoint::handleStopTransactionResponse(int32_t connectorId,
 
 CallResponse OcppChargePoint::handleUnlockConnector(const char *uid, UnlockConnectorView req)
 {
-    auto result = UnlockConnectorResponseStatus::NONE;
+    auto result = UnlockConnectorResponseStatus::NONE_;
 
     int32_t conn_id = req.connectorId() - 1;
 

@@ -40,7 +40,7 @@ static MeasurandType get_measurand_type(SampledValueMeasurand m, bool average) {
         case SampledValueMeasurand::RPM:
             return average ? MeasurandType::Average : MeasurandType::Register;
 
-        case SampledValueMeasurand::NONE:
+        case SampledValueMeasurand::NONE_:
             return MeasurandType::Register;
     }
     SILENCE_GCC_UNREACHABLE();

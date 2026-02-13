@@ -192,7 +192,7 @@ def camel(*args):
 def req_param_check(message: str, name: str, p: Property):
     if isinstance(p.element, String):
         if p.element.enum and p.required:
-            return 'if ({name} == {{{message}{name_camel}}}::NONE) {{ platform_printfln("Required {name} missing."); return DynamicJsonDocument{{0}}; }}'.format(message=message, name=name, name_camel=camel(name))
+            return 'if ({name} == {{{message}{name_camel}}}::NONE_) {{ platform_printfln("Required {name} missing."); return DynamicJsonDocument{{0}}; }}'.format(message=message, name=name, name_camel=camel(name))
         if p.element.format:
             if p.element.format == "date-time":
                 return 'if ({name} == OCPP_DATETIME_NOT_PASSED) {{ platform_printfln("Required {name} missing."); return DynamicJsonDocument{{0}}; }}'.format(name=name)
@@ -270,7 +270,7 @@ def param_size(param_name, e: Element):
 def param_insertion(message: str, name: str, p: Property):
     if isinstance(p.element, String):
         if p.element.enum:
-            return 'if ({name} != {{{message}{name_camel}}}::NONE) json.addMemberString("{name}", {{{message}{name_camel}}}Strings[(size_t){name}]);'.format(message=message, name=name, name_camel=camel(name))
+            return 'if ({name} != {{{message}{name_camel}}}::NONE_) json.addMemberString("{name}", {{{message}{name_camel}}}Strings[(size_t){name}]);'.format(message=message, name=name, name_camel=camel(name))
 
         if p.element.format:
             if p.element.format == "date-time":
@@ -311,7 +311,7 @@ def param_arg(message: str, name: str, p: Property, strings_as_arrays=True, defa
     if isinstance(p.element, String):
         if p.element.enum:
             enums_to_generate.append(EnumReq("{message}{name_camel}".format(message=message, name_camel=name_camel), p.element.enum, True))
-            return "{{{message}{name_camel}}} {name}{default}".format(message=message, name=name, name_camel=name_camel, default=" = {{{message}{name_camel}}}::NONE".format(message=message, name_camel=name_camel) if default_values and not p.required else "")
+            return "{{{message}{name_camel}}} {name}{default}".format(message=message, name=name, name_camel=name_camel, default=" = {{{message}{name_camel}}}::NONE_".format(message=message, name_camel=name_camel) if default_values and not p.required else "")
 
         if p.element.format:
             if p.element.format == "date-time":
@@ -380,7 +380,7 @@ enum class {name} : {type_} {{
     entries_strings = ['"{}"'.format(x) for x in entries_set]
     cpp_content = string_template.format(name=name, count=len(entries_set), entry_strings=",\n    ".join(entries_strings))
 
-    h_content = template.format(name=name, count=len(entries_set), max_len = max(len(x) - 2 for x in entries_strings), type_=type_, entries=",\n    ".join(camel_to_upper_snake(x) if len(x) > 0 else "EMPTY_STRING" for x in entries_set), none=",\n    NONE" if add_none else "")
+    h_content = template.format(name=name, count=len(entries_set), max_len = max(len(x) - 2 for x in entries_strings), type_=type_, entries=",\n    ".join(camel_to_upper_snake(x) if len(x) > 0 else "EMPTY_STRING" for x in entries_set), none=",\n    NONE_" if add_none else "")
 
     return h_content, cpp_content
 

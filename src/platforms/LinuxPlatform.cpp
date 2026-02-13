@@ -405,9 +405,9 @@ static SupportedMeasurand supported_measurands[] = {
     {SampledValuePhase::L3, SampledValueLocation::OUTLET, SampledValueUnit::W, false},
 
     //POWER_FACTOR
-    {SampledValuePhase::L1, SampledValueLocation::OUTLET, SampledValueUnit::NONE, false},
-    {SampledValuePhase::L2, SampledValueLocation::OUTLET, SampledValueUnit::NONE, false},
-    {SampledValuePhase::L3, SampledValueLocation::OUTLET, SampledValueUnit::NONE, false},
+    {SampledValuePhase::L1, SampledValueLocation::OUTLET, SampledValueUnit::NONE_, false},
+    {SampledValuePhase::L2, SampledValueLocation::OUTLET, SampledValueUnit::NONE_, false},
+    {SampledValuePhase::L3, SampledValueLocation::OUTLET, SampledValueUnit::NONE_, false},
 
     // We can measure this with 1. the offered current and 2. the connected phases
 
@@ -429,7 +429,7 @@ static SupportedMeasurand supported_measurands[] = {
     NOTE: OCPP 1.6 does not have a UnitOfMeasure for
     frequency, the UnitOfMeasure for any SampledValue with measurand: Frequency is Hertz.
     */
-    {SampledValuePhase::NONE, SampledValueLocation::OUTLET, SampledValueUnit::NONE, false},
+    {SampledValuePhase::NONE_, SampledValueLocation::OUTLET, SampledValueUnit::NONE_, false},
 };
 
 static size_t supported_measurand_offsets[] = {
@@ -461,7 +461,7 @@ static size_t supported_measurand_offsets[] = {
 size_t platform_get_supported_measurand_count(int32_t connector_id, SampledValueMeasurand measurand) {
     if (connector_id == 0)
         return 0;
-    if (measurand == SampledValueMeasurand::NONE)
+    if (measurand == SampledValueMeasurand::NONE_)
         return ARRAY_SIZE(supported_measurands);
     return supported_measurand_offsets[(size_t)measurand + 1] - supported_measurand_offsets[(size_t)measurand];
 }
@@ -469,7 +469,7 @@ size_t platform_get_supported_measurand_count(int32_t connector_id, SampledValue
 const SupportedMeasurand *platform_get_supported_measurands(int32_t connector_id, SampledValueMeasurand measurand) {
     if (connector_id == 0)
         return nullptr;
-    if (measurand == SampledValueMeasurand::NONE)
+    if (measurand == SampledValueMeasurand::NONE_)
         return supported_measurands;
     return supported_measurands + supported_measurand_offsets[(size_t)measurand];
 }

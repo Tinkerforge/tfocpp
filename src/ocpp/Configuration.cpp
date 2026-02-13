@@ -184,11 +184,11 @@ ChangeConfigurationResponseStatus OcppConfiguration::setValue(const char *newVal
                         /* Where applicable, the Measurand is combined with the optional phase; for instance: Voltage.L1 */
                         char *last_dot = nullptr;
                         if (phase_suffix_allowed) {
-                            phases_buf[next_parsed_buf_insert] = (size_t)SampledValuePhase::NONE;
+                            phases_buf[next_parsed_buf_insert] = (size_t)SampledValuePhase::NONE_;
                             last_dot = strrchr(token, '.');
                             if (last_dot != nullptr) {
                                 size_t phase_idx = 0;
-                                if (lookup_key(&phase_idx, last_dot + 1, SampledValuePhaseStrings, (size_t) SampledValuePhase::NONE)) {
+                                if (lookup_key(&phase_idx, last_dot + 1, SampledValuePhaseStrings, (size_t) SampledValuePhase::NONE_)) {
                                     *last_dot = '\0'; // terminate string here so that lookup of the allowed value below does ignore the phase
                                     phases_buf[next_parsed_buf_insert] = phase_idx;
                                 }
@@ -384,11 +384,11 @@ static OcppConfiguration config[OCPP_CONFIG_COUNT] = {
     // because the complete list has a length of 465.
     // This also means that we don't have to implement the MeterValuesAlignedDataMaxLength key.
     // Force reboot required to true, as MeterValueHandler does not support changing this at runtime.
-    /*MeterValuesAlignedData*/            OcppConfiguration::csl(OCPP_DEFAULT_METER_VALUES_ALIGNED_DATA, MAX_CONFIG_LENGTH, OCPP_METER_VALUES_ALIGNED_DATA_MAX_LENGTH, false, true/*OCPP_METER_VALUES_ALIGNED_DATA_REQUIRES_REBOOT*/, SampledValueMeasurandStrings, (size_t)SampledValueMeasurand::NONE),
+    /*MeterValuesAlignedData*/            OcppConfiguration::csl(OCPP_DEFAULT_METER_VALUES_ALIGNED_DATA, MAX_CONFIG_LENGTH, OCPP_METER_VALUES_ALIGNED_DATA_MAX_LENGTH, false, true/*OCPP_METER_VALUES_ALIGNED_DATA_REQUIRES_REBOOT*/, SampledValueMeasurandStrings, (size_t)SampledValueMeasurand::NONE_),
     /*MeterValuesAlignedDataMaxLength*/   OcppConfiguration::integer(OCPP_METER_VALUES_ALIGNED_DATA_MAX_LENGTH, true, false, 0),
 
     // Same reasoning as with MeterValuesAlignedData.
-    /*MeterValuesSampledData*/            OcppConfiguration::csl(OCPP_DEFAULT_METER_VALUES_SAMPLED_DATA, MAX_CONFIG_LENGTH, OCPP_METER_VALUES_SAMPLED_DATA_MAX_LENGTH, false, true/*OCPP_METER_VALUES_SAMPLED_DATA_REQUIRES_REBOOT*/, SampledValueMeasurandStrings, (size_t)SampledValueMeasurand::NONE, false, true),
+    /*MeterValuesSampledData*/            OcppConfiguration::csl(OCPP_DEFAULT_METER_VALUES_SAMPLED_DATA, MAX_CONFIG_LENGTH, OCPP_METER_VALUES_SAMPLED_DATA_MAX_LENGTH, false, true/*OCPP_METER_VALUES_SAMPLED_DATA_REQUIRES_REBOOT*/, SampledValueMeasurandStrings, (size_t)SampledValueMeasurand::NONE_, false, true),
     /*MeterValuesSampledDataMaxLength*/   OcppConfiguration::integer(OCPP_METER_VALUES_SAMPLED_DATA_MAX_LENGTH, true, false, 0),
 
     /*MeterValueSampleInterval*/          OcppConfiguration::integer(OCPP_DEFAULT_METER_VALUE_SAMPLE_INTERVAL, false, OCPP_METER_VALUE_SAMPLE_INTERVAL_REQUIRES_REBOOT, 0),
@@ -413,7 +413,7 @@ static OcppConfiguration config[OCPP_CONFIG_COUNT] = {
     /*StopTransactionOnInvalidId*/        OcppConfiguration::boolean(OCPP_DEFAULT_STOP_TRANSACTION_ON_INVALID_ID, false, OCPP_STOP_TRANSACTION_ON_INVALID_ID_REQUIRES_REBOOT),
 
     // Same reasoning as with MeterValuesAlignedData.
-    /*StopTxnAlignedData*/                OcppConfiguration::csl("", MAX_CONFIG_LENGTH, 0, false, STOP_TXN_ALIGNED_DATA_REQUIRES_REBOOT, SampledValueMeasurandStrings, (size_t)SampledValueMeasurand::NONE),
+    /*StopTxnAlignedData*/                OcppConfiguration::csl("", MAX_CONFIG_LENGTH, 0, false, STOP_TXN_ALIGNED_DATA_REQUIRES_REBOOT, SampledValueMeasurandStrings, (size_t)SampledValueMeasurand::NONE_),
 
     // Hardcode 0 for now: We don't want to support sending metering data in StopTransaction.req for now. The spec says:
     /*
@@ -425,7 +425,7 @@ static OcppConfiguration config[OCPP_CONFIG_COUNT] = {
     /*StopTxnAlignedDataMaxLength*/       OcppConfiguration::integer(0, true, false, 0),
 
     // Same reasoning as with MeterValuesAlignedData.
-    /*StopTxnSampledData*/                OcppConfiguration::csl("", MAX_CONFIG_LENGTH, 0, false, STOP_TXN_SAMPLED_DATA_REQUIRES_REBOOT, SampledValueMeasurandStrings, (size_t)SampledValueMeasurand::NONE),
+    /*StopTxnSampledData*/                OcppConfiguration::csl("", MAX_CONFIG_LENGTH, 0, false, STOP_TXN_SAMPLED_DATA_REQUIRES_REBOOT, SampledValueMeasurandStrings, (size_t)SampledValueMeasurand::NONE_),
     /*StopTxnSampledDataMaxLength*/       OcppConfiguration::integer(0, true, false, 0),
 
     /*SupportedFeatureProfiles*/          OcppConfiguration::csl(OCPP_SUPPORTED_FEATURE_PROFILES, strlen(OCPP_SUPPORTED_FEATURE_PROFILES) + 1, 2, true, false, feature_profiles, OCPP_FEATURE_PROFILE_COUNT, false),
@@ -459,7 +459,7 @@ static OcppConfiguration config[OCPP_CONFIG_COUNT] = {
     /*PublicKeyWithSignedMeterValue*/     OcppConfiguration::csl(OCPP_DEFAULT_PUBLIC_KEY_WITH_SIGNED_METER_VALUE, MAX_CONFIG_LENGTH, 1, false, true, PublicKeyWithSignedMeterValue_strings, OCPP_SEND_PUB_KEY_COUNT),
     /*SampledDataSignReadings*/           OcppConfiguration::boolean(true, false, true),
     // Completely hard-coded for now: We only support sending Energy.Active.Import.Register signed. We always send it directly after the txn starts (in a MeterValues.req) and both the txn start and end value when the txn ends (in a StopTransaction.req)
-    /*StartTxnSampledData*/               OcppConfiguration::csl("Energy.Active.Import.Register", strlen("Energy.Active.Import.Register") + 1, 1, true, true, SampledValueMeasurandStrings, (size_t)SampledValueMeasurand::NONE, false, false),
+    /*StartTxnSampledData*/               OcppConfiguration::csl("Energy.Active.Import.Register", strlen("Energy.Active.Import.Register") + 1, 1, true, true, SampledValueMeasurandStrings, (size_t)SampledValueMeasurand::NONE_, false, false),
     /*SampledDataSignStartedReadings*/    OcppConfiguration::boolean(true, false, true),
     // Hard-code updated readings to always be unsigned for now.
     /*SampledDataSignUpdatedReadings*/    OcppConfiguration::boolean(false, true, true),

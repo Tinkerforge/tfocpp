@@ -40,7 +40,7 @@ struct StopTxn {
     time_t timestamp;
 } __attribute__((__packed__));
 
-static_assert(((size_t)StopTransactionReason::NONE) < 255, "");
+static_assert(((size_t)StopTransactionReason::NONE_) < 255, "");
 
 #define NAME_BUF_SIZE 21 //len(INT64_MAX) = 20 + 1 for minus + for null terminator
 

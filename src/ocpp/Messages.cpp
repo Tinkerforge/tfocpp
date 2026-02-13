@@ -351,26 +351,26 @@ void MeterValue::serializeInto(TFJsonSerializer &json) {
 void GetCompositeScheduleResponseChargingSchedule::serializeInto(TFJsonSerializer &json) {
         if (duration != OCPP_INTEGER_NOT_PASSED) json.addMemberNumber("duration", duration);
         if (startSchedule != OCPP_DATETIME_NOT_PASSED) unix_timestamp_to_iso_string(startSchedule, json, "startSchedule");
-        if (chargingRateUnit != GetCompositeScheduleResponseChargingScheduleChargingRateUnit::NONE) json.addMemberString("chargingRateUnit", GetCompositeScheduleResponseChargingScheduleChargingRateUnitStrings[(size_t)chargingRateUnit]);
+        if (chargingRateUnit != GetCompositeScheduleResponseChargingScheduleChargingRateUnit::NONE_) json.addMemberString("chargingRateUnit", GetCompositeScheduleResponseChargingScheduleChargingRateUnitStrings[(size_t)chargingRateUnit]);
         if (chargingSchedulePeriod != nullptr) { json.addMemberArray("chargingSchedulePeriod"); for(size_t i = 0; i < chargingSchedulePeriod_length; ++i) { json.addObject(); chargingSchedulePeriod[i].serializeInto(json); json.endObject(); } json.endArray(); }
         if (!isnan(minChargingRate)) json.addMemberNumber("minChargingRate", minChargingRate, "%.1f");
     }
 
 void ExtSMVSignedMeterValueType::serializeInto(TFJsonSerializer &json) {
         if (signedMeterData != nullptr) json.addMemberString("signedMeterData", signedMeterData);
-        if (signingMethod != ExtSMVSignedMeterValueTypeSigningMethod::NONE) json.addMemberString("signingMethod", ExtSMVSignedMeterValueTypeSigningMethodStrings[(size_t)signingMethod]);
-        if (encodingMethod != ExtSMVSignedMeterValueTypeEncodingMethod::NONE) json.addMemberString("encodingMethod", ExtSMVSignedMeterValueTypeEncodingMethodStrings[(size_t)encodingMethod]);
+        if (signingMethod != ExtSMVSignedMeterValueTypeSigningMethod::NONE_) json.addMemberString("signingMethod", ExtSMVSignedMeterValueTypeSigningMethodStrings[(size_t)signingMethod]);
+        if (encodingMethod != ExtSMVSignedMeterValueTypeEncodingMethod::NONE_) json.addMemberString("encodingMethod", ExtSMVSignedMeterValueTypeEncodingMethodStrings[(size_t)encodingMethod]);
         if (publicKey != nullptr) json.addMemberString("publicKey", publicKey);
     }
 
 void MeterValueSampledValue::serializeInto(TFJsonSerializer &json) {
         if (value != nullptr) json.addMemberString("value", value);
-        if (context != SampledValueContext::NONE) json.addMemberString("context", SampledValueContextStrings[(size_t)context]);
-        if (format != SampledValueFormat::NONE) json.addMemberString("format", SampledValueFormatStrings[(size_t)format]);
-        if (measurand != SampledValueMeasurand::NONE) json.addMemberString("measurand", SampledValueMeasurandStrings[(size_t)measurand]);
-        if (phase != SampledValuePhase::NONE) json.addMemberString("phase", SampledValuePhaseStrings[(size_t)phase]);
-        if (location != SampledValueLocation::NONE) json.addMemberString("location", SampledValueLocationStrings[(size_t)location]);
-        if (unit != SampledValueUnit::NONE) json.addMemberString("unit", SampledValueUnitStrings[(size_t)unit]);
+        if (context != SampledValueContext::NONE_) json.addMemberString("context", SampledValueContextStrings[(size_t)context]);
+        if (format != SampledValueFormat::NONE_) json.addMemberString("format", SampledValueFormatStrings[(size_t)format]);
+        if (measurand != SampledValueMeasurand::NONE_) json.addMemberString("measurand", SampledValueMeasurandStrings[(size_t)measurand]);
+        if (phase != SampledValuePhase::NONE_) json.addMemberString("phase", SampledValuePhaseStrings[(size_t)phase]);
+        if (location != SampledValueLocation::NONE_) json.addMemberString("location", SampledValueLocationStrings[(size_t)location]);
+        if (unit != SampledValueUnit::NONE_) json.addMemberString("unit", SampledValueUnitStrings[(size_t)unit]);
     }
 
 void GetCompositeScheduleResponseChargingScheduleChargingSchedulePeriod::serializeInto(TFJsonSerializer &json) {
@@ -456,7 +456,7 @@ size_t ChangeAvailabilityResponse::serializeJson(char *buf, size_t buf_len) cons
         json.addString(this->ocppJcallId);
 
         json.addObject();
-            if (status != ChangeAvailabilityResponseStatus::NONE) json.addMemberString("status", ChangeAvailabilityResponseStatusStrings[(size_t)status]);
+            if (status != ChangeAvailabilityResponseStatus::NONE_) json.addMemberString("status", ChangeAvailabilityResponseStatusStrings[(size_t)status]);
         json.endObject();
     json.endArray();
 
@@ -476,7 +476,7 @@ size_t ChangeConfigurationResponse::serializeJson(char *buf, size_t buf_len) con
         json.addString(this->ocppJcallId);
 
         json.addObject();
-            if (status != ChangeConfigurationResponseStatus::NONE) json.addMemberString("status", ChangeConfigurationResponseStatusStrings[(size_t)status]);
+            if (status != ChangeConfigurationResponseStatus::NONE_) json.addMemberString("status", ChangeConfigurationResponseStatusStrings[(size_t)status]);
         json.endObject();
     json.endArray();
 
@@ -496,7 +496,7 @@ size_t ClearCacheResponse::serializeJson(char *buf, size_t buf_len) const {
         json.addString(this->ocppJcallId);
 
         json.addObject();
-            if (status != ResponseStatus::NONE) json.addMemberString("status", ResponseStatusStrings[(size_t)status]);
+            if (status != ResponseStatus::NONE_) json.addMemberString("status", ResponseStatusStrings[(size_t)status]);
         json.endObject();
     json.endArray();
 
@@ -543,7 +543,7 @@ size_t DataTransferResponse::serializeJson(char *buf, size_t buf_len) const {
         json.addString(this->ocppJcallId);
 
         json.addObject();
-            if (status != DataTransferResponseStatus::NONE) json.addMemberString("status", DataTransferResponseStatusStrings[(size_t)status]);
+            if (status != DataTransferResponseStatus::NONE_) json.addMemberString("status", DataTransferResponseStatusStrings[(size_t)status]);
             if (data != nullptr) json.addMemberString("data", data);
         json.endObject();
     json.endArray();
@@ -633,7 +633,7 @@ size_t RemoteStartTransactionResponse::serializeJson(char *buf, size_t buf_len) 
         json.addString(this->ocppJcallId);
 
         json.addObject();
-            if (status != ResponseStatus::NONE) json.addMemberString("status", ResponseStatusStrings[(size_t)status]);
+            if (status != ResponseStatus::NONE_) json.addMemberString("status", ResponseStatusStrings[(size_t)status]);
         json.endObject();
     json.endArray();
 
@@ -653,7 +653,7 @@ size_t RemoteStopTransactionResponse::serializeJson(char *buf, size_t buf_len) c
         json.addString(this->ocppJcallId);
 
         json.addObject();
-            if (status != ResponseStatus::NONE) json.addMemberString("status", ResponseStatusStrings[(size_t)status]);
+            if (status != ResponseStatus::NONE_) json.addMemberString("status", ResponseStatusStrings[(size_t)status]);
         json.endObject();
     json.endArray();
 
@@ -673,7 +673,7 @@ size_t ResetResponse::serializeJson(char *buf, size_t buf_len) const {
         json.addString(this->ocppJcallId);
 
         json.addObject();
-            if (status != ResponseStatus::NONE) json.addMemberString("status", ResponseStatusStrings[(size_t)status]);
+            if (status != ResponseStatus::NONE_) json.addMemberString("status", ResponseStatusStrings[(size_t)status]);
         json.endObject();
     json.endArray();
 
@@ -736,9 +736,9 @@ size_t StatusNotification::serializeJson(char *buf, size_t buf_len) const {
         json.addString(CallActionStrings[(size_t)this->action]);
         json.addObject();
             if (connectorId != OCPP_INTEGER_NOT_PASSED) json.addMemberNumber("connectorId", connectorId);
-            if (errorCode != StatusNotificationErrorCode::NONE) json.addMemberString("errorCode", StatusNotificationErrorCodeStrings[(size_t)errorCode]);
+            if (errorCode != StatusNotificationErrorCode::NONE_) json.addMemberString("errorCode", StatusNotificationErrorCodeStrings[(size_t)errorCode]);
             if (info != nullptr) json.addMemberString("info", info);
-            if (status != StatusNotificationStatus::NONE) json.addMemberString("status", StatusNotificationStatusStrings[(size_t)status]);
+            if (status != StatusNotificationStatus::NONE_) json.addMemberString("status", StatusNotificationStatusStrings[(size_t)status]);
             if (timestamp != OCPP_DATETIME_NOT_PASSED) unix_timestamp_to_iso_string(timestamp, json, "timestamp");
             if (vendorId != nullptr) json.addMemberString("vendorId", vendorId);
             if (vendorErrorCode != nullptr) json.addMemberString("vendorErrorCode", vendorErrorCode);
@@ -775,7 +775,7 @@ size_t StopTransaction::serializeJson(char *buf, size_t buf_len) const {
             if (meterStop != OCPP_INTEGER_NOT_PASSED) json.addMemberNumber("meterStop", meterStop);
             if (timestamp != OCPP_DATETIME_NOT_PASSED) unix_timestamp_to_iso_string(timestamp, json, "timestamp");
             if (transactionId != OCPP_INTEGER_NOT_PASSED) json.addMemberNumber("transactionId", transactionId);
-            if (reason != StopTransactionReason::NONE) json.addMemberString("reason", StopTransactionReasonStrings[(size_t)reason]);
+            if (reason != StopTransactionReason::NONE_) json.addMemberString("reason", StopTransactionReasonStrings[(size_t)reason]);
             if (transactionData != nullptr) { json.addMemberArray("transactionData"); for(size_t i = 0; i < transactionData_length; ++i) { json.addObject(); transactionData[i].serializeInto(json); json.endObject(); } json.endArray(); }
         json.endObject();
     json.endArray();
@@ -796,7 +796,7 @@ size_t UnlockConnectorResponse::serializeJson(char *buf, size_t buf_len) const {
         json.addString(this->ocppJcallId);
 
         json.addObject();
-            if (status != UnlockConnectorResponseStatus::NONE) json.addMemberString("status", UnlockConnectorResponseStatusStrings[(size_t)status]);
+            if (status != UnlockConnectorResponseStatus::NONE_) json.addMemberString("status", UnlockConnectorResponseStatusStrings[(size_t)status]);
         json.endObject();
     json.endArray();
 
@@ -816,7 +816,7 @@ size_t ClearChargingProfileResponse::serializeJson(char *buf, size_t buf_len) co
         json.addString(this->ocppJcallId);
 
         json.addObject();
-            if (status != ClearChargingProfileResponseStatus::NONE) json.addMemberString("status", ClearChargingProfileResponseStatusStrings[(size_t)status]);
+            if (status != ClearChargingProfileResponseStatus::NONE_) json.addMemberString("status", ClearChargingProfileResponseStatusStrings[(size_t)status]);
         json.endObject();
     json.endArray();
 
@@ -842,7 +842,7 @@ size_t GetCompositeScheduleResponse::serializeJson(char *buf, size_t buf_len) co
         json.addString(this->ocppJcallId);
 
         json.addObject();
-            if (status != ResponseStatus::NONE) json.addMemberString("status", ResponseStatusStrings[(size_t)status]);
+            if (status != ResponseStatus::NONE_) json.addMemberString("status", ResponseStatusStrings[(size_t)status]);
             if (connectorId != OCPP_INTEGER_NOT_PASSED) json.addMemberNumber("connectorId", connectorId);
             if (scheduleStart != OCPP_DATETIME_NOT_PASSED) unix_timestamp_to_iso_string(scheduleStart, json, "scheduleStart");
             if (chargingSchedule != nullptr) { json.addMemberObject("chargingSchedule"); chargingSchedule->serializeInto(json); json.endObject(); }
@@ -865,7 +865,7 @@ size_t SetChargingProfileResponse::serializeJson(char *buf, size_t buf_len) cons
         json.addString(this->ocppJcallId);
 
         json.addObject();
-            if (status != SetChargingProfileResponseStatus::NONE) json.addMemberString("status", SetChargingProfileResponseStatusStrings[(size_t)status]);
+            if (status != SetChargingProfileResponseStatus::NONE_) json.addMemberString("status", SetChargingProfileResponseStatusStrings[(size_t)status]);
         json.endObject();
     json.endArray();
 
