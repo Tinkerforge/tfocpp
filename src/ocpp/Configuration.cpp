@@ -603,6 +603,8 @@ void debugDumpConfig() {
 
     for(size_t i = 0; i < OCPP_CONFIG_COUNT; ++i) {
         auto &cfg = getConfig(i);
+        if (cfg.hidden)
+            continue;
         switch(cfg.type) {
             case OcppConfigurationValueType::Boolean:
                 platform_update_config_state((ConfigKey)i, cfg.value.boolean.b ? "true" : "false");
