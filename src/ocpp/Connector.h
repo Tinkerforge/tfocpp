@@ -20,15 +20,20 @@ enum class ConnectorState {
     NO_PLUG,
     NO_CABLE,
 
+    START_TXN,
     TRANSACTION,  //This represents charging, suspended EVSE and suspended EV, as those are not controlled by us
     AUTH_STOP,
+    STOP_TXN,
 
     FINISHING_UNLOCKED,
     FINISHING_NO_CABLE_UNLOCKED,
     FINISHING_NO_CABLE_LOCKED,
     FINISHING_NO_SAME_TAG,
 
-    UNAVAILABLE
+    UNAVAILABLE,
+
+    _min = IDLE,
+    _max = UNAVAILABLE,
 };
 
 class OcppChargePoint;
@@ -57,6 +62,9 @@ struct Connector {
     int32_t transaction_id = INT32_MAX;
     uint64_t transaction_confirmed_id = 0;
     time_t transaction_start_time = 0;
+    time_t transaction_stop_time = 0;
+
+    ConnectorState next_state_after_stop_txn = ConnectorState::IDLE;
 
     uint32_t current_allowed = OCPP_MAX_CHARGING_CURRENT;
     uint32_t phases_allowed = 3;
@@ -95,6 +103,16 @@ struct Connector {
 
     StopTransactionReason next_stop_reason = StopTransactionReason::NONE;
 
+    // This is the signed Energy.Active.Import.Register value that will be sent
+    // - via a MeterValues.req directly after starting a transaction
+    // - via the StopTransaction.req when stopping a transaction
+    std::unique_ptr<char[]> txn_meter_value = nullptr;
+    ExtSMVSignedMeterValueTypeEncodingMethod txn_meter_value_encoding_method = ExtSMVSignedMeterValueTypeEncodingMethod::OCMF;
+    ExtSMVSignedMeterValueTypeSigningMethod txn_meter_value_signing_method = ExtSMVSignedMeterValueTypeSigningMethod::EMPTY_STRING;
+    // The meter value extracted from txn_meter_value in watt-hours.
+    int txn_meter_value_wh = 0;
+    std::unique_ptr<char[]> serializeSignedMeterValue(bool send_public_key);
+
     void deauth();
     void setTagDeadline();
     void clearTagDeadline();
@@ -116,6 +134,8 @@ struct Connector {
 
     void onAuthorizeError();
     void onAuthorizeConf(IdTagInfo info);
+
+    void onSignedMeterValue(ExtSMVSignedMeterValueTypeSigningMethod signing_method, ExtSMVSignedMeterValueTypeEncodingMethod encoding_method, const char *data /*OCMF container, not base64 encoded*/, size_t data_len, int energy_wh);
 
     void onStartTransactionConf(IdTagInfo info, int32_t txn_id);
 

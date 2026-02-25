@@ -50,6 +50,7 @@ public:
 
     void handleTagSeen(int32_t connectorId, const char *tagId);
     void handleStop(int32_t connectorId, StopReason reason);
+    void handleSignedMeterValue(int32_t connectorId, ExtSMVSignedMeterValueTypeSigningMethod signing_method, ExtSMVSignedMeterValueTypeEncodingMethod encoding_method, const char *data, size_t data_len, int energy_wh);
 
     void tick_power_on();
     void tick_flush_persistent_messages();

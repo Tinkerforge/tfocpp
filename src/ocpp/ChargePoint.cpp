@@ -1411,6 +1411,18 @@ void OcppChargePoint::handleStop(int32_t connectorId, StopReason reason) {
     conn.onStop(reason);
 }
 
+void OcppChargePoint::handleSignedMeterValue(int32_t connectorId, ExtSMVSignedMeterValueTypeSigningMethod signing_method, ExtSMVSignedMeterValueTypeEncodingMethod encoding_method, const char *data, size_t data_len, int energy_wh) {
+    // Don't allow tags at connector 0 (i.e. the charge point itself)
+    if (connectorId <= 0)
+        return;
+
+    if (connectorId > OCPP_NUM_CONNECTORS)
+        return;
+
+    auto &conn = connectors[connectorId - 1];
+    conn.onSignedMeterValue(signing_method, encoding_method, data, data_len, energy_wh);
+}
+
 static bool is_url_safe(char c) {
     // RFC 3986: unreserved  = ALPHA / DIGIT / "-" / "." / "_" / "~"
     return (c >= 'a' && c <= 'z') ||
@@ -1496,6 +1508,12 @@ bool OcppChargePoint::start(const char *websocket_endpoint_url, const char *char
         },
         this);
 
+    platform_register_signed_meter_value_callback(
+        platform_ctx,
+        [](int32_t connectorId, ExtSMVSignedMeterValueTypeSigningMethod signing_method, ExtSMVSignedMeterValueTypeEncodingMethod encoding_method, const char *data, size_t data_len, int energy_wh, void *user_data){
+            ((OcppChargePoint*)user_data)->handleSignedMeterValue(connectorId, signing_method, encoding_method, data, data_len, energy_wh);
+        },
+        this);
     return true;
 }
 

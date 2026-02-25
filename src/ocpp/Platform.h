@@ -110,6 +110,132 @@ void platform_set_charging_phases(int32_t connectorId, uint8_t phases);
 
 bool platform_supports_signed_meter_values(void *ctx, int32_t connectorId);
 
+enum class IdentificationLevel {
+    NONE,
+    HEARSAY,
+    TRUSTED,
+    VERIFIED,
+    CERTIFIED,
+    SECURE,
+    MISMATCH,
+    INVALID,
+    OUTDATED,
+    UNKNOWN,
+};
+
+enum class RFIDIdentificationFlag {
+    NONE,
+    PLAIN,
+    RELATED,
+    PSK
+};
+
+enum class OCPPIdentificationFlag {
+    NONE,
+    RS,
+    AUTH,
+    RS_TLS,
+    AUTH_TLS,
+    CACHE,
+    WHITELIST,
+    CERTIFIED
+};
+
+enum class ISO15118IdentificationFlag {
+    NONE,
+    PNC
+};
+
+enum class PLMNIdentificationFlag {
+    NONE,
+    RING,
+    SMS
+};
+
+enum class IdentificationType {
+    NONE,
+    DENIED,
+    UNDEFINED,
+    ISO14443,
+    ISO15693,
+    EMAID,
+    EVCCID,
+    EVCOID,
+    ISO7812,
+    CARD_TXN_NR,
+    CENTRAL,
+    CENTRAL_1,
+    CENTRAL_2,
+    LOCAL,
+    LOCAL_1,
+    LOCAL_2,
+    PHONE_NUMBER,
+    KEY_CODE
+};
+
+struct LossCompensation {
+    const char *naming;
+    int32_t identification;
+    int32_t cable_resistance;
+    enum CableResistanceUnit {
+        mOhm,
+        uOhm
+    } cable_resistance_unit;
+};
+
+enum ChargePointIdentificationType {
+    EVSEID,
+    CBIDC
+};
+
+enum SignatureEncoding {
+    BASE16,
+    BASE64
+};
+
+void platform_notify_txn_start(
+    void *ctx,
+
+    int32_t connectorId,
+
+    const char *gateway_identification,
+    const char *gateway_serial,
+    const char *gateway_version, //unused by Iskra meter
+
+    bool identification_status,
+    IdentificationLevel identification_level, //unused by Iskra meter
+    RFIDIdentificationFlag rfid_identification_flag,
+    OCPPIdentificationFlag ocpp_identification_flag,
+    ISO15118IdentificationFlag iso15118_identification_flag,
+    PLMNIdentificationFlag plmn_identification_flag,
+    IdentificationType identification_type,
+    const char *identification_data,
+    const char *tariff_text, //unused by Iskra meter
+
+    const char *charge_controller_firmware_version, //unused by Iskra meter?
+    LossCompensation *loss_compensation, //currently unused by EVSE
+
+    ChargePointIdentificationType charge_point_identification_type,
+    const char *charge_point_identification,
+
+    time_t unix_time,
+
+    SignatureEncoding signature_encoding
+);
+
+void platform_notify_txn_end(
+    void *ctx,
+    int32_t connectorId,
+    time_t unix_time,
+    SignatureEncoding signature_encoding
+);
+
+// Should be called by the platform when a new OCMF container is received/reassembled
+void platform_register_signed_meter_value_callback(void *ctx, void (*cb)(int32_t connectorId, ExtSMVSignedMeterValueTypeSigningMethod signing_method, ExtSMVSignedMeterValueTypeEncodingMethod encoding_method, const char *data, size_t data_len, int energy_wh, void *user_data), void *user_data);
+
+// prepend 3059301306072A8648CE3D020106082A8648CE3D03010703420004 for iskra meter!
+size_t platform_get_meter_public_key(void *ctx, int32_t connectorId, char *buf, size_t buf_size);
+
 // Calling the stop callback will _never_ unlock the cable if it is currently locked. The same tag (or one in the same group) is required to unlock the cable.
 // For example to implement a remote stop that unlocks immediately, use platform_unlock_cable.
 void platform_register_stop_callback(void *ctx, void (*cb)(int32_t, StopReason, void *), void *user_data);
