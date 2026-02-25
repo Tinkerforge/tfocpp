@@ -110,7 +110,7 @@ void platform_set_charging_phases(int32_t connectorId, uint8_t phases);
 
 bool platform_supports_signed_meter_values(void *ctx, int32_t connectorId);
 
-enum class IdentificationLevel {
+enum class IdentificationLevel : uint8_t {
     NONE,
     HEARSAY,
     TRUSTED,
@@ -123,14 +123,14 @@ enum class IdentificationLevel {
     UNKNOWN,
 };
 
-enum class RFIDIdentificationFlag {
+enum class RFIDIdentificationFlag : uint8_t {
     NONE,
     PLAIN,
     RELATED,
     PSK
 };
 
-enum class OCPPIdentificationFlag {
+enum class OCPPIdentificationFlag : uint8_t {
     NONE,
     RS,
     AUTH,
@@ -141,18 +141,18 @@ enum class OCPPIdentificationFlag {
     CERTIFIED
 };
 
-enum class ISO15118IdentificationFlag {
+enum class ISO15118IdentificationFlag : uint8_t {
     NONE,
     PNC
 };
 
-enum class PLMNIdentificationFlag {
+enum class PLMNIdentificationFlag : uint8_t {
     NONE,
     RING,
     SMS
 };
 
-enum class IdentificationType {
+enum class IdentificationType : uint8_t {
     NONE,
     DENIED,
     UNDEFINED,
@@ -177,18 +177,18 @@ struct LossCompensation {
     const char *naming;
     int32_t identification;
     int32_t cable_resistance;
-    enum CableResistanceUnit {
+    enum CableResistanceUnit : uint8_t {
         mOhm,
         uOhm
     } cable_resistance_unit;
 };
 
-enum ChargePointIdentificationType {
+enum ChargePointIdentificationType : uint8_t {
     EVSEID,
     CBIDC
 };
 
-enum SignatureEncoding {
+enum SignatureEncoding : uint8_t {
     BASE16,
     BASE64
 };
