@@ -13,7 +13,7 @@ extern "C" {
 
 #include "TFJson.h"
 
-static bool iso_string_to_unix_timestamp(const char *iso_string, time_t *t) {
+bool iso_string_to_unix_timestamp(const char *iso_string, time_t *t) {
     iso8601_time time;
     if (iso8601_parse(iso_string, &time) != 0) {
         return false;
@@ -22,7 +22,7 @@ static bool iso_string_to_unix_timestamp(const char *iso_string, time_t *t) {
     return true;
 }
 
-static void unix_timestamp_to_iso_string(time_t timestamp, TFJsonSerializer &json, const char *key) {
+void unix_timestamp_to_iso_string(time_t timestamp, TFJsonSerializer &json, const char *key) {
     char buf[OCPP_ISO_8601_MAX_LEN] = {0};
     tm t;
     gmtime_r(&timestamp, &t);

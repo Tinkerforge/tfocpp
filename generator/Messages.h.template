@@ -7,6 +7,9 @@
 
 #include <math.h>
 
+bool iso_string_to_unix_timestamp(const char *iso_string, time_t *t);
+void unix_timestamp_to_iso_string(time_t timestamp, TFJsonSerializer &json, const char *key);
+
 class OcppChargePoint;
 
 #define OCPP_INTEGER_NOT_PASSED INT32_MAX
