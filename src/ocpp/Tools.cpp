@@ -51,15 +51,15 @@ Option<int32_t> parse_int(const char *c) {
     int64_t parsed = strtol(c, &p, 10);
 
     if (errno != 0 || c == p)
-        return {false};
+        return {};
 
     p += strspn(p, " \r\n\t");
 
     if (*p != '\0')
-        return {false};
+        return {};
 
     if (parsed > INT32_MAX || parsed < INT32_MIN)
-        return {false};
+        return {};
 
     return {(int32_t)parsed};
 }
