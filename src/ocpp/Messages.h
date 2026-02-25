@@ -1107,6 +1107,8 @@ struct Authorize final : public ICall {
     Authorize(const char idTag[21]);
     Authorize(const Authorize&) = delete;
     Authorize &operator=(const Authorize&) = delete;
+    Authorize(Authorize&&) = default;
+    Authorize& operator=(Authorize&&) = default;
 
     size_t serializeJson(char *buf, size_t buf_len) const override;
 };
@@ -1133,6 +1135,8 @@ struct BootNotification final : public ICall {
         const char meterSerialNumber[26] = nullptr);
     BootNotification(const BootNotification&) = delete;
     BootNotification &operator=(const BootNotification&) = delete;
+    BootNotification(BootNotification&&) = default;
+    BootNotification& operator=(BootNotification&&) = default;
 
     size_t serializeJson(char *buf, size_t buf_len) const override;
 };
@@ -1144,6 +1148,8 @@ struct ChangeAvailabilityResponse final : public ICall {
         ChangeAvailabilityResponseStatus status);
     ChangeAvailabilityResponse(const ChangeAvailabilityResponse&) = delete;
     ChangeAvailabilityResponse &operator=(const ChangeAvailabilityResponse&) = delete;
+    ChangeAvailabilityResponse(ChangeAvailabilityResponse&&) = default;
+    ChangeAvailabilityResponse& operator=(ChangeAvailabilityResponse&&) = default;
 
     size_t serializeJson(char *buf, size_t buf_len) const override;
 };
@@ -1155,6 +1161,8 @@ struct ChangeConfigurationResponse final : public ICall {
         ChangeConfigurationResponseStatus status);
     ChangeConfigurationResponse(const ChangeConfigurationResponse&) = delete;
     ChangeConfigurationResponse &operator=(const ChangeConfigurationResponse&) = delete;
+    ChangeConfigurationResponse(ChangeConfigurationResponse&&) = default;
+    ChangeConfigurationResponse& operator=(ChangeConfigurationResponse&&) = default;
 
     size_t serializeJson(char *buf, size_t buf_len) const override;
 };
@@ -1166,6 +1174,8 @@ struct ClearCacheResponse final : public ICall {
         ResponseStatus status);
     ClearCacheResponse(const ClearCacheResponse&) = delete;
     ClearCacheResponse &operator=(const ClearCacheResponse&) = delete;
+    ClearCacheResponse(ClearCacheResponse&&) = default;
+    ClearCacheResponse& operator=(ClearCacheResponse&&) = default;
 
     size_t serializeJson(char *buf, size_t buf_len) const override;
 };
@@ -1180,6 +1190,8 @@ struct DataTransfer final : public ICall {
         const char *data = nullptr);
     DataTransfer(const DataTransfer&) = delete;
     DataTransfer &operator=(const DataTransfer&) = delete;
+    DataTransfer(DataTransfer&&) = default;
+    DataTransfer& operator=(DataTransfer&&) = default;
 
     size_t serializeJson(char *buf, size_t buf_len) const override;
 };
@@ -1193,6 +1205,8 @@ struct DataTransferResponse final : public ICall {
         const char *data = nullptr);
     DataTransferResponse(const DataTransferResponse&) = delete;
     DataTransferResponse &operator=(const DataTransferResponse&) = delete;
+    DataTransferResponse(DataTransferResponse&&) = default;
+    DataTransferResponse& operator=(DataTransferResponse&&) = default;
 
     size_t serializeJson(char *buf, size_t buf_len) const override;
 };
@@ -1206,6 +1220,8 @@ struct GetConfigurationResponse final : public ICall {
         const char **unknownKey = nullptr, size_t unknownKey_length = 0);
     GetConfigurationResponse(const GetConfigurationResponse&) = delete;
     GetConfigurationResponse &operator=(const GetConfigurationResponse&) = delete;
+    GetConfigurationResponse(GetConfigurationResponse&&) = default;
+    GetConfigurationResponse& operator=(GetConfigurationResponse&&) = default;
 
     size_t serializeJson(char *buf, size_t buf_len) const override;
 };
@@ -1215,6 +1231,8 @@ struct Heartbeat final : public ICall {
     Heartbeat();
     Heartbeat(const Heartbeat&) = delete;
     Heartbeat &operator=(const Heartbeat&) = delete;
+    Heartbeat(Heartbeat&&) = default;
+    Heartbeat& operator=(Heartbeat&&) = default;
 
     size_t serializeJson(char *buf, size_t buf_len) const override;
 };
@@ -1229,6 +1247,8 @@ struct MeterValues final : public ICall {
         int32_t transactionId = OCPP_INTEGER_NOT_PASSED);
     MeterValues(const MeterValues&) = delete;
     MeterValues &operator=(const MeterValues&) = delete;
+    MeterValues(MeterValues&&) = default;
+    MeterValues& operator=(MeterValues&&) = default;
 
     size_t serializeJson(char *buf, size_t buf_len) const override;
 };
@@ -1240,6 +1260,8 @@ struct RemoteStartTransactionResponse final : public ICall {
         ResponseStatus status);
     RemoteStartTransactionResponse(const RemoteStartTransactionResponse&) = delete;
     RemoteStartTransactionResponse &operator=(const RemoteStartTransactionResponse&) = delete;
+    RemoteStartTransactionResponse(RemoteStartTransactionResponse&&) = default;
+    RemoteStartTransactionResponse& operator=(RemoteStartTransactionResponse&&) = default;
 
     size_t serializeJson(char *buf, size_t buf_len) const override;
 };
@@ -1251,6 +1273,8 @@ struct RemoteStopTransactionResponse final : public ICall {
         ResponseStatus status);
     RemoteStopTransactionResponse(const RemoteStopTransactionResponse&) = delete;
     RemoteStopTransactionResponse &operator=(const RemoteStopTransactionResponse&) = delete;
+    RemoteStopTransactionResponse(RemoteStopTransactionResponse&&) = default;
+    RemoteStopTransactionResponse& operator=(RemoteStopTransactionResponse&&) = default;
 
     size_t serializeJson(char *buf, size_t buf_len) const override;
 };
@@ -1262,6 +1286,8 @@ struct ResetResponse final : public ICall {
         ResponseStatus status);
     ResetResponse(const ResetResponse&) = delete;
     ResetResponse &operator=(const ResetResponse&) = delete;
+    ResetResponse(ResetResponse&&) = default;
+    ResetResponse& operator=(ResetResponse&&) = default;
 
     size_t serializeJson(char *buf, size_t buf_len) const override;
 };
@@ -1280,6 +1306,8 @@ struct StartTransaction final : public ICall {
         int32_t reservationId = OCPP_INTEGER_NOT_PASSED);
     StartTransaction(const StartTransaction&) = delete;
     StartTransaction &operator=(const StartTransaction&) = delete;
+    StartTransaction(StartTransaction&&) = default;
+    StartTransaction& operator=(StartTransaction&&) = default;
 
     size_t serializeJson(char *buf, size_t buf_len) const override;
 };
@@ -1302,6 +1330,8 @@ struct StatusNotification final : public ICall {
         const char vendorErrorCode[51] = nullptr);
     StatusNotification(const StatusNotification&) = delete;
     StatusNotification &operator=(const StatusNotification&) = delete;
+    StatusNotification(StatusNotification&&) = default;
+    StatusNotification& operator=(StatusNotification&&) = default;
 
     size_t serializeJson(char *buf, size_t buf_len) const override;
 };
@@ -1322,6 +1352,8 @@ struct StopTransaction final : public ICall {
         MeterValue *transactionData = nullptr, size_t transactionData_length = 0);
     StopTransaction(const StopTransaction&) = delete;
     StopTransaction &operator=(const StopTransaction&) = delete;
+    StopTransaction(StopTransaction&&) = default;
+    StopTransaction& operator=(StopTransaction&&) = default;
 
     size_t serializeJson(char *buf, size_t buf_len) const override;
 };
@@ -1333,6 +1365,8 @@ struct UnlockConnectorResponse final : public ICall {
         UnlockConnectorResponseStatus status);
     UnlockConnectorResponse(const UnlockConnectorResponse&) = delete;
     UnlockConnectorResponse &operator=(const UnlockConnectorResponse&) = delete;
+    UnlockConnectorResponse(UnlockConnectorResponse&&) = default;
+    UnlockConnectorResponse& operator=(UnlockConnectorResponse&&) = default;
 
     size_t serializeJson(char *buf, size_t buf_len) const override;
 };
@@ -1344,6 +1378,8 @@ struct ClearChargingProfileResponse final : public ICall {
         ClearChargingProfileResponseStatus status);
     ClearChargingProfileResponse(const ClearChargingProfileResponse&) = delete;
     ClearChargingProfileResponse &operator=(const ClearChargingProfileResponse&) = delete;
+    ClearChargingProfileResponse(ClearChargingProfileResponse&&) = default;
+    ClearChargingProfileResponse& operator=(ClearChargingProfileResponse&&) = default;
 
     size_t serializeJson(char *buf, size_t buf_len) const override;
 };
@@ -1361,6 +1397,8 @@ struct GetCompositeScheduleResponse final : public ICall {
         GetCompositeScheduleResponseChargingSchedule *chargingSchedule = nullptr);
     GetCompositeScheduleResponse(const GetCompositeScheduleResponse&) = delete;
     GetCompositeScheduleResponse &operator=(const GetCompositeScheduleResponse&) = delete;
+    GetCompositeScheduleResponse(GetCompositeScheduleResponse&&) = default;
+    GetCompositeScheduleResponse& operator=(GetCompositeScheduleResponse&&) = default;
 
     size_t serializeJson(char *buf, size_t buf_len) const override;
 };
@@ -1372,6 +1410,8 @@ struct SetChargingProfileResponse final : public ICall {
         SetChargingProfileResponseStatus status);
     SetChargingProfileResponse(const SetChargingProfileResponse&) = delete;
     SetChargingProfileResponse &operator=(const SetChargingProfileResponse&) = delete;
+    SetChargingProfileResponse(SetChargingProfileResponse&&) = default;
+    SetChargingProfileResponse& operator=(SetChargingProfileResponse&&) = default;
 
     size_t serializeJson(char *buf, size_t buf_len) const override;
 };
@@ -1383,6 +1423,8 @@ struct ExtSMV final : public ICall {
         ExtSMVSignedMeterValueType *signedMeterValueType = nullptr);
     ExtSMV(const ExtSMV&) = delete;
     ExtSMV &operator=(const ExtSMV&) = delete;
+    ExtSMV(ExtSMV&&) = default;
+    ExtSMV& operator=(ExtSMV&&) = default;
 
     size_t serializeJson(char *buf, size_t buf_len) const override;
 };

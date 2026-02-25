@@ -757,6 +757,8 @@ def generate_send_function(obj: Object):
     {action}({call_id_param}{params});
     {action}(const {action}&) = delete;
     {action} &operator=(const {action}&) = delete;
+    {action}({action}&&) = default;
+    {action}& operator=({action}&&) = default;
 
     size_t serializeJson(char *buf, size_t buf_len) const override;
 }};"""
