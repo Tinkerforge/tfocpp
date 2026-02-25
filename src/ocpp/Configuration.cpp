@@ -26,6 +26,7 @@ OcppConfiguration OcppConfiguration::integer(int32_t value,
     result.value.integer.max_ = max_;
     result.readonly = readonly;
     result.requires_reboot = requires_reboot;
+    result.hidden = false;
 
     return result;
 }
@@ -39,6 +40,7 @@ OcppConfiguration OcppConfiguration::boolean(bool value,
     result.value.boolean.b = value;
     result.readonly = readonly;
     result.requires_reboot = requires_reboot;
+    result.hidden = false;
 
     return result;
 }
@@ -72,6 +74,7 @@ OcppConfiguration OcppConfiguration::csl(const char *value,
     result.value.csl.max_num_allowed_values = max_elements;
     result.readonly = readonly;
     result.requires_reboot = requires_reboot;
+    result.hidden = false;
 
     memset(result.value.csl.c, 0, len);
 
@@ -92,6 +95,7 @@ OcppConfiguration OcppConfiguration::string(const char *value,
     result.value.string.max_len = max_len;
     result.readonly = readonly;
     result.requires_reboot = requires_reboot;
+    result.hidden = false;
 
     memcpy(result.value.string.s, value, result.value.string.len);
     result.value.string.s[result.value.string.len] = '\0';

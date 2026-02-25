@@ -399,7 +399,12 @@ ChangeConfigurationResponseStatus OcppChargePoint::changeConfig(const char *key,
         return ChangeConfigurationResponseStatus::NOT_SUPPORTED;
     }
 
-    status = getConfig(key_idx).setValue(value);
+    auto &config = getConfig(key_idx);
+    if (config.hidden) {
+        return ChangeConfigurationResponseStatus::NOT_SUPPORTED;
+    }
+
+    status = config.setValue(value);
 
     if (status == ChangeConfigurationResponseStatus::ACCEPTED || status == ChangeConfigurationResponseStatus::REBOOT_REQUIRED) {
 #ifdef OCPP_STATE_CALLBACKS
@@ -549,27 +554,40 @@ CallResponse OcppChargePoint::handleGetConfiguration(const char *uid, GetConfigu
     bool dump_all = false;
 
     if (req.key_count() == 0) {
-        known_keys = OCPP_CONFIG_COUNT;
+        for(size_t i = 0; i < OCPP_CONFIG_COUNT; ++i) {
+            const char *config_value;
+            OcppConfiguration &config = getConfig(i);
+            if (!config.hidden)
+                ++known_keys;
+        }
+
         scratch_buf_size = 20 * known_keys;
         dump_all = true;
     } else {
         for(size_t i = 0; i < req.key_count(); ++i) {
             size_t result;
-            if (lookup_key(&result, req.key(i).unwrap(), config_keys, OCPP_CONFIG_COUNT)) {
-                ++known_keys;
-                switch(getConfig(result).type) {
-                    case OcppConfigurationValueType::Integer:
-                        scratch_buf_size += 20;
-                        break;
-                    case OcppConfigurationValueType::Boolean:
-                    case OcppConfigurationValueType::CSL:
-                    case OcppConfigurationValueType::String:
-                        scratch_buf_size += 0;
-                        break;
-                }
-            }
-            else
+            if (!lookup_key(&result, req.key(i).unwrap(), config_keys, OCPP_CONFIG_COUNT)) {
                 ++unknown_keys;
+                continue;
+            }
+
+            auto &config = getConfig(result);
+            if (config.hidden) {
+                ++unknown_keys;
+                continue;
+            }
+
+            ++known_keys;
+            switch(getConfig(result).type) {
+                case OcppConfigurationValueType::Integer:
+                    scratch_buf_size += 20;
+                    break;
+                case OcppConfigurationValueType::Boolean:
+                case OcppConfigurationValueType::CSL:
+                case OcppConfigurationValueType::String:
+                    scratch_buf_size += 0;
+                    break;
+            }
         }
     }
 
@@ -584,9 +602,13 @@ CallResponse OcppChargePoint::handleGetConfiguration(const char *uid, GetConfigu
     size_t scratch_buf_idx = 0;
 
     if (dump_all) {
-        for(size_t i = 0; i < known_keys; ++i) {
+        for(size_t i = 0; i < OCPP_CONFIG_COUNT; ++i) {
             const char *config_value;
             OcppConfiguration &config = getConfig(i);
+
+            if (config.hidden)
+                continue;
+
             switch(config.type) {
                 case OcppConfigurationValueType::Boolean:
                     config_value = config.value.boolean.b ? "true" : "false";
@@ -618,42 +640,49 @@ CallResponse OcppChargePoint::handleGetConfiguration(const char *uid, GetConfigu
     } else {
         for(size_t i = 0; i < req.key_count(); ++i) {
             size_t result = i;
-            if (lookup_key(&result, req.key(i).unwrap(), config_keys, ARRAY_SIZE(config_keys))) {
-                const char *config_value = "";
-                OcppConfiguration &config = getConfig(result);
-                switch(config.type) {
-                    case OcppConfigurationValueType::Boolean:
-                        config_value = config.value.boolean.b ? "true" : "false";
-                        break;
-                    case OcppConfigurationValueType::Integer: {
-                            config_value = (const char *)&scratch_buf[scratch_buf_idx];
-                            int written = snprintf(&scratch_buf[scratch_buf_idx], scratch_buf_size - scratch_buf_idx, "%" PRId32, config.value.integer.i);
-                            if (written < 0) {
-                                log_error("Failed to write int config %s: %d", config_keys[result], written);
-                                return CallResponse{CallErrorCode::InternalError, "Failed to write int config value."};
-                            }
-                            scratch_buf_idx += (size_t)written;
-                            ++scratch_buf_idx; // for null terminator
-                        }
-                        break;
-                    case OcppConfigurationValueType::CSL:
-                        config_value = config.value.csl.c;
-                        break;
-                    case OcppConfigurationValueType::String:
-                        config_value = config.value.string.s;
-                        break;
-                }
-                known[known_idx].key = config_keys[result];
-                known[known_idx].readonly = config.readonly;
-                known[known_idx].value = config_value;
-                log_info("    %s: %s", config_keys[result], config_value);
-                ++known_idx;
-            }
-            else {
+            if (!lookup_key(&result, req.key(i).unwrap(), config_keys, ARRAY_SIZE(config_keys))) {
                 unknown[unknown_idx] = req.key(i).unwrap();
                 ++unknown_idx;
                 log_info("    %s: [UNKNOWN KEY]", req.key(i).unwrap());
+                continue;
             }
+
+            const char *config_value = "";
+            OcppConfiguration &config = getConfig(result);
+            if (config.hidden) {
+                unknown[unknown_idx] = req.key(i).unwrap();
+                ++unknown_idx;
+                log_info("    %s: [UNKNOWN KEY]", req.key(i).unwrap());
+                continue;
+            }
+
+            switch(config.type) {
+                case OcppConfigurationValueType::Boolean:
+                    config_value = config.value.boolean.b ? "true" : "false";
+                    break;
+                case OcppConfigurationValueType::Integer: {
+                        config_value = (const char *)&scratch_buf[scratch_buf_idx];
+                        int written = snprintf(&scratch_buf[scratch_buf_idx], scratch_buf_size - scratch_buf_idx, "%" PRId32, config.value.integer.i);
+                        if (written < 0) {
+                            log_error("Failed to write int config %s: %d", config_keys[result], written);
+                            return CallResponse{CallErrorCode::InternalError, "Failed to write int config value."};
+                        }
+                        scratch_buf_idx += (size_t)written;
+                        ++scratch_buf_idx; // for null terminator
+                    }
+                    break;
+                case OcppConfigurationValueType::CSL:
+                    config_value = config.value.csl.c;
+                    break;
+                case OcppConfigurationValueType::String:
+                    config_value = config.value.string.s;
+                    break;
+            }
+            known[known_idx].key = config_keys[result];
+            known[known_idx].readonly = config.readonly;
+            known[known_idx].value = config_value;
+            log_info("    %s: %s", config_keys[result], config_value);
+            ++known_idx;
         }
     }
 

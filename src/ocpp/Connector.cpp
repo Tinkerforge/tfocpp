@@ -1304,4 +1304,17 @@ void Connector::init(int32_t connId, OcppChargePoint *chargePoint)
     this->connectorId = connId;
     this->cp = chargePoint;
     this->meter_value_handler.init(connId, chargePoint);
+
+    static_assert(OCPP_NUM_CONNECTORS == 1, "only one connector is supported for now: if this connector does not supported signed meter values, it will deactivate those for all connectors");
+    if (!platform_supports_signed_meter_values(this->cp->platform_ctx, this->connectorId)) {
+        getConfig(ConfigKey::MeterPublicKey1).hidden = true;
+        getConfig(ConfigKey::PublicKeyWithSignedMeterValue).hidden = true;
+        getConfig(ConfigKey::SampledDataSignReadings).hidden = true;
+        getConfig(ConfigKey::StartTxnSampledData).hidden = true;
+        getConfig(ConfigKey::SampledDataSignStartedReadings).hidden = true;
+        getConfig(ConfigKey::SampledDataSignUpdatedReadings).hidden = true;
+        getConfig(ConfigKey::AlignedDataSignReadings).hidden = true;
+        getConfig(ConfigKey::AlignedDataSignUpdatedReadings).hidden = true;
+        return;
+    }
 }

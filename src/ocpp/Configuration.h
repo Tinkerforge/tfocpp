@@ -20,6 +20,7 @@ struct OcppConfiguration {
     OcppConfigurationValueType type;
     bool readonly;
     bool requires_reboot;
+    bool hidden;
 
     union {
         struct {
