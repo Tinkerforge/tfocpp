@@ -55,7 +55,10 @@ struct Connector {
     StatusNotificationStatus last_sent_status = StatusNotificationStatus::NONE;
 
     char tagIdInFlight[21] = {0};
+    IdentificationLevel authLevelInFlight = IdentificationLevel::NONE;
+
     IdTagInfo authorized_for;
+    IdentificationLevel authorized_for_level = IdentificationLevel::NONE;
 
     uint32_t tag_deadline = 0;
     uint32_t cable_deadline = 0;
@@ -129,7 +132,7 @@ struct Connector {
     bool canHandleRemoteStartTxn();
     bool canHandleRemoteStopTxn(int32_t transaction_id);
 
-    void onTagSeen(const char *tag_id);
+    void onTagSeen(const char *tag_id, bool from_remote_start_txn);
     void onStop(StopReason reason);
 
     void onAuthorizeError();

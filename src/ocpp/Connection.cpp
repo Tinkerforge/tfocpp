@@ -458,6 +458,8 @@ void* OcppConnection::start(const char *websocket_endpoint_url, const char *char
     ws_url += '/';
     ws_url += charge_point_name_percent_encoded;
 
+    this->encrypted = ws_url.length() >= 6 && strncmp(ws_url.c_str(),  "wss://", 6) == 0;
+
     size_t cred_alloc_count = 0;
     switch (basic_auth_pass_type) {
         case BasicAuthPassType::HEX_CHARS:

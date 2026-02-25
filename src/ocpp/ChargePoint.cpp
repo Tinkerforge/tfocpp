@@ -831,7 +831,7 @@ CallResponse OcppChargePoint::handleRemoteStartTransaction(const char *uid, Remo
     connection.sendCallResponse(RemoteStartTransactionResponse(uid, ResponseStatus::ACCEPTED));
 
     if (getBoolConfig(ConfigKey::AuthorizeRemoteTxRequests)) {
-        connectors[conn_idx].onTagSeen(req.idTag());
+        connectors[conn_idx].onTagSeen(req.idTag(), true);
     } else {
         connectors[conn_idx].onAuthorizedRemoteStartTransaction(req.idTag());
     }
@@ -1394,7 +1394,7 @@ void OcppChargePoint::handleTagSeen(int32_t connectorId, const char *tagId)
         return;
 
     auto &conn = connectors[connectorId - 1];
-    conn.onTagSeen(tagId);
+    conn.onTagSeen(tagId, false);
 }
 
 void OcppChargePoint::handleStop(int32_t connectorId, StopReason reason) {

@@ -7,6 +7,7 @@
 
 void Connector::deauth() {
     authorized_for = IdTagInfo{};
+    authorized_for_level = IdentificationLevel::NONE;
 }
 
 void Connector::setTagDeadline()
@@ -312,30 +313,42 @@ void Connector::setState(ConnectorState newState) {
 
                 this->transaction_start_time = platform_get_system_time(cp->platform_ctx);
 
+                char gi[42]; // model (20 bytes) + ' ' + vendor (20 bytes) + '\0'
+                snprintf(gi, ARRAY_SIZE(gi), "%.20s %.20s", platform_get_charge_point_vendor(), platform_get_charge_point_model());
+
+                bool from_rfid = this->authorized_for_level == IdentificationLevel::HEARSAY;
+
+                static_assert((size_t) OCPPIdentificationFlag::AUTH + 2 == (size_t) OCPPIdentificationFlag::AUTH_TLS);
+                static_assert((size_t) OCPPIdentificationFlag::RS + 2 == (size_t) OCPPIdentificationFlag::RS_TLS);
+
+                char ci[38]; // serial (25 bytes) + ' ' + connector id (11 byte) + '\0'
+                snprintf(ci, ARRAY_SIZE(ci), "%.25s %d", platform_get_charge_point_serial_number(), this->connectorId);
+
                 platform_notify_txn_start(
                         cp->platform_ctx,
 
                         this->connectorId,
 
-                        "GATEWAY_IDENTIFICATION",
-                        "GATEWAY_SERIAL",
-                        "GATEWAY_VERSION",
+                        gi,
+                        platform_get_charge_point_serial_number(),
+                        platform_get_firmware_version(),
 
                         true,
-                        IdentificationLevel::HEARSAY,
-                        RFIDIdentificationFlag::NONE,
-                        OCPPIdentificationFlag::AUTH, // TODO auth -> IL::HEARSAY; rs (remotestarttxn) -> IL::TRUSTED?; also add _TLS if wss
+                        this->authorized_for_level,
+                        from_rfid ? RFIDIdentificationFlag::PLAIN : RFIDIdentificationFlag::NONE,
+                        (OCPPIdentificationFlag) ((size_t)(from_rfid ? OCPPIdentificationFlag::AUTH : OCPPIdentificationFlag::RS)
+                                                + (this->cp->connection.encrypted ? 2 : 0)),
                         ISO15118IdentificationFlag::NONE,
                         PLMNIdentificationFlag::NONE,
-                        IdentificationType::ISO14443, // CENTRAL_2 if remotestarttxn?
+                        from_rfid ? IdentificationType::ISO14443 : IdentificationType::UNDEFINED, // We don't know what the central passes to us if we've received a RemoteStartTxn.req
                         this->authorized_for.tagId,
-                        "TARIFF_TEXT",
+                        nullptr,
 
                         platform_get_firmware_version(),
                         nullptr,
 
                         ChargePointIdentificationType::CBIDC,
-                        "warp3-abcd 1",
+                        ci,
 
                         this->transaction_start_time,
 
@@ -1020,7 +1033,7 @@ void Connector::tick() {
 }
 
 // Handles TagSeen, SameTagSeen
-void Connector::onTagSeen(const char *tag_id) {
+void Connector::onTagSeen(const char *tag_id, bool from_remote_start_txn) {
     if (authorized_for.is_same_tag(tag_id)) {
         platform_tag_accepted(this->connectorId, tag_id);
 
@@ -1113,6 +1126,7 @@ void Connector::onTagSeen(const char *tag_id) {
 
     memset(tagIdInFlight, 0, ARRAY_SIZE(tagIdInFlight));
     strncpy(tagIdInFlight, tag_id, ARRAY_SIZE(tagIdInFlight) - 1);
+    authLevelInFlight = from_remote_start_txn ? IdentificationLevel::TRUSTED : IdentificationLevel::HEARSAY;
 
     setState(next_state);
 }
@@ -1145,8 +1159,13 @@ void Connector::onAuthorizeConf(IdTagInfo info) {
 
     if (auth_success) {
         platform_tag_accepted(this->connectorId, tagIdInFlight);
+
         authorized_for.updateTagId(tagIdInFlight);
+        authorized_for_level = authLevelInFlight;
+
         memset(tagIdInFlight, 0, ARRAY_SIZE(tagIdInFlight));
+        authLevelInFlight = IdentificationLevel::NONE;
+
         authorized_for.updateFromIdTagInfo(info);
     } else {
         platform_tag_rejected(this->connectorId, tagIdInFlight, statusToTRT(info.status));
@@ -1474,6 +1493,7 @@ void Connector::onAuthorizedRemoteStartTransaction(const char *tag_id)
     }
 
     authorized_for.updateTagId(tag_id);
+    authorized_for_level = IdentificationLevel::TRUSTED;
     setState(next_state);
 }
 
