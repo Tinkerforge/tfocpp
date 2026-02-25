@@ -1,0 +1,139 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ExtOCMFRequest",
+  "type": "object",
+  "properties": {
+    "FV": { "type": "string" },
+    "GI": { "type": "string", "maxLength": 41 },
+    "GS": { "type": "string", "maxLength": 25 },
+    "GV": { "type": "string", "maxLength": 50 },
+
+    "PG": { "type": "string" },
+
+    "MV": { "type": "string" },
+    "MM": { "type": "string" },
+    "MS": { "type": "string" },
+    "MF": { "type": "string" },
+
+    "IS": { "type": "boolean" },
+    "IL": {
+      "type": "string",
+      "enum": [
+        "NONE",
+        "HEARSAY",
+        "TRUSTED",
+        "VERIFIED",
+        "CERTIFIED",
+        "SECURE",
+        "MISMATCH",
+        "INVALID",
+        "OUTDATED",
+        "UNKNOWN"
+      ]
+    },
+    "IF": {
+      "type": "array",
+      "items": {
+          "type": "string",
+          "enum": ["RFID_NONE", "RFID_PLAIN", "RFID_RELATED", "RFID_PSK", "OCPP_NONE",
+            "OCPP_RS",
+            "OCPP_AUTH",
+            "OCPP_RS_TLS",
+            "OCPP_AUTH_TLS",
+            "OCPP_CACHE",
+            "OCPP_WHITELIST",
+            "OCPP_CERTIFIED","ISO15118_NONE", "ISO15118_PNC", "PLMN_NONE", "PLMN_RING", "PLMN_SMS"]
+      },
+      "maxItems": 4
+    },
+    "IT": {
+      "type": "string",
+      "enum": [
+        "NONE",
+        "DENIED",
+        "UNDEFINED",
+        "ISO14443",
+        "ISO15693",
+        "EMAID",
+        "EVCCID",
+        "EVCOID",
+        "ISO7812",
+        "CARD_TXN_NR",
+        "CENTRAL",
+        "CENTRAL_1",
+        "CENTRAL_2",
+        "LOCAL",
+        "LOCAL_1",
+        "LOCAL_2",
+        "PHONE_NUMBER",
+        "KEY_CODE"
+      ]
+    },
+    "ID": { "type": "string" },
+    "TT": { "type": "string", "maxLength": 250 },
+
+    "CF": { "type": "string", "maxLength": 25 },
+    "LC": {
+      "type": "object",
+      "properties": {
+        "LN": { "type": "string", "maxLength": 250 },
+        "LI": { "type": "integer" },
+        "LR": { "type": "number" },
+        "LU": {
+          "type": "string",
+          "enum": ["mOhm", "uOhm"]
+        }
+      },
+      "additionalProperties": false,
+      "required": ["LR", "LU"]
+    },
+
+    "CT": { "type": "string", "enum": ["EVSEID", "CBIDC"] },
+    "CI": { "type": "string", "maxLength": 20 },
+
+    "RD": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "TM": {
+            "type": "string",
+            "pattern": "^[0-9]{4}-[0-1][0-9]-[0-3][0-9]T[0-2][0-9]:[0-5][0-9]:[0-5][0-9],[0-9]{3}[+-][0-2][0-9][0-5][0-9] [UISR]$",
+            "maxLength": 30,
+            "minLength": 30
+          },
+          "TX": {
+            "type": "string",
+            "enum": ["B", "C", "X", "E", "L", "R", "A", "P", "S", "T"]
+          },
+          "RV": { "type": "number" },
+          "RI": { "type": "string" },
+          "RU": { "type": "string", "enum": ["kWh", "Wh", "mOhm", "uOhm"] },
+          "RT": { "type": "string", "enum": ["AC", "DC"] },
+          "CL": { "type": "number" },
+          "EF": { "type": "string", "enum": ["", "E", "t", "Et", "tE"] },
+          "ST": {
+            "type": "string",
+            "enum": ["N", "G", "T", "D", "R", "M", "X", "I", "O", "S", "E", "F"]
+          }
+        },
+        "additionalProperties": false,
+        "required": ["TM", "RV", "RU", "ST"]
+      }
+    },
+    "$comment": "Manufacturer specific extensions are allowed starting with U,V,W,X,Y or Z",
+    "WTF_connector_id": { "type": "integer", "minimum": 0 },
+    "WTF_unix_time": {
+        "type": "string",
+        "format": "date-time"
+    },
+    "WTF_signature_encoding": {
+        "type": "string",
+        "enum": ["BASE16", "BASE64"]
+    }
+  },
+
+  "$comment": "Manufacturer specific extensions are allowed",
+  "additionalProperties": true,
+  "required": ["PG", "MS", "IS", "IT", "RD"]
+}

@@ -55,10 +55,10 @@ struct Connector {
     StatusNotificationStatus last_sent_status = StatusNotificationStatus::NONE_;
 
     char tagIdInFlight[21] = {0};
-    IdentificationLevel authLevelInFlight = IdentificationLevel::NONE;
+    ExtOCMFIL authLevelInFlight = ExtOCMFIL::NONE;
 
     IdTagInfo authorized_for;
-    IdentificationLevel authorized_for_level = IdentificationLevel::NONE;
+    ExtOCMFIL authorized_for_level = ExtOCMFIL::NONE;
 
     uint32_t tag_deadline = 0;
     uint32_t cable_deadline = 0;
@@ -112,6 +112,8 @@ struct Connector {
     std::unique_ptr<char[]> txn_meter_value = nullptr;
     ExtSMVSignedMeterValueTypeEncodingMethod txn_meter_value_encoding_method = ExtSMVSignedMeterValueTypeEncodingMethod::OCMF;
     ExtSMVSignedMeterValueTypeSigningMethod txn_meter_value_signing_method = ExtSMVSignedMeterValueTypeSigningMethod::EMPTY_STRING;
+
+    uint64_t signed_start_meter_values_message_id = 0;
     // The meter value extracted from txn_meter_value in watt-hours.
     int txn_meter_value_wh = 0;
     std::unique_ptr<char[]> serializeSignedMeterValue(bool send_public_key);
@@ -138,9 +140,12 @@ struct Connector {
     void onAuthorizeError();
     void onAuthorizeConf(IdTagInfo info);
 
-    void onSignedMeterValue(ExtSMVSignedMeterValueTypeSigningMethod signing_method, ExtSMVSignedMeterValueTypeEncodingMethod encoding_method, const char *data /*OCMF container, not base64 encoded*/, size_t data_len, int energy_wh);
+    void onSignedMeterValue(ExtSMVSignedMeterValueTypeSigningMethod signing_method, ExtSMVSignedMeterValueTypeEncodingMethod encoding_method, char *data /*OCMF container, not base64 encoded*/, size_t data_len);
 
     void onStartTransactionConf(IdTagInfo info, int32_t txn_id);
+    void onStopTransactionConf(Option<StopTransactionResponseIdTagInfoEntriesView> info);
+
+    void onMeterValuesConf();
 
     bool isTransactionActive();
 

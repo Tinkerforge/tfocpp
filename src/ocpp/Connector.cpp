@@ -4,10 +4,11 @@
 #include "ChargePoint.h"
 #include "Persistency.h"
 #include "Platform.h"
+#include "SignedMeterValueHelper.h"
 
 void Connector::deauth() {
     authorized_for = IdTagInfo{};
-    authorized_for_level = IdentificationLevel::NONE;
+    authorized_for_level = ExtOCMFIL::NONE;
 }
 
 void Connector::setTagDeadline()
@@ -315,44 +316,57 @@ void Connector::setState(ConnectorState newState) {
                 char gi[42]; // model (20 bytes) + ' ' + vendor (20 bytes) + '\0'
                 snprintf(gi, ARRAY_SIZE(gi), "%.20s %.20s", platform_get_charge_point_vendor(), platform_get_charge_point_model());
 
-                bool from_rfid = this->authorized_for_level == IdentificationLevel::HEARSAY;
+                bool from_rfid = this->authorized_for_level == ExtOCMFIL::HEARSAY;
 
-                static_assert((size_t) OCPPIdentificationFlag::AUTH + 2 == (size_t) OCPPIdentificationFlag::AUTH_TLS, "OCPPIdentificationFlag layout not as expected");
-                static_assert((size_t) OCPPIdentificationFlag::RS + 2 == (size_t) OCPPIdentificationFlag::RS_TLS, "OCPPIdentificationFlag layout not as expected");
+                static_assert((size_t) ExtOCMFIFEntry::OCPP_AUTH + 2 == (size_t) ExtOCMFIFEntry::OCPP_AUTH_TLS, "OCPPIdentificationFlag layout not as expected");
+                static_assert((size_t) ExtOCMFIFEntry::OCPP_RS + 2 == (size_t) ExtOCMFIFEntry::OCPP_RS_TLS, "OCPPIdentificationFlag layout not as expected");
 
                 char ci[38]; // serial (25 bytes) + ' ' + connector id (11 byte) + '\0'
                 snprintf(ci, ARRAY_SIZE(ci), "%.25s %d", platform_get_charge_point_serial_number(), this->connectorId);
 
-                platform_notify_txn_start(
-                        cp->platform_ctx,
+                ExtOCMFIFEntry if_[4] {
+                    from_rfid ? ExtOCMFIFEntry::RFID_PLAIN : ExtOCMFIFEntry::RFID_NONE,
+                    (ExtOCMFIFEntry) ((size_t)(from_rfid ? ExtOCMFIFEntry::OCPP_AUTH : ExtOCMFIFEntry::OCPP_RS)
+                                            + (this->cp->connection.encrypted ? 2 : 0)),
+                    ExtOCMFIFEntry::ISO15118_NONE,
+                    ExtOCMFIFEntry::PLMN_NONE,
+                };
 
-                        this->connectorId,
+                ExtOCMF ocmf {
+                    /*PG,*/  "unused",
+                    /*MS,*/  "unused",
+                    /*IS,*/  true,
+                    /*IT,*/  from_rfid ? ExtOCMFIT::ISO14443 : ExtOCMFIT::UNDEFINED,
+                    reinterpret_cast<ExtOCMFRD*>(0x00000001), 0, //RD is required (but allowed to be empty). If we pass nullptr RD is not serialized. If we pass any other pointer but size 0, an empty array is serizalized.
+                    /*FV,*/  nullptr,
+                    /*GI*/   gi,
+                    /*GS*/   platform_get_charge_point_serial_number(),
+                    /*GV*/   platform_get_firmware_version(),
+                    /*MV,*/  nullptr,
+                    /*MM,*/  nullptr,
+                    /*MF,*/  nullptr,
+                    /*IL,*/  this->authorized_for_level,
+                    /*IF,*/  if_, 4,
+                    /*ID,*/  this->authorized_for.tagId,
+                    /*TT,*/  nullptr,
+                    /*CF,*/  platform_get_evse_firmware_version(),
+                    /*LC,*/  nullptr,
+                    /*CT,*/  ExtOCMFCT::CBIDC,
+                    /*CI */  ci,
+                    // vendor extensions
+                    /*WTF_connector_id*/       this->connectorId,
+                    /*WTF_unix_time*/          this->transaction_start_time,
+                    /*WTF_signature_encoding*/ ExtOCMFWTF_signature_encoding::BASE16
+                };
 
-                        gi,
-                        platform_get_charge_point_serial_number(),
-                        platform_get_firmware_version(),
+                txnLogAppend(this->connectorId, TxnLogTag::BEGIN, ocmf);
 
-                        true,
-                        this->authorized_for_level,
-                        from_rfid ? RFIDIdentificationFlag::PLAIN : RFIDIdentificationFlag::NONE,
-                        (OCPPIdentificationFlag) ((size_t)(from_rfid ? OCPPIdentificationFlag::AUTH : OCPPIdentificationFlag::RS)
-                                                + (this->cp->connection.encrypted ? 2 : 0)),
-                        ISO15118IdentificationFlag::NONE,
-                        PLMNIdentificationFlag::NONE,
-                        from_rfid ? IdentificationType::ISO14443 : IdentificationType::UNDEFINED, // We don't know what the central passes to us if we've received a RemoteStartTxn.req
-                        this->authorized_for.tagId,
-                        nullptr,
-
-                        platform_get_firmware_version(),
-                        nullptr,
-
-                        ChargePointIdentificationType::CBIDC,
-                        ci,
-
-                        this->transaction_start_time,
-
-                        SignatureEncoding::BASE64
-                    );
+                platform_prepare_meter_for_txn(cp->platform_ctx, &ocmf);
+                platform_request_meter_value(cp->platform_ctx,
+                                             ocmf.WTF_connector_id,
+                                             ocmf.WTF_unix_time,
+                                             ocmf.WTF_signature_encoding,
+                                             MeterRequest::BEGIN);
             }
             break;
         case TransitionAction::SEND_START_TXN: {
@@ -361,16 +375,15 @@ void Connector::setState(ConnectorState newState) {
                     energy = this->txn_meter_value_wh;
                 } else {
                     energy = platform_get_energy(connectorId);
+                    char buf[12];
+                    size_t written = snprintf(buf, sizeof(buf), "%d", energy);
+                    txnLogAppend(this->connectorId, TxnLogTag::UNSIGNED_MV_START, buf, written);
                 }
 
                 StartTransaction msg{connectorId, authorized_for.tagId, energy, this->transaction_start_time};
                 log_info("Created StartTransaction.req at connector %" PRId32 " for tag %s at %.3f kWh.", msg.connectorId, msg.idTag, msg.meterStart / 1000.0f);
+                txnLogAppend(this->connectorId, TxnLogTag::START_TXN_REQ, msg);
 
-                // TODO: persist signed meter value if available
-                persistStartTxn(msg.connectorId, msg.idTag, msg.meterStart, msg.reservationId, (uint32_t)msg.ocppJmessageId, msg.timestamp);
-
-                this->transaction_confirmed_id = next_call_id++;
-                persistRunningTxn(this->connectorId, transaction_confirmed_id, -1); // Persist running txn with txn-ID -1 until we've received the StartTransaction.conf.
                 this->sendCallAction(msg);
             }
             break;
@@ -381,55 +394,44 @@ void Connector::setState(ConnectorState newState) {
 
                 this->transaction_stop_time = platform_get_system_time(cp->platform_ctx);
 
-                platform_notify_txn_end(this->cp->platform_ctx, this->connectorId, transaction_stop_time, SignatureEncoding::BASE64);
+                platform_request_meter_value(this->cp->platform_ctx, this->connectorId, transaction_stop_time, ExtOCMFWTF_signature_encoding::BASE16, MeterRequest::END_WITH_BEGIN);
             }
             break;
         case TransitionAction::SEND_STOP_TXN: {
-                auto timestamp = this->transaction_stop_time;
-                int energy = this->txn_meter_value != nullptr ? this->txn_meter_value_wh : platform_get_energy(connectorId);
+                int energy;
+                if (txn_meter_value != nullptr) {
+                    energy = this->txn_meter_value_wh;
+                } else {
+                    energy = platform_get_energy(connectorId);
+                    char buf[12];
+                    size_t written = snprintf(buf, sizeof(buf), "%d", energy);
+                    txnLogAppend(this->connectorId, TxnLogTag::UNSIGNED_MV_STOP, buf, written);
+                }
 
                 this->meter_value_handler.onStopTransaction();
-
-                onTxnMsgResponseReceived(this->transaction_confirmed_id);
-
-                // TODO don't pass tag ID if the stop was not requested with an identifier
-                StopTransaction msg{energy, timestamp, transaction_id, authorized_for.tagId, this->next_stop_reason};
-                log_info("Created StopTransaction.req at connector %" PRId32 " for tag %s at %.3f kWh. StopReason %d", this->connectorId, msg.idTag, msg.meterStop / 1000.0f, (int)msg.reason);
 
                 std::unique_ptr<char[]> signed_meter_value;
                 MeterValueSampledValue sv;
                 MeterValue mv;
-                if (this->txn_meter_value != nullptr) {
-                    bool send_public_key = false;
-                    auto cfg_len = getCSLConfigLen(ConfigKey::PublicKeyWithSignedMeterValue);
-                    if (cfg_len != 1) {
-                        log_error("Unexpected length of PublicKeyWithSignedMeterValue. Should be 1, is %zu", cfg_len);
-                    } else if (getCSLConfig(ConfigKey::PublicKeyWithSignedMeterValue)[0] != (size_t)PublicKeyWithSignedMeterValue::Never) {
-                        // If we shall only send the public key once, send it at the end of the transaction, i.e. now.
-                        send_public_key = true;
-                    }
 
-                    signed_meter_value = this->serializeSignedMeterValue(send_public_key);
-                    this->txn_meter_value.reset();
+                // TODO don't pass tag ID if the stop was not requested with an identifier
+                auto msg = SMVH::buildStopTxn(
+                    this->connectorId,
+                    this->transaction_stop_time,
+                    energy,
+                    this->transaction_id,
+                    authorized_for.tagId,
+                    this->next_stop_reason,
+                    this->txn_meter_value_encoding_method,
+                    this->txn_meter_value_signing_method,
+                    this->txn_meter_value.get(),
+                    signed_meter_value,
+                    sv,
+                    mv);
 
-                    sv.context = SampledValueContext::TRANSACTION_END;
-                    sv.location = SampledValueLocation::OUTLET;
-                    sv.measurand = SampledValueMeasurand::ENERGY_ACTIVE_IMPORT_REGISTER;
-                    sv.phase = SampledValuePhase::NONE_;
-                    sv.unit = SampledValueUnit::K_WH; // TODO: should be reported by platform
-                    sv.value = signed_meter_value.get();
-                    sv.format = SampledValueFormat::SIGNED_DATA;
+                this->txn_meter_value.reset();
 
-                    mv.timestamp = timestamp;
-                    mv.sampledValue_length = 1;
-                    mv.sampledValue = &sv;
-
-                    msg.transactionData = &mv;
-                    msg.transactionData_length = 1;
-                }
-
-                // TODO: persist with meter value if available
-                persistStopTxn((uint8_t)msg.reason, msg.meterStop, msg.transactionId, msg.idTag, (uint32_t) msg.ocppJmessageId, msg.timestamp);
+                txnLogAppend(this->connectorId, TxnLogTag::STOP_TXN_REQ, msg);
 
                 this->sendCallAction(msg);
             }
@@ -1128,7 +1130,7 @@ void Connector::onTagSeen(const char *tag_id, bool from_remote_start_txn) {
 
     memset(tagIdInFlight, 0, ARRAY_SIZE(tagIdInFlight));
     strncpy(tagIdInFlight, tag_id, ARRAY_SIZE(tagIdInFlight) - 1);
-    authLevelInFlight = from_remote_start_txn ? IdentificationLevel::TRUSTED : IdentificationLevel::HEARSAY;
+    authLevelInFlight = from_remote_start_txn ? ExtOCMFIL::TRUSTED : ExtOCMFIL::HEARSAY;
 
     setState(next_state);
 }
@@ -1166,7 +1168,7 @@ void Connector::onAuthorizeConf(IdTagInfo info) {
         authorized_for_level = authLevelInFlight;
 
         memset(tagIdInFlight, 0, ARRAY_SIZE(tagIdInFlight));
-        authLevelInFlight = IdentificationLevel::NONE;
+        authLevelInFlight = ExtOCMFIL::NONE;
 
         authorized_for.updateFromIdTagInfo(info);
     } else {
@@ -1271,35 +1273,13 @@ bool b64_encode(const char *in, size_t len, char *out, size_t out_len)
 
 
 std::unique_ptr<char[]> Connector::serializeSignedMeterValue(bool send_public_key) {
-    ExtSMVSignedMeterValueType smvt;
-    smvt.encodingMethod = this->txn_meter_value_encoding_method;
-    smvt.signingMethod = this->txn_meter_value_signing_method;
-
+    const char *publicKey = nullptr;
     if (send_public_key) {
         static_assert(OCPP_NUM_CONNECTORS == 1, "only one connector is supported for now: each connector requires a separate MeterPublicKey[ConnectorID] ConfigKey");
-        smvt.publicKey = getStringConfig(ConfigKey::MeterPublicKey1);
-    } else {
-        smvt.publicKey = "";
+        publicKey = getStringConfig(ConfigKey::MeterPublicKey1);
     }
 
-    smvt.signedMeterData = this->txn_meter_value.get();
-
-    size_t required; {
-        TFJsonSerializer json{nullptr, 0};
-        json.addObject();
-        smvt.serializeInto(json);
-        json.endObject();
-        required = json.end();
-    }
-
-    auto meter_value_buf = heap_alloc_array<char>(required + 1);
-    TFJsonSerializer json{meter_value_buf.get(), required + 1};
-    json.addObject();
-    smvt.serializeInto(json);
-    json.endObject();
-    json.end();
-
-    return meter_value_buf;
+    return SMVH::serializeSignedMeterValue(publicKey, this->txn_meter_value_encoding_method, this->txn_meter_value_signing_method, this->txn_meter_value.get());
 }
 
 // Handles StartTxnNotAccepted
@@ -1314,42 +1294,31 @@ void Connector::onStartTransactionConf(IdTagInfo info, int32_t txn_id) {
     this->transaction_id = txn_id;
     this->meter_value_handler.transactionId = txn_id;
 
-    // We've already persisted a running txn with the message ID transaction_confirmed_id and transaction ID -1
-    // when we've created the StartTransaction.Req.
-    // Replace that persisted information with a new running txn with the correct transaction ID.
-    onTxnMsgResponseReceived(this->transaction_confirmed_id);
-
-    this->transaction_confirmed_id = next_call_id++;
-    persistRunningTxn(this->connectorId, transaction_confirmed_id, txn_id);
+    char buf[12];
+    size_t written = snprintf(buf, sizeof(buf), "%d", txn_id);
+    txnLogAppend(this->connectorId, TxnLogTag::TXN_ID, buf, written);
 
     if (this->txn_meter_value != nullptr) {
-        bool send_public_key = false;
-        auto cfg_len = getCSLConfigLen(ConfigKey::PublicKeyWithSignedMeterValue);
-        if (cfg_len != 1) {
-            log_error("Unexpected length of PublicKeyWithSignedMeterValue. Should be 1, is %zu", cfg_len);
-        } else if (getCSLConfig(ConfigKey::PublicKeyWithSignedMeterValue)[0] == (size_t)PublicKeyWithSignedMeterValue::EveryMeterValue) {
-            // If we shall only send the public key once, send it at the end of the transaction, not now.
-            send_public_key = true;
-        }
-
-        auto signed_meter_value = this->serializeSignedMeterValue(send_public_key);
-
+        std::unique_ptr<char[]> signed_meter_value;
         MeterValueSampledValue sv;
-        sv.context = SampledValueContext::TRANSACTION_BEGIN;
-        sv.location = SampledValueLocation::OUTLET;
-        sv.measurand = SampledValueMeasurand::ENERGY_ACTIVE_IMPORT_REGISTER;
-        sv.phase = SampledValuePhase::NONE_;
-        sv.unit = SampledValueUnit::K_WH; // TODO: should be reported by platform
-        sv.value = signed_meter_value.get();
-
-        sv.format = SampledValueFormat::SIGNED_DATA;
-
         MeterValue mv;
-        mv.timestamp = this->transaction_start_time;
-        mv.sampledValue_length = 1;
-        mv.sampledValue = &sv;
-        this->sendCallAction(MeterValues(this->connectorId, &mv, 1, this->transaction_id));
+
+        auto msg = SMVH::buildTxnStartMeterValues(
+            this->connectorId,
+            this->transaction_id,
+            this->transaction_start_time,
+            this->txn_meter_value_encoding_method,
+            this->txn_meter_value_signing_method,
+            this->txn_meter_value.get(),
+            signed_meter_value,
+            sv,
+            mv);
+
         this->txn_meter_value.reset();
+
+        this->signed_start_meter_values_message_id = msg.ocppJmessageId;
+        txnLogAppend(this->connectorId, TxnLogTag::MV_START_REQ, msg);
+        this->sendCallAction(msg);
     }
 
     if (info.status == ResponseIdTagInfoEntriesStatus::ACCEPTED) {
@@ -1379,19 +1348,53 @@ void Connector::onStartTransactionConf(IdTagInfo info, int32_t txn_id) {
     this->transaction_with_non_accepted_tag_id = true;
 }
 
-void Connector::onSignedMeterValue(ExtSMVSignedMeterValueTypeSigningMethod signing_method, ExtSMVSignedMeterValueTypeEncodingMethod encoding_method, const char *data /*OCMF container, not base64 encoded*/, size_t data_len, int energy_wh) {
+void Connector::onStopTransactionConf(Option<StopTransactionResponseIdTagInfoEntriesView> info) {
+    (void) info;
+
+    txnLogRemove(this->connectorId);
+}
+
+void Connector::onMeterValuesConf() {
+    if (this->signed_start_meter_values_message_id != 0) {
+        txnLogAppend(this->connectorId, TxnLogTag::MV_START_CONFIRMED, "null", 4);
+        this->signed_start_meter_values_message_id = 0;
+    }
+}
+
+void Connector::onSignedMeterValue(ExtSMVSignedMeterValueTypeSigningMethod signing_method, ExtSMVSignedMeterValueTypeEncodingMethod encoding_method, char *data /*OCMF container, not base64 encoded*/, size_t data_len) {
     switch (state) {
         case ConnectorState::START_TXN: {
             if (this->txn_meter_value != nullptr)
                 log_error("Overwriting potentially unsent txn related signed meter value!");
 
+            {
+                auto pr = SMVH::parseOCMF(data, data_len);
+
+                if (pr.is_none()) {
+                    log_error("Failed to parse OCMF container for begin");
+                    return;
+                }
+
+                auto ocmf = pr.unwrap().get_view();
+
+                if (ocmf.RD_count() != 1) {
+                    log_error("Expected exactly one reading in OCMF container for begin. Got %zu", ocmf.RD_count());
+                    return;
+                }
+
+                // TODO check unit/obis here?
+
+                // unwrap is fine here, we've made sure that there is exactly one reading
+                this->txn_meter_value_wh = SMVH::getEnergyWhFromOCMF(ocmf, 0).unwrap();
+            }
+            this->txn_meter_value_encoding_method = encoding_method;
+            this->txn_meter_value_signing_method = signing_method;
+
+            txnLogAppend(this->connectorId, TxnLogTag::SIGNED_MV_START, data, data_len);
+
             auto base64_len = b64_encoded_size(data_len) + 1;
             this->txn_meter_value = heap_alloc_array<char>(base64_len);
             b64_encode(data, data_len, this->txn_meter_value.get(), base64_len);
-
-            this->txn_meter_value_encoding_method = encoding_method;
-            this->txn_meter_value_signing_method = signing_method;
-            this->txn_meter_value_wh = energy_wh;
 
             this->setState(ConnectorState::TRANSACTION);
             break;
@@ -1400,13 +1403,33 @@ void Connector::onSignedMeterValue(ExtSMVSignedMeterValueTypeSigningMethod signi
             if (this->txn_meter_value != nullptr)
                 log_error("Overwriting potentially unsent txn related signed meter value!");
 
-            auto base64_len = b64_encoded_size(data_len) + 1;
-            this->txn_meter_value = heap_alloc_array<char>(base64_len);
-            b64_encode(data, data_len, this->txn_meter_value.get(), base64_len);
+            {
+                auto pr = SMVH::parseOCMF(data, data_len);
+
+                if (pr.is_none()) {
+                    // TODO error handling
+                    break;
+                }
+
+                auto ocmf = pr.unwrap().get_view();
+
+                if (ocmf.RD_count() != 2)
+                    log_error("Expected exactly two readings in OCMF container for end. Got %zu", ocmf.RD_count());
+
+                // TODO check unit/obis here?
+
+                // unwrap is fine here, we've made sure that there are exactly two readings
+                this->txn_meter_value_wh = SMVH::getEnergyWhFromOCMF(ocmf, 1).unwrap();
+            }
 
             this->txn_meter_value_encoding_method = encoding_method;
             this->txn_meter_value_signing_method = signing_method;
-            this->txn_meter_value_wh = energy_wh;
+
+            txnLogAppend(this->connectorId, TxnLogTag::SIGNED_MV_STOP, data, data_len);
+
+            auto base64_len = b64_encoded_size(data_len) + 1;
+            this->txn_meter_value = heap_alloc_array<char>(base64_len);
+            b64_encode(data, data_len, this->txn_meter_value.get(), base64_len);
 
             auto next_state = this->next_state_after_stop_txn;
             this->next_state_after_stop_txn = ConnectorState::IDLE;
@@ -1500,7 +1523,7 @@ void Connector::onAuthorizedRemoteStartTransaction(const char *tag_id)
     }
 
     authorized_for.updateTagId(tag_id);
-    authorized_for_level = IdentificationLevel::TRUSTED;
+    authorized_for_level = ExtOCMFIL::TRUSTED;
     setState(next_state);
 }
 
@@ -1595,6 +1618,7 @@ ChangeAvailabilityResponseStatus Connector::onChangeAvailability(ChangeAvailabil
                 return ChangeAvailabilityResponseStatus::SCHEDULED;
             }
             this->setState(ConnectorState::UNAVAILABLE);
+            return ChangeAvailabilityResponseStatus::ACCEPTED;
     }
     SILENCE_GCC_UNREACHABLE();
 }
@@ -1665,7 +1689,6 @@ void Connector::init(int32_t connId, OcppChargePoint *chargePoint)
         // TODO
         log_error("Failed to get public key. Add error handling here.");
     }
-    log_warn("binary len %zu", binary_len);
 
     char pub_key[500];
     char *ptr = pub_key;
@@ -1676,7 +1699,6 @@ void Connector::init(int32_t connId, OcppChargePoint *chargePoint)
     memcpy(ptr, prefix, prefix_len); ptr += prefix_len;
 
     b64_encode(binary, binary_len, ptr, ARRAY_SIZE(pub_key) - prefix_len);
-    log_warn("pub key %s", pub_key);
 
     static_assert(OCPP_NUM_CONNECTORS == 1, "only one connector is supported for now: each connector requires a separate MeterPublicKey[ConnectorID] ConfigKey");
     getConfig(ConfigKey::MeterPublicKey1).setValue(pub_key, true);

@@ -5,6 +5,7 @@
 #include <time.h>
 
 #include <functional>
+#include <memory>
 
 #include "Messages.h"
 #include "ChargePoint.h"
@@ -110,45 +111,37 @@ void platform_set_charging_phases(int32_t connectorId, uint8_t phases);
 
 bool platform_supports_signed_meter_values(void *ctx, int32_t connectorId);
 
-void platform_notify_txn_start(
+void platform_prepare_meter_for_txn(
     void *ctx,
-
-    int32_t connectorId,
-
-    const char *gateway_identification,
-    const char *gateway_serial,
-    const char *gateway_version, //unused by Iskra meter
-
-    bool identification_status,
-    IdentificationLevel identification_level, //unused by Iskra meter
-    RFIDIdentificationFlag rfid_identification_flag,
-    OCPPIdentificationFlag ocpp_identification_flag,
-    ISO15118IdentificationFlag iso15118_identification_flag,
-    PLMNIdentificationFlag plmn_identification_flag,
-    IdentificationType identification_type,
-    const char *identification_data,
-    const char *tariff_text, //unused by Iskra meter
-
-    const char *charge_controller_firmware_version, //unused by Iskra meter?
-    LossCompensation *loss_compensation, //currently unused by EVSE
-
-    ChargePointIdentificationType charge_point_identification_type,
-    const char *charge_point_identification,
-
-    time_t unix_time,
-
-    SignatureEncoding signature_encoding
+    ExtOCMF *ocmf
 );
 
-void platform_notify_txn_end(
+enum MeterRequest {
+    BEGIN='B',
+    END='E',
+    INTERMEDIATE='C',
+    EXCEPTION='X',
+    TARIFF_CHANGE='T',
+    SUSPENDED='S',
+    END_WITH_BEGIN='r',
+    FISCAL_READING='f',
+    HOLD_COMMAND='h',
+    LAST_CHARGE_READING='i'
+};
+
+void platform_request_meter_value(
     void *ctx,
     int32_t connectorId,
     time_t unix_time,
-    SignatureEncoding signature_encoding
+    ExtOCMFWTF_signature_encoding signature_encoding,
+    MeterRequest req
 );
+
+bool platform_txn_active(void *ctx, int32_t connectorId);
 
 // Should be called by the platform when a new OCMF container is received/reassembled
-void platform_register_signed_meter_value_callback(void *ctx, void (*cb)(int32_t connectorId, ExtSMVSignedMeterValueTypeSigningMethod signing_method, ExtSMVSignedMeterValueTypeEncodingMethod encoding_method, const char *data, size_t data_len, int energy_wh, void *user_data), void *user_data);
+typedef void (*signed_meter_value_cb)(int32_t connectorId, ExtSMVSignedMeterValueTypeSigningMethod signing_method, ExtSMVSignedMeterValueTypeEncodingMethod encoding_method, char *data, size_t data_len, void *user_data);
+void platform_register_signed_meter_value_callback(void *ctx, signed_meter_value_cb, void *user_data);
 
 // prepend 3059301306072A8648CE3D020106082A8648CE3D03010703420004 for iskra meter!
 size_t platform_get_meter_public_key(void *ctx, int32_t connectorId, char *buf, size_t buf_size);
@@ -191,15 +184,18 @@ struct SupportedMeasurand {
 
 bool platform_prepare_meter(int32_t connector_id, SampledValueMeasurand *measurands, SampledValuePhase *phases, size_t measurand_count, SupportedMeasurand **out_supported_measurands, size_t *out_supported_measurand_count, void **out_platform_meter_cache);
 
-size_t platform_read_file(const char *name, char *buf, size_t len);
+std::unique_ptr<char[]> platform_read_file(const char *name, size_t *length, size_t max_len = OCPP_MAX_FILE_LEN);
 bool platform_write_file(const char *name, char *buf, size_t len);
+bool platform_append_file(const char *name, char *buf, size_t len);
+bool platform_file_exists(const char *name);
 
 // return nullptr if name does not exist or is not a directory
 void *platform_open_dir(const char *name);
 
 struct OcppDirEnt {
     bool is_dir;
-    char name[33] = "";
+    char name[100] = "";
+    size_t size; // 0 if directory
 };
 
 // return nullptr if no more files
@@ -215,6 +211,7 @@ const char *platform_get_charge_point_model();
 // Optional - Return nullptr if not to be sent.
 const char *platform_get_charge_point_serial_number();
 const char *platform_get_firmware_version();
+const char *platform_get_evse_firmware_version();
 const char *platform_get_iccid();
 const char *platform_get_imsi();
 const char *platform_get_meter_type();

@@ -574,8 +574,8 @@ bool setBoolConfig(ConfigKey key, bool b) {
 
 void loadConfig()
 {
-    auto buf = heap_alloc_array<char>(8192);
-    size_t len = platform_read_file("config", buf.get(), 8192);
+    size_t len;
+    auto buf = platform_read_file("config", &len);
     StaticJsonDocument<JSON_OBJECT_SIZE(MAX_SPECIFIED_CONFIGS)> doc;
     if (deserializeJson(doc, buf.get(), len) != DeserializationError::Ok)
         return;

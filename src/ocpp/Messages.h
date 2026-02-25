@@ -215,6 +215,160 @@ enum class SetChargingProfileResponseStatus : uint8_t {
     NONE_
 };
 
+extern const char * const ExtOCMFILStrings[10];
+constexpr size_t ExtOCMFILStringsMaxLength = 9;
+
+enum class ExtOCMFIL : uint8_t {
+    NONE,
+    HEARSAY,
+    TRUSTED,
+    VERIFIED,
+    CERTIFIED,
+    SECURE,
+    MISMATCH,
+    INVALID,
+    OUTDATED,
+    UNKNOWN,
+    NONE_
+};
+
+extern const char * const ExtOCMFITStrings[18];
+constexpr size_t ExtOCMFITStringsMaxLength = 12;
+
+enum class ExtOCMFIT : uint8_t {
+    NONE,
+    DENIED,
+    UNDEFINED,
+    ISO14443,
+    ISO15693,
+    EMAID,
+    EVCCID,
+    EVCOID,
+    ISO7812,
+    CARD_TXN_NR,
+    CENTRAL,
+    CENTRAL_1,
+    CENTRAL_2,
+    LOCAL,
+    LOCAL_1,
+    LOCAL_2,
+    PHONE_NUMBER,
+    KEY_CODE,
+    NONE_
+};
+
+extern const char * const ExtOCMFCTStrings[2];
+constexpr size_t ExtOCMFCTStringsMaxLength = 6;
+
+enum class ExtOCMFCT : uint8_t {
+    EVSEID,
+    CBIDC,
+    NONE_
+};
+
+extern const char * const ExtOCMFWTF_signature_encodingStrings[2];
+constexpr size_t ExtOCMFWTF_signature_encodingStringsMaxLength = 6;
+
+enum class ExtOCMFWTF_signature_encoding : uint8_t {
+    BASE16,
+    BASE64,
+    NONE_
+};
+
+extern const char * const ExtOCMFIFEntryStrings[17];
+constexpr size_t ExtOCMFIFEntryStringsMaxLength = 14;
+
+enum class ExtOCMFIFEntry : uint8_t {
+    RFID_NONE,
+    RFID_PLAIN,
+    RFID_RELATED,
+    RFID_PSK,
+    OCPP_NONE,
+    OCPP_RS,
+    OCPP_AUTH,
+    OCPP_RS_TLS,
+    OCPP_AUTH_TLS,
+    OCPP_CACHE,
+    OCPP_WHITELIST,
+    OCPP_CERTIFIED,
+    ISO15118_NONE,
+    ISO15118_PNC,
+    PLMN_NONE,
+    PLMN_RING,
+    PLMN_SMS
+};
+
+extern const char * const ExtOCMFLCEntriesLUStrings[2];
+constexpr size_t ExtOCMFLCEntriesLUStringsMaxLength = 4;
+
+enum class ExtOCMFLCEntriesLU : uint8_t {
+    M_OHM,
+    U_OHM
+};
+
+extern const char * const ExtOCMFRDEntryEntriesTXStrings[10];
+constexpr size_t ExtOCMFRDEntryEntriesTXStringsMaxLength = 1;
+
+enum class ExtOCMFRDEntryEntriesTX : uint8_t {
+    B,
+    C,
+    X,
+    E,
+    L,
+    R,
+    A,
+    P,
+    S,
+    T
+};
+
+extern const char * const ExtOCMFRDEntryEntriesRUStrings[4];
+constexpr size_t ExtOCMFRDEntryEntriesRUStringsMaxLength = 4;
+
+enum class ExtOCMFRDEntryEntriesRU : uint8_t {
+    K_WH,
+    WH,
+    M_OHM,
+    U_OHM
+};
+
+extern const char * const ExtOCMFRDEntryEntriesRTStrings[2];
+constexpr size_t ExtOCMFRDEntryEntriesRTStringsMaxLength = 2;
+
+enum class ExtOCMFRDEntryEntriesRT : uint8_t {
+    AC,
+    DC
+};
+
+extern const char * const ExtOCMFRDEntryEntriesEFStrings[5];
+constexpr size_t ExtOCMFRDEntryEntriesEFStringsMaxLength = 2;
+
+enum class ExtOCMFRDEntryEntriesEF : uint8_t {
+    EMPTY_STRING,
+    E,
+    T,
+    ET,
+    T_E
+};
+
+extern const char * const ExtOCMFRDEntryEntriesSTStrings[12];
+constexpr size_t ExtOCMFRDEntryEntriesSTStringsMaxLength = 1;
+
+enum class ExtOCMFRDEntryEntriesST : uint8_t {
+    N,
+    G,
+    T,
+    D,
+    R,
+    M,
+    X,
+    I,
+    O,
+    S,
+    E,
+    F
+};
+
 extern const char * const GetCompositeScheduleResponseChargingScheduleChargingRateUnitStrings[2];
 constexpr size_t GetCompositeScheduleResponseChargingScheduleChargingRateUnitStringsMaxLength = 1;
 
@@ -245,6 +399,83 @@ constexpr size_t ExtSMVSignedMeterValueTypeEncodingMethodStringsMaxLength = 4;
 enum class ExtSMVSignedMeterValueTypeEncodingMethod : uint8_t {
     OCMF,
     EDL,
+    NONE_
+};
+
+extern const char * const ExtOCMFLCLUStrings[2];
+constexpr size_t ExtOCMFLCLUStringsMaxLength = 4;
+
+enum class ExtOCMFLCLU : uint8_t {
+    M_OHM,
+    U_OHM,
+    NONE_
+};
+
+extern const char * const ExtOCMFRDTXStrings[10];
+constexpr size_t ExtOCMFRDTXStringsMaxLength = 1;
+
+enum class ExtOCMFRDTX : uint8_t {
+    B,
+    C,
+    X,
+    E,
+    L,
+    R,
+    A,
+    P,
+    S,
+    T,
+    NONE_
+};
+
+extern const char * const ExtOCMFRDRUStrings[4];
+constexpr size_t ExtOCMFRDRUStringsMaxLength = 4;
+
+enum class ExtOCMFRDRU : uint8_t {
+    K_WH,
+    WH,
+    M_OHM,
+    U_OHM,
+    NONE_
+};
+
+extern const char * const ExtOCMFRDRTStrings[2];
+constexpr size_t ExtOCMFRDRTStringsMaxLength = 2;
+
+enum class ExtOCMFRDRT : uint8_t {
+    AC,
+    DC,
+    NONE_
+};
+
+extern const char * const ExtOCMFRDEFStrings[5];
+constexpr size_t ExtOCMFRDEFStringsMaxLength = 2;
+
+enum class ExtOCMFRDEF : uint8_t {
+    EMPTY_STRING,
+    E,
+    T,
+    ET,
+    T_E,
+    NONE_
+};
+
+extern const char * const ExtOCMFRDSTStrings[12];
+constexpr size_t ExtOCMFRDSTStringsMaxLength = 1;
+
+enum class ExtOCMFRDST : uint8_t {
+    N,
+    G,
+    T,
+    D,
+    R,
+    M,
+    X,
+    I,
+    O,
+    S,
+    E,
+    F,
     NONE_
 };
 
@@ -354,7 +585,7 @@ enum class SampledValueUnit : uint8_t {
     NONE_
 };
 
-extern const char * const CallActionStrings[57];
+extern const char * const CallActionStrings[58];
 constexpr size_t CallActionStringsMaxLength = 37;
 
 enum class CallAction : uint8_t {
@@ -414,7 +645,8 @@ enum class CallAction : uint8_t {
     SET_CHARGING_PROFILE,
     TRIGGER_MESSAGE_RESPONSE,
     TRIGGER_MESSAGE,
-    EXT_SMV
+    EXT_SMV,
+    EXT_OCMF
 };
 
 
@@ -434,6 +666,261 @@ struct ICall {
     CallAction action;
     uint64_t ocppJmessageId;
     const char *ocppJcallId;
+};
+
+struct ExtOCMFRDEntryEntriesView {
+    JsonObject _obj;
+
+    const char * TM() {
+
+        return _obj["TM"].as<const char *>();
+    }
+
+    Option<ExtOCMFRDEntryEntriesTX> TX() {
+        if (!_obj.containsKey("TX"))
+                return {};
+
+        return Option<ExtOCMFRDEntryEntriesTX>{(ExtOCMFRDEntryEntriesTX)_obj["TX"].as<size_t>()};
+    }
+
+    float RV() {
+
+        return _obj["RV"].as<float>();
+    }
+
+    Option<const char *> RI() {
+        if (!_obj.containsKey("RI"))
+                return {};
+
+        return _obj["RI"].as<const char *>();
+    }
+
+    ExtOCMFRDEntryEntriesRU RU() {
+
+        return (ExtOCMFRDEntryEntriesRU)_obj["RU"].as<size_t>();
+    }
+
+    Option<ExtOCMFRDEntryEntriesRT> RT() {
+        if (!_obj.containsKey("RT"))
+                return {};
+
+        return Option<ExtOCMFRDEntryEntriesRT>{(ExtOCMFRDEntryEntriesRT)_obj["RT"].as<size_t>()};
+    }
+
+    Option<float> CL() {
+        if (!_obj.containsKey("CL"))
+                return {};
+
+        return _obj["CL"].as<float>();
+    }
+
+    Option<ExtOCMFRDEntryEntriesEF> EF() {
+        if (!_obj.containsKey("EF"))
+                return {};
+
+        return Option<ExtOCMFRDEntryEntriesEF>{(ExtOCMFRDEntryEntriesEF)_obj["EF"].as<size_t>()};
+    }
+
+    ExtOCMFRDEntryEntriesST ST() {
+
+        return (ExtOCMFRDEntryEntriesST)_obj["ST"].as<size_t>();
+    }
+
+};
+
+struct ExtOCMFLCEntriesView {
+    JsonObject _obj;
+
+    Option<const char *> LN() {
+        if (!_obj.containsKey("LN"))
+                return {};
+
+        return _obj["LN"].as<const char *>();
+    }
+
+    Option<int32_t> LI() {
+        if (!_obj.containsKey("LI"))
+                return {};
+
+        return _obj["LI"].as<int32_t>();
+    }
+
+    float LR() {
+
+        return _obj["LR"].as<float>();
+    }
+
+    ExtOCMFLCEntriesLU LU() {
+
+        return (ExtOCMFLCEntriesLU)_obj["LU"].as<size_t>();
+    }
+
+};
+
+struct ExtOCMFView {
+    JsonObject _obj;
+
+    Option<const char *> FV() {
+        if (!_obj.containsKey("FV"))
+                return {};
+
+        return _obj["FV"].as<const char *>();
+    }
+
+    Option<const char *> GI() {
+        if (!_obj.containsKey("GI"))
+                return {};
+
+        return _obj["GI"].as<const char *>();
+    }
+
+    Option<const char *> GS() {
+        if (!_obj.containsKey("GS"))
+                return {};
+
+        return _obj["GS"].as<const char *>();
+    }
+
+    Option<const char *> GV() {
+        if (!_obj.containsKey("GV"))
+                return {};
+
+        return _obj["GV"].as<const char *>();
+    }
+
+    const char * PG() {
+
+        return _obj["PG"].as<const char *>();
+    }
+
+    Option<const char *> MV() {
+        if (!_obj.containsKey("MV"))
+                return {};
+
+        return _obj["MV"].as<const char *>();
+    }
+
+    Option<const char *> MM() {
+        if (!_obj.containsKey("MM"))
+                return {};
+
+        return _obj["MM"].as<const char *>();
+    }
+
+    const char * MS() {
+
+        return _obj["MS"].as<const char *>();
+    }
+
+    Option<const char *> MF() {
+        if (!_obj.containsKey("MF"))
+                return {};
+
+        return _obj["MF"].as<const char *>();
+    }
+
+    bool IS() {
+
+        return _obj["IS"].as<bool>();
+    }
+
+    Option<ExtOCMFIL> IL() {
+        if (!_obj.containsKey("IL"))
+                return {};
+
+        return Option<ExtOCMFIL>{(ExtOCMFIL)_obj["IL"].as<size_t>()};
+    }
+
+    size_t IF_count() {
+        if (!_obj.containsKey("IF"))
+                return {};
+
+        return _obj["IF"].size();
+    }
+
+    Option<ExtOCMFIFEntry> IF(size_t i) {
+        if (!_obj.containsKey("IF"))
+                return {};
+
+        return (ExtOCMFIFEntry)_obj["IF"][i].as<size_t>();
+    }
+
+    ExtOCMFIT IT() {
+
+        return (ExtOCMFIT)_obj["IT"].as<size_t>();
+    }
+
+    Option<const char *> ID() {
+        if (!_obj.containsKey("ID"))
+                return {};
+
+        return _obj["ID"].as<const char *>();
+    }
+
+    Option<const char *> TT() {
+        if (!_obj.containsKey("TT"))
+                return {};
+
+        return _obj["TT"].as<const char *>();
+    }
+
+    Option<const char *> CF() {
+        if (!_obj.containsKey("CF"))
+                return {};
+
+        return _obj["CF"].as<const char *>();
+    }
+
+    Option<ExtOCMFLCEntriesView> LC() {
+        if (!_obj.containsKey("LC"))
+                return {};
+
+        return Option<ExtOCMFLCEntriesView>{ExtOCMFLCEntriesView{_obj["LC"].as<JsonObject>()}};
+    }
+
+    Option<ExtOCMFCT> CT() {
+        if (!_obj.containsKey("CT"))
+                return {};
+
+        return Option<ExtOCMFCT>{(ExtOCMFCT)_obj["CT"].as<size_t>()};
+    }
+
+    Option<const char *> CI() {
+        if (!_obj.containsKey("CI"))
+                return {};
+
+        return _obj["CI"].as<const char *>();
+    }
+
+    size_t RD_count() {
+        return _obj["RD"].size();
+    }
+
+    ExtOCMFRDEntryEntriesView RD(size_t i) {
+        return ExtOCMFRDEntryEntriesView{_obj["RD"][i]};
+    }
+
+    Option<int32_t> WTF_connector_id() {
+        if (!_obj.containsKey("WTF_connector_id"))
+                return {};
+
+        return _obj["WTF_connector_id"].as<int32_t>();
+    }
+
+    Option<time_t> WTF_unix_time() {
+        if (!_obj.containsKey("WTF_unix_time"))
+                return {};
+
+        return _obj["WTF_unix_time"].as<time_t>();
+    }
+
+    Option<ExtOCMFWTF_signature_encoding> WTF_signature_encoding() {
+        if (!_obj.containsKey("WTF_signature_encoding"))
+                return {};
+
+        return Option<ExtOCMFWTF_signature_encoding>{(ExtOCMFWTF_signature_encoding)_obj["WTF_signature_encoding"].as<size_t>()};
+    }
+
 };
 
 struct SetChargingProfileCsChargingProfilesEntriesChargingScheduleEntriesChargingSchedulePeriodEntryEntriesView {
@@ -481,12 +968,10 @@ struct SetChargingProfileCsChargingProfilesEntriesChargingScheduleEntriesView {
     }
 
     size_t chargingSchedulePeriod_count() {
-
         return _obj["chargingSchedulePeriod"].size();
     }
 
     SetChargingProfileCsChargingProfilesEntriesChargingScheduleEntriesChargingSchedulePeriodEntryEntriesView chargingSchedulePeriod(size_t i) {
-
         return SetChargingProfileCsChargingProfilesEntriesChargingScheduleEntriesChargingSchedulePeriodEntryEntriesView{_obj["chargingSchedulePeriod"][i]};
     }
 
@@ -782,12 +1267,10 @@ struct RemoteStartTransactionChargingProfileEntriesChargingScheduleEntriesView {
     }
 
     size_t chargingSchedulePeriod_count() {
-
         return _obj["chargingSchedulePeriod"].size();
     }
 
     RemoteStartTransactionChargingProfileEntriesChargingScheduleEntriesChargingSchedulePeriodEntryEntriesView chargingSchedulePeriod(size_t i) {
-
         return RemoteStartTransactionChargingProfileEntriesChargingScheduleEntriesChargingSchedulePeriodEntryEntriesView{_obj["chargingSchedulePeriod"][i]};
     }
 
@@ -1060,6 +1543,29 @@ struct MeterValueSampledValue {
     SampledValuePhase phase = SampledValuePhase::NONE_;
     SampledValueLocation location = SampledValueLocation::NONE_;
     SampledValueUnit unit = SampledValueUnit::NONE_;
+
+    void serializeInto(TFJsonSerializer &json);
+};
+
+struct ExtOCMFRD {
+    const char *TM;
+    ExtOCMFRDTX TX = ExtOCMFRDTX::NONE_;
+    float RV;
+    const char *RI = nullptr;
+    ExtOCMFRDRU RU;
+    ExtOCMFRDRT RT = ExtOCMFRDRT::NONE_;
+    float CL = OCPP_DECIMAL_NOT_PASSED;
+    ExtOCMFRDEF EF = ExtOCMFRDEF::NONE_;
+    ExtOCMFRDST ST;
+
+    void serializeInto(TFJsonSerializer &json);
+};
+
+struct ExtOCMFLC {
+    const char *LN = nullptr;
+    int32_t LI = OCPP_INTEGER_NOT_PASSED;
+    float LR;
+    ExtOCMFLCLU LU;
 
     void serializeInto(TFJsonSerializer &json);
 };
@@ -1429,6 +1935,62 @@ struct ExtSMV final : public ICall {
     size_t serializeJson(char *buf, size_t buf_len) const override;
 };
 
+struct ExtOCMF final : public ICall {
+    const char *FV;
+    const char *GI;
+    const char *GS;
+    const char *GV;
+    const char *PG;
+    const char *MV;
+    const char *MM;
+    const char *MS;
+    const char *MF;
+    bool IS;
+    ExtOCMFIL IL;
+    ExtOCMFIFEntry *IF; size_t IF_length;
+    ExtOCMFIT IT;
+    const char *ID;
+    const char *TT;
+    const char *CF;
+    ExtOCMFLC *LC;
+    ExtOCMFCT CT;
+    const char *CI;
+    ExtOCMFRD *RD; size_t RD_length;
+    int32_t WTF_connector_id;
+    time_t WTF_unix_time;
+    ExtOCMFWTF_signature_encoding WTF_signature_encoding;
+
+    ExtOCMF(const char *PG,
+        const char *MS,
+        bool IS,
+        ExtOCMFIT IT,
+        ExtOCMFRD *RD, size_t RD_length,
+        const char *FV = nullptr,
+        const char GI[42] = nullptr,
+        const char GS[26] = nullptr,
+        const char GV[51] = nullptr,
+        const char *MV = nullptr,
+        const char *MM = nullptr,
+        const char *MF = nullptr,
+        ExtOCMFIL IL = ExtOCMFIL::NONE_,
+        ExtOCMFIFEntry *IF = nullptr, size_t IF_length = 0,
+        const char *ID = nullptr,
+        const char TT[251] = nullptr,
+        const char CF[26] = nullptr,
+        ExtOCMFLC *LC = nullptr,
+        ExtOCMFCT CT = ExtOCMFCT::NONE_,
+        const char CI[21] = nullptr,
+        int32_t WTF_connector_id = OCPP_INTEGER_NOT_PASSED,
+        time_t WTF_unix_time = OCPP_DATETIME_NOT_PASSED,
+        ExtOCMFWTF_signature_encoding WTF_signature_encoding = ExtOCMFWTF_signature_encoding::NONE_);
+    ExtOCMF(const ExtOCMF&) = delete;
+    ExtOCMF &operator=(const ExtOCMF&) = delete;
+    ExtOCMF(ExtOCMF&&) = default;
+    ExtOCMF& operator=(ExtOCMF&&) = default;
+
+    size_t serializeJson(char *buf, size_t buf_len) const override;
+};
+
 CallResponse parseAuthorizeResponse(JsonObject obj);
 
 CallResponse parseBootNotificationResponse(JsonObject obj);
@@ -1468,6 +2030,8 @@ CallResponse parseClearChargingProfile(JsonObject obj);
 CallResponse parseGetCompositeSchedule(JsonObject obj);
 
 CallResponse parseSetChargingProfile(JsonObject obj);
+
+CallResponse parseExtOCMF(JsonObject obj);
 
 CallResponse callResultHandler(int32_t connectorId, CallAction resultTo, JsonObject obj, OcppChargePoint *cp);
 

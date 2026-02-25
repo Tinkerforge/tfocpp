@@ -173,6 +173,123 @@ constexpr const char * const SetChargingProfileResponseStatusStrings[3] = {
     "NotSupported"
 };
 
+constexpr const char * const ExtOCMFILStrings[10] = {
+    "NONE",
+    "HEARSAY",
+    "TRUSTED",
+    "VERIFIED",
+    "CERTIFIED",
+    "SECURE",
+    "MISMATCH",
+    "INVALID",
+    "OUTDATED",
+    "UNKNOWN"
+};
+
+constexpr const char * const ExtOCMFITStrings[18] = {
+    "NONE",
+    "DENIED",
+    "UNDEFINED",
+    "ISO14443",
+    "ISO15693",
+    "EMAID",
+    "EVCCID",
+    "EVCOID",
+    "ISO7812",
+    "CARD_TXN_NR",
+    "CENTRAL",
+    "CENTRAL_1",
+    "CENTRAL_2",
+    "LOCAL",
+    "LOCAL_1",
+    "LOCAL_2",
+    "PHONE_NUMBER",
+    "KEY_CODE"
+};
+
+constexpr const char * const ExtOCMFCTStrings[2] = {
+    "EVSEID",
+    "CBIDC"
+};
+
+constexpr const char * const ExtOCMFWTF_signature_encodingStrings[2] = {
+    "BASE16",
+    "BASE64"
+};
+
+constexpr const char * const ExtOCMFIFEntryStrings[17] = {
+    "RFID_NONE",
+    "RFID_PLAIN",
+    "RFID_RELATED",
+    "RFID_PSK",
+    "OCPP_NONE",
+    "OCPP_RS",
+    "OCPP_AUTH",
+    "OCPP_RS_TLS",
+    "OCPP_AUTH_TLS",
+    "OCPP_CACHE",
+    "OCPP_WHITELIST",
+    "OCPP_CERTIFIED",
+    "ISO15118_NONE",
+    "ISO15118_PNC",
+    "PLMN_NONE",
+    "PLMN_RING",
+    "PLMN_SMS"
+};
+
+constexpr const char * const ExtOCMFLCEntriesLUStrings[2] = {
+    "mOhm",
+    "uOhm"
+};
+
+constexpr const char * const ExtOCMFRDEntryEntriesTXStrings[10] = {
+    "B",
+    "C",
+    "X",
+    "E",
+    "L",
+    "R",
+    "A",
+    "P",
+    "S",
+    "T"
+};
+
+constexpr const char * const ExtOCMFRDEntryEntriesRUStrings[4] = {
+    "kWh",
+    "Wh",
+    "mOhm",
+    "uOhm"
+};
+
+constexpr const char * const ExtOCMFRDEntryEntriesRTStrings[2] = {
+    "AC",
+    "DC"
+};
+
+constexpr const char * const ExtOCMFRDEntryEntriesEFStrings[5] = {
+    "",
+    "E",
+    "t",
+    "Et",
+    "tE"
+};
+
+constexpr const char * const ExtOCMFRDEntryEntriesSTStrings[12] = {
+    "N",
+    "G",
+    "T",
+    "D",
+    "R",
+    "M",
+    "X",
+    "I",
+    "O",
+    "S",
+    "E",
+    "F"
+};
+
 constexpr const char * const GetCompositeScheduleResponseChargingScheduleChargingRateUnitStrings[2] = {
     "A",
     "W"
@@ -192,6 +309,59 @@ constexpr const char * const ExtSMVSignedMeterValueTypeSigningMethodStrings[8] =
 constexpr const char * const ExtSMVSignedMeterValueTypeEncodingMethodStrings[2] = {
     "OCMF",
     "EDL"
+};
+
+constexpr const char * const ExtOCMFLCLUStrings[2] = {
+    "mOhm",
+    "uOhm"
+};
+
+constexpr const char * const ExtOCMFRDTXStrings[10] = {
+    "B",
+    "C",
+    "X",
+    "E",
+    "L",
+    "R",
+    "A",
+    "P",
+    "S",
+    "T"
+};
+
+constexpr const char * const ExtOCMFRDRUStrings[4] = {
+    "kWh",
+    "Wh",
+    "mOhm",
+    "uOhm"
+};
+
+constexpr const char * const ExtOCMFRDRTStrings[2] = {
+    "AC",
+    "DC"
+};
+
+constexpr const char * const ExtOCMFRDEFStrings[5] = {
+    "",
+    "E",
+    "t",
+    "Et",
+    "tE"
+};
+
+constexpr const char * const ExtOCMFRDSTStrings[12] = {
+    "N",
+    "G",
+    "T",
+    "D",
+    "R",
+    "M",
+    "X",
+    "I",
+    "O",
+    "S",
+    "E",
+    "F"
 };
 
 constexpr const char * const SampledValueContextStrings[8] = {
@@ -276,7 +446,7 @@ constexpr const char * const SampledValueUnitStrings[17] = {
     "Percent"
 };
 
-constexpr const char * const CallActionStrings[57] = {
+constexpr const char * const CallActionStrings[58] = {
     "Authorize",
     "BootNotification",
     "ChangeAvailabilityResponse",
@@ -333,7 +503,8 @@ constexpr const char * const CallActionStrings[57] = {
     "SetChargingProfile",
     "TriggerMessageResponse",
     "TriggerMessage",
-    "ExtSMV"
+    "ExtSMV",
+    "ExtOCMF"
 };
 
 
@@ -361,6 +532,25 @@ void ExtSMVSignedMeterValueType::serializeInto(TFJsonSerializer &json) {
         if (signingMethod != ExtSMVSignedMeterValueTypeSigningMethod::NONE_) json.addMemberString("signingMethod", ExtSMVSignedMeterValueTypeSigningMethodStrings[(size_t)signingMethod]);
         if (encodingMethod != ExtSMVSignedMeterValueTypeEncodingMethod::NONE_) json.addMemberString("encodingMethod", ExtSMVSignedMeterValueTypeEncodingMethodStrings[(size_t)encodingMethod]);
         if (publicKey != nullptr) json.addMemberString("publicKey", publicKey);
+    }
+
+void ExtOCMFLC::serializeInto(TFJsonSerializer &json) {
+        if (LN != nullptr) json.addMemberString("LN", LN);
+        if (LI != OCPP_INTEGER_NOT_PASSED) json.addMemberNumber("LI", LI);
+        if (!isnan(LR)) json.addMemberNumber("LR", LR, "%.1f");
+        if (LU != ExtOCMFLCLU::NONE_) json.addMemberString("LU", ExtOCMFLCLUStrings[(size_t)LU]);
+    }
+
+void ExtOCMFRD::serializeInto(TFJsonSerializer &json) {
+        if (TM != nullptr) json.addMemberString("TM", TM);
+        if (TX != ExtOCMFRDTX::NONE_) json.addMemberString("TX", ExtOCMFRDTXStrings[(size_t)TX]);
+        if (!isnan(RV)) json.addMemberNumber("RV", RV, "%.1f");
+        if (RI != nullptr) json.addMemberString("RI", RI);
+        if (RU != ExtOCMFRDRU::NONE_) json.addMemberString("RU", ExtOCMFRDRUStrings[(size_t)RU]);
+        if (RT != ExtOCMFRDRT::NONE_) json.addMemberString("RT", ExtOCMFRDRTStrings[(size_t)RT]);
+        if (!isnan(CL)) json.addMemberNumber("CL", CL, "%.1f");
+        if (EF != ExtOCMFRDEF::NONE_) json.addMemberString("EF", ExtOCMFRDEFStrings[(size_t)EF]);
+        if (ST != ExtOCMFRDST::NONE_) json.addMemberString("ST", ExtOCMFRDSTStrings[(size_t)ST]);
     }
 
 void MeterValueSampledValue::serializeInto(TFJsonSerializer &json) {
@@ -886,6 +1076,93 @@ size_t ExtSMV::serializeJson(char *buf, size_t buf_len) const {
 
         json.addObject();
             if (signedMeterValueType != nullptr) { json.addMemberObject("signedMeterValueType"); signedMeterValueType->serializeInto(json); json.endObject(); }
+        json.endObject();
+    json.endArray();
+
+    return json.end();
+}
+
+ExtOCMF::ExtOCMF(const char *PG,
+        const char *MS,
+        bool IS,
+        ExtOCMFIT IT,
+        ExtOCMFRD *RD, size_t RD_length,
+        const char *FV,
+        const char GI[42],
+        const char GS[26],
+        const char GV[51],
+        const char *MV,
+        const char *MM,
+        const char *MF,
+        ExtOCMFIL IL,
+        ExtOCMFIFEntry *IF, size_t IF_length,
+        const char *ID,
+        const char TT[251],
+        const char CF[26],
+        ExtOCMFLC *LC,
+        ExtOCMFCT CT,
+        const char CI[21],
+        int32_t WTF_connector_id,
+        time_t WTF_unix_time,
+        ExtOCMFWTF_signature_encoding WTF_signature_encoding) :
+    ICall(CallAction::EXT_OCMF, next_call_id++),
+    FV(FV),
+    GI(GI),
+    GS(GS),
+    GV(GV),
+    PG(PG),
+    MV(MV),
+    MM(MM),
+    MS(MS),
+    MF(MF),
+    IS(IS),
+    IL(IL),
+    IF(IF),
+    IF_length(IF_length),
+    IT(IT),
+    ID(ID),
+    TT(TT),
+    CF(CF),
+    LC(LC),
+    CT(CT),
+    CI(CI),
+    RD(RD),
+    RD_length(RD_length),
+    WTF_connector_id(WTF_connector_id),
+    WTF_unix_time(WTF_unix_time),
+    WTF_signature_encoding(WTF_signature_encoding)
+{}
+
+size_t ExtOCMF::serializeJson(char *buf, size_t buf_len) const {
+    TFJsonSerializer json{buf, buf_len};
+    json.addArray();
+        json.addNumber((int32_t)OcppRpcMessageType::CALL);
+        json.addNumber(this->ocppJmessageId, true);
+        json.addString(CallActionStrings[(size_t)this->action]);
+        json.addObject();
+            if (FV != nullptr) json.addMemberString("FV", FV);
+            if (GI != nullptr) json.addMemberString("GI", GI);
+            if (GS != nullptr) json.addMemberString("GS", GS);
+            if (GV != nullptr) json.addMemberString("GV", GV);
+            if (PG != nullptr) json.addMemberString("PG", PG);
+            if (MV != nullptr) json.addMemberString("MV", MV);
+            if (MM != nullptr) json.addMemberString("MM", MM);
+            if (MS != nullptr) json.addMemberString("MS", MS);
+            if (MF != nullptr) json.addMemberString("MF", MF);
+            json.addMemberBoolean("IS", IS);
+            if (IL != ExtOCMFIL::NONE_) json.addMemberString("IL", ExtOCMFILStrings[(size_t)IL]);
+            if (IF != nullptr) { json.addMemberArray("IF"); for(size_t i = 0; i < IF_length; ++i) { json.addString(ExtOCMFIFEntryStrings[(size_t)IF[i]]); } json.endArray(); }
+            if (IT != ExtOCMFIT::NONE_) json.addMemberString("IT", ExtOCMFITStrings[(size_t)IT]);
+            if (ID != nullptr) json.addMemberString("ID", ID);
+            if (TT != nullptr) json.addMemberString("TT", TT);
+            if (CF != nullptr) json.addMemberString("CF", CF);
+            if (LC != nullptr) { json.addMemberObject("LC"); LC->serializeInto(json); json.endObject(); }
+            if (CT != ExtOCMFCT::NONE_) json.addMemberString("CT", ExtOCMFCTStrings[(size_t)CT]);
+            if (CI != nullptr) json.addMemberString("CI", CI);
+            if (RD != nullptr) { json.addMemberArray("RD"); for(size_t i = 0; i < RD_length; ++i) { json.addObject(); RD[i].serializeInto(json); json.endObject(); } json.endArray(); }
+            if (WTF_connector_id != OCPP_INTEGER_NOT_PASSED) json.addMemberNumber("WTF_connector_id", WTF_connector_id);
+            if (WTF_unix_time != OCPP_DATETIME_NOT_PASSED) unix_timestamp_to_iso_string(WTF_unix_time, json, "WTF_unix_time");
+            if (WTF_signature_encoding != ExtOCMFWTF_signature_encoding::NONE_) json.addMemberString("WTF_signature_encoding", ExtOCMFWTF_signature_encodingStrings[(size_t)WTF_signature_encoding]);
         json.endObject();
     json.endArray();
 
@@ -2925,6 +3202,870 @@ CallResponse parseSetChargingProfile(JsonObject obj) {
     return CallResponse{CallErrorCode::OK, nullptr};
 }
 
+static CallResponse parseExtOCMFFV(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "FV: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseExtOCMFGI(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "GI: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 41)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "GI: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseExtOCMFGS(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "GS: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 25)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "GS: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseExtOCMFGV(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "GV: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 50)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "GV: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseExtOCMFPG(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "PG: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseExtOCMFMV(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "MV: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseExtOCMFMM(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "MM: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseExtOCMFMS(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "MS: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseExtOCMFMF(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "MF: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseExtOCMFIS(JsonVariant var) {
+
+    if (!var.is<bool>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "IS: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseExtOCMFIL(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "IL: wrong type"};
+
+    {
+        bool found = false;
+        for(size_t i = 0; i < ARRAY_SIZE(ExtOCMFILStrings); ++i) {
+            if (strcmp(var.as<const char *>(), ExtOCMFILStrings[i]) != 0)
+                continue;
+
+            var.set(i);
+            found = true;
+            break;
+        }
+
+        if (!found)
+            return CallResponse{CallErrorCode::PropertyConstraintViolation, "IL: unknown enum value received"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseExtOCMFIFEntry(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "IFEntry: wrong type"};
+
+    {
+        bool found = false;
+        for(size_t i = 0; i < ARRAY_SIZE(ExtOCMFIFEntryStrings); ++i) {
+            if (strcmp(var.as<const char *>(), ExtOCMFIFEntryStrings[i]) != 0)
+                continue;
+
+            var.set(i);
+            found = true;
+            break;
+        }
+
+        if (!found)
+            return CallResponse{CallErrorCode::PropertyConstraintViolation, "IFEntry: unknown enum value received"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseExtOCMFIF(JsonVariant var) {
+
+    if (!var.is<JsonArray>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "IF: wrong type"};
+
+    {
+        for(size_t i = 0; i < var.as<JsonArray>().size(); ++i) {
+            CallResponse inner_result = parseExtOCMFIFEntry(var[i]);
+            if (inner_result.result != CallErrorCode::OK)
+                return inner_result;
+        }
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseExtOCMFIT(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "IT: wrong type"};
+
+    {
+        bool found = false;
+        for(size_t i = 0; i < ARRAY_SIZE(ExtOCMFITStrings); ++i) {
+            if (strcmp(var.as<const char *>(), ExtOCMFITStrings[i]) != 0)
+                continue;
+
+            var.set(i);
+            found = true;
+            break;
+        }
+
+        if (!found)
+            return CallResponse{CallErrorCode::PropertyConstraintViolation, "IT: unknown enum value received"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseExtOCMFID(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "ID: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseExtOCMFTT(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "TT: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 250)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "TT: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseExtOCMFCF(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "CF: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 25)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "CF: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseExtOCMFLCEntriesLN(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "LN: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 250)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "LN: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseExtOCMFLCEntriesLI(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "LI: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseExtOCMFLCEntriesLR(JsonVariant var) {
+
+    if (!var.is<float>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "LR: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseExtOCMFLCEntriesLU(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "LU: wrong type"};
+
+    {
+        bool found = false;
+        for(size_t i = 0; i < ARRAY_SIZE(ExtOCMFLCEntriesLUStrings); ++i) {
+            if (strcmp(var.as<const char *>(), ExtOCMFLCEntriesLUStrings[i]) != 0)
+                continue;
+
+            var.set(i);
+            found = true;
+            break;
+        }
+
+        if (!found)
+            return CallResponse{CallErrorCode::PropertyConstraintViolation, "LU: unknown enum value received"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseExtOCMFLCEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (obj.containsKey("LN")) {
+    {
+        CallResponse inner_result = parseExtOCMFLCEntriesLN(obj["LN"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("LI")) {
+    {
+        CallResponse inner_result = parseExtOCMFLCEntriesLI(obj["LI"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+
+    if (!obj.containsKey("LR"))
+        return CallResponse{CallErrorCode::OccurenceConstraintViolation, "LR: required, but missing"};
+
+    {
+        CallResponse inner_result = parseExtOCMFLCEntriesLR(obj["LR"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+
+    if (!obj.containsKey("LU"))
+        return CallResponse{CallErrorCode::OccurenceConstraintViolation, "LU: required, but missing"};
+
+    {
+        CallResponse inner_result = parseExtOCMFLCEntriesLU(obj["LU"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormationViolation, "ExtOCMFLCEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseExtOCMFLC(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "LC: wrong type"};
+
+    {
+        CallResponse inner_result = parseExtOCMFLCEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseExtOCMFCT(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "CT: wrong type"};
+
+    {
+        bool found = false;
+        for(size_t i = 0; i < ARRAY_SIZE(ExtOCMFCTStrings); ++i) {
+            if (strcmp(var.as<const char *>(), ExtOCMFCTStrings[i]) != 0)
+                continue;
+
+            var.set(i);
+            found = true;
+            break;
+        }
+
+        if (!found)
+            return CallResponse{CallErrorCode::PropertyConstraintViolation, "CT: unknown enum value received"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseExtOCMFCI(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "CI: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 20)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "CI: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseExtOCMFRDEntryEntriesTM(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "TM: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 30)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "TM: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseExtOCMFRDEntryEntriesTX(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "TX: wrong type"};
+
+    {
+        bool found = false;
+        for(size_t i = 0; i < ARRAY_SIZE(ExtOCMFRDEntryEntriesTXStrings); ++i) {
+            if (strcmp(var.as<const char *>(), ExtOCMFRDEntryEntriesTXStrings[i]) != 0)
+                continue;
+
+            var.set(i);
+            found = true;
+            break;
+        }
+
+        if (!found)
+            return CallResponse{CallErrorCode::PropertyConstraintViolation, "TX: unknown enum value received"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseExtOCMFRDEntryEntriesRV(JsonVariant var) {
+
+    if (!var.is<float>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "RV: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseExtOCMFRDEntryEntriesRI(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "RI: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseExtOCMFRDEntryEntriesRU(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "RU: wrong type"};
+
+    {
+        bool found = false;
+        for(size_t i = 0; i < ARRAY_SIZE(ExtOCMFRDEntryEntriesRUStrings); ++i) {
+            if (strcmp(var.as<const char *>(), ExtOCMFRDEntryEntriesRUStrings[i]) != 0)
+                continue;
+
+            var.set(i);
+            found = true;
+            break;
+        }
+
+        if (!found)
+            return CallResponse{CallErrorCode::PropertyConstraintViolation, "RU: unknown enum value received"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseExtOCMFRDEntryEntriesRT(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "RT: wrong type"};
+
+    {
+        bool found = false;
+        for(size_t i = 0; i < ARRAY_SIZE(ExtOCMFRDEntryEntriesRTStrings); ++i) {
+            if (strcmp(var.as<const char *>(), ExtOCMFRDEntryEntriesRTStrings[i]) != 0)
+                continue;
+
+            var.set(i);
+            found = true;
+            break;
+        }
+
+        if (!found)
+            return CallResponse{CallErrorCode::PropertyConstraintViolation, "RT: unknown enum value received"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseExtOCMFRDEntryEntriesCL(JsonVariant var) {
+
+    if (!var.is<float>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "CL: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseExtOCMFRDEntryEntriesEF(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "EF: wrong type"};
+
+    {
+        bool found = false;
+        for(size_t i = 0; i < ARRAY_SIZE(ExtOCMFRDEntryEntriesEFStrings); ++i) {
+            if (strcmp(var.as<const char *>(), ExtOCMFRDEntryEntriesEFStrings[i]) != 0)
+                continue;
+
+            var.set(i);
+            found = true;
+            break;
+        }
+
+        if (!found)
+            return CallResponse{CallErrorCode::PropertyConstraintViolation, "EF: unknown enum value received"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseExtOCMFRDEntryEntriesST(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "ST: wrong type"};
+
+    {
+        bool found = false;
+        for(size_t i = 0; i < ARRAY_SIZE(ExtOCMFRDEntryEntriesSTStrings); ++i) {
+            if (strcmp(var.as<const char *>(), ExtOCMFRDEntryEntriesSTStrings[i]) != 0)
+                continue;
+
+            var.set(i);
+            found = true;
+            break;
+        }
+
+        if (!found)
+            return CallResponse{CallErrorCode::PropertyConstraintViolation, "ST: unknown enum value received"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseExtOCMFRDEntryEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (!obj.containsKey("TM"))
+        return CallResponse{CallErrorCode::OccurenceConstraintViolation, "TM: required, but missing"};
+
+    {
+        CallResponse inner_result = parseExtOCMFRDEntryEntriesTM(obj["TM"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("TX")) {
+    {
+        CallResponse inner_result = parseExtOCMFRDEntryEntriesTX(obj["TX"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+
+    if (!obj.containsKey("RV"))
+        return CallResponse{CallErrorCode::OccurenceConstraintViolation, "RV: required, but missing"};
+
+    {
+        CallResponse inner_result = parseExtOCMFRDEntryEntriesRV(obj["RV"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("RI")) {
+    {
+        CallResponse inner_result = parseExtOCMFRDEntryEntriesRI(obj["RI"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+
+    if (!obj.containsKey("RU"))
+        return CallResponse{CallErrorCode::OccurenceConstraintViolation, "RU: required, but missing"};
+
+    {
+        CallResponse inner_result = parseExtOCMFRDEntryEntriesRU(obj["RU"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("RT")) {
+    {
+        CallResponse inner_result = parseExtOCMFRDEntryEntriesRT(obj["RT"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("CL")) {
+    {
+        CallResponse inner_result = parseExtOCMFRDEntryEntriesCL(obj["CL"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("EF")) {
+    {
+        CallResponse inner_result = parseExtOCMFRDEntryEntriesEF(obj["EF"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+
+    if (!obj.containsKey("ST"))
+        return CallResponse{CallErrorCode::OccurenceConstraintViolation, "ST: required, but missing"};
+
+    {
+        CallResponse inner_result = parseExtOCMFRDEntryEntriesST(obj["ST"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormationViolation, "ExtOCMFRDEntryEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseExtOCMFRDEntry(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "RDEntry: wrong type"};
+
+    {
+        CallResponse inner_result = parseExtOCMFRDEntryEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseExtOCMFRD(JsonVariant var) {
+
+    if (!var.is<JsonArray>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "RD: wrong type"};
+
+    {
+        for(size_t i = 0; i < var.as<JsonArray>().size(); ++i) {
+            CallResponse inner_result = parseExtOCMFRDEntry(var[i]);
+            if (inner_result.result != CallErrorCode::OK)
+                return inner_result;
+        }
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseExtOCMFWTF_connector_id(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "WTF_connector_id: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseExtOCMFWTF_unix_time(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "WTF_unix_time: wrong type"};
+
+    {
+        time_t result;
+        if (!iso_string_to_unix_timestamp(var.as<const char *>(), &result))
+            return CallResponse{CallErrorCode::TypeConstraintViolation, "WTF_unix_time: failed to parse as ISO 8601 date-time string"};
+
+        var.set(result);
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseExtOCMFWTF_signature_encoding(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "WTF_signature_encoding: wrong type"};
+
+    {
+        bool found = false;
+        for(size_t i = 0; i < ARRAY_SIZE(ExtOCMFWTF_signature_encodingStrings); ++i) {
+            if (strcmp(var.as<const char *>(), ExtOCMFWTF_signature_encodingStrings[i]) != 0)
+                continue;
+
+            var.set(i);
+            found = true;
+            break;
+        }
+
+        if (!found)
+            return CallResponse{CallErrorCode::PropertyConstraintViolation, "WTF_signature_encoding: unknown enum value received"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+CallResponse parseExtOCMF(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (obj.containsKey("FV")) {
+    {
+        CallResponse inner_result = parseExtOCMFFV(obj["FV"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("GI")) {
+    {
+        CallResponse inner_result = parseExtOCMFGI(obj["GI"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("GS")) {
+    {
+        CallResponse inner_result = parseExtOCMFGS(obj["GS"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("GV")) {
+    {
+        CallResponse inner_result = parseExtOCMFGV(obj["GV"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+
+    if (!obj.containsKey("PG"))
+        return CallResponse{CallErrorCode::OccurenceConstraintViolation, "PG: required, but missing"};
+
+    {
+        CallResponse inner_result = parseExtOCMFPG(obj["PG"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("MV")) {
+    {
+        CallResponse inner_result = parseExtOCMFMV(obj["MV"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("MM")) {
+    {
+        CallResponse inner_result = parseExtOCMFMM(obj["MM"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+
+    if (!obj.containsKey("MS"))
+        return CallResponse{CallErrorCode::OccurenceConstraintViolation, "MS: required, but missing"};
+
+    {
+        CallResponse inner_result = parseExtOCMFMS(obj["MS"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("MF")) {
+    {
+        CallResponse inner_result = parseExtOCMFMF(obj["MF"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+
+    if (!obj.containsKey("IS"))
+        return CallResponse{CallErrorCode::OccurenceConstraintViolation, "IS: required, but missing"};
+
+    {
+        CallResponse inner_result = parseExtOCMFIS(obj["IS"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("IL")) {
+    {
+        CallResponse inner_result = parseExtOCMFIL(obj["IL"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("IF")) {
+    {
+        CallResponse inner_result = parseExtOCMFIF(obj["IF"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+
+    if (!obj.containsKey("IT"))
+        return CallResponse{CallErrorCode::OccurenceConstraintViolation, "IT: required, but missing"};
+
+    {
+        CallResponse inner_result = parseExtOCMFIT(obj["IT"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("ID")) {
+    {
+        CallResponse inner_result = parseExtOCMFID(obj["ID"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("TT")) {
+    {
+        CallResponse inner_result = parseExtOCMFTT(obj["TT"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("CF")) {
+    {
+        CallResponse inner_result = parseExtOCMFCF(obj["CF"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("LC")) {
+    {
+        CallResponse inner_result = parseExtOCMFLC(obj["LC"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("CT")) {
+    {
+        CallResponse inner_result = parseExtOCMFCT(obj["CT"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("CI")) {
+    {
+        CallResponse inner_result = parseExtOCMFCI(obj["CI"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+
+    if (!obj.containsKey("RD"))
+        return CallResponse{CallErrorCode::OccurenceConstraintViolation, "RD: required, but missing"};
+
+    {
+        CallResponse inner_result = parseExtOCMFRD(obj["RD"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("WTF_connector_id")) {
+    {
+        CallResponse inner_result = parseExtOCMFWTF_connector_id(obj["WTF_connector_id"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("WTF_unix_time")) {
+    {
+        CallResponse inner_result = parseExtOCMFWTF_unix_time(obj["WTF_unix_time"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("WTF_signature_encoding")) {
+    {
+        CallResponse inner_result = parseExtOCMFWTF_signature_encoding(obj["WTF_signature_encoding"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormationViolation, "ExtOCMF: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
 CallResponse callHandler(const char *uid, const char *action_string, JsonObject obj, OcppChargePoint *cp) {
     size_t action_idx = 0;
     if (!lookup_key(&action_idx, action_string, CallActionStrings, ARRAY_SIZE(CallActionStrings)))
@@ -3030,50 +4171,51 @@ CallResponse callHandler(const char *uid, const char *action_string, JsonObject 
         }
 
         case CallAction::AUTHORIZE:
+        case CallAction::AUTHORIZE_RESPONSE:
         case CallAction::BOOT_NOTIFICATION:
+        case CallAction::BOOT_NOTIFICATION_RESPONSE:
+        case CallAction::CANCEL_RESERVATION:
+        case CallAction::CANCEL_RESERVATION_RESPONSE:
         case CallAction::CHANGE_AVAILABILITY_RESPONSE:
         case CallAction::CHANGE_CONFIGURATION_RESPONSE:
         case CallAction::CLEAR_CACHE_RESPONSE:
+        case CallAction::CLEAR_CHARGING_PROFILE_RESPONSE:
+        case CallAction::DATA_TRANSFER_RESPONSE:
+        case CallAction::DIAGNOSTICS_STATUS_NOTIFICATION:
+        case CallAction::DIAGNOSTICS_STATUS_NOTIFICATION_RESPONSE:
+        case CallAction::EXT_OCMF:
+        case CallAction::EXT_SMV:
+        case CallAction::FIRMWARE_STATUS_NOTIFICATION:
+        case CallAction::FIRMWARE_STATUS_NOTIFICATION_RESPONSE:
+        case CallAction::GET_COMPOSITE_SCHEDULE_RESPONSE:
         case CallAction::GET_CONFIGURATION_RESPONSE:
+        case CallAction::GET_DIAGNOSTICS:
+        case CallAction::GET_DIAGNOSTICS_RESPONSE:
+        case CallAction::GET_LOCAL_LIST_VERSION:
+        case CallAction::GET_LOCAL_LIST_VERSION_RESPONSE:
         case CallAction::HEARTBEAT:
+        case CallAction::HEARTBEAT_RESPONSE:
         case CallAction::METER_VALUES:
+        case CallAction::METER_VALUES_RESPONSE:
         case CallAction::REMOTE_START_TRANSACTION_RESPONSE:
         case CallAction::REMOTE_STOP_TRANSACTION_RESPONSE:
-        case CallAction::RESET_RESPONSE:
-        case CallAction::START_TRANSACTION:
-        case CallAction::STATUS_NOTIFICATION:
-        case CallAction::STOP_TRANSACTION:
-        case CallAction::UNLOCK_CONNECTOR_RESPONSE:
-        case CallAction::AUTHORIZE_RESPONSE:
-        case CallAction::BOOT_NOTIFICATION_RESPONSE:
-        case CallAction::DATA_TRANSFER_RESPONSE:
-        case CallAction::HEARTBEAT_RESPONSE:
-        case CallAction::METER_VALUES_RESPONSE:
-        case CallAction::START_TRANSACTION_RESPONSE:
-        case CallAction::STATUS_NOTIFICATION_RESPONSE:
-        case CallAction::STOP_TRANSACTION_RESPONSE:
-        case CallAction::GET_DIAGNOSTICS_RESPONSE:
-        case CallAction::DIAGNOSTICS_STATUS_NOTIFICATION:
-        case CallAction::FIRMWARE_STATUS_NOTIFICATION:
-        case CallAction::UPDATE_FIRMWARE_RESPONSE:
-        case CallAction::GET_DIAGNOSTICS:
-        case CallAction::DIAGNOSTICS_STATUS_NOTIFICATION_RESPONSE:
-        case CallAction::FIRMWARE_STATUS_NOTIFICATION_RESPONSE:
-        case CallAction::UPDATE_FIRMWARE:
-        case CallAction::GET_LOCAL_LIST_VERSION_RESPONSE:
-        case CallAction::SEND_LOCAL_LIST_RESPONSE:
-        case CallAction::GET_LOCAL_LIST_VERSION:
-        case CallAction::SEND_LOCAL_LIST:
-        case CallAction::CANCEL_RESERVATION_RESPONSE:
-        case CallAction::RESERVE_NOW_RESPONSE:
-        case CallAction::CANCEL_RESERVATION:
         case CallAction::RESERVE_NOW:
-        case CallAction::CLEAR_CHARGING_PROFILE_RESPONSE:
-        case CallAction::GET_COMPOSITE_SCHEDULE_RESPONSE:
+        case CallAction::RESERVE_NOW_RESPONSE:
+        case CallAction::RESET_RESPONSE:
+        case CallAction::SEND_LOCAL_LIST:
+        case CallAction::SEND_LOCAL_LIST_RESPONSE:
         case CallAction::SET_CHARGING_PROFILE_RESPONSE:
-        case CallAction::TRIGGER_MESSAGE_RESPONSE:
+        case CallAction::START_TRANSACTION:
+        case CallAction::START_TRANSACTION_RESPONSE:
+        case CallAction::STATUS_NOTIFICATION:
+        case CallAction::STATUS_NOTIFICATION_RESPONSE:
+        case CallAction::STOP_TRANSACTION:
+        case CallAction::STOP_TRANSACTION_RESPONSE:
         case CallAction::TRIGGER_MESSAGE:
-        case CallAction::EXT_SMV:
+        case CallAction::TRIGGER_MESSAGE_RESPONSE:
+        case CallAction::UNLOCK_CONNECTOR_RESPONSE:
+        case CallAction::UPDATE_FIRMWARE:
+        case CallAction::UPDATE_FIRMWARE_RESPONSE:
             return CallResponse{CallErrorCode::NotSupported, "action not supported"};
     }
 
@@ -3147,55 +4289,56 @@ CallResponse callResultHandler(int32_t connectorId, CallAction resultTo, JsonObj
             return cp->handleStopTransactionResponse(connectorId, StopTransactionResponseView{obj});
         }
 
-        case CallAction::CHANGE_AVAILABILITY_RESPONSE:
-        case CallAction::CHANGE_CONFIGURATION_RESPONSE:
-        case CallAction::CLEAR_CACHE_RESPONSE:
-        case CallAction::GET_CONFIGURATION_RESPONSE:
-        case CallAction::REMOTE_START_TRANSACTION_RESPONSE:
-        case CallAction::REMOTE_STOP_TRANSACTION_RESPONSE:
-        case CallAction::RESET_RESPONSE:
-        case CallAction::UNLOCK_CONNECTOR_RESPONSE:
         case CallAction::AUTHORIZE_RESPONSE:
         case CallAction::BOOT_NOTIFICATION_RESPONSE:
+        case CallAction::CANCEL_RESERVATION:
+        case CallAction::CANCEL_RESERVATION_RESPONSE:
         case CallAction::CHANGE_AVAILABILITY:
+        case CallAction::CHANGE_AVAILABILITY_RESPONSE:
         case CallAction::CHANGE_CONFIGURATION:
+        case CallAction::CHANGE_CONFIGURATION_RESPONSE:
         case CallAction::CLEAR_CACHE:
+        case CallAction::CLEAR_CACHE_RESPONSE:
+        case CallAction::CLEAR_CHARGING_PROFILE:
+        case CallAction::CLEAR_CHARGING_PROFILE_RESPONSE:
         case CallAction::DATA_TRANSFER_RESPONSE:
+        case CallAction::DIAGNOSTICS_STATUS_NOTIFICATION:
+        case CallAction::DIAGNOSTICS_STATUS_NOTIFICATION_RESPONSE:
+        case CallAction::EXT_OCMF:
+        case CallAction::EXT_SMV:
+        case CallAction::FIRMWARE_STATUS_NOTIFICATION:
+        case CallAction::FIRMWARE_STATUS_NOTIFICATION_RESPONSE:
+        case CallAction::GET_COMPOSITE_SCHEDULE:
+        case CallAction::GET_COMPOSITE_SCHEDULE_RESPONSE:
         case CallAction::GET_CONFIGURATION:
+        case CallAction::GET_CONFIGURATION_RESPONSE:
+        case CallAction::GET_DIAGNOSTICS:
+        case CallAction::GET_DIAGNOSTICS_RESPONSE:
+        case CallAction::GET_LOCAL_LIST_VERSION:
+        case CallAction::GET_LOCAL_LIST_VERSION_RESPONSE:
         case CallAction::HEARTBEAT_RESPONSE:
         case CallAction::METER_VALUES_RESPONSE:
         case CallAction::REMOTE_START_TRANSACTION:
+        case CallAction::REMOTE_START_TRANSACTION_RESPONSE:
         case CallAction::REMOTE_STOP_TRANSACTION:
+        case CallAction::REMOTE_STOP_TRANSACTION_RESPONSE:
+        case CallAction::RESERVE_NOW:
+        case CallAction::RESERVE_NOW_RESPONSE:
         case CallAction::RESET:
+        case CallAction::RESET_RESPONSE:
+        case CallAction::SEND_LOCAL_LIST:
+        case CallAction::SEND_LOCAL_LIST_RESPONSE:
+        case CallAction::SET_CHARGING_PROFILE:
+        case CallAction::SET_CHARGING_PROFILE_RESPONSE:
         case CallAction::START_TRANSACTION_RESPONSE:
         case CallAction::STATUS_NOTIFICATION_RESPONSE:
         case CallAction::STOP_TRANSACTION_RESPONSE:
-        case CallAction::UNLOCK_CONNECTOR:
-        case CallAction::GET_DIAGNOSTICS_RESPONSE:
-        case CallAction::DIAGNOSTICS_STATUS_NOTIFICATION:
-        case CallAction::FIRMWARE_STATUS_NOTIFICATION:
-        case CallAction::UPDATE_FIRMWARE_RESPONSE:
-        case CallAction::GET_DIAGNOSTICS:
-        case CallAction::DIAGNOSTICS_STATUS_NOTIFICATION_RESPONSE:
-        case CallAction::FIRMWARE_STATUS_NOTIFICATION_RESPONSE:
-        case CallAction::UPDATE_FIRMWARE:
-        case CallAction::GET_LOCAL_LIST_VERSION_RESPONSE:
-        case CallAction::SEND_LOCAL_LIST_RESPONSE:
-        case CallAction::GET_LOCAL_LIST_VERSION:
-        case CallAction::SEND_LOCAL_LIST:
-        case CallAction::CANCEL_RESERVATION_RESPONSE:
-        case CallAction::RESERVE_NOW_RESPONSE:
-        case CallAction::CANCEL_RESERVATION:
-        case CallAction::RESERVE_NOW:
-        case CallAction::CLEAR_CHARGING_PROFILE_RESPONSE:
-        case CallAction::GET_COMPOSITE_SCHEDULE_RESPONSE:
-        case CallAction::SET_CHARGING_PROFILE_RESPONSE:
-        case CallAction::CLEAR_CHARGING_PROFILE:
-        case CallAction::GET_COMPOSITE_SCHEDULE:
-        case CallAction::SET_CHARGING_PROFILE:
-        case CallAction::TRIGGER_MESSAGE_RESPONSE:
         case CallAction::TRIGGER_MESSAGE:
-        case CallAction::EXT_SMV:
+        case CallAction::TRIGGER_MESSAGE_RESPONSE:
+        case CallAction::UNLOCK_CONNECTOR:
+        case CallAction::UNLOCK_CONNECTOR_RESPONSE:
+        case CallAction::UPDATE_FIRMWARE:
+        case CallAction::UPDATE_FIRMWARE_RESPONSE:
             return CallResponse{CallErrorCode::NotSupported, "action not supported"};
     }
 

@@ -24,6 +24,10 @@
 #define OCPP_RECONNECT_WEBSOCKET_INTERVAL_S 60
 #endif
 
+#ifndef OCPP_MAX_FILE_LEN
+#define OCPP_MAX_FILE_LEN 16384ul
+#endif
+
 // Default configuration
 
 #ifndef OCPP_DEFAULT_ALLOW_OFFLINE_TX_FOR_UNKNOWN_ID

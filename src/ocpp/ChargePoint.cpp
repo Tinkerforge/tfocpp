@@ -8,6 +8,7 @@
 
 #include "Persistency.h"
 #include "Tools.h"
+#include "SignedMeterValueHelper.h"
 
 #include <limits>
 #include <array>
@@ -74,14 +75,378 @@ void OcppChargePoint::tick_soft_reset() {
     platform_reset(false);
 }
 
-void OcppChargePoint::tick_flush_persistent_messages() {
+struct OcmfInOcppParseResult {
+    OcmfInOcppParseResult(DynamicJsonDocument &&doc_) : doc(std::move(doc_)) {}
+    OcmfInOcppParseResult() = default;
+    DynamicJsonDocument doc{0};
+    ExtOCMFView get_view() { return ExtOCMFView{doc.as<JsonArray>()[3].as<JsonObject>()}; }
+};
+
+
+static Option<OcmfInOcppParseResult> parseOcmfInOcppCall(const char *data) {
+    // ESP32Platform's ocmf_buffer_size rounded up. (asserted there to be less than this value)
+    DynamicJsonDocument doc{1536 + 128}; // + 128 for call action wrapper
+    auto error = deserializeJson(doc, data);
+    if (error != DeserializationError::Ok) {
+        log_error("Failed to parse OCMF container payload! %s", error.c_str());
+        return {};
+    }
+
+    auto res = parseExtOCMF(doc.as<JsonArray>()[3].as<JsonObject>());
+    if (res.result != CallErrorCode::OK) {
+        log_error("Failed to parse OCMF container payload! %s: %s", CallErrorCodeStrings[(size_t)res.result], res.error_description);
+        return {};
+    }
+
+    OcmfInOcppParseResult pr{std::move(doc)};
+
+    return {std::move(pr)};
+}
+
+void OcppChargePoint::tick_recover_transactions() {
+    static bool first = true;
+
     if (connection.message_in_flight.is_valid())
+        return; // Currently waiting for the last recovered message to be confirmed by the server.
+
+    if (recover_transactions_state != RecTxnState::NONE)
         return;
 
-    if (restoreNextTxnMessage(&connection))
-        return;
+    // This is hard(tm) because multiple logs can interleave.
+    // We have to handle this correctly to ensure that all transaction related messages
+    // are sent in chronological order as required by the OCPP spec.
+    static_assert(OCPP_NUM_CONNECTORS == 1, "recovery of multiple (concurrent) transaction logs not yet implemented");
 
-    finishRestore();
+    for (int i = 0; i < OCPP_NUM_CONNECTORS; ++i) {
+        auto connector_id = i + 1;
+        size_t txn_log_length;
+        auto txn_log = txnLogRestore(connector_id, &txn_log_length);
+        if (txn_log == nullptr)
+            continue;
+
+        if (first) {
+            first = false;
+            log_warn("Last transaction on connector %d was interrupted or not sent completely to server. Restoring now.", connector_id);
+        }
+
+        if (txn_log_length == 0) {
+            log_error("Transaction log empty. Nothing to do.");
+            // Begin is the first message that is written to the transaction log.
+            // If it is missing, the file is probably empty and we can't do anything
+            // with the other entries.
+            txnLogRemove(connector_id);
+            this->setState(OcppState::Idle);
+            return;
+        }
+
+        // TODO check whether we have to send signed values and/or the platform does not support sending those.
+        bool meter_active = platform_txn_active(this->platform_ctx, connector_id);
+
+        bool seen_tags[(size_t)TxnLogTag::max_ + 1];
+        memset(seen_tags, 0, sizeof(seen_tags));
+        char *payloads[(size_t)TxnLogTag::max_ + 1];
+
+        char *saveptr = nullptr; // On some implementations, *saveptr is required to be NULL on the first call to strtok_r() that is being used to parse str.
+
+        char *line_start = strtok_r(txn_log.get(), "\n", &saveptr);
+        do {
+            if (line_start == nullptr)
+                break;
+
+            char t = *line_start;
+            if (t < 'a' || t > 'a' + (char)TxnLogTag::max_) {
+                log_error("Unexpected start of txn_log line 0x%x", (uint8_t)t);
+                this->setState(OcppState::Faulted);
+                return;
+            }
+
+            TxnLogTag tag = (TxnLogTag) (t - 'a');
+            if (seen_tags[(size_t)tag]) {
+                log_error("Duplicated txn_log entry %c", t);
+                this->setState(OcppState::Faulted);
+                return;
+            }
+
+            seen_tags[(size_t)tag] = true;
+            payloads[(size_t)tag] = line_start + 1;
+
+        } while ((line_start = strtok_r(nullptr, "\n", &saveptr)) != nullptr);
+
+        if (!seen_tags[(size_t)TxnLogTag::BEGIN]) {
+            log_error("TxnLogTag::Begin missing. Nothing to do.");
+
+            // Begin is the first message that is written to the transaction log.
+            // If it is missing, the file is probably empty and we can't do anything
+            // with the other entries.
+            txnLogRemove(connector_id);
+            this->setState(OcppState::Idle);
+            return;
+        }
+
+        auto pr = parseOcmfInOcppCall(payloads[(size_t)TxnLogTag::BEGIN]);
+
+        if (pr.is_none()) {
+            log_error("Failed to parse persisted begin OCMF");
+            this->setState(OcppState::Faulted);
+            return;
+        }
+
+        auto view = pr.unwrap().get_view();
+
+        ExtOCMFIFEntry IF[4];
+        for (int entry = 0; entry < (int)std::min(ARRAY_SIZE(IF), view.IF_count()); ++entry)
+            IF[entry] = view.IF(entry).unwrap();
+
+        ExtOCMF begin_ocmf{
+            view.PG(),
+            view.MS(),
+            view.IS(),
+            view.IT(),
+            nullptr, 0, //RD
+            view.FV().unwrap_or(nullptr),
+            view.GI().unwrap_or(nullptr),
+            view.GS().unwrap_or(nullptr),
+            view.GV().unwrap_or(nullptr),
+            view.MV().unwrap_or(nullptr),
+            view.MM().unwrap_or(nullptr),
+            view.MF().unwrap_or(nullptr),
+            view.IL().unwrap_or(ExtOCMFIL::NONE_),
+            IF, view.IF_count(),
+            view.ID().unwrap_or(nullptr),
+            view.TT().unwrap_or(nullptr),
+            view.CF().unwrap_or(nullptr),
+            nullptr, // LC
+            view.CT().unwrap_or(ExtOCMFCT::NONE_),
+            view.CI().unwrap_or(nullptr),
+            view.WTF_connector_id().unwrap_or(OCPP_INTEGER_NOT_PASSED),
+            view.WTF_unix_time().unwrap_or(OCPP_DATETIME_NOT_PASSED),
+            view.WTF_signature_encoding().unwrap_or(ExtOCMFWTF_signature_encoding::NONE_)
+        };
+
+        if (!seen_tags[(size_t)TxnLogTag::SIGNED_MV_START] && !seen_tags[(size_t)TxnLogTag::UNSIGNED_MV_START]) {
+            // Interrupted while notifying meter of transaction start
+            //
+            // RECOVERY_STOPPED_EMPTY_TXN marks that we've stopped a transaction (that should be sent out)
+            // in this recovery path,
+            // as opposed to being interrupted before the meter was notified of the txn start.
+
+            if (seen_tags[(size_t)TxnLogTag::RECOVERY_STOPPING_EMPTY_TXN]) {
+                // Interrupted while handling this recovery case
+                // -> prepare meter
+                // -> send 'r' iff meter_active or else 'i'
+                // -> wait for meter value
+                // -> persist as UNSIGNED_MV_START
+
+                auto meter_req = meter_active ? MeterRequest::END_WITH_BEGIN : MeterRequest::LAST_CHARGE_READING;
+
+                log_warn("Stopping transaction and fetching meter values.");
+                platform_prepare_meter_for_txn(this->platform_ctx, &begin_ocmf);
+                platform_request_meter_value(this->platform_ctx, begin_ocmf.WTF_connector_id, begin_ocmf.WTF_unix_time, begin_ocmf.WTF_signature_encoding, meter_req);
+                this->recover_transactions_state = RecTxnState::WAITING_FOR_METER_VALUE_START;
+                return;
+            } else {
+                if (!meter_active) {
+                    log_warn("Transaction was interrupted before meter measured start value. Nothing to do.");
+                    // Interrupted before notifying meter of transaction start.
+                    // "Officially" there was no transaction.
+                    // Also the contactor was never closed
+                    // (because persisting a meter value happens before
+                    //  creating and persisting the StartTransaction.req,
+                    //  which happens before setting the current limit to > 0)
+                    txnLogRemove(connector_id);
+                    this->setState(OcppState::Idle);
+                    return;
+                }
+
+                // Interrupted before start meter value could be fetched.
+                // Set marker and return. Behaves as if we've been interrupted again after writing the flag
+                txnLogAppend(connector_id, TxnLogTag::RECOVERY_STOPPING_EMPTY_TXN, "null", 4);
+                return;
+            }
+        }
+
+        int start_energy_wh = 0;
+        if (seen_tags[(size_t)TxnLogTag::SIGNED_MV_START]) {
+            auto opt = SMVH::parseOCMF(payloads[(size_t)TxnLogTag::SIGNED_MV_START], strlen(payloads[(size_t)TxnLogTag::SIGNED_MV_START]));
+            if (opt.is_none()) {
+                log_error("Failed to parse persisted signed meter value start OCMF");
+                this->setState(OcppState::Faulted);
+                return;
+            }
+
+            // TODO check reading count
+            start_energy_wh = SMVH::getEnergyWhFromOCMF(opt.unwrap().get_view(), 0).unwrap();
+        } else if (seen_tags[(size_t)TxnLogTag::UNSIGNED_MV_START]) {
+            // TODO error handling
+            start_energy_wh = parse_int(payloads[(size_t)TxnLogTag::UNSIGNED_MV_START]).unwrap();
+        }
+
+        if (!seen_tags[(size_t)TxnLogTag::START_TXN_REQ]) {
+            log_warn("Recreating StartTransaction.req.");
+            // Interrupted before StartTransaction.req was created
+            // -> Create, persist and send StartTransaction.req
+
+            StartTransaction msg{
+                connector_id,
+                begin_ocmf.ID,
+                start_energy_wh,
+                begin_ocmf.WTF_unix_time
+            };
+
+            txnLogAppend(connector_id, TxnLogTag::START_TXN_REQ, msg);
+            this->sendCallAction(msg, connector_id);
+            return;
+        }
+
+        if (seen_tags[(size_t)TxnLogTag::START_TXN_REQ] && !seen_tags[(size_t)TxnLogTag::TXN_ID]) {
+            // Interrupted after StartTransaction.req was created
+            // but before StartTransaction.conf was received.
+            // -> Resend StartTransaction.req
+
+            log_warn("Resending StartTransaction.req.");
+            this->sendCallAction(RestoredMessage{CallAction::START_TRANSACTION, payloads[(size_t)TxnLogTag::START_TXN_REQ]}, connector_id);
+            this->recover_transactions_state = RecTxnState::WAITING_FOR_START_TXN_CONF;
+            return;
+        }
+
+        int32_t transaction_id; {
+            auto opt = parse_int(payloads[(size_t)TxnLogTag::TXN_ID]);
+            if (opt.is_none()) {
+                log_error("Failed to parse persisted transaction ID");
+                this->setState(OcppState::Faulted);
+                return;
+            }
+            transaction_id = opt.unwrap();
+        }
+
+
+        if (seen_tags[(size_t)TxnLogTag::SIGNED_MV_START] && !seen_tags[(size_t)TxnLogTag::MV_START_REQ]) {
+            // Interrupted after StartTransaction.conf was received,
+            // but before MeterValues.req with context Transaction.Begin and signed meter value was created.
+            // -> Create, persist and send MeterValues.req
+            // We have to check for SIGNED_MV_START because if we were not configured to send the signed start value
+            // there is no MV_START_REQ to persist
+
+            log_warn("Recreating MeterValues.req with context Transaction.Begin.");
+
+            std::unique_ptr<char[]> signed_meter_value;
+            MeterValueSampledValue sv;
+            MeterValue mv;
+
+            auto msg = SMVH::buildTxnStartMeterValues(
+                connector_id,
+                transaction_id,
+                begin_ocmf.WTF_unix_time,
+                ExtSMVSignedMeterValueTypeEncodingMethod::OCMF,
+                ExtSMVSignedMeterValueTypeSigningMethod::EMPTY_STRING, // TODO: don't hardcode this
+                payloads[(size_t)TxnLogTag::SIGNED_MV_START],
+                signed_meter_value,
+                sv,
+                mv);
+
+            txnLogAppend(connector_id, TxnLogTag::MV_START_REQ, msg);
+            this->sendCallAction(msg, connector_id);
+            return;
+        }
+
+        if (seen_tags[(size_t)TxnLogTag::MV_START_REQ] && !seen_tags[(size_t)TxnLogTag::MV_START_CONFIRMED]) {
+            // Interrupted after MeterValues.req with context Transaction.Begin and signed meter value,
+            // but before receiving the MeterValues.conf.
+            // -> Resend MeterValues.req
+
+            log_warn("Resending MeterValues.req with context Transaction.Begin.");
+            this->sendCallAction(RestoredMessage{CallAction::METER_VALUES, payloads[(size_t)TxnLogTag::MV_START_REQ]}, connector_id);
+            this->recover_transactions_state = RecTxnState::WAITING_FOR_METER_VALUE_START_CONF;
+            return;
+        }
+
+        if (seen_tags[(size_t)TxnLogTag::TXN_ID] && !seen_tags[(size_t)TxnLogTag::SIGNED_MV_STOP] && !seen_tags[(size_t)TxnLogTag::UNSIGNED_MV_STOP]) {
+            auto meter_req = meter_active ? MeterRequest::END_WITH_BEGIN : MeterRequest::LAST_CHARGE_READING;
+            // Interrupted while transaction was running and either we've already notified the meter of the txn end (iff !meter_active) or we didn't
+            // -> prepare meter, send 'r' iff meter_active or else 'i'
+            // -> wait for meter value
+            // -> persist as SIGNED_MV_STOP
+
+            log_warn("Fetching stop+start meter value.");
+            platform_prepare_meter_for_txn(this->platform_ctx, &begin_ocmf);
+            platform_request_meter_value(this->platform_ctx, begin_ocmf.WTF_connector_id, platform_get_system_time(this->platform_ctx), begin_ocmf.WTF_signature_encoding, meter_req);
+            this->recover_transactions_state = RecTxnState::WAITING_FOR_METER_VALUE_STOP;
+
+            return;
+        }
+
+        int stop_energy_wh = 0;
+        time_t transaction_stop_time = 0;
+        if (seen_tags[(size_t)TxnLogTag::SIGNED_MV_STOP] && !seen_tags[(size_t)TxnLogTag::STOP_TXN_REQ]) {
+            // Interrupted while signed txn end meter value was already received, but StopTransaction.req was not yet written.
+            // (or this point was reached because of the recovery case above)
+            // -> create, persist and send StopTransaction.req
+
+            auto opt = SMVH::parseOCMF(payloads[(size_t)TxnLogTag::SIGNED_MV_STOP], strlen(payloads[(size_t)TxnLogTag::SIGNED_MV_STOP]));
+            if (opt.is_none()) {
+                log_error("Failed to parse persisted signed meter value start OCMF");
+                this->setState(OcppState::Faulted);
+                return;
+            }
+
+            // TODO check reading count
+            stop_energy_wh = SMVH::getEnergyWhFromOCMF(opt.unwrap().get_view(), 1).unwrap();
+            // TODO handle parse error
+            transaction_stop_time = SMVH::getReadingTimestampFromOCMF(opt.unwrap().get_view(), 1).unwrap();
+        } else if (seen_tags[(size_t)TxnLogTag::UNSIGNED_MV_STOP] && !seen_tags[(size_t)TxnLogTag::STOP_TXN_REQ]) {
+            // Interrupted while unsigned txn end meter value was already received, but StopTransaction.req was not yet written.
+            // -> create, persist and send StopTransaction.req
+
+            // TODO error handling
+            stop_energy_wh = parse_int(payloads[(size_t)TxnLogTag::UNSIGNED_MV_STOP]).unwrap();
+            transaction_stop_time = platform_get_system_time(this->platform_ctx);
+        }
+
+        if ((seen_tags[(size_t)TxnLogTag::SIGNED_MV_STOP] || seen_tags[(size_t)TxnLogTag::UNSIGNED_MV_STOP]) && !seen_tags[(size_t)TxnLogTag::STOP_TXN_REQ]) {
+            // Interrupted while txn end meter value was already received, but StopTransaction.req was not yet written.
+            // (or this point was reached because of the recovery case above)
+            // -> create, persist and send StopTransaction.req
+
+            log_warn("Recreating StopTransaction.req.");
+
+            std::unique_ptr<char[]> signed_meter_value;
+            MeterValueSampledValue sv;
+            MeterValue mv;
+
+            auto msg = SMVH::buildStopTxn(
+                connector_id,
+                transaction_stop_time,
+                stop_energy_wh,
+                transaction_id,
+                nullptr,
+                StopTransactionReason::REBOOT,
+                ExtSMVSignedMeterValueTypeEncodingMethod::OCMF,
+                ExtSMVSignedMeterValueTypeSigningMethod::EMPTY_STRING, // TODO: don't hardcode this
+                seen_tags[(size_t)TxnLogTag::SIGNED_MV_STOP] ? payloads[(size_t)TxnLogTag::SIGNED_MV_STOP] : nullptr,
+                signed_meter_value,
+                sv,
+                mv);
+            txnLogAppend(connector_id, TxnLogTag::STOP_TXN_REQ, msg);
+            this->sendCallAction(msg, connector_id);
+            return;
+        }
+
+        if (seen_tags[(size_t)TxnLogTag::STOP_TXN_REQ]) {
+            // Interrupted after StopTransaction.req was created,
+            // but before receiving the StopTransaction.conf.
+            // (When the .conf is received, the transaction log is deleted)
+            // -> Resend StopTransaction.conf
+
+            log_warn("Resending StopTransaction.req.");
+            this->sendCallAction(RestoredMessage{CallAction::STOP_TRANSACTION, payloads[(size_t)TxnLogTag::STOP_TXN_REQ]}, connector_id);
+            return;
+        }
+    }
+
+    // If first is still set, we've done nothing.
+    if (!first) {
+        log_warn("Transaction recovery done.");
+    }
     this->setState(OcppState::Idle);
 }
 
@@ -94,7 +459,7 @@ void OcppChargePoint::tick() {
             break;
 
         case OcppState::FlushPersistentMessages:
-            tick_flush_persistent_messages();
+            tick_recover_transactions();
             break;
 
         case OcppState::Idle:
@@ -218,8 +583,10 @@ void OcppChargePoint::saveAvailability()
 
 void OcppChargePoint::loadAvailability()
 {
-    auto buf = heap_alloc_array<char>(AVAILABLE_STRING_BUF_SIZE);
-    size_t len = platform_read_file("avail", buf.get(), AVAILABLE_STRING_BUF_SIZE);
+    size_t len;
+    auto buf = platform_read_file("avail", &len, AVAILABLE_STRING_BUF_SIZE - 1);
+    if (buf == nullptr)
+        return;
 
     StaticJsonDocument<JSON_ARRAY_SIZE(OCPP_NUM_CONNECTORS + 1)> doc;
     if (deserializeJson(doc, buf.get(), len) != DeserializationError::Ok)
@@ -312,6 +679,9 @@ bool OcppChargePoint::sendCallAction(const ICall &call, int32_t connectorId)
 
 void OcppChargePoint::onTimeout(CallAction action, uint64_t messageId, int32_t connectorId)
 {
+    if (connectorId < 0)
+        return;
+
     (void) messageId;
 
     switch (action) {
@@ -387,6 +757,10 @@ void OcppChargePoint::onTimeout(CallAction action, uint64_t messageId, int32_t c
         case CallAction::GET_COMPOSITE_SCHEDULE_RESPONSE:
         case CallAction::SET_CHARGING_PROFILE_RESPONSE:
         case CallAction::TRIGGER_MESSAGE_RESPONSE:
+
+        // Extensions only used for struct serialization, not for message sending/receiving - should be unreachable
+        case CallAction::EXT_OCMF:
+        case CallAction::EXT_SMV:
             break;
     }
 }
@@ -454,8 +828,7 @@ CallResponse OcppChargePoint::handleBootNotificationResponse(int32_t connectorId
             for(int32_t i = 0; i < OCPP_NUM_CONNECTORS; ++i)
                 connectors[i].forceSendStatus();
 
-            if (shouldRestore())
-                this->setState(OcppState::FlushPersistentMessages);
+            this->setState(OcppState::FlushPersistentMessages);
 
             break;
         }
@@ -701,8 +1074,17 @@ CallResponse OcppChargePoint::handleHeartbeatResponse(int32_t connectorId, Heart
 
 CallResponse OcppChargePoint::handleMeterValuesResponse(int32_t connectorId, MeterValuesResponseView conf)
 {
-    (void) connectorId;
     (void) conf;
+
+    if (connectorId > 0 && connectorId <= OCPP_NUM_CONNECTORS) {
+        if (this->recover_transactions_state == RecTxnState::WAITING_FOR_METER_VALUE_START_CONF) {
+            txnLogAppend(connectorId, TxnLogTag::MV_START_CONFIRMED, "null", 4);
+            this->recover_transactions_state = RecTxnState::NONE;
+        } else {
+            connectors[connectorId - 1].onMeterValuesConf();
+        }
+    }
+
     return CallResponse{CallErrorCode::OK, ""};
 }
 
@@ -880,8 +1262,16 @@ CallResponse OcppChargePoint::handleStartTransactionResponse(int32_t connectorId
     IdTagInfo info;
     info.updateFromIdTagInfo(conf.idTagInfo());
 
-    if (connectorId > 0 && connectorId <= OCPP_NUM_CONNECTORS)
-        connectors[connectorId - 1].onStartTransactionConf(info, conf.transactionId());
+    if (connectorId > 0 && connectorId <= OCPP_NUM_CONNECTORS) {
+        if (this->recover_transactions_state == RecTxnState::WAITING_FOR_START_TXN_CONF) {
+            char buf[12];
+            size_t written = snprintf(buf, sizeof(buf), "%d", conf.transactionId());
+            txnLogAppend(connectorId, TxnLogTag::TXN_ID, buf, written);
+            this->recover_transactions_state = RecTxnState::NONE;
+        } else {
+            connectors[connectorId - 1].onStartTransactionConf(info, conf.transactionId());
+        }
+    }
 
     // We received the txn-ID, so maybe now a TxProfile applies.
     this->triggerChargingProfileEval("Received TxnID");
@@ -899,10 +1289,9 @@ CallResponse OcppChargePoint::handleStatusNotificationResponse(int32_t connector
 
 CallResponse OcppChargePoint::handleStopTransactionResponse(int32_t connectorId, StopTransactionResponseView conf)
 {
-    (void) connectorId;
-    (void) conf;
+    if (connectorId > 0 && connectorId <= OCPP_NUM_CONNECTORS)
+        connectors[connectorId - 1].onStopTransactionConf(conf.idTagInfo());
 
-    // conf only contains a idTagInfo for updating the authorization cache. We don't implement that yet.
     return CallResponse{CallErrorCode::OK, ""};
 }
 
@@ -1410,7 +1799,7 @@ void OcppChargePoint::handleStop(int32_t connectorId, StopReason reason) {
     conn.onStop(reason);
 }
 
-void OcppChargePoint::handleSignedMeterValue(int32_t connectorId, ExtSMVSignedMeterValueTypeSigningMethod signing_method, ExtSMVSignedMeterValueTypeEncodingMethod encoding_method, const char *data, size_t data_len, int energy_wh) {
+void OcppChargePoint::handleSignedMeterValue(int32_t connectorId, ExtSMVSignedMeterValueTypeSigningMethod signing_method, ExtSMVSignedMeterValueTypeEncodingMethod encoding_method, char *data, size_t data_len) {
     // Don't allow signed meter values at connector 0 (i.e. the charge point itself)
     if (connectorId <= 0)
         return;
@@ -1418,8 +1807,37 @@ void OcppChargePoint::handleSignedMeterValue(int32_t connectorId, ExtSMVSignedMe
     if (connectorId > OCPP_NUM_CONNECTORS)
         return;
 
+    if (this->state == OcppState::FlushPersistentMessages) {
+        if (this->recover_transactions_state == RecTxnState::WAITING_FOR_METER_VALUE_START) {
+            // The refetched OCMF container consists of the begin and end values.
+            // We can't separate the begin value into a separate container without breaking the signature.
+            // Handle as unsigned value instead.
+            auto opt = SMVH::parseOCMF(data, data_len);
+            if (opt.is_none()) {
+                log_error("Failed to parse persisted signed meter value start OCMF");
+                this->setState(OcppState::Faulted);
+                return;
+            }
+
+            auto energy_wh = SMVH::getEnergyWhFromOCMF(opt.unwrap().get_view(), 0).unwrap();
+            char buf[12];
+            size_t written = snprintf(buf, sizeof(buf), "%d", energy_wh);
+            txnLogAppend(connectorId, TxnLogTag::UNSIGNED_MV_START, buf, written);
+            this->recover_transactions_state = RecTxnState::NONE;
+            return;
+        }
+        if (this->recover_transactions_state == RecTxnState::WAITING_FOR_METER_VALUE_STOP) {
+            txnLogAppend(connectorId, TxnLogTag::SIGNED_MV_STOP, data, data_len);
+            this->recover_transactions_state = RecTxnState::NONE;
+            return;
+        }
+
+        log_error("Unexpected meter value while flushing persistent messages!");
+        return;
+    }
+
     auto &conn = connectors[connectorId - 1];
-    conn.onSignedMeterValue(signing_method, encoding_method, data, data_len, energy_wh);
+    conn.onSignedMeterValue(signing_method, encoding_method, data, data_len);
 }
 
 static bool is_url_safe(char c) {
@@ -1479,8 +1897,6 @@ bool OcppChargePoint::start(const char *websocket_endpoint_url, const char *char
 
     url_encode(buf.get(), encoded_len + 1, charge_point_name);
 
-    initRestore();
-
     platform_ctx = connection.start(websocket_endpoint_url, buf.get(), charge_point_name, basic_auth_pass, basic_auth_pass_length, basic_auth_pass_type, this);
     if (platform_ctx == nullptr)
         return false;
@@ -1509,8 +1925,8 @@ bool OcppChargePoint::start(const char *websocket_endpoint_url, const char *char
 
     platform_register_signed_meter_value_callback(
         platform_ctx,
-        [](int32_t connectorId, ExtSMVSignedMeterValueTypeSigningMethod signing_method, ExtSMVSignedMeterValueTypeEncodingMethod encoding_method, const char *data, size_t data_len, int energy_wh, void *user_data){
-            ((OcppChargePoint*)user_data)->handleSignedMeterValue(connectorId, signing_method, encoding_method, data, data_len, energy_wh);
+        [](int32_t connectorId, ExtSMVSignedMeterValueTypeSigningMethod signing_method, ExtSMVSignedMeterValueTypeEncodingMethod encoding_method, char *data, size_t data_len, void *user_data){
+            ((OcppChargePoint*)user_data)->handleSignedMeterValue(connectorId, signing_method, encoding_method, data, data_len);
         },
         this);
     return true;

@@ -123,8 +123,8 @@ void OcppConnection::handleMessage(char *message, size_t message_len)
             return;
         }
 
-        if (is_transaction_related(message_in_flight.action))
-            onTxnMsgResponseReceived(message_in_flight.message_id);
+        //if (is_transaction_related(message_in_flight.action))
+        //    onTxnMsgResponseReceived(message_in_flight.message_id);
 
         log_info("Received result for %s (id %" PRIu64 ")", CallActionStrings[(size_t) message_in_flight.action], uid);
 

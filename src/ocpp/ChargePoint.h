@@ -10,6 +10,7 @@
 #include "Connector.h"
 #include "ChargingProfile.h"
 #include "Types.h"
+#include "Persistency.h"
 
 // keep in sync with ocpp_platform_gui.py charge_point_state_strings
 const char * const OcppStateStrings[] = {
@@ -50,10 +51,10 @@ public:
 
     void handleTagSeen(int32_t connectorId, const char *tagId);
     void handleStop(int32_t connectorId, StopReason reason);
-    void handleSignedMeterValue(int32_t connectorId, ExtSMVSignedMeterValueTypeSigningMethod signing_method, ExtSMVSignedMeterValueTypeEncodingMethod encoding_method, const char *data, size_t data_len, int energy_wh);
+    void handleSignedMeterValue(int32_t connectorId, ExtSMVSignedMeterValueTypeSigningMethod signing_method, ExtSMVSignedMeterValueTypeEncodingMethod encoding_method, char *data, size_t data_len);
 
     void tick_power_on();
-    void tick_flush_persistent_messages();
+    void tick_recover_transactions();
     void tick_idle();
 
     void tick_soft_reset();
@@ -145,4 +146,14 @@ public:
     void loadProfiles();
 
     time_t next_profile_eval = 0;
+
+    enum class RecTxnState {
+        NONE,
+        WAITING_FOR_START_TXN_CONF,
+        WAITING_FOR_METER_VALUE_START,
+        WAITING_FOR_METER_VALUE_START_CONF,
+        WAITING_FOR_METER_VALUE_STOP
+    };
+
+    RecTxnState recover_transactions_state = RecTxnState::NONE;
 };

@@ -124,8 +124,11 @@ remote_trigger_profile = [[ #send
 
 
 signed_meter_values = [[ #send
-        schema.ExtSMV.ExtSMV
-    ], []]
+        schema.ExtSMV.ExtSMV,
+        schema.ExtOCMF.ExtOCMFRequest
+    ], [ #recv
+        schema.ExtOCMF.ExtOCMFRequest
+    ]]
 
 all_profiles = [core_profile,
                 firmware_management_profile,
@@ -293,10 +296,18 @@ def param_insertion(message: str, name: str, p: Property):
         #return 'if ({name} != nullptr) {name}->serializeInto(json, "{name}");'.format(name=name)
         return 'if ({name} != nullptr) {{ json.addMemberObject("{name}"); {name}->serializeInto(json); json.endObject(); }}'.format(name=name)
     elif isinstance(p.element, Array):
-        if not isinstance(p.element.items, String):
-            return 'if ({name} != nullptr) {{ json.addMemberArray("{name}"); for(size_t i = 0; i < {name}_length; ++i) {{ json.addObject(); {name}[i].serializeInto(json); json.endObject(); }} json.endArray(); }}'.format(name=name)
-        else:
+        if isinstance(p.element.items, String):
+            if p.element.items.enum:
+                # This case only matches one generated line: ExtOCMFIF. For some reason the double replacement of enums (see the top-level string enum case) does not work here
+                return 'if ({name} != nullptr) {{ json.addMemberArray("{name}"); for(size_t i = 0; i < {name}_length; ++i) {{ json.addString({{{message}{name_camel}Entry}}Strings[(size_t){name}[i]]); }} json.endArray(); }}'.format(message=message, name=name, name_camel=camel(name))
+
+            if p.element.items.format:
+                raise Exception("formatted strings in array are not supported yet")
+
             return 'if ({name} != nullptr) {{ json.addMemberArray("{name}"); for(size_t i = 0; i < {name}_length; ++i) {{ json.addString({name}[i]); }} json.endArray(); }}'.format(name=name)
+        else:
+            return 'if ({name} != nullptr) {{ json.addMemberArray("{name}"); for(size_t i = 0; i < {name}_length; ++i) {{ json.addObject(); {name}[i].serializeInto(json); json.endObject(); }} json.endArray(); }}'.format(name=name)
+
 
     raise Exception("Not implemented yet")
 
@@ -340,6 +351,8 @@ def param_arg(message: str, name: str, p: Property, strings_as_arrays=True, defa
         if not isinstance(p.element.items, String):
             structs_to_generate["{message}{name_camel}".format(message=message, name_camel=name_camel)] = p.element.items
             return "{message}{name_camel} *{name}{default}, size_t {name}_length{len_default}".format(message=message, name_camel=name_camel, name=name, default=" = nullptr" if default_values and not p.required else "", len_default=" = 0" if default_values and not p.required else "")
+        elif p.element.items.enum:
+            return "{message}{name_camel}Entry *{name}{default}, size_t {name}_length{len_default}".format(message=message, name_camel=name_camel, name=name, default=" = nullptr" if default_values and not p.required else "", len_default=" = 0" if default_values and not p.required else "")
         else:
             return "const char **{name}{default}, size_t {name}_length{len_default}".format(message=message, name_camel=name_camel, name=name, default=" = nullptr" if default_values and not p.required else "", len_default=" = 0" if default_values and not p.required else "")
 
@@ -586,7 +599,7 @@ def generate_view(name: str, obj: Object):
     }}
 """
 
-    object_array_template = """
+    enum_array_template = """
     size_t {name}_count() {{
         {size_opt_check}
         return _obj["{name}"].size();
@@ -594,7 +607,29 @@ def generate_view(name: str, obj: Object):
 
     {ret_type} {name}(size_t i) {{
         {opt_check}
+        return ({ret_type_plain})_obj["{name}"][i].as<size_t>();
+    }}
+"""
+
+    object_array_template = """
+    size_t {name}_count() {{
+        return _obj["{name}"].size();
+    }}
+
+    {ret_type} {name}(size_t i) {{
         return {ret_type}{{_obj["{name}"][i]}};
+    }}
+"""
+
+    object_array_opt_template = """
+    size_t {name}_count() {{
+        {size_opt_check}
+        return _obj["{name}"].size();
+    }}
+
+    {ret_type} {name}(size_t i) {{
+        {opt_check}
+        return {ret_type}{{{ret_type_plain}{{_obj["{name}"][i]}}}};
     }}
 """
 
@@ -670,10 +705,18 @@ def generate_view(name: str, obj: Object):
                                                   opt_check=opt_check(param_name, param)))
         elif isinstance(param.element, Array):
             if inspect.isclass(param.element.items):
-                methods.append(object_array_template.format(ret_type=add_opt(camel(name, param_name, "EntryEntriesView"), param),
+                t = object_array_template if param.required else object_array_opt_template
+                methods.append(t.format(ret_type=add_opt(camel(name, param_name, "EntryEntriesView"), param),
+                                        ret_type_plain=camel(name, param_name, "EntryEntriesView"),
+                                        name=param_name,
+                                        opt_check=opt_check(param_name, param),
+                                        size_opt_check=opt_check(param_name, param)))
+            elif param.element.items.enum:
+                methods.append(enum_array_template.format(ret_type=add_opt("{{{}}}".format(camel(name, param_name, "Entry")), param),
+                                                            ret_type_plain=camel(name, param_name, "Entry"),
                                                             name=param_name,
                                                             opt_check=opt_check(param_name, param),
-                                                            size_opt_check=""))
+                                                            size_opt_check=opt_check(param_name, param)))
             else:
                 methods.append(array_template.format(ret_type=add_opt(get_primitive_type(param.element.items), param), ret_type_plain=get_primitive_type(param.element.items),
                                                      name=param_name,
@@ -883,16 +926,17 @@ def generate_on_call(all_messages: List[Object], supported_to_recv: List[Object]
 
     default_cases=["case CallAction::{}:".format(camel_to_upper_snake(x.__name__.removesuffix("Request"))) for x in all_messages]
 
+    recvs = [obj for obj in supported_to_recv if obj.__name__.endswith("Request") and not obj.__name__.startswith("Ext")]
+
     cases = [case_template.format(
                     actionNameUpper=camel_to_upper_snake(obj.__name__.removesuffix("Request")),
                     actionName=obj.__name__.removesuffix("Request"))
-                for obj in supported_to_recv
-                    if obj.__name__.endswith("Request")]
+                for obj in recvs]
 
-    to_remove = ["case CallAction::{}:".format(camel_to_upper_snake(obj.__name__.removesuffix("Request"))) for obj in supported_to_recv if obj.__name__.endswith("Request")]
+    to_remove = ["case CallAction::{}:".format(camel_to_upper_snake(obj.__name__.removesuffix("Request"))) for obj in recvs]
 
-    default_cases = [x for x in default_cases if x not in to_remove]
-    default_cases.remove("case CallAction::DATA_TRANSFER_RESPONSE:") # this is duplicated because data transfers can be sent and received by both parties
+    default_cases = sorted(set(x for x in default_cases if x not in to_remove))
+    #default_cases.remove("case CallAction::DATA_TRANSFER_RESPONSE:") # this is duplicated because data transfers can be sent and received by both parties
 
     cpp_content += template.format(cases="\n".join(cases),
                                    default_cases="\n        ".join(default_cases))
@@ -934,8 +978,7 @@ def generate_on_call_response(all_messages: List[Object], supported_to_recv: Lis
 
     to_remove = ["case CallAction::{}:".format(camel_to_upper_snake(obj.__name__.removesuffix("Response"))) for obj in supported_to_recv if obj.__name__.endswith("Response")]
 
-    default_cases = [x for x in default_cases if x not in to_remove]
-    default_cases.remove("case CallAction::DATA_TRANSFER_RESPONSE:") # this is duplicated because data transfers can be sent and received by both parties
+    default_cases = sorted(set(x for x in default_cases if x not in to_remove))
 
     cpp_content += template.format(cases="\n".join(cases),
                                    default_cases="\n        ".join(default_cases))
