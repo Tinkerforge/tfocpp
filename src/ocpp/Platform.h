@@ -108,6 +108,8 @@ bool platform_supports_phase_switch();
 void platform_set_charging_current(int32_t connectorId, uint32_t milliAmps);
 void platform_set_charging_phases(int32_t connectorId, uint8_t phases);
 
+bool platform_supports_signed_meter_values(void *ctx, int32_t connectorId);
+
 // Calling the stop callback will _never_ unlock the cable if it is currently locked. The same tag (or one in the same group) is required to unlock the cable.
 // For example to implement a remote stop that unlocks immediately, use platform_unlock_cable.
 void platform_register_stop_callback(void *ctx, void (*cb)(int32_t, StopReason, void *), void *user_data);
