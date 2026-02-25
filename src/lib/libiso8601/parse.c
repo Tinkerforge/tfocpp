@@ -303,6 +303,7 @@ static bool normalize_iso8601(char *buf)
             continue;
 
         case '.':
+        case ',':
             /* Only one permitted. */
             if (decimals++ > 0)
                 return false;
