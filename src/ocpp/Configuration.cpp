@@ -460,10 +460,10 @@ static OcppConfiguration config[OCPP_CONFIG_COUNT] = {
     /*SampledDataSignReadings*/           OcppConfiguration::boolean(true, false, true),
     // Completely hard-coded for now: We only support sending Energy.Active.Import.Register signed. We always send it directly after the txn starts (in a MeterValues.req) and both the txn start and end value when the txn ends (in a StopTransaction.req)
     /*StartTxnSampledData*/               OcppConfiguration::csl("Energy.Active.Import.Register", strlen("Energy.Active.Import.Register") + 1, 1, true, true, SampledValueMeasurandStrings, (size_t)SampledValueMeasurand::NONE_, false, false),
-    /*SampledDataSignStartedReadings*/    OcppConfiguration::boolean(true, false, true),
+    /*SampledDataSignStartedReadings*/    OcppConfiguration::boolean(true, true, true),
     // Hard-code updated readings to always be unsigned for now.
     /*SampledDataSignUpdatedReadings*/    OcppConfiguration::boolean(false, true, true),
-    /*AlignedDataSignReadings*/           OcppConfiguration::boolean(true, false, true),
+    /*AlignedDataSignReadings*/           OcppConfiguration::boolean(false, false, true),
     // Hard-code updated readings to always be unsigned for now.
     /*AlignedDataSignUpdatedReadings*/    OcppConfiguration::boolean(false, true, true),
 };

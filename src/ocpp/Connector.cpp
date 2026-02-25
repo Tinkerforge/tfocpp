@@ -998,7 +998,7 @@ void Connector::tick() {
     }
 
     if (state == ConnectorState::START_TXN) {
-        bool signed_values_enabled = getBoolConfig(ConfigKey::SampledDataSignReadings) || getBoolConfig(ConfigKey::AlignedDataSignReadings);
+        bool signed_values_enabled = getBoolConfig(ConfigKey::SampledDataSignReadings);
         bool signed_start_enabled = getCSLConfigLen(ConfigKey::StartTxnSampledData) > 0;
         if (!signed_values_enabled || !signed_start_enabled)
             // No need to wait for signed meter values if they won't be sent.
@@ -1006,7 +1006,7 @@ void Connector::tick() {
     }
 
     if (state == ConnectorState::STOP_TXN) {
-        bool signed_values_enabled = getBoolConfig(ConfigKey::SampledDataSignReadings) || getBoolConfig(ConfigKey::AlignedDataSignReadings);
+        bool signed_values_enabled = getBoolConfig(ConfigKey::SampledDataSignReadings);
         if (!signed_values_enabled) {
             // No need to wait for signed meter values if they won't be sent.
             auto next_state = this->next_state_after_stop_txn;
