@@ -22,6 +22,18 @@ struct OcppConfiguration {
     bool requires_reboot;
     bool hidden;
 
+    ~OcppConfiguration() {
+        if (this->type == OcppConfigurationValueType::CSL) {
+            free(value.csl.c); value.csl.c = nullptr;
+            free(value.csl.parsed); value.csl.parsed = nullptr;
+            if (value.csl.phases != nullptr) {
+                free(value.csl.phases); value.csl.phases = nullptr;
+            }
+        } else if (this->type == OcppConfigurationValueType::String) {
+            free(value.string.s); value.string.s = nullptr;
+        }
+    }
+
     union {
         struct {
             int32_t i;
