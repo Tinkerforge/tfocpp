@@ -4,6 +4,7 @@
 #include <time.h>
 #include <ArduinoJson.h>
 #include <TFTools/Option.h>
+#include <memory>
 
 #define OCPP_INTEGER_NOT_PASSED INT32_MAX
 #define OCPP_DATETIME_NOT_PASSED 0
@@ -62,7 +63,7 @@ enum StopReason {
 };
 
 struct BasicAuthCredentials {
-    const char *user;
-    uint8_t *pass;
+    std::unique_ptr<char[]> user;
+    std::unique_ptr<uint8_t[]> pass;
     size_t pass_length;
 };

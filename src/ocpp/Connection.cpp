@@ -491,23 +491,29 @@ void* OcppConnection::start(const char *websocket_endpoint_url, const char *char
                 return nullptr;
 
             if (pass_is_hex) {
-                // FIXME: Currently there is no way to stop a connection. If we add this, this memory has to be freed!
-                this->basic_auth_credentials[cred_used_count].user = strdup(basic_auth_user);
-                this->basic_auth_credentials[cred_used_count].pass = new uint8_t[20];
+                auto len = strlen(basic_auth_user);
+                this->basic_auth_credentials[cred_used_count].user = heap_alloc_array<char>(len);
+                memcpy(this->basic_auth_credentials[cred_used_count].user.get(), basic_auth_user, len);
+
+                this->basic_auth_credentials[cred_used_count].pass = heap_alloc_array<uint8_t>(20);
                 for (size_t i = 0; i < 20; ++i) {
                     this->basic_auth_credentials[cred_used_count].pass[i] = hex_digit_to_byte(basic_auth_pass[2 * i]) << 4 | hex_digit_to_byte(basic_auth_pass[2 * i + 1]);
                 }
                 this->basic_auth_credentials[cred_used_count].pass_length = 20;
+
                 ++cred_used_count;
             }
         }
 
         if (basic_auth_pass_type == BasicAuthPassType::TEXT || basic_auth_pass_type == BasicAuthPassType::TRY_BOTH) {
-            // FIXME: Currently there is no way to stop a connection. If we add this, this memory has to be freed!
-            this->basic_auth_credentials[cred_used_count].user = strdup(basic_auth_user);
-            this->basic_auth_credentials[cred_used_count].pass = new uint8_t[basic_auth_pass_length];
-            memcpy(this->basic_auth_credentials[cred_used_count].pass, basic_auth_pass, basic_auth_pass_length);
+            auto len = strlen(basic_auth_user);
+            this->basic_auth_credentials[cred_used_count].user = heap_alloc_array<char>(len);
+            memcpy(this->basic_auth_credentials[cred_used_count].user.get(), basic_auth_user, len);
+
+            this->basic_auth_credentials[cred_used_count].pass = heap_alloc_array<uint8_t>(basic_auth_pass_length);
+            memcpy(this->basic_auth_credentials[cred_used_count].pass.get(), basic_auth_pass, basic_auth_pass_length);
             this->basic_auth_credentials[cred_used_count].pass_length = basic_auth_pass_length;
+
             ++cred_used_count;
         }
     }
