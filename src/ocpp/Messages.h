@@ -1452,3 +1452,11 @@ struct IdTagInfo {
         return (strncmp(this->tagId, other_id, ARRAY_SIZE(this->tagId)) == 0);
     }
 };
+
+struct SupportedMeasurand {
+    SampledValueMeasurand measurand;
+    SampledValuePhase phase;
+    SampledValueLocation location;
+    SampledValueUnit unit;
+    bool is_signed;
+};

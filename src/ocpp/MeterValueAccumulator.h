@@ -1,12 +1,11 @@
 #pragma once
 
 #include "Configuration.h"
+#include "Types.h"
 
 #include <memory>
 
 class OcppChargePoint;
-
-struct SupportedMeasurand;
 
 struct ValueToSend {
     std::unique_ptr<MeterValueSampledValue[]> sampled_values;
@@ -25,9 +24,7 @@ struct MeterValueAccumulator {
     std::unique_ptr<SampledValuePhase[]> measurand_phases = nullptr;
     size_t measurand_count;
 
-    void * platform_meter_cache = nullptr;
-
-    SupportedMeasurand *supported_measurands = nullptr;
+    std::unique_ptr<SupportedMeasurand[]> supported_measurands = nullptr;
     size_t supported_measurand_count;
 
     uint32_t samples_this_run = 0;

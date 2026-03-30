@@ -84,20 +84,20 @@ void MeterValueAccumulator::tick()
 #if defined(__clang__)
 #pragma clang diagnostic pop
 #endif
-                    meter_values[supported_idx] = platform_get_raw_meter_value(this->connectorId, supported_idx, this->platform_meter_cache);
+                    meter_values[supported_idx] = platform_get_raw_meter_value(this->connectorId, supported_idx);
                 }
                 break;
             case MeasurandType::Interval:
                 /*// Use two values for intervals as a mini ring-buffer. Set the first one only on the first run after boot-up.
                 // ::reset() "rotates" the ring buffer.
                 if (first_run)
-                    meter_values[value_offset] = platform_get_raw_meter_value(this->connectorId, supported_idx, this->platform_meter_cache);
+                    meter_values[value_offset] = platform_get_raw_meter_value(this->connectorId, supported_idx);
                 else
-                    meter_values[value_offset + 1] = platform_get_raw_meter_value(this->connectorId, supported_idx, this->platform_meter_cache);
+                    meter_values[value_offset + 1] = platform_get_raw_meter_value(this->connectorId, supported_idx);
                 ++value_offset;*/
                 break;
             case MeasurandType::Average:
-                float new_value = platform_get_raw_meter_value(this->connectorId, supported_idx, this->platform_meter_cache);
+                float new_value = platform_get_raw_meter_value(this->connectorId, supported_idx);
                 // TODO: store value "undivided" here and divide by samples_this_run only in get()
                 meter_values[supported_idx] = ((meter_values[supported_idx] * samples_this_run) + new_value) / ((float)samples_this_run + 1);
                 break;
@@ -181,7 +181,8 @@ void MeterValueAccumulator::reset()
 }
 
 void MeterValueAccumulator::initMeter() {
-    if (!platform_prepare_meter(this->connectorId, this->measurands.get(), this->measurand_phases.get(), measurand_count, &this->supported_measurands, &this->supported_measurand_count, &this->platform_meter_cache))
+
+    if (!platform_prepare_meter(this->connectorId, this->measurands.get(), this->measurand_phases.get(), measurand_count, this->supported_measurands, &this->supported_measurand_count))
         return;
 
     // Drop measurands and phases. All info is contained in supported_measurands.
