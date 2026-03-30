@@ -67,6 +67,8 @@ OcppConfiguration OcppConfiguration::csl(const char *value,
     result.value.csl.parsed_len = 0;
     if (suffix_phase)
         result.value.csl.phases = (size_t*)malloc(sizeof(size_t) * max_elements);
+    else
+        result.value.csl.phases = nullptr;
 
     result.value.csl.allowed_values = allowed_values;
     result.value.csl.allowed_values_len = allowed_values_len;
