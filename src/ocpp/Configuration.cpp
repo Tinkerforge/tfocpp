@@ -356,7 +356,11 @@ static const char * const PublicKeyWithSignedMeterValue_strings[OCPP_SEND_PUB_KE
 
 //TODO: implement that CSL max_elements and the corresponding ...MaxLength value are kept in sync
 
-static OcppConfiguration config[OCPP_CONFIG_COUNT] = {
+// This is ugly but the smallest change to get the config to be heap-allocated and owned by the ChargePoint.
+static OcppConfiguration *config = nullptr;
+
+std::unique_ptr<OcppConfiguration[]> initConfig() {
+    auto result = std::unique_ptr<OcppConfiguration[]>{new OcppConfiguration[OCPP_CONFIG_COUNT]{
     // CORE PROFILE
     /*AllowOfflineTxForUnknownId*/        //OcppConfiguration::boolean(OCPP_DEFAULT_ALLOW_OFFLINE_TX_FOR_UNKNOWN_ID, false, false),
     /*AuthorizationCacheEnabled*/         //OcppConfiguration::boolean(OCPP_DEFAULT_AUTHORIZATION_CACHE_ENABLED, false, false),
@@ -468,7 +472,11 @@ static OcppConfiguration config[OCPP_CONFIG_COUNT] = {
     /*AlignedDataSignReadings*/           OcppConfiguration::boolean(true, false, true),
     // Hard-code updated readings to always be unsigned for now.
     /*AlignedDataSignUpdatedReadings*/    OcppConfiguration::boolean(false, true, true),
-};
+}};
+
+    config = result.get();
+    return result;
+}
 
 OcppConfiguration& getConfig(ConfigKey key) {
     return config[(size_t)key];
@@ -574,16 +582,18 @@ bool setBoolConfig(ConfigKey key, bool b) {
     return true;
 }
 
-void loadConfig()
+std::unique_ptr<OcppConfiguration[]> loadConfig()
 {
+    auto result = initConfig();
+
     auto buf = heap_alloc_array<char>(8192);
     size_t len = platform_read_file("config", buf.get(), 8192);
     StaticJsonDocument<JSON_OBJECT_SIZE(MAX_SPECIFIED_CONFIGS)> doc;
     if (deserializeJson(doc, buf.get(), len) != DeserializationError::Ok)
-        return;
+        return result;
 
     if (!doc.is<JsonObject>())
-        return;
+        return result;
 
     JsonObject root = doc.as<JsonObject>();
 
@@ -595,6 +605,7 @@ void loadConfig()
 
         getConfig(key_idx).setValue(kv.value().as<const char *>());
     }
+    return result;
 }
 
 #ifdef OCPP_STATE_CALLBACKS

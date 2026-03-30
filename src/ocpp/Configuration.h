@@ -197,7 +197,7 @@ const char *getStringConfig(ConfigKey key);
 bool setIntConfig(ConfigKey key, int32_t i);
 bool setBoolConfig(ConfigKey key, bool b);
 
-void loadConfig();
+std::unique_ptr<OcppConfiguration[]> loadConfig();
 void saveConfig();
 
 #ifdef OCPP_STATE_CALLBACKS

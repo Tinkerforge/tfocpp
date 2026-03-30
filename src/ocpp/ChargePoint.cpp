@@ -1453,7 +1453,7 @@ static size_t url_encode(char *buf, size_t len, const char *url) {
 }
 
 bool OcppChargePoint::start(const char *websocket_endpoint_url, const char *charge_point_name, const uint8_t *basic_auth_pass, size_t basic_auth_pass_length, BasicAuthPassType basic_auth_pass_type) {
-    loadConfig();
+    this->config = loadConfig();
 
     // TODO: Refactor this later.
     // This is ugly but the currently only case where we detect config from the platform.

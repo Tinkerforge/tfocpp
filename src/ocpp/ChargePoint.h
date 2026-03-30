@@ -126,6 +126,8 @@ public:
 
     OcppConnection connection;
 
+    std::unique_ptr<OcppConfiguration[]> config;
+
     /*
     Connectors numbering (ConnectorIds) MUST be as follows:
     • ID of the first connector MUST be 1
