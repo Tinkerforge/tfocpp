@@ -76,4 +76,6 @@ public:
     QueueItem next_response;
 
     std::unique_ptr<BasicAuthCredentials[]> basic_auth_credentials;
+
+    bool was_connected = false;
 };

@@ -286,7 +286,6 @@ void OcppConnection::setPongDeadline() {
 }
 
 void OcppConnection::tick() {
-    static bool was_connected = false;
     bool connected = platform_ws_connected(platform_ctx);
 
     if (!connected && was_connected) {
