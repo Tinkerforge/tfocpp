@@ -41,6 +41,8 @@ class OcppConnection {
 public:
     void* start(const char *websocket_endpoint_url, const char *charge_point_name_percent_encoded, const char *basic_auth_user, const uint8_t *basic_auth_pass, size_t basic_auth_pass_length, BasicAuthPassType basic_auth_pass_type, OcppChargePoint *ocpp_handle);
 
+    void stop();
+
     void tick();
 
     void handleMessage(char *message, size_t message_len);

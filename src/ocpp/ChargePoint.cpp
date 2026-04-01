@@ -1500,5 +1500,5 @@ bool OcppChargePoint::start(const char *websocket_endpoint_url, const char *char
 }
 
 void OcppChargePoint::stop() {
-    platform_disconnect(platform_ctx);
+    connection.stop();
 }

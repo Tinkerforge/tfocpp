@@ -526,3 +526,8 @@ void* OcppConnection::start(const char *websocket_endpoint_url, const char *char
 
     return platform_ctx;
 }
+
+void OcppConnection::stop() {
+    platform_disconnect(platform_ctx);
+    platform_destroy(platform_ctx);
+}
