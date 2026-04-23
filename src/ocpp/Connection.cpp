@@ -490,7 +490,7 @@ void* OcppConnection::start(const char *websocket_endpoint_url, const char *char
                 return nullptr;
 
             if (pass_is_hex) {
-                auto len = strlen(basic_auth_user);
+                auto len = strlen(basic_auth_user) + 1;
                 this->basic_auth_credentials[cred_used_count].user = heap_alloc_array<char>(len);
                 memcpy(this->basic_auth_credentials[cred_used_count].user.get(), basic_auth_user, len);
 
@@ -505,7 +505,7 @@ void* OcppConnection::start(const char *websocket_endpoint_url, const char *char
         }
 
         if (basic_auth_pass_type == BasicAuthPassType::TEXT || basic_auth_pass_type == BasicAuthPassType::TRY_BOTH) {
-            auto len = strlen(basic_auth_user);
+            auto len = strlen(basic_auth_user) + 1;
             this->basic_auth_credentials[cred_used_count].user = heap_alloc_array<char>(len);
             memcpy(this->basic_auth_credentials[cred_used_count].user.get(), basic_auth_user, len);
 
