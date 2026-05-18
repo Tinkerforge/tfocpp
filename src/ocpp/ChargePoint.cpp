@@ -1500,5 +1500,8 @@ bool OcppChargePoint::start(const char *websocket_endpoint_url, const char *char
 }
 
 void OcppChargePoint::stop() {
+    platform_register_stop_callback(this->platform_ctx, nullptr, nullptr);
+    platform_register_tag_seen_callback(this->platform_ctx, nullptr, nullptr);
+
     connection.stop();
 }

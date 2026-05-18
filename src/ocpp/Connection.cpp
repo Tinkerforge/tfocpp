@@ -528,6 +528,9 @@ void* OcppConnection::start(const char *websocket_endpoint_url, const char *char
 }
 
 void OcppConnection::stop() {
+    platform_ws_register_pong_callback(platform_ctx, nullptr, nullptr);
+    platform_ws_register_receive_callback(platform_ctx, nullptr, nullptr);
+
     platform_disconnect(platform_ctx);
     platform_destroy(platform_ctx);
 }
