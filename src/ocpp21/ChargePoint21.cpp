@@ -89,7 +89,11 @@ bool ChargePoint::start(const char *websocket_endpoint_url, const char *charge_p
         tls_in_use = true;
         if (tls_ca_file.empty()) {
             const CertEntry *root = cert_store.find(CertGroup::CsmsRoot);
-            tls_ca_file = cert_store.pemPath(CertGroup::CsmsRoot, root->id);
+            if (root != nullptr) {
+                tls_ca_file = cert_store.pemPath(CertGroup::CsmsRoot, root->id);
+            }
+            // Both empty: the platform decides whether it can verify the
+            // server against a system trust store or refuses the URL.
         }
 
         const CertEntry *client_chain = cert_store.find(CertGroup::CsmsClientChain);
