@@ -1,0 +1,120 @@
+# TransactionEvent based charging sessions.
+
+import subprocess
+import time
+
+import pytest
+
+from conftest import WS, DOCKER_OCPP
+
+STARTING = "Starting transaction ([0-9a-f-]+)"
+
+
+def start_station(api, stations, hosts):
+    name, db_id = stations.create(security_profile=1, password="test-basic-auth-pass-01")
+    h = hosts.start(WS, name, "test-basic-auth-pass-01")
+    h.wait_for("Boot notification accepted")
+    return name, db_id, h
+
+
+def test_local_start_stop(api, stations, hosts, rfid):
+    name, db_id, h = start_station(api, stations, hosts)
+
+    h.send(f"tag {rfid}")
+    h.wait_for(f"Authorization of {rfid} accepted")
+    h.send("plug")
+    transaction_id = h.wait_for(STARTING).group(1)
+
+    h.send(f"tag {rfid}")
+    h.wait_for("Stopping transaction")
+    h.send("unplug")
+
+    session, events = api.wait_for_ended_session(db_id, transaction_id)
+    assert events[0]["eventType"] == "started"
+    assert events[-1]["eventType"] == "ended"
+    assert all(not e["offline"] for e in events)
+
+
+def test_remote_start_stop(api, stations, hosts, rfid):
+    name, db_id, h = start_station(api, stations, hosts)
+
+    api.command("RequestStartTransaction", name, remoteStartId=1,
+                idToken={"idToken": rfid, "type": "ISO14443"})
+    h.wait_for("Remote start accepted")
+    h.send("plug")
+    transaction_id = h.wait_for(STARTING).group(1)
+
+    api.command("RequestStopTransaction", name, transactionId=transaction_id)
+    h.wait_for("Remote stop accepted")
+    h.wait_for("Stopping transaction")
+    h.send("unplug")
+
+    session, events = api.wait_for_ended_session(db_id, transaction_id)
+    assert events[0]["triggerReason"] == "RemoteStart"
+
+
+def test_periodic_meter_values(api, stations, hosts, rfid):
+    name, db_id, h = start_station(api, stations, hosts)
+
+    since = api.last_ocpp_log_id(db_id)
+    api.set_variable(name, "SampledDataCtrlr", "TxUpdatedInterval", "2")
+    api.wait_for_response(db_id, "SetVariables", since)
+
+    h.send(f"tag {rfid}")
+    h.wait_for(f"Authorization of {rfid} accepted")
+    h.send("plug")
+    transaction_id = h.wait_for(STARTING).group(1)
+
+    time.sleep(7)
+    h.send(f"tag {rfid}")
+    h.wait_for("Stopping transaction")
+    h.send("unplug")
+
+    session, events = api.wait_for_ended_session(db_id, transaction_id)
+    updated = [e for e in events if e["eventType"] == "updated"]
+    assert len(updated) >= 2, f"expected periodic Updated events, got {events}"
+
+
+def test_ev_connection_timeout(api, stations, hosts, rfid):
+    name, db_id, h = start_station(api, stations, hosts)
+
+    since = api.last_ocpp_log_id(db_id)
+    api.set_variable(name, "TxCtrlr", "EVConnectionTimeOut", "2")
+    api.wait_for_response(db_id, "SetVariables", since)
+
+    h.send(f"tag {rfid}")
+    h.wait_for(f"Authorization of {rfid} accepted")
+    # No plug follows, the authorization must be canceled.
+    h.wait_for("EV connection timeout", timeout=15)
+
+
+@pytest.mark.docker
+def test_offline_transaction_continuation(api, stations, hosts, rfid):
+    name, db_id, h = start_station(api, stations, hosts)
+
+    h.send(f"tag {rfid}")
+    h.wait_for(f"Authorization of {rfid} accepted")
+    h.send("plug")
+    transaction_id = h.wait_for(STARTING).group(1)
+
+    subprocess.run(["docker", "stop", DOCKER_OCPP], check=True, capture_output=True)
+    try:
+        h.wait_for("Disconnected", timeout=60)
+        # Stop the transaction while offline. The Ended event must be queued.
+        h.send(f"tag {rfid}")
+        h.wait_for("Stopping transaction")
+        h.send("unplug")
+    finally:
+        subprocess.run(["docker", "start", DOCKER_OCPP], check=True, capture_output=True)
+
+    h.wait_for("Connected \\(subprotocol ocpp2.1\\)", min_count=2, timeout=90)
+
+    session, events = api.wait_for_ended_session(db_id, transaction_id, timeout=30)
+    assert any(e["eventType"] == "ended" for e in events)
+
+    # The transaction-events endpoint does not expose the offline flag,
+    # check the raw frame in the OCPP log instead.
+    frames = [entry["payload"] for entry in api.ocpp_logs(db_id, limit=100)
+              if entry["action"] == "TransactionEvent" and entry["direction"] == "inbound"
+              and entry["messageType"] == 2 and entry["payload"].get("eventType") == "Ended"]
+    assert frames and frames[0].get("offline") is True, f"expected offline Ended frame, got {frames}"

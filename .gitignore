@@ -11,3 +11,4 @@ profiles/
 ocpp21_linux
 build/
 *.sec21
+test/csms/.env
