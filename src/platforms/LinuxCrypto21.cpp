@@ -1,7 +1,7 @@
 // OpenSSL implementation of the OCPP 2.1 certificate and key platform
 // primitives (Platform21.h) for the Linux host.
 
-#ifdef OCPP_PLATFORM_LINUX21
+#if defined(OCPP_PLATFORM_LINUX21) && !defined(OCPP_CRYPTO_MBEDTLS)
 
 #include <string.h>
 #include <sys/stat.h>

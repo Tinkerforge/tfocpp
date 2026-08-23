@@ -9,6 +9,7 @@ config
 txn_msg/
 profiles/
 ocpp21_linux
+ocpp21_linux_mbedtls
 build/
 *.sec21
 test/csms/.env

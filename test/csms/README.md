@@ -19,6 +19,7 @@ The first supported CSMS is evtivity, other CSMS can follow.
 ```
 ./run.sh            # everything
 ./run.sh -k security -v
+OCPP21_BINARY=ocpp21_linux_mbedtls ./run.sh   # against the mbedTLS crypto variant
 ```
 
 The tests create their own stations (prefix `tfocpp-test-`) via the REST API

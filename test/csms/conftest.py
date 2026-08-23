@@ -45,7 +45,8 @@ RFID_TOKENS = os.environ.get(
 ).split(",")
 TFOCPP_DIR = pathlib.Path(os.environ.get("TFOCPP_DIR", str(REPO_ROOT)))
 
-BINARY21 = TFOCPP_DIR / "ocpp21_linux"
+# OCPP21_BINARY=ocpp21_linux_mbedtls runs the suite against mbedTLS
+BINARY21 = TFOCPP_DIR / os.environ.get("OCPP21_BINARY", "ocpp21_linux")
 BINARY16 = TFOCPP_DIR / "ocpp16_linux"
 
 
@@ -88,7 +89,7 @@ def rfid():
 @pytest.fixture(scope="session")
 def binary21():
     if not BINARY21.exists():
-        pytest.exit(f"{BINARY21} not built, run: make ocpp21_linux", returncode=3)
+        pytest.exit(f"{BINARY21} not built, run: make {BINARY21.name}", returncode=3)
     return str(BINARY21)
 
 

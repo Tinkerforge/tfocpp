@@ -84,12 +84,17 @@ CFILES := src/lib/musl_libc_timegm.c \
 SOURCES_LIB := $(SOURCES_16) src/platforms/TestPlatform.cpp
 SOURCES_EXEC := $(SOURCES_16) src/platforms/LinuxPlatform16.cpp
 SOURCES_EXEC_21 := $(SOURCES_21) src/platforms/LinuxPlatform21.cpp src/platforms/LinuxCrypto21.cpp
+SOURCES_EXEC_21_MBEDTLS := $(SOURCES_21) src/platforms/LinuxPlatform21.cpp src/platforms/MbedCrypto21.cpp
+
+MBEDTLS_DIR := lib/mbedtls
+MBEDTLS_LIBS := $(MBEDTLS_DIR)/library/libmbedx509.a $(MBEDTLS_DIR)/library/libmbedcrypto.a
 
 # Each build variant compiles with a different platform define,
 # so each variant gets its own object directory below build/.
 OBJECTS_LIB := $(SOURCES_LIB:%.cpp=build/test/%.o) $(CFILES:%.c=build/test/%.o)
 OBJECTS_EXEC := $(SOURCES_EXEC:%.cpp=build/linux/%.o) $(CFILES:%.c=build/linux/%.o)
 OBJECTS_21 := $(SOURCES_EXEC_21:%.cpp=build/linux21/%.o) $(CFILES:%.c=build/linux21/%.o)
+OBJECTS_21_MBEDTLS := $(SOURCES_EXEC_21_MBEDTLS:%.cpp=build/linux21_mbedtls/%.o) $(CFILES:%.c=build/linux21_mbedtls/%.o)
 
 build/test/%.o: %.cpp
 	mkdir -p $(dir $@)
@@ -115,7 +120,19 @@ build/linux21/%.o: %.c
 	mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -DOCPP_PLATFORM_LINUX21 -c $< -o $@
 
-all: libocpp.so ocpp16_linux ocpp21_linux
+build/linux21_mbedtls/%.o: %.cpp
+	mkdir -p $(dir $@)
+	$(CXX) $(CXXFLAGS) -DOCPP_PLATFORM_LINUX21 -DOCPP_CRYPTO_MBEDTLS -isystem $(MBEDTLS_DIR)/include -c $< -o $@
+
+build/linux21_mbedtls/%.o: %.c
+	mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) -DOCPP_PLATFORM_LINUX21 -DOCPP_CRYPTO_MBEDTLS -c $< -o $@
+
+$(MBEDTLS_LIBS) &:
+	test -f $(MBEDTLS_DIR)/library/Makefile || { echo "lib/mbedtls is missing, run: git submodule update --init --recursive"; exit 1; }
+	$(MAKE) -C $(MBEDTLS_DIR)/library libmbedcrypto.a libmbedx509.a
+
+all: libocpp.so ocpp16_linux ocpp21_linux ocpp21_linux_mbedtls
 
 libocpp.so: $(OBJECTS_LIB)
 	$(CXX) $(OBJECTS_LIB) $(LIBS) $(LDFLAGS) $(LIB_LD_FLAGS) -shared -o $@
@@ -126,7 +143,10 @@ ocpp16_linux: $(OBJECTS_EXEC)
 ocpp21_linux: $(OBJECTS_21)
 	$(CXX) $(OBJECTS_21) $(LIBS) $(LDFLAGS) -o $@ $(STATIC_FLAG)
 
+ocpp21_linux_mbedtls: $(OBJECTS_21_MBEDTLS) $(MBEDTLS_LIBS)
+	$(CXX) $(OBJECTS_21_MBEDTLS) $(MBEDTLS_LIBS) $(LIBS) $(LDFLAGS) -o $@ $(STATIC_FLAG)
+
 .PHONY: all clean
 
 clean: Makefile
-	$(E)$(RM) -r build libocpp.so ocpp16_linux ocpp21_linux
+	$(E)$(RM) -r build libocpp.so ocpp16_linux ocpp21_linux ocpp21_linux_mbedtls
