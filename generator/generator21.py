@@ -864,11 +864,11 @@ def newline_remove(s):
     return s
 
 def generate_on_call(all_action_name_list: List[str], supported_to_recv: List[Object]):
-    h_content = "CallResponse callHandler(const char *uid, const char *action_string, JsonObject obj, ChargePoint21 *cp);\n"
+    h_content = "CallResponse callHandler(const char *uid, const char *action_string, JsonObject obj, ChargePoint *cp);\n"
     cpp_content = ""
 
 
-    template = """CallResponse callHandler(const char *uid, const char *action_string, JsonObject obj, ChargePoint21 *cp) {{
+    template = """CallResponse callHandler(const char *uid, const char *action_string, JsonObject obj, ChargePoint *cp) {{
     size_t action_idx = 0;
     if (!lookup_key(&action_idx, action_string, CallActionStrings, ARRAY_SIZE(CallActionStrings)))
         return CallResponse{{CallErrorCode::NotImplemented, "unknown action passed"}};
@@ -912,10 +912,10 @@ def generate_on_call(all_action_name_list: List[str], supported_to_recv: List[Ob
 
 
 def generate_on_call_response(all_action_name_list: List[str], supported_to_recv: List[Object]):
-    h_content = "CallResponse callResultHandler(int32_t connectorId, CallAction resultTo, JsonObject obj, ChargePoint21 *cp);\n"
+    h_content = "CallResponse callResultHandler(int32_t connectorId, CallAction resultTo, JsonObject obj, ChargePoint *cp);\n"
     cpp_content = ""
 
-    template = """CallResponse callResultHandler(int32_t connectorId, CallAction resultTo, JsonObject obj, ChargePoint21 *cp) {{
+    template = """CallResponse callResultHandler(int32_t connectorId, CallAction resultTo, JsonObject obj, ChargePoint *cp) {{
 
     switch(resultTo) {{{cases}
         {default_cases}

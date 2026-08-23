@@ -23,7 +23,7 @@
 
 namespace Ocpp21 {
 
-class ChargePoint21;
+class ChargePoint;
 
 extern uint64_t next_call_id;
 

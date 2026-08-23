@@ -23,7 +23,7 @@
 
 namespace Ocpp21 {
 
-class ChargePoint21;
+class ChargePoint;
 
 extern uint64_t next_call_id;
 
@@ -4782,7 +4782,7 @@ struct BootNotificationChargingStation {
 };
 
 
-CallResponse callHandler(const char *uid, const char *action_string, JsonObject obj, ChargePoint21 *cp);
+CallResponse callHandler(const char *uid, const char *action_string, JsonObject obj, ChargePoint *cp);
 
 struct BootNotification final : public ICall {
     BootNotificationChargingStation *chargingStation;
@@ -5120,7 +5120,7 @@ CallResponse parseDeleteCertificate(JsonObject obj);
 
 CallResponse parseGetInstalledCertificateIds(JsonObject obj);
 
-CallResponse callResultHandler(int32_t connectorId, CallAction resultTo, JsonObject obj, ChargePoint21 *cp);
+CallResponse callResultHandler(int32_t connectorId, CallAction resultTo, JsonObject obj, ChargePoint *cp);
 
 
 } // namespace Ocpp21

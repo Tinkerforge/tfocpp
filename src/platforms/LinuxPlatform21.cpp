@@ -153,8 +153,8 @@ const char *platform_get_firmware_version() {
     return "0.1.0";
 }
 
-static Ocpp21::ChargePoint21 cp;
-static Ocpp21::ChargePoint21 cp2;
+static Ocpp21::ChargePoint cp;
+static Ocpp21::ChargePoint cp2;
 
 // Simulated EVSE, driven by stdin commands. One global simulator shared by
 // all instances, sufficient for the host tests which use one instance.

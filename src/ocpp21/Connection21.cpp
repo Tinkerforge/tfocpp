@@ -23,7 +23,7 @@ static void log_payload(const char *prefix, const char *buf, size_t buf_len) {
     log_debug("%s (len %zu) %.*s%s", prefix, buf_len, (int)std::min(buf_len, (size_t)100), buf, buf_len > 96 ? " ..." : "");
 }
 
-void Connection21::handleMessage(char *message, size_t message_len)
+void Connection::handleMessage(char *message, size_t message_len)
 {
     (void)message_len;
     log_payload("Received message", message, message_len);
@@ -70,7 +70,7 @@ void Connection21::handleMessage(char *message, size_t message_len)
             return;
         }
 
-        if (cp->state == OcppState21::Rejected) {
+        if (cp->state == State::Rejected) {
             // B03.FR.06: while Rejected the Charging Station shall not respond to CSMS initiated messages.
             log_warn("received call while being rejected. Ignoring call.");
             return;
@@ -133,7 +133,7 @@ void Connection21::handleMessage(char *message, size_t message_len)
         log_info("Received result for %s (id %" PRIu64 ")", CallActionStrings[(size_t)message_in_flight.action], uid);
 
         CallAction result_to = message_in_flight.action;
-        message_in_flight = QueueItem21{};
+        message_in_flight = QueueItem{};
         in_flight_is_transaction = false;
         message_timeout_deadline = 0;
 
@@ -155,7 +155,7 @@ void Connection21::handleMessage(char *message, size_t message_len)
              doc[3].is<const char *>() ? doc[3].as<const char *>() : "?");
 
     cp->onCallError(message_in_flight.action, message_in_flight.message_id);
-    message_in_flight = QueueItem21{};
+    message_in_flight = QueueItem{};
     in_flight_is_transaction = false;
     message_timeout_deadline = 0;
 }
@@ -172,7 +172,7 @@ static size_t buildCallError(TFJsonSerializer &json, const char *uid, CallErrorC
     return json.end();
 }
 
-void Connection21::sendCallError(const char *uid, CallErrorCode code, const char *desc)
+void Connection::sendCallError(const char *uid, CallErrorCode code, const char *desc)
 {
     log_info("Sending error %s (%s) for id %s", CallErrorCodeStrings[(size_t)code], desc, uid);
 
@@ -189,14 +189,14 @@ void Connection21::sendCallError(const char *uid, CallErrorCode code, const char
     next_response.len = len;
 }
 
-bool Connection21::sendCallResponse(const ICall &call)
+bool Connection::sendCallResponse(const ICall &call)
 {
     log_info("Sending response for %s (id %s)", CallActionStrings[(size_t)call.action], call.ocppJcallId);
-    next_response = QueueItem21{call};
+    next_response = QueueItem{call};
     return true;
 }
 
-bool Connection21::sendCallAction(const ICall &call)
+bool Connection::sendCallAction(const ICall &call)
 {
     if (!platform_ws_connected(platform_ctx))
         return false;
@@ -214,7 +214,7 @@ bool Connection21::sendCallAction(const ICall &call)
     return true;
 }
 
-bool Connection21::sendTransactionCallAction(const ICall &call)
+bool Connection::sendTransactionCallAction(const ICall &call)
 {
     if (transaction_messages.size() >= OCPP21_TRANSACTION_QUEUE_DEPTH) {
         log_warn("Transaction message queue full. Dropping oldest %s", CallActionStrings[(size_t)transaction_messages.front().action]);
@@ -224,11 +224,11 @@ bool Connection21::sendTransactionCallAction(const ICall &call)
     return true;
 }
 
-void Connection21::setPongDeadline() {
+void Connection::setPongDeadline() {
     this->pong_deadline = set_deadline(1000 * (OCPP21_WS_PING_INTERVAL_S * 3 + OCPP21_WS_PING_INTERVAL_S / 2));
 }
 
-void Connection21::tick() {
+void Connection::tick() {
     bool connected = platform_ws_connected(platform_ctx);
 
     if (!connected && was_connected) {
@@ -262,13 +262,13 @@ void Connection21::tick() {
     if (!connected) {
         status_notifications.clear();
         messages.clear();
-        next_response = QueueItem21{};
+        next_response = QueueItem{};
         // Transaction messages survive the disconnect. An in flight
         // transaction message goes back to the queue front, it is unknown
         // whether the CSMS received it.
         if (message_in_flight.is_valid() && in_flight_is_transaction) {
             transaction_messages.push_front(std::move(message_in_flight));
-            message_in_flight = QueueItem21{};
+            message_in_flight = QueueItem{};
             in_flight_is_transaction = false;
             message_timeout_deadline = 0;
         }
@@ -293,7 +293,7 @@ void Connection21::tick() {
     if (next_response.is_valid()) {
         log_payload("Sending response", next_response.buf.get(), next_response.len);
         if (platform_ws_send(platform_ctx, next_response.buf.get(), next_response.len))
-            next_response = QueueItem21{};
+            next_response = QueueItem{};
         return;
     }
 
@@ -310,11 +310,11 @@ void Connection21::tick() {
             log_info("%s (id %" PRIu64 ") timed out. Dropping", CallActionStrings[(size_t)message_in_flight.action], message_in_flight.message_id);
             cp->onTimeout(message_in_flight.action, message_in_flight.message_id);
         }
-        message_in_flight = QueueItem21{};
+        message_in_flight = QueueItem{};
     }
 
     bool sending_transaction = false;
-    std::deque<QueueItem21> *to_pop = nullptr;
+    std::deque<QueueItem> *to_pop = nullptr;
     // Transaction events first, they are the authoritative session record
     // and their order relative to the status notifications matters at
     // transaction end (Ended before Available).
@@ -329,7 +329,7 @@ void Connection21::tick() {
         return;
 
     {
-        QueueItem21 *to_send = &to_pop->front();
+        QueueItem *to_send = &to_pop->front();
 
         auto new_deadline = set_deadline(1000 * OCPP21_MESSAGE_TIMEOUT_S);
 
@@ -347,7 +347,7 @@ void Connection21::tick() {
     in_flight_is_transaction = sending_transaction;
 }
 
-QueueItem21::QueueItem21(const ICall &call) :
+QueueItem::QueueItem(const ICall &call) :
         action(call.action),
         buf(nullptr),
         message_id(call.ocppJmessageId),
@@ -358,7 +358,7 @@ QueueItem21::QueueItem21(const ICall &call) :
     this->len = length;
 }
 
-bool QueueItem21::is_valid()
+bool QueueItem::is_valid()
 {
     return buf != nullptr;
 }
@@ -379,7 +379,7 @@ static std::unique_ptr<BasicAuthCredentials[]> build_credentials(const char *use
     return creds;
 }
 
-void *Connection21::start(const char *websocket_endpoint_url, const char *charge_point_name_percent_encoded, const char *basic_auth_pass, const PlatformTlsConfig *tls, ChargePoint21 *ocpp_handle) {
+void *Connection::start(const char *websocket_endpoint_url, const char *charge_point_name_percent_encoded, const char *basic_auth_pass, const PlatformTlsConfig *tls, ChargePoint *ocpp_handle) {
     this->cp = ocpp_handle;
     this->charge_point_name = charge_point_name_percent_encoded;
 
@@ -406,13 +406,13 @@ void *Connection21::start(const char *websocket_endpoint_url, const char *charge
     if (platform_ctx == nullptr)
         return nullptr;
 
-    platform_ws_register_receive_callback(platform_ctx, [](char *c, size_t s, void *user_data){((Connection21*)user_data)->handleMessage(c, s);}, this);
-    platform_ws_register_pong_callback(platform_ctx, [](void *user_data){((Connection21*)user_data)->setPongDeadline();}, this);
+    platform_ws_register_receive_callback(platform_ctx, [](char *c, size_t s, void *user_data){((Connection*)user_data)->handleMessage(c, s);}, this);
+    platform_ws_register_pong_callback(platform_ctx, [](void *user_data){((Connection*)user_data)->setPongDeadline();}, this);
 
     return platform_ctx;
 }
 
-void Connection21::updateBasicAuthPassword(const char *basic_auth_pass) {
+void Connection::updateBasicAuthPassword(const char *basic_auth_pass) {
     size_t cred_used_count = 0;
     if (basic_auth_pass != nullptr && basic_auth_pass[0] != '\0') {
         this->basic_auth_credentials = build_credentials(charge_point_name.c_str(), basic_auth_pass);
@@ -425,7 +425,7 @@ void Connection21::updateBasicAuthPassword(const char *basic_auth_pass) {
     platform_reconnect(platform_ctx);
 }
 
-void Connection21::stop() {
+void Connection::stop() {
     platform_ws_register_pong_callback(platform_ctx, nullptr, nullptr);
     platform_ws_register_receive_callback(platform_ctx, nullptr, nullptr);
 

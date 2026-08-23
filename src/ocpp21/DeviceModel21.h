@@ -23,9 +23,9 @@ enum class VariableResult : uint8_t {
     NotSupportedAttributeType,
 };
 
-class CertStore21;
+class CertStore;
 
-class DeviceModel21 {
+class DeviceModel {
 public:
     // Values owned by the device model.
     int32_t heartbeat_interval_s = 300;
@@ -46,7 +46,7 @@ public:
     int32_t cert_signing_wait_minimum_s = 30;
     int32_t cert_signing_repeat_times = 2;
     // CertificateEntries, set by the charge point.
-    const CertStore21 *cert_store = nullptr;
+    const CertStore *cert_store = nullptr;
 
     // ISO15118Ctrlr, subject fields of the SECC leaf CSR. Must match the
     // SECC registration at the V2G PKI operator.

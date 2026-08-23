@@ -13,7 +13,7 @@
 
 namespace Ocpp21 {
 
-enum class OcppState21 {
+enum class State {
     PowerOn,  // boot notification not yet accepted
     Pending,  // boot notification answered with Pending
     Rejected, // boot notification answered with Rejected
@@ -27,7 +27,7 @@ enum class OcppState21 {
 // Per EVSE connector and transaction state. One connector per EVSE,
 // TxStartPoint and TxStopPoint fixed to PowerPathClosed (simplified to
 // authorized and cable plugged).
-struct EvseTracker21 {
+struct EvseTracker {
     EvseState21 last_state = EvseState21::NotConnected;
     StatusNotificationConnectorStatus last_sent_status = StatusNotificationConnectorStatus::NONE;
 
@@ -51,7 +51,7 @@ struct EvseTracker21 {
 };
 
 // M06/M07: cached OCSP status of a SECC chain certificate.
-struct OcspCacheEntry21 {
+struct OcspCacheEntry {
     bool used = false;
     bool in_flight = false;
     uint32_t chain_id = 0;
@@ -66,7 +66,7 @@ struct OcspCacheEntry21 {
 
 // M07: vehicle chain status cache, filled from
 // GetCertificateChainStatusResponse. Read by the ISO 15118 stack.
-struct VehicleOcspStatus21 {
+struct VehicleOcspStatus {
     bool used = false;
     OcppCertHashData21 hash{};
     GetCertificateChainStatusResponseCertificateStatusEntryEntriesStatus status = GetCertificateChainStatusResponseCertificateStatusEntryEntriesStatus::UNKNOWN;
@@ -75,12 +75,12 @@ struct VehicleOcspStatus21 {
 
 #define OCPP21_VEHICLE_OCSP_CACHE_SIZE 4
 
-class ChargePoint21 {
+class ChargePoint {
 public:
-    ChargePoint21() {}
+    ChargePoint() {}
 
-    ChargePoint21(const ChargePoint21&) = delete;
-    ChargePoint21 &operator=(const ChargePoint21&) = delete;
+    ChargePoint(const ChargePoint&) = delete;
+    ChargePoint &operator=(const ChargePoint&) = delete;
 
     bool start(const char *websocket_endpoint_url, const char *charge_point_name, const char *basic_auth_pass, int32_t security_profile = 1, const PlatformTlsConfig *tls = nullptr);
     void stop();
@@ -103,7 +103,7 @@ public:
     // (hashes with per certificate responder URL). The result lands in
     // the vehicle status cache, see vehicleChainStatus.
     bool requestVehicleChainStatus(const OcppCertHashData21 *hashes, const char * const *responder_urls, size_t count);
-    const VehicleOcspStatus21 *vehicleChainStatus(const OcppCertHashData21 &hash) const;
+    const VehicleOcspStatus *vehicleChainStatus(const OcppCertHashData21 &hash) const;
 
     // Received call results
     CallResponse handleBootNotificationResponse(int32_t connectorId, BootNotificationResponseView conf);
@@ -130,11 +130,11 @@ public:
     CallResponse handleDeleteCertificate(const char *uid, DeleteCertificateView req);
     CallResponse handleGetInstalledCertificateIds(const char *uid, GetInstalledCertificateIdsView req);
 
-    OcppState21 state = OcppState21::PowerOn;
+    State state = State::PowerOn;
 
-    Connection21 connection;
-    DeviceModel21 device_model;
-    CertStore21 cert_store;
+    Connection connection;
+    DeviceModel device_model;
+    CertStore cert_store;
 
 private:
     void sendBootNotification();
@@ -167,7 +167,7 @@ private:
     bool trigger_heartbeat = false;
     bool trigger_status_notification = false;
 
-    EvseTracker21 evses[1];
+    EvseTracker evses[1];
 
     // A tag swipe reported by the platform, handled in the next tick.
     bool tag_pending = false;
@@ -226,11 +226,11 @@ private:
     std::string tls_client_key_file;
 
     // M06: SECC chain OCSP status cache. One request in flight at a time.
-    OcspCacheEntry21 ocsp_cache[OCPP21_OCSP_CACHE_SIZE];
+    OcspCacheEntry ocsp_cache[OCPP21_OCSP_CACHE_SIZE];
     int32_t ocsp_in_flight_idx = -1;
 
     // M07 plumbing.
-    VehicleOcspStatus21 vehicle_ocsp[OCPP21_VEHICLE_OCSP_CACHE_SIZE];
+    VehicleOcspStatus vehicle_ocsp[OCPP21_VEHICLE_OCSP_CACHE_SIZE];
 };
 
 } // namespace Ocpp21

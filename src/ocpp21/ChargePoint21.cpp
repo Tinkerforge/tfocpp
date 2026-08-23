@@ -29,7 +29,7 @@ static void generate_transaction_id(char buf[OCPP21_TRANSACTION_ID_LEN + 1])
              (unsigned long long)(r2 & 0xffffffffffffull));
 }
 
-bool ChargePoint21::start(const char *websocket_endpoint_url, const char *charge_point_name, const char *basic_auth_pass, int32_t security_profile, const PlatformTlsConfig *tls)
+bool ChargePoint::start(const char *websocket_endpoint_url, const char *charge_point_name, const char *basic_auth_pass, int32_t security_profile, const PlatformTlsConfig *tls)
 {
     this->charge_point_name = charge_point_name;
     device_model.identity = this->charge_point_name.c_str();
@@ -59,10 +59,10 @@ bool ChargePoint21::start(const char *websocket_endpoint_url, const char *charge
             tls_client_key_file = tls->client_key_file;
         }
 
-        const CertEntry21 *client_chain = cert_store.find(CertGroup21::CsmsClientChain);
+        const CertEntry *client_chain = cert_store.find(CertGroup::CsmsClientChain);
         if (client_chain != nullptr) {
             log_info("Using the charging station certificate installed via OCPP");
-            tls_client_cert_file = cert_store.pemPath(CertGroup21::CsmsClientChain, client_chain->id);
+            tls_client_cert_file = cert_store.pemPath(CertGroup::CsmsClientChain, client_chain->id);
             tls_client_key_file = cert_store.keyPath(client_chain->id);
         }
 
@@ -77,17 +77,17 @@ bool ChargePoint21::start(const char *websocket_endpoint_url, const char *charge
 
     // M06: refresh the OCSP status of stored SECC chains after boot.
     for (auto &e : cert_store.all()) {
-        if (e.group == CertGroup21::V2GChain || e.group == CertGroup21::V2G20Chain) {
+        if (e.group == CertGroup::V2GChain || e.group == CertGroup::V2G20Chain) {
             scheduleChainOcsp(e.id);
         }
     }
 
     platform_register_tag_seen_callback21(connection.platform_ctx, [](int32_t evse_id, const char *tag_id, void *user_data){
-        ((ChargePoint21*)user_data)->onTagSeen(evse_id, tag_id);
+        ((ChargePoint*)user_data)->onTagSeen(evse_id, tag_id);
     }, this);
 
     platform_ws_register_connection_error_callback(connection.platform_ctx, [](PlatformConnectionError error, void *user_data){
-        ((ChargePoint21*)user_data)->onConnectionError(error);
+        ((ChargePoint*)user_data)->onConnectionError(error);
     }, this);
 
     boot_retry_deadline = set_deadline(0);
@@ -95,12 +95,12 @@ bool ChargePoint21::start(const char *websocket_endpoint_url, const char *charge
     return true;
 }
 
-void ChargePoint21::stop()
+void ChargePoint::stop()
 {
     connection.stop();
 }
 
-void ChargePoint21::tick()
+void ChargePoint::tick()
 {
     connection.tick();
 
@@ -120,23 +120,23 @@ void ChargePoint21::tick()
 
     // Transactions continue while offline, their events are queued and
     // flushed after the reconnect.
-    if (state == OcppState21::Idle)
+    if (state == State::Idle)
         tickEvses();
 
     if (!platform_ws_connected(connection.platform_ctx))
         return;
 
     switch (state) {
-        case OcppState21::PowerOn:
-        case OcppState21::Pending:
-        case OcppState21::Rejected:
+        case State::PowerOn:
+        case State::Pending:
+        case State::Rejected:
             if ((deadline_elapsed(boot_retry_deadline) || trigger_boot_notification) && !boot_notification_in_flight) {
                 trigger_boot_notification = false;
                 sendBootNotification();
             }
             break;
 
-        case OcppState21::Idle:
+        case State::Idle:
             if (status_notifications_pending || trigger_status_notification) {
                 status_notifications_pending = false;
                 trigger_status_notification = false;
@@ -154,11 +154,11 @@ void ChargePoint21::tick()
     }
 }
 
-void ChargePoint21::onConnect()
+void ChargePoint::onConnect()
 {
     log_info("Connected (subprotocol ocpp2.1)");
     last_reported_conn_error = PlatformConnectionError::Unknown;
-    if (state != OcppState21::Idle)
+    if (state != State::Idle)
         boot_retry_deadline = set_deadline(0);
     else
         status_notifications_pending = true;
@@ -167,13 +167,13 @@ void ChargePoint21::onConnect()
     cert_expiry_check_deadline = set_deadline(5000);
 }
 
-void ChargePoint21::onDisconnect()
+void ChargePoint::onDisconnect()
 {
     log_info("Disconnected");
     boot_notification_in_flight = false;
 }
 
-void ChargePoint21::onConnectionError(PlatformConnectionError error)
+void ChargePoint::onConnectionError(PlatformConnectionError error)
 {
     const char *type;
     switch (error) {
@@ -194,14 +194,14 @@ void ChargePoint21::onConnectionError(PlatformConnectionError error)
     sendSecurityEventNotification(type);
 }
 
-void ChargePoint21::sendSecurityEventNotification(const char *type, const char *tech_info)
+void ChargePoint::sendSecurityEventNotification(const char *type, const char *tech_info)
 {
     connection.sendTransactionCallAction(SecurityEventNotification{type, platform_get_system_time(connection.platform_ctx), tech_info});
 }
 
 #define OCPP21_SECURITY_PERSISTENCE_BUF_LEN 512
 
-void ChargePoint21::loadSecurityPersistence()
+void ChargePoint::loadSecurityPersistence()
 {
     std::string name = charge_point_name + ".sec21";
     char buf[OCPP21_SECURITY_PERSISTENCE_BUF_LEN];
@@ -236,7 +236,7 @@ void ChargePoint21::loadSecurityPersistence()
     }
 }
 
-void ChargePoint21::saveSecurityPersistence()
+void ChargePoint::saveSecurityPersistence()
 {
     std::string name = charge_point_name + ".sec21";
     char buf[OCPP21_SECURITY_PERSISTENCE_BUF_LEN];
@@ -256,7 +256,7 @@ void ChargePoint21::saveSecurityPersistence()
     }
 }
 
-void ChargePoint21::onTimeout(CallAction action, uint64_t messageId)
+void ChargePoint::onTimeout(CallAction action, uint64_t messageId)
 {
     (void)messageId;
     if (action == CallAction::BOOT_NOTIFICATION) {
@@ -275,12 +275,12 @@ void ChargePoint21::onTimeout(CallAction action, uint64_t messageId)
     }
 }
 
-void ChargePoint21::onCallError(CallAction action, uint64_t messageId)
+void ChargePoint::onCallError(CallAction action, uint64_t messageId)
 {
     this->onTimeout(action, messageId);
 }
 
-void ChargePoint21::sendBootNotification()
+void ChargePoint::sendBootNotification()
 {
     BootNotificationChargingStation cs;
     cs.model = platform_get_charge_point_model();
@@ -291,7 +291,7 @@ void ChargePoint21::sendBootNotification()
     boot_notification_in_flight = connection.sendCallAction(BootNotification{&cs, BootNotificationReason::POWER_UP});
 }
 
-void ChargePoint21::onTagSeen(int32_t evse_id, const char *tag_id)
+void ChargePoint::onTagSeen(int32_t evse_id, const char *tag_id)
 {
     if (tag_pending) {
         log_info("Tag %s seen while a tag is still being processed. Ignored", tag_id);
@@ -303,7 +303,7 @@ void ChargePoint21::onTagSeen(int32_t evse_id, const char *tag_id)
     tag_pending = true;
 }
 
-static StatusNotificationConnectorStatus connector_status(EvseState21 s, const EvseTracker21 &t)
+static StatusNotificationConnectorStatus connector_status(EvseState21 s, const EvseTracker &t)
 {
     if (s == EvseState21::Faulted)
         return StatusNotificationConnectorStatus::FAULTED;
@@ -312,7 +312,7 @@ static StatusNotificationConnectorStatus connector_status(EvseState21 s, const E
     return StatusNotificationConnectorStatus::AVAILABLE;
 }
 
-void ChargePoint21::sendStatusNotifications()
+void ChargePoint::sendStatusNotifications()
 {
     for (int32_t evse_id = 1; evse_id <= OCPP21_NUM_EVSES; ++evse_id) {
         auto &t = evses[evse_id - 1];
@@ -326,7 +326,7 @@ void ChargePoint21::sendStatusNotifications()
     }
 }
 
-void ChargePoint21::tickEvses()
+void ChargePoint::tickEvses()
 {
     for (int32_t evse_id = 1; evse_id <= OCPP21_NUM_EVSES; ++evse_id) {
         auto &t = evses[evse_id - 1];
@@ -414,7 +414,7 @@ void ChargePoint21::tickEvses()
     tag_pending = false;
 }
 
-void ChargePoint21::startTransaction(int32_t evse_id, TransactionEventTriggerReason trigger)
+void ChargePoint::startTransaction(int32_t evse_id, TransactionEventTriggerReason trigger)
 {
     auto &t = evses[evse_id - 1];
 
@@ -471,7 +471,7 @@ void ChargePoint21::startTransaction(int32_t evse_id, TransactionEventTriggerRea
         t.next_sampled_value_deadline = set_deadline((uint32_t)device_model.tx_updated_interval_s * 1000);
 }
 
-void ChargePoint21::sendTransactionUpdated(int32_t evse_id, TransactionEventTriggerReason trigger, bool with_meter_value)
+void ChargePoint::sendTransactionUpdated(int32_t evse_id, TransactionEventTriggerReason trigger, bool with_meter_value)
 {
     auto &t = evses[evse_id - 1];
 
@@ -510,7 +510,7 @@ void ChargePoint21::sendTransactionUpdated(int32_t evse_id, TransactionEventTrig
         &evse});
 }
 
-void ChargePoint21::stopTransaction(int32_t evse_id, TransactionEventTriggerReason trigger, TransactionEventTransactionInfoStoppedReason reason, bool include_token)
+void ChargePoint::stopTransaction(int32_t evse_id, TransactionEventTriggerReason trigger, TransactionEventTransactionInfoStoppedReason reason, bool include_token)
 {
     auto &t = evses[evse_id - 1];
 
@@ -566,7 +566,7 @@ void ChargePoint21::stopTransaction(int32_t evse_id, TransactionEventTriggerReas
     t.transaction_id[0] = '\0';
 }
 
-CallResponse ChargePoint21::handleBootNotificationResponse(int32_t connectorId, BootNotificationResponseView conf)
+CallResponse ChargePoint::handleBootNotificationResponse(int32_t connectorId, BootNotificationResponseView conf)
 {
     (void)connectorId;
     boot_notification_in_flight = false;
@@ -578,7 +578,7 @@ CallResponse ChargePoint21::handleBootNotificationResponse(int32_t connectorId, 
     switch (conf.status()) {
         case BootNotificationResponseStatus::ACCEPTED:
             log_info("Boot notification accepted");
-            state = OcppState21::Idle;
+            state = State::Idle;
             if (interval > 0)
                 device_model.heartbeat_interval_s = interval;
             next_heartbeat_deadline = set_deadline((uint32_t)device_model.heartbeat_interval_s * 1000);
@@ -587,13 +587,13 @@ CallResponse ChargePoint21::handleBootNotificationResponse(int32_t connectorId, 
 
         case BootNotificationResponseStatus::PENDING:
             log_info("Boot notification pending, retrying in %d s", interval > 0 ? interval : OCPP21_DEFAULT_BOOT_RETRY_INTERVAL_S);
-            state = OcppState21::Pending;
+            state = State::Pending;
             boot_retry_deadline = set_deadline((uint32_t)(interval > 0 ? interval : OCPP21_DEFAULT_BOOT_RETRY_INTERVAL_S) * 1000);
             break;
 
         case BootNotificationResponseStatus::REJECTED:
             log_warn("Boot notification rejected, retrying in %d s", interval > 0 ? interval : OCPP21_DEFAULT_BOOT_RETRY_INTERVAL_S);
-            state = OcppState21::Rejected;
+            state = State::Rejected;
             boot_retry_deadline = set_deadline((uint32_t)(interval > 0 ? interval : OCPP21_DEFAULT_BOOT_RETRY_INTERVAL_S) * 1000);
             break;
     }
@@ -601,21 +601,21 @@ CallResponse ChargePoint21::handleBootNotificationResponse(int32_t connectorId, 
     return CallResponse{CallErrorCode::OK, nullptr};
 }
 
-CallResponse ChargePoint21::handleHeartbeatResponse(int32_t connectorId, HeartbeatResponseView conf)
+CallResponse ChargePoint::handleHeartbeatResponse(int32_t connectorId, HeartbeatResponseView conf)
 {
     (void)connectorId;
     platform_set_system_time(connection.platform_ctx, conf.currentTime());
     return CallResponse{CallErrorCode::OK, nullptr};
 }
 
-CallResponse ChargePoint21::handleStatusNotificationResponse(int32_t connectorId, StatusNotificationResponseView conf)
+CallResponse ChargePoint::handleStatusNotificationResponse(int32_t connectorId, StatusNotificationResponseView conf)
 {
     (void)connectorId;
     (void)conf;
     return CallResponse{CallErrorCode::OK, nullptr};
 }
 
-CallResponse ChargePoint21::handleGetVariables(const char *uid, GetVariablesView req)
+CallResponse ChargePoint::handleGetVariables(const char *uid, GetVariablesView req)
 {
     size_t count = req.getVariableData_count();
     if (count == 0)
@@ -674,7 +674,7 @@ CallResponse ChargePoint21::handleGetVariables(const char *uid, GetVariablesView
     return CallResponse{CallErrorCode::OK, nullptr};
 }
 
-CallResponse ChargePoint21::handleSetVariables(const char *uid, SetVariablesView req)
+CallResponse ChargePoint::handleSetVariables(const char *uid, SetVariablesView req)
 {
     size_t count = req.setVariableData_count();
     if (count == 0)
@@ -754,7 +754,7 @@ CallResponse ChargePoint21::handleSetVariables(const char *uid, SetVariablesView
     return CallResponse{CallErrorCode::OK, nullptr};
 }
 
-CallResponse ChargePoint21::handleGetBaseReport(const char *uid, GetBaseReportView req)
+CallResponse ChargePoint::handleGetBaseReport(const char *uid, GetBaseReportView req)
 {
     (void)req;
     // TODO: implement NotifyReport streaming for the base report.
@@ -762,14 +762,14 @@ CallResponse ChargePoint21::handleGetBaseReport(const char *uid, GetBaseReportVi
     return CallResponse{CallErrorCode::OK, nullptr};
 }
 
-CallResponse ChargePoint21::handleTriggerMessage(const char *uid, TriggerMessageView req)
+CallResponse ChargePoint::handleTriggerMessage(const char *uid, TriggerMessageView req)
 {
     auto status = TriggerMessageResponseStatus::NOT_IMPLEMENTED;
 
     switch (req.requestedMessage()) {
         case TriggerMessageRequestedMessage::BOOT_NOTIFICATION:
             // B06: a triggered boot notification is only useful while not accepted.
-            if (state == OcppState21::Idle) {
+            if (state == State::Idle) {
                 status = TriggerMessageResponseStatus::REJECTED;
             } else {
                 trigger_boot_notification = true;
@@ -816,7 +816,7 @@ CallResponse ChargePoint21::handleTriggerMessage(const char *uid, TriggerMessage
     return CallResponse{CallErrorCode::OK, nullptr};
 }
 
-CallResponse ChargePoint21::handleReset(const char *uid, ResetView req)
+CallResponse ChargePoint::handleReset(const char *uid, ResetView req)
 {
     // TODO: OnIdle handling once the transaction queue is persistent. Every
     // reset is treated as Immediate for now.
@@ -835,7 +835,7 @@ CallResponse ChargePoint21::handleReset(const char *uid, ResetView req)
     return CallResponse{CallErrorCode::OK, nullptr};
 }
 
-CallResponse ChargePoint21::handleAuthorizeResponse(int32_t connectorId, AuthorizeResponseView conf)
+CallResponse ChargePoint::handleAuthorizeResponse(int32_t connectorId, AuthorizeResponseView conf)
 {
     (void)connectorId;
     authorize_in_flight = false;
@@ -875,7 +875,7 @@ CallResponse ChargePoint21::handleAuthorizeResponse(int32_t connectorId, Authori
     return CallResponse{CallErrorCode::OK, nullptr};
 }
 
-CallResponse ChargePoint21::handleTransactionEventResponse(int32_t connectorId, TransactionEventResponseView conf)
+CallResponse ChargePoint::handleTransactionEventResponse(int32_t connectorId, TransactionEventResponseView conf)
 {
     (void)connectorId;
 
@@ -895,21 +895,21 @@ CallResponse ChargePoint21::handleTransactionEventResponse(int32_t connectorId, 
     return CallResponse{CallErrorCode::OK, nullptr};
 }
 
-CallResponse ChargePoint21::handleMeterValuesResponse(int32_t connectorId, MeterValuesResponseView conf)
+CallResponse ChargePoint::handleMeterValuesResponse(int32_t connectorId, MeterValuesResponseView conf)
 {
     (void)connectorId;
     (void)conf;
     return CallResponse{CallErrorCode::OK, nullptr};
 }
 
-CallResponse ChargePoint21::handleSecurityEventNotificationResponse(int32_t connectorId, SecurityEventNotificationResponseView conf)
+CallResponse ChargePoint::handleSecurityEventNotificationResponse(int32_t connectorId, SecurityEventNotificationResponseView conf)
 {
     (void)connectorId;
     (void)conf;
     return CallResponse{CallErrorCode::OK, nullptr};
 }
 
-CallResponse ChargePoint21::handleRequestStartTransaction(const char *uid, RequestStartTransactionView req)
+CallResponse ChargePoint::handleRequestStartTransaction(const char *uid, RequestStartTransactionView req)
 {
     int32_t evse_id = req.evseId().is_some() ? req.evseId().unwrap() : 1;
 
@@ -946,7 +946,7 @@ CallResponse ChargePoint21::handleRequestStartTransaction(const char *uid, Reque
     return CallResponse{CallErrorCode::OK, nullptr};
 }
 
-CallResponse ChargePoint21::handleRequestStopTransaction(const char *uid, RequestStopTransactionView req)
+CallResponse ChargePoint::handleRequestStopTransaction(const char *uid, RequestStopTransactionView req)
 {
     for (int32_t evse_id = 1; evse_id <= OCPP21_NUM_EVSES; ++evse_id) {
         auto &t = evses[evse_id - 1];
@@ -972,17 +972,17 @@ CallResponse ChargePoint21::handleRequestStopTransaction(const char *uid, Reques
 
 static const char * const sign_type_names[] = {"ChargingStationCertificate", "V2GCertificate", "V2G20Certificate"};
 
-static CertGroup21 chain_group_for_sign_type(SignCertificateCertificateType type)
+static CertGroup chain_group_for_sign_type(SignCertificateCertificateType type)
 {
     switch (type) {
-        case SignCertificateCertificateType::CHARGING_STATION_CERTIFICATE: return CertGroup21::CsmsClientChain;
-        case SignCertificateCertificateType::V2_G_CERTIFICATE:             return CertGroup21::V2GChain;
-        case SignCertificateCertificateType::V2_G20_CERTIFICATE:           return CertGroup21::V2G20Chain;
-        default:                                                           return CertGroup21::None;
+        case SignCertificateCertificateType::CHARGING_STATION_CERTIFICATE: return CertGroup::CsmsClientChain;
+        case SignCertificateCertificateType::V2_G_CERTIFICATE:             return CertGroup::V2GChain;
+        case SignCertificateCertificateType::V2_G20_CERTIFICATE:           return CertGroup::V2G20Chain;
+        default:                                                           return CertGroup::None;
     }
 }
 
-void ChargePoint21::tickCertificates()
+void ChargePoint::tickCertificates()
 {
     if (trigger_sign) {
         trigger_sign = false;
@@ -1011,9 +1011,9 @@ void ChargePoint21::tickCertificates()
             for (auto &e : cert_store.all()) {
                 SignCertificateCertificateType type;
                 switch (e.group) {
-                    case CertGroup21::CsmsClientChain: type = SignCertificateCertificateType::CHARGING_STATION_CERTIFICATE; break;
-                    case CertGroup21::V2GChain:        type = SignCertificateCertificateType::V2_G_CERTIFICATE; break;
-                    case CertGroup21::V2G20Chain:      type = SignCertificateCertificateType::V2_G20_CERTIFICATE; break;
+                    case CertGroup::CsmsClientChain: type = SignCertificateCertificateType::CHARGING_STATION_CERTIFICATE; break;
+                    case CertGroup::V2GChain:        type = SignCertificateCertificateType::V2_G_CERTIFICATE; break;
+                    case CertGroup::V2G20Chain:      type = SignCertificateCertificateType::V2_G20_CERTIFICATE; break;
                     default: continue;
                 }
                 if (e.not_after == 0 || e.not_after - now > OCPP21_A03_RENEWAL_WINDOW_S) {
@@ -1048,7 +1048,7 @@ void ChargePoint21::tickCertificates()
     }
 }
 
-void ChargePoint21::startCsr(SignCertificateCertificateType type, bool renewal, const OcppCertHashData21 *root_hash)
+void ChargePoint::startCsr(SignCertificateCertificateType type, bool renewal, const OcppCertHashData21 *root_hash)
 {
     // HUB20-42-003: a new trigger aborts a pending retry.
     abortCsr();
@@ -1105,7 +1105,7 @@ void ChargePoint21::startCsr(SignCertificateCertificateType type, bool renewal, 
     sendSignCertificate();
 }
 
-void ChargePoint21::abortCsr()
+void ChargePoint::abortCsr()
 {
     if (csr_pending_id != 0) {
         platform_remove_file(cert_store.keyPath(csr_pending_id).c_str());
@@ -1114,7 +1114,7 @@ void ChargePoint21::abortCsr()
     csr_active = false;
 }
 
-void ChargePoint21::sendSignCertificate()
+void ChargePoint::sendSignCertificate()
 {
     SignCertificateHashRootCertificate root;
     if (csr_has_root_hash) {
@@ -1128,7 +1128,7 @@ void ChargePoint21::sendSignCertificate()
     csr_retry_deadline = set_deadline(csr_backoff_s * 1000);
 }
 
-CallResponse ChargePoint21::handleSignCertificateResponse(int32_t connectorId, SignCertificateResponseView conf)
+CallResponse ChargePoint::handleSignCertificateResponse(int32_t connectorId, SignCertificateResponseView conf)
 {
     (void)connectorId;
     if (!csr_active) {
@@ -1145,13 +1145,13 @@ CallResponse ChargePoint21::handleSignCertificateResponse(int32_t connectorId, S
     return CallResponse{CallErrorCode::OK, nullptr};
 }
 
-CallResponse ChargePoint21::handleCertificateSigned(const char *uid, CertificateSignedView req)
+CallResponse ChargePoint::handleCertificateSigned(const char *uid, CertificateSignedView req)
 {
     const char *chain = req.certificateChain();
     const char *reject_reason = nullptr;
     size_t cert_count = 0;
-    CertGroup21 chain_group = chain_group_for_sign_type(csr_type);
-    CertGroup21 root_group = chain_group == CertGroup21::CsmsClientChain ? CertGroup21::CsmsRoot : CertGroup21::V2GRoot;
+    CertGroup chain_group = chain_group_for_sign_type(csr_type);
+    CertGroup root_group = chain_group == CertGroup::CsmsClientChain ? CertGroup::CsmsRoot : CertGroup::V2GRoot;
 
     std::unique_ptr<char[]> root_bufs[OCPP21_CERTSTORE_MAX_V2G_ROOT];
     const char *root_ptrs[OCPP21_CERTSTORE_MAX_V2G_ROOT];
@@ -1235,7 +1235,7 @@ CallResponse ChargePoint21::handleCertificateSigned(const char *uid, Certificate
     csr_pending_id = 0; // the key now belongs to the installed chain
     csr_active = false;
 
-    if (chain_group == CertGroup21::CsmsClientChain) {
+    if (chain_group == CertGroup::CsmsClientChain) {
         // A02.FR.08: reconnect with the new certificate after the
         // response left. No reconnect for the V2G types.
         if (tls_in_use) {
@@ -1250,9 +1250,9 @@ CallResponse ChargePoint21::handleCertificateSigned(const char *uid, Certificate
     return CallResponse{CallErrorCode::OK, nullptr};
 }
 
-void ChargePoint21::applyClientCertificate(uint32_t chain_id)
+void ChargePoint::applyClientCertificate(uint32_t chain_id)
 {
-    tls_client_cert_file = cert_store.pemPath(CertGroup21::CsmsClientChain, chain_id);
+    tls_client_cert_file = cert_store.pemPath(CertGroup::CsmsClientChain, chain_id);
     tls_client_key_file = cert_store.keyPath(chain_id);
 
     PlatformTlsConfig tls;
@@ -1265,30 +1265,30 @@ void ChargePoint21::applyClientCertificate(uint32_t chain_id)
     platform_reconnect(connection.platform_ctx);
 }
 
-CallResponse ChargePoint21::handleInstallCertificate(const char *uid, InstallCertificateView req)
+CallResponse ChargePoint::handleInstallCertificate(const char *uid, InstallCertificateView req)
 {
-    CertGroup21 group;
+    CertGroup group;
     switch (req.certificateType()) {
-        case InstallCertificateCertificateType::V2_G_ROOT_CERTIFICATE:          group = CertGroup21::V2GRoot; break;
-        case InstallCertificateCertificateType::MO_ROOT_CERTIFICATE:            group = CertGroup21::MORoot; break;
-        case InstallCertificateCertificateType::MANUFACTURER_ROOT_CERTIFICATE:  group = CertGroup21::MfrRoot; break;
-        case InstallCertificateCertificateType::CSMS_ROOT_CERTIFICATE:          group = CertGroup21::CsmsRoot; break;
-        case InstallCertificateCertificateType::OEM_ROOT_CERTIFICATE:           group = CertGroup21::OEMRoot; break;
+        case InstallCertificateCertificateType::V2_G_ROOT_CERTIFICATE:          group = CertGroup::V2GRoot; break;
+        case InstallCertificateCertificateType::MO_ROOT_CERTIFICATE:            group = CertGroup::MORoot; break;
+        case InstallCertificateCertificateType::MANUFACTURER_ROOT_CERTIFICATE:  group = CertGroup::MfrRoot; break;
+        case InstallCertificateCertificateType::CSMS_ROOT_CERTIFICATE:          group = CertGroup::CsmsRoot; break;
+        case InstallCertificateCertificateType::OEM_ROOT_CERTIFICATE:           group = CertGroup::OEMRoot; break;
         default:
             return CallResponse{CallErrorCode::PropertyConstraintViolation, "unknown certificateType"};
     }
 
     auto status = InstallCertificateResponseStatus::REJECTED;
     switch (cert_store.installRoot(group, req.certificate())) {
-        case CertInstallResult21::Accepted:
+        case CertInstallResult::Accepted:
             status = InstallCertificateResponseStatus::ACCEPTED;
             log_info("Installed a %s", InstallCertificateCertificateTypeStrings[(size_t)req.certificateType()]);
             break;
-        case CertInstallResult21::Rejected:
+        case CertInstallResult::Rejected:
             status = InstallCertificateResponseStatus::REJECTED;
             log_warn("Rejected a %s", InstallCertificateCertificateTypeStrings[(size_t)req.certificateType()]);
             break;
-        case CertInstallResult21::Failed:
+        case CertInstallResult::Failed:
             status = InstallCertificateResponseStatus::FAILED;
             log_error("Failed to store a %s", InstallCertificateCertificateTypeStrings[(size_t)req.certificateType()]);
             break;
@@ -1298,7 +1298,7 @@ CallResponse ChargePoint21::handleInstallCertificate(const char *uid, InstallCer
     return CallResponse{CallErrorCode::OK, nullptr};
 }
 
-CallResponse ChargePoint21::handleDeleteCertificate(const char *uid, DeleteCertificateView req)
+CallResponse ChargePoint::handleDeleteCertificate(const char *uid, DeleteCertificateView req)
 {
     auto hash_data = req.certificateHashData();
     auto status = DeleteCertificateResponseStatus::NOT_FOUND;
@@ -1306,15 +1306,15 @@ CallResponse ChargePoint21::handleDeleteCertificate(const char *uid, DeleteCerti
     // Only SHA256 hashes are stored (A00.FR.506).
     if (hash_data.hashAlgorithm() == CertificateHashDataEntriesHashAlgorithm::SHA256) {
         switch (cert_store.deleteByHash(hash_data.issuerNameHash(), hash_data.issuerKeyHash(), hash_data.serialNumber())) {
-            case CertDeleteResult21::Accepted:
+            case CertDeleteResult::Accepted:
                 status = DeleteCertificateResponseStatus::ACCEPTED;
                 log_info("Deleted the certificate with serial %s", hash_data.serialNumber());
                 break;
-            case CertDeleteResult21::Failed:
+            case CertDeleteResult::Failed:
                 status = DeleteCertificateResponseStatus::FAILED;
                 log_warn("Refused to delete the certificate in use for the CSMS connection");
                 break;
-            case CertDeleteResult21::NotFound:
+            case CertDeleteResult::NotFound:
                 break;
         }
     }
@@ -1323,7 +1323,7 @@ CallResponse ChargePoint21::handleDeleteCertificate(const char *uid, DeleteCerti
     return CallResponse{CallErrorCode::OK, nullptr};
 }
 
-CallResponse ChargePoint21::handleGetInstalledCertificateIds(const char *uid, GetInstalledCertificateIdsView req)
+CallResponse ChargePoint::handleGetInstalledCertificateIds(const char *uid, GetInstalledCertificateIdsView req)
 {
     // Requested types, all when the filter is absent (M03.FR.05).
     bool want[6] = {false, false, false, false, false, false};
@@ -1341,15 +1341,15 @@ CallResponse ChargePoint21::handleGetInstalledCertificateIds(const char *uid, Ge
         }
     }
 
-    auto entry_type = [](CertGroup21 group) -> GetInstalledCertificateIdsCertificateTypeEntry {
+    auto entry_type = [](CertGroup group) -> GetInstalledCertificateIdsCertificateTypeEntry {
         switch (group) {
-            case CertGroup21::V2GRoot:    return GetInstalledCertificateIdsCertificateTypeEntry::V2_G_ROOT_CERTIFICATE;
-            case CertGroup21::MORoot:     return GetInstalledCertificateIdsCertificateTypeEntry::MO_ROOT_CERTIFICATE;
-            case CertGroup21::OEMRoot:    return GetInstalledCertificateIdsCertificateTypeEntry::OEM_ROOT_CERTIFICATE;
-            case CertGroup21::CsmsRoot:   return GetInstalledCertificateIdsCertificateTypeEntry::CSMS_ROOT_CERTIFICATE;
-            case CertGroup21::MfrRoot:    return GetInstalledCertificateIdsCertificateTypeEntry::MANUFACTURER_ROOT_CERTIFICATE;
-            case CertGroup21::V2GChain:
-            case CertGroup21::V2G20Chain: return GetInstalledCertificateIdsCertificateTypeEntry::V2_G_CERTIFICATE_CHAIN;
+            case CertGroup::V2GRoot:    return GetInstalledCertificateIdsCertificateTypeEntry::V2_G_ROOT_CERTIFICATE;
+            case CertGroup::MORoot:     return GetInstalledCertificateIdsCertificateTypeEntry::MO_ROOT_CERTIFICATE;
+            case CertGroup::OEMRoot:    return GetInstalledCertificateIdsCertificateTypeEntry::OEM_ROOT_CERTIFICATE;
+            case CertGroup::CsmsRoot:   return GetInstalledCertificateIdsCertificateTypeEntry::CSMS_ROOT_CERTIFICATE;
+            case CertGroup::MfrRoot:    return GetInstalledCertificateIdsCertificateTypeEntry::MANUFACTURER_ROOT_CERTIFICATE;
+            case CertGroup::V2GChain:
+            case CertGroup::V2G20Chain: return GetInstalledCertificateIdsCertificateTypeEntry::V2_G_CERTIFICATE_CHAIN;
             default:                      return (GetInstalledCertificateIdsCertificateTypeEntry)6;
         }
     };
@@ -1405,10 +1405,10 @@ CallResponse ChargePoint21::handleGetInstalledCertificateIds(const char *uid, Ge
     return CallResponse{CallErrorCode::OK, nullptr};
 }
 
-void ChargePoint21::scheduleChainOcsp(uint32_t chain_id)
+void ChargePoint::scheduleChainOcsp(uint32_t chain_id)
 {
-    const CertEntry21 *e = cert_store.findById(chain_id);
-    if (e == nullptr || (e->group != CertGroup21::V2GChain && e->group != CertGroup21::V2G20Chain)) {
+    const CertEntry *e = cert_store.findById(chain_id);
+    if (e == nullptr || (e->group != CertGroup::V2GChain && e->group != CertGroup::V2G20Chain)) {
         return;
     }
 
@@ -1450,7 +1450,7 @@ void ChargePoint21::scheduleChainOcsp(uint32_t chain_id)
     }
 }
 
-CallResponse ChargePoint21::handleGetCertificateStatusResponse(int32_t connectorId, GetCertificateStatusResponseView conf)
+CallResponse ChargePoint::handleGetCertificateStatusResponse(int32_t connectorId, GetCertificateStatusResponseView conf)
 {
     (void)connectorId;
     if (ocsp_in_flight_idx < 0) {
@@ -1467,7 +1467,7 @@ CallResponse ChargePoint21::handleGetCertificateStatusResponse(int32_t connector
         return CallResponse{CallErrorCode::OK, nullptr};
     }
 
-    const CertEntry21 *e = cert_store.findById(slot.chain_id);
+    const CertEntry *e = cert_store.findById(slot.chain_id);
     if (e == nullptr) {
         slot.used = false;
         return CallResponse{CallErrorCode::OK, nullptr};
@@ -1492,7 +1492,7 @@ CallResponse ChargePoint21::handleGetCertificateStatusResponse(int32_t connector
 
     std::unique_ptr<char[]> root_bufs[OCPP21_CERTSTORE_MAX_V2G_ROOT];
     const char *root_ptrs[OCPP21_CERTSTORE_MAX_V2G_ROOT];
-    size_t roots = cert_store.loadRoots(CertGroup21::V2GRoot, root_bufs, root_ptrs, OCPP21_CERTSTORE_MAX_V2G_ROOT);
+    size_t roots = cert_store.loadRoots(CertGroup::V2GRoot, root_bufs, root_ptrs, OCPP21_CERTSTORE_MAX_V2G_ROOT);
 
     time_t now = platform_get_system_time(connection.platform_ctx);
     time_t next_update = 0;
@@ -1536,7 +1536,7 @@ CallResponse ChargePoint21::handleGetCertificateStatusResponse(int32_t connector
     return CallResponse{CallErrorCode::OK, nullptr};
 }
 
-bool ChargePoint21::requestVehicleChainStatus(const OcppCertHashData21 *hashes, const char * const *responder_urls, size_t count)
+bool ChargePoint::requestVehicleChainStatus(const OcppCertHashData21 *hashes, const char * const *responder_urls, size_t count)
 {
     // M07 plumbing for the ISO 15118 stack (HUB20-432-001).
     if (count == 0 || count > OCPP21_VEHICLE_OCSP_CACHE_SIZE) {
@@ -1562,7 +1562,7 @@ bool ChargePoint21::requestVehicleChainStatus(const OcppCertHashData21 *hashes, 
     return connection.sendCallAction(GetCertificateChainStatus{requests, count});
 }
 
-const VehicleOcspStatus21 *ChargePoint21::vehicleChainStatus(const OcppCertHashData21 &hash) const
+const VehicleOcspStatus *ChargePoint::vehicleChainStatus(const OcppCertHashData21 &hash) const
 {
     for (auto &v : vehicle_ocsp) {
         if (v.used && strcasecmp(v.hash.serial_number, hash.serial_number) == 0
@@ -1574,7 +1574,7 @@ const VehicleOcspStatus21 *ChargePoint21::vehicleChainStatus(const OcppCertHashD
     return nullptr;
 }
 
-CallResponse ChargePoint21::handleGetCertificateChainStatusResponse(int32_t connectorId, GetCertificateChainStatusResponseView conf)
+CallResponse ChargePoint::handleGetCertificateChainStatusResponse(int32_t connectorId, GetCertificateChainStatusResponseView conf)
 {
     (void)connectorId;
     size_t count = conf.certificateStatus_count();

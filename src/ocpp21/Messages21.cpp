@@ -12031,7 +12031,7 @@ CallResponse parseGetInstalledCertificateIds(JsonObject obj) {
     return CallResponse{CallErrorCode::OK, nullptr};
 }
 
-CallResponse callHandler(const char *uid, const char *action_string, JsonObject obj, ChargePoint21 *cp) {
+CallResponse callHandler(const char *uid, const char *action_string, JsonObject obj, ChargePoint *cp) {
     size_t action_idx = 0;
     if (!lookup_key(&action_idx, action_string, CallActionStrings, ARRAY_SIZE(CallActionStrings)))
         return CallResponse{CallErrorCode::NotImplemented, "unknown action passed"};
@@ -12303,7 +12303,7 @@ CallResponse callHandler(const char *uid, const char *action_string, JsonObject 
     SILENCE_GCC_UNREACHABLE();
 }
 
-CallResponse callResultHandler(int32_t connectorId, CallAction resultTo, JsonObject obj, ChargePoint21 *cp) {
+CallResponse callResultHandler(int32_t connectorId, CallAction resultTo, JsonObject obj, ChargePoint *cp) {
 
     switch(resultTo) {
         case CallAction::BOOT_NOTIFICATION: {

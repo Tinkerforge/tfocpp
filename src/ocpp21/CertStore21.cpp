@@ -12,19 +12,19 @@ static const char * const group_prefixes[] = {
     "v2gr", "mor", "oemr", "csmsr", "mfrr", "cs", "v2g2", "v2g20",
 };
 
-static bool is_chain_group(CertGroup21 group)
+static bool is_chain_group(CertGroup group)
 {
-    return group == CertGroup21::CsmsClientChain || group == CertGroup21::V2GChain || group == CertGroup21::V2G20Chain;
+    return group == CertGroup::CsmsClientChain || group == CertGroup::V2GChain || group == CertGroup::V2G20Chain;
 }
 
-void CertStore21::init(const char *charge_point_name)
+void CertStore::init(const char *charge_point_name)
 {
     dir = std::string(charge_point_name) + ".certs";
     entries.clear();
     next_id = 1;
 
     struct Found {
-        CertGroup21 group;
+        CertGroup group;
         uint32_t id;
     };
     std::vector<Found> found;
@@ -47,7 +47,7 @@ void CertStore21::init(const char *charge_point_name)
             }
             for (size_t g = 0; g < sizeof(group_prefixes) / sizeof(group_prefixes[0]); ++g) {
                 if (strcmp(prefix, group_prefixes[g]) == 0) {
-                    found.push_back({(CertGroup21)g, id});
+                    found.push_back({(CertGroup)g, id});
                     if (id >= next_id) {
                         next_id = id + 1;
                     }
@@ -78,19 +78,19 @@ void CertStore21::init(const char *charge_point_name)
     }
 }
 
-size_t CertStore21::groupLimit(CertGroup21 group) const
+size_t CertStore::groupLimit(CertGroup group) const
 {
     switch (group) {
-        case CertGroup21::V2GRoot:  return OCPP21_CERTSTORE_MAX_V2G_ROOT;
-        case CertGroup21::MORoot:   return OCPP21_CERTSTORE_MAX_MO_ROOT;
-        case CertGroup21::OEMRoot:  return OCPP21_CERTSTORE_MAX_OEM_ROOT;
-        case CertGroup21::CsmsRoot: return OCPP21_CERTSTORE_MAX_CSMS_ROOT;
-        case CertGroup21::MfrRoot:  return OCPP21_CERTSTORE_MAX_MFR_ROOT;
+        case CertGroup::V2GRoot:  return OCPP21_CERTSTORE_MAX_V2G_ROOT;
+        case CertGroup::MORoot:   return OCPP21_CERTSTORE_MAX_MO_ROOT;
+        case CertGroup::OEMRoot:  return OCPP21_CERTSTORE_MAX_OEM_ROOT;
+        case CertGroup::CsmsRoot: return OCPP21_CERTSTORE_MAX_CSMS_ROOT;
+        case CertGroup::MfrRoot:  return OCPP21_CERTSTORE_MAX_MFR_ROOT;
         default:                    return OCPP21_CERTSTORE_MAX_CHAINS;
     }
 }
 
-size_t CertStore21::groupCount(CertGroup21 group) const
+size_t CertStore::groupCount(CertGroup group) const
 {
     size_t count = 0;
     for (auto &e : entries) {
@@ -101,7 +101,7 @@ size_t CertStore21::groupCount(CertGroup21 group) const
     return count;
 }
 
-const CertEntry21 *CertStore21::find(CertGroup21 group) const
+const CertEntry *CertStore::find(CertGroup group) const
 {
     for (auto &e : entries) {
         if (e.group == group) {
@@ -111,7 +111,7 @@ const CertEntry21 *CertStore21::find(CertGroup21 group) const
     return nullptr;
 }
 
-const CertEntry21 *CertStore21::findById(uint32_t id) const
+const CertEntry *CertStore::findById(uint32_t id) const
 {
     for (auto &e : entries) {
         if (e.id == id) {
@@ -121,21 +121,21 @@ const CertEntry21 *CertStore21::findById(uint32_t id) const
     return nullptr;
 }
 
-std::string CertStore21::pemPath(CertGroup21 group, uint32_t id) const
+std::string CertStore::pemPath(CertGroup group, uint32_t id) const
 {
     char name[48];
     snprintf(name, sizeof(name), "/%s.%u.pem", group_prefixes[(size_t)group], id);
     return dir + name;
 }
 
-std::string CertStore21::keyPath(uint32_t id) const
+std::string CertStore::keyPath(uint32_t id) const
 {
     char name[32];
     snprintf(name, sizeof(name), "/key.%u", id);
     return dir + name;
 }
 
-size_t CertStore21::readPem(const CertEntry21 &e, char *buf, size_t buf_len) const
+size_t CertStore::readPem(const CertEntry &e, char *buf, size_t buf_len) const
 {
     std::string path = pemPath(e.group, e.id);
     size_t len = platform_read_file(path.c_str(), buf, buf_len - 1);
@@ -143,9 +143,9 @@ size_t CertStore21::readPem(const CertEntry21 &e, char *buf, size_t buf_len) con
     return len;
 }
 
-bool CertStore21::addEntry(CertGroup21 group, uint32_t id, const char *pem)
+bool CertStore::addEntry(CertGroup group, uint32_t id, const char *pem)
 {
-    CertEntry21 e;
+    CertEntry e;
     e.group = group;
     e.id = id;
 
@@ -178,7 +178,7 @@ bool CertStore21::addEntry(CertGroup21 group, uint32_t id, const char *pem)
 
     // The anchor root provides the issuer key of the last chain
     // certificate and identifies the issuing PKI for A03 renewals.
-    CertGroup21 root_group = group == CertGroup21::CsmsClientChain ? CertGroup21::CsmsRoot : CertGroup21::V2GRoot;
+    CertGroup root_group = group == CertGroup::CsmsClientChain ? CertGroup::CsmsRoot : CertGroup::V2GRoot;
     std::unique_ptr<char[]> root_bufs[OCPP21_CERTSTORE_MAX_OEM_ROOT];
     const char *root_ptrs[OCPP21_CERTSTORE_MAX_OEM_ROOT];
     size_t roots = loadRoots(root_group, root_bufs, root_ptrs, OCPP21_CERTSTORE_MAX_OEM_ROOT);
@@ -217,20 +217,20 @@ bool CertStore21::addEntry(CertGroup21 group, uint32_t id, const char *pem)
     return true;
 }
 
-CertInstallResult21 CertStore21::installRoot(CertGroup21 group, const char *pem)
+CertInstallResult CertStore::installRoot(CertGroup group, const char *pem)
 {
     if (is_chain_group(group)) {
-        return CertInstallResult21::Rejected;
+        return CertInstallResult::Rejected;
     }
 
     OcppCertInfo21 info;
     if (platform_cert_count21(pem) != 1 || !platform_cert_info21(pem, 0, &info) || !info.is_ca) {
-        return CertInstallResult21::Rejected;
+        return CertInstallResult::Rejected;
     }
 
     OcppCertHashData21 hash;
     if (!platform_cert_hash_data21(pem, 0, nullptr, 0, &hash)) {
-        return CertInstallResult21::Rejected;
+        return CertInstallResult::Rejected;
     }
 
     // M05.FR.17: replace an already installed certificate.
@@ -242,35 +242,35 @@ CertInstallResult21 CertStore21::installRoot(CertGroup21 group, const char *pem)
         }
         std::string path = pemPath(group, e.id);
         if (!platform_write_file(path.c_str(), (char *)pem, strlen(pem))) {
-            return CertInstallResult21::Failed;
+            return CertInstallResult::Failed;
         }
         e.not_before = info.not_before;
         e.not_after = info.not_after;
-        return CertInstallResult21::Accepted;
+        return CertInstallResult::Accepted;
     }
 
     // M05.FR.06: reject when the storage limit would be exceeded.
     if (groupCount(group) >= groupLimit(group)) {
-        return CertInstallResult21::Rejected;
+        return CertInstallResult::Rejected;
     }
 
     uint32_t id = nextId();
     std::string path = pemPath(group, id);
     if (!platform_write_file(path.c_str(), (char *)pem, strlen(pem))) {
-        return CertInstallResult21::Failed;
+        return CertInstallResult::Failed;
     }
 
-    CertEntry21 e;
+    CertEntry e;
     e.group = group;
     e.id = id;
     e.hash = hash;
     e.not_before = info.not_before;
     e.not_after = info.not_after;
     entries.push_back(e);
-    return CertInstallResult21::Accepted;
+    return CertInstallResult::Accepted;
 }
 
-bool CertStore21::installChain(CertGroup21 group, uint32_t id, const char *pem, const OcppCertHashData21 &anchor_root)
+bool CertStore::installChain(CertGroup group, uint32_t id, const char *pem, const OcppCertHashData21 &anchor_root)
 {
     if (!is_chain_group(group)) {
         return false;
@@ -283,7 +283,7 @@ bool CertStore21::installChain(CertGroup21 group, uint32_t id, const char *pem, 
         if (e.group != group) {
             continue;
         }
-        if (group != CertGroup21::CsmsClientChain
+        if (group != CertGroup::CsmsClientChain
          && (!e.has_anchor || strcmp(e.anchor_root.issuer_key_hash, anchor_root.issuer_key_hash) != 0)) {
             continue;
         }
@@ -302,7 +302,7 @@ bool CertStore21::installChain(CertGroup21 group, uint32_t id, const char *pem, 
     return true;
 }
 
-void CertStore21::removeChain(uint32_t id)
+void CertStore::removeChain(uint32_t id)
 {
     for (size_t i = 0; i < entries.size(); ++i) {
         if (entries[i].id != id || !is_chain_group(entries[i].group)) {
@@ -315,7 +315,7 @@ void CertStore21::removeChain(uint32_t id)
     }
 }
 
-CertDeleteResult21 CertStore21::deleteByHash(const char *issuer_name_hash, const char *issuer_key_hash, const char *serial_number)
+CertDeleteResult CertStore::deleteByHash(const char *issuer_name_hash, const char *issuer_key_hash, const char *serial_number)
 {
     // The hash data identifies the certificate, which may be installed
     // under multiple types. Delete every matching entry.
@@ -331,7 +331,7 @@ CertDeleteResult21 CertStore21::deleteByHash(const char *issuer_name_hash, const
             continue;
         }
 
-        if (e.group == CertGroup21::CsmsClientChain) {
+        if (e.group == CertGroup::CsmsClientChain) {
             in_use = true;
             continue;
         }
@@ -346,12 +346,12 @@ CertDeleteResult21 CertStore21::deleteByHash(const char *issuer_name_hash, const
     }
 
     if (deleted) {
-        return CertDeleteResult21::Accepted;
+        return CertDeleteResult::Accepted;
     }
-    return in_use ? CertDeleteResult21::Failed : CertDeleteResult21::NotFound;
+    return in_use ? CertDeleteResult::Failed : CertDeleteResult::NotFound;
 }
 
-size_t CertStore21::loadRoots(CertGroup21 group, std::unique_ptr<char[]> *bufs, const char **ptrs, size_t max) const
+size_t CertStore::loadRoots(CertGroup group, std::unique_ptr<char[]> *bufs, const char **ptrs, size_t max) const
 {
     size_t count = 0;
     for (auto &e : entries) {
@@ -369,7 +369,7 @@ size_t CertStore21::loadRoots(CertGroup21 group, std::unique_ptr<char[]> *bufs, 
     return count;
 }
 
-std::string CertStore21::loadRootByHash(const OcppCertHashData21 &hash) const
+std::string CertStore::loadRootByHash(const OcppCertHashData21 &hash) const
 {
     for (auto &e : entries) {
         if (is_chain_group(e.group) || strcmp(e.hash.issuer_key_hash, hash.issuer_key_hash) != 0

@@ -27,7 +27,7 @@ namespace Ocpp21 {
 // Sub CAs per chain (SECC: CPO sub CA 1 and 2).
 #define OCPP21_CHAIN_MAX_CHILDREN 3
 
-enum class CertGroup21 : uint8_t {
+enum class CertGroup : uint8_t {
     V2GRoot,
     MORoot,
     OEMRoot,
@@ -39,8 +39,8 @@ enum class CertGroup21 : uint8_t {
     None,
 };
 
-struct CertEntry21 {
-    CertGroup21 group = CertGroup21::None;
+struct CertEntry {
+    CertGroup group = CertGroup::None;
     uint32_t id = 0;
     // Root or chain leaf.
     OcppCertHashData21 hash{};
@@ -54,55 +54,55 @@ struct CertEntry21 {
     bool has_anchor = false;
 };
 
-enum class CertInstallResult21 : uint8_t {
+enum class CertInstallResult : uint8_t {
     Accepted,
     Rejected,
     Failed,
 };
 
-enum class CertDeleteResult21 : uint8_t {
+enum class CertDeleteResult : uint8_t {
     Accepted,
     Failed,
     NotFound,
 };
 
-class CertStore21 {
+class CertStore {
 public:
     // Scans <charge_point_name>.certs. Roots are loaded first so that
     // chain entries can recover their anchor root.
     void init(const char *charge_point_name);
 
-    CertInstallResult21 installRoot(CertGroup21 group, const char *pem);
+    CertInstallResult installRoot(CertGroup group, const char *pem);
     // The chain file and key file ids are reserved by the caller via
     // nextId (the key is written at CSR time). Replaces chains of the
     // same group anchored at the same root (HUB20-42-002, A02.FR.13).
-    bool installChain(CertGroup21 group, uint32_t id, const char *pem, const OcppCertHashData21 &anchor_root);
-    CertDeleteResult21 deleteByHash(const char *issuer_name_hash, const char *issuer_key_hash, const char *serial_number);
+    bool installChain(CertGroup group, uint32_t id, const char *pem, const OcppCertHashData21 &anchor_root);
+    CertDeleteResult deleteByHash(const char *issuer_name_hash, const char *issuer_key_hash, const char *serial_number);
     void removeChain(uint32_t id);
 
     size_t count() const { return entries.size(); }
-    const std::vector<CertEntry21> &all() const { return entries; }
-    const CertEntry21 *find(CertGroup21 group) const;
-    const CertEntry21 *findById(uint32_t id) const;
+    const std::vector<CertEntry> &all() const { return entries; }
+    const CertEntry *find(CertGroup group) const;
+    const CertEntry *findById(uint32_t id) const;
 
     uint32_t nextId() { return next_id++; }
 
-    std::string pemPath(CertGroup21 group, uint32_t id) const;
+    std::string pemPath(CertGroup group, uint32_t id) const;
     std::string keyPath(uint32_t id) const;
-    size_t readPem(const CertEntry21 &e, char *buf, size_t buf_len) const;
+    size_t readPem(const CertEntry &e, char *buf, size_t buf_len) const;
 
     // Loads all root PEMs of a group. bufs and ptrs must have space for
     // max entries. Returns the number of loaded roots.
-    size_t loadRoots(CertGroup21 group, std::unique_ptr<char[]> *bufs, const char **ptrs, size_t max) const;
+    size_t loadRoots(CertGroup group, std::unique_ptr<char[]> *bufs, const char **ptrs, size_t max) const;
     // The root PEM matching hash data, empty if not installed.
     std::string loadRootByHash(const OcppCertHashData21 &hash) const;
 
 private:
-    bool addEntry(CertGroup21 group, uint32_t id, const char *pem);
-    size_t groupCount(CertGroup21 group) const;
-    size_t groupLimit(CertGroup21 group) const;
+    bool addEntry(CertGroup group, uint32_t id, const char *pem);
+    size_t groupCount(CertGroup group) const;
+    size_t groupLimit(CertGroup group) const;
 
-    std::vector<CertEntry21> entries;
+    std::vector<CertEntry> entries;
     std::string dir;
     uint32_t next_id = 1;
 };
