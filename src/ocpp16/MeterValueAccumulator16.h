@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Configuration.h"
-#include "Types.h"
+#include "Configuration16.h"
+#include "Types16.h"
 
 #include <memory>
 

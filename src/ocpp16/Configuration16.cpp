@@ -1,8 +1,8 @@
-#include "Configuration.h"
+#include "Configuration16.h"
 
-#include "Defines.h"
-#include "Platform.h"
-#include "Tools.h"
+#include "Defines16.h"
+#include "Platform16.h"
+#include <common/Tools.h>
 
 #include <string.h>
 

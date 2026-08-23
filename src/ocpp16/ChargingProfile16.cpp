@@ -1,6 +1,6 @@
-#include "ChargingProfile.h"
+#include "ChargingProfile16.h"
 
-#include "Platform.h"
+#include "Platform16.h"
 
 ChargingProfile::ChargingProfile(SetChargingProfileCsChargingProfilesEntriesView view) {
     this->id = view.chargingProfileId();

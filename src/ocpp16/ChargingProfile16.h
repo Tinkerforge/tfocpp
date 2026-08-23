@@ -2,9 +2,9 @@
 
 #include <stdint.h>
 
-#include "Defines.h"
-#include "Types.h"
-#include "Messages.h"
+#include "Defines16.h"
+#include "Types16.h"
+#include "Messages16.h"
 
 #include <limits>
 

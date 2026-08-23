@@ -1,7 +1,7 @@
 #pragma once
 
 #include "stdint.h"
-#include "Types.h"
+#include <ocpp16/Types16.h>
 
 #include <memory>
 

@@ -1,8 +1,8 @@
-#include "MeterValueAccumulator.h"
-#include "Tools.h"
-#include "Configuration.h"
-#include "ChargePoint.h"
-#include "Platform.h"
+#include "MeterValueAccumulator16.h"
+#include <common/Tools.h>
+#include "Configuration16.h"
+#include "ChargePoint16.h"
+#include "Platform16.h"
 
 enum class MeasurandType {
     Register,

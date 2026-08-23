@@ -4,7 +4,7 @@
 
 #include "LinuxWS.h"
 
-#include "ocpp/ChargePoint.h"
+#include "ocpp16/ChargePoint16.h"
 #include "time.h"
 
 #define TFJSON_IMPLEMENTATION

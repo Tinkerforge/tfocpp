@@ -71,7 +71,7 @@ else
 	LIBS += -lwebsockets -lc++
 endif
 
-SOURCES :=	$(wildcard src/ocpp/*.cpp) \
+SOURCES :=	$(wildcard src/ocpp16/*.cpp) \
 			lib/mongoose/mongoose.cpp \
 			src/platforms/LinuxWS.cpp
 
@@ -79,7 +79,7 @@ CFILES := src/lib/musl_libc_timegm.c \
 		  $(wildcard src/lib/libiso8601/*.c)
 
 SOURCES_LIB := $(SOURCES) src/platforms/TestPlatform.cpp
-SOURCES_EXEC := $(SOURCES) src/platforms/LinuxPlatform.cpp
+SOURCES_EXEC := $(SOURCES) src/platforms/LinuxPlatform16.cpp
 
 OBJECTS_LIB := ${SOURCES_LIB:.cpp=.o} ${CFILES:.c=.o}
 OBJECTS_EXEC := ${SOURCES_EXEC:.cpp=.o} ${CFILES:.c=.o}
@@ -87,12 +87,12 @@ OBJECTS_EXEC := ${SOURCES_EXEC:.cpp=.o} ${CFILES:.c=.o}
 $(OBJECTS_LIB): CXXFLAGS := $(CXXFLAGS) -DOCPP_PLATFORM_TEST
 $(OBJECTS_EXEC): CXXFLAGS := $(CXXFLAGS) -DOCPP_PLATFORM_LINUX
 
-all: libocpp.so ocpp_linux
+all: libocpp.so ocpp16_linux
 
 libocpp.so: $(OBJECTS_LIB)
 	$(CXX) $(OBJECTS_LIB) $(LIBS) $(LDFLAGS) $(LIB_LD_FLAGS) -shared -o $@
 
-ocpp_linux: $(OBJECTS_EXEC)
+ocpp16_linux: $(OBJECTS_EXEC)
 	$(CXX) $(OBJECTS_EXEC) $(LIBS) $(LDFLAGS) -o $@ $(STATIC_FLAG)
 
 .PHONY: all clean

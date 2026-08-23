@@ -6,8 +6,8 @@
 #include <memory>
 #include <limits>
 
-#include "Messages.h"
-#include "Defines.h"
+#include "Messages16.h"
+#include "Defines16.h"
 
 enum class OcppConfigurationValueType : uint8_t {
     Integer,

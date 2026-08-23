@@ -12,17 +12,17 @@ import subprocess
 
 import shutil
 
-shutil.rmtree("schema")
-os.makedirs("schema")
+shutil.rmtree("schema16")
+os.makedirs("schema16")
 
 todo = os.listdir("../spec/schemas/json")
 for f in todo:
     if not f.endswith(".json"):
         continue
-    subprocess.check_output(["statham", "--input", os.path.join("../spec/schemas/json", f), "--output", "schema"])
+    subprocess.check_output(["statham", "--input", os.path.join("../spec/schemas/json", f), "--output", "schema16"])
 
-with open("schema/__init__.py", "w") as f:
+with open("schema16/__init__.py", "w") as f:
     for x in todo:
         if not x.endswith(".json"):
             continue
-        f.write("import schema.{}\n".format(x.replace(".json", "")))
+        f.write("import schema16.{}\n".format(x.replace(".json", "")))

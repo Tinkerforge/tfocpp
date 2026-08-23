@@ -1,11 +1,11 @@
 // THIS FILE IS AUTO-GENERATED. DO NOT EDIT.
 
-#include "Messages.h"
+#include "Messages16.h"
 
-#include "ChargePoint.h"
-#include "Platform.h"
-#include "Types.h"
-#include "Tools.h"
+#include "ChargePoint16.h"
+#include "Platform16.h"
+#include "Types16.h"
+#include <common/Tools.h>
 
 extern "C" {
 #include "lib/libiso8601/iso8601.h"

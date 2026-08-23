@@ -2,8 +2,8 @@
 
 #include <stdint.h>
 #include <time.h>
-#include "Connection.h"
-#include "ChargingProfile.h"
+#include "Connection16.h"
+#include "ChargingProfile16.h"
 
 #define OCPP_MAX_PERSISTENT_MESSAGES 100
 

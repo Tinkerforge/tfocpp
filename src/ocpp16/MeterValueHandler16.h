@@ -1,6 +1,6 @@
 #pragma once
 
-#include "MeterValueAccumulator.h"
+#include "MeterValueAccumulator16.h"
 
 class OcppChargePoint;
 

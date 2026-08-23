@@ -1,8 +1,8 @@
-#include "Persistency.h"
+#include "Persistency16.h"
 
-#include "Types.h"
-#include "Platform.h"
-#include "ChargePoint.h"
+#include "Types16.h"
+#include "Platform16.h"
+#include "ChargePoint16.h"
 
 #include <string.h>
 #include <inttypes.h>

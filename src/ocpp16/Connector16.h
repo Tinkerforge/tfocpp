@@ -2,12 +2,12 @@
 
 #include <stdint.h>
 
-#include "Configuration.h"
-#include "Messages.h"
-#include "Connection.h"
-#include "MeterValueHandler.h"
-#include "ChargingProfile.h"
-#include "Defines.h"
+#include "Configuration16.h"
+#include "Messages16.h"
+#include "Connection16.h"
+#include "MeterValueHandler16.h"
+#include "ChargingProfile16.h"
+#include "Defines16.h"
 
 enum class ConnectorState {
     IDLE,

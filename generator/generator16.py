@@ -13,7 +13,7 @@ from typing import List
 import re
 import os
 
-from schema import *
+from schema16 import *
 
 import inspect
 
@@ -40,91 +40,91 @@ enum_name_replacements = {
 
 
 core_profile = [[ #send
-        schema.Authorize.AuthorizeRequest,
-        schema.BootNotification.BootNotificationRequest,
-        schema.ChangeAvailabilityResponse.ChangeAvailabilityResponse,
-        schema.ChangeConfigurationResponse.ChangeConfigurationResponse,
-        schema.ClearCacheResponse.ClearCacheResponse,
-        schema.DataTransfer.DataTransferRequest,
-        schema.DataTransferResponse.DataTransferResponse,
-        schema.GetConfigurationResponse.GetConfigurationResponse,
-        schema.Heartbeat.HeartbeatRequest,
-        schema.MeterValues.MeterValuesRequest,
-        schema.RemoteStartTransactionResponse.RemoteStartTransactionResponse,
-        schema.RemoteStopTransactionResponse.RemoteStopTransactionResponse,
-        schema.ResetResponse.ResetResponse,
-        schema.StartTransaction.StartTransactionRequest,
-        schema.StatusNotification.StatusNotificationRequest,
-        schema.StopTransaction.StopTransactionRequest,
-        schema.UnlockConnectorResponse.UnlockConnectorResponse,
+        schema16.Authorize.AuthorizeRequest,
+        schema16.BootNotification.BootNotificationRequest,
+        schema16.ChangeAvailabilityResponse.ChangeAvailabilityResponse,
+        schema16.ChangeConfigurationResponse.ChangeConfigurationResponse,
+        schema16.ClearCacheResponse.ClearCacheResponse,
+        schema16.DataTransfer.DataTransferRequest,
+        schema16.DataTransferResponse.DataTransferResponse,
+        schema16.GetConfigurationResponse.GetConfigurationResponse,
+        schema16.Heartbeat.HeartbeatRequest,
+        schema16.MeterValues.MeterValuesRequest,
+        schema16.RemoteStartTransactionResponse.RemoteStartTransactionResponse,
+        schema16.RemoteStopTransactionResponse.RemoteStopTransactionResponse,
+        schema16.ResetResponse.ResetResponse,
+        schema16.StartTransaction.StartTransactionRequest,
+        schema16.StatusNotification.StatusNotificationRequest,
+        schema16.StopTransaction.StopTransactionRequest,
+        schema16.UnlockConnectorResponse.UnlockConnectorResponse,
     ], [ #recv
-        schema.AuthorizeResponse.AuthorizeResponse,
-        schema.BootNotificationResponse.BootNotificationResponse,
-        schema.ChangeAvailability.ChangeAvailabilityRequest,
-        schema.ChangeConfiguration.ChangeConfigurationRequest,
-        schema.ClearCache.ClearCacheRequest,
-        schema.DataTransfer.DataTransferRequest,
-        schema.DataTransferResponse.DataTransferResponse,
-        schema.GetConfiguration.GetConfigurationRequest,
-        schema.HeartbeatResponse.HeartbeatResponse,
-        schema.MeterValuesResponse.MeterValuesResponse,
-        schema.RemoteStartTransaction.RemoteStartTransactionRequest,
-        schema.RemoteStopTransaction.RemoteStopTransactionRequest,
-        schema.Reset.ResetRequest,
-        schema.StartTransactionResponse.StartTransactionResponse,
-        schema.StatusNotificationResponse.StatusNotificationResponse,
-        schema.StopTransactionResponse.StopTransactionResponse,
-        schema.UnlockConnector.UnlockConnectorRequest,
+        schema16.AuthorizeResponse.AuthorizeResponse,
+        schema16.BootNotificationResponse.BootNotificationResponse,
+        schema16.ChangeAvailability.ChangeAvailabilityRequest,
+        schema16.ChangeConfiguration.ChangeConfigurationRequest,
+        schema16.ClearCache.ClearCacheRequest,
+        schema16.DataTransfer.DataTransferRequest,
+        schema16.DataTransferResponse.DataTransferResponse,
+        schema16.GetConfiguration.GetConfigurationRequest,
+        schema16.HeartbeatResponse.HeartbeatResponse,
+        schema16.MeterValuesResponse.MeterValuesResponse,
+        schema16.RemoteStartTransaction.RemoteStartTransactionRequest,
+        schema16.RemoteStopTransaction.RemoteStopTransactionRequest,
+        schema16.Reset.ResetRequest,
+        schema16.StartTransactionResponse.StartTransactionResponse,
+        schema16.StatusNotificationResponse.StatusNotificationResponse,
+        schema16.StopTransactionResponse.StopTransactionResponse,
+        schema16.UnlockConnector.UnlockConnectorRequest,
 ]]
 
 firmware_management_profile = [[ #send
-        schema.GetDiagnosticsResponse.GetDiagnosticsResponse,
-        schema.DiagnosticsStatusNotification.DiagnosticsStatusNotificationRequest,
-        schema.FirmwareStatusNotification.FirmwareStatusNotificationRequest,
-        schema.UpdateFirmwareResponse.UpdateFirmwareResponse,
+        schema16.GetDiagnosticsResponse.GetDiagnosticsResponse,
+        schema16.DiagnosticsStatusNotification.DiagnosticsStatusNotificationRequest,
+        schema16.FirmwareStatusNotification.FirmwareStatusNotificationRequest,
+        schema16.UpdateFirmwareResponse.UpdateFirmwareResponse,
     ], [ #recv
-        schema.GetDiagnostics.GetDiagnosticsRequest,
-        schema.DiagnosticsStatusNotificationResponse.DiagnosticsStatusNotificationResponse,
-        schema.FirmwareStatusNotificationResponse.FirmwareStatusNotificationResponse,
-        schema.UpdateFirmware.UpdateFirmwareRequest,
+        schema16.GetDiagnostics.GetDiagnosticsRequest,
+        schema16.DiagnosticsStatusNotificationResponse.DiagnosticsStatusNotificationResponse,
+        schema16.FirmwareStatusNotificationResponse.FirmwareStatusNotificationResponse,
+        schema16.UpdateFirmware.UpdateFirmwareRequest,
 ]]
 
 local_auth_list_management_profile = [[ #send
-        schema.GetLocalListVersionResponse.GetLocalListVersionResponse,
-        schema.SendLocalListResponse.SendLocalListResponse,
+        schema16.GetLocalListVersionResponse.GetLocalListVersionResponse,
+        schema16.SendLocalListResponse.SendLocalListResponse,
     ], [ #recv
-        schema.GetLocalListVersion.GetLocalListVersionRequest,
-        schema.SendLocalList.SendLocalListRequest, # TODO: figure out how to specify that list version may not be 0 or -1. See errata 4.0 3.52
+        schema16.GetLocalListVersion.GetLocalListVersionRequest,
+        schema16.SendLocalList.SendLocalListRequest, # TODO: figure out how to specify that list version may not be 0 or -1. See errata 4.0 3.52
 ]]
 
 # Read Errata v4.0 section 3.2 before changing anything in the next three profiles! Don't undo the switcheroo
 reservation_profile = [[ #send
-        schema.CancelReservationResponse.CancelReservationResponse,
-        schema.ReserveNowResponse.ReserveNowResponse,
+        schema16.CancelReservationResponse.CancelReservationResponse,
+        schema16.ReserveNowResponse.ReserveNowResponse,
     ], [ #recv
-        schema.CancelReservation.CancelReservationRequest,
-        schema.ReserveNow.ReserveNowRequest,
+        schema16.CancelReservation.CancelReservationRequest,
+        schema16.ReserveNow.ReserveNowRequest,
 ]]
 
 smart_charging_profile = [[ #send
-        schema.ClearChargingProfileResponse.ClearChargingProfileResponse,
-        schema.GetCompositeScheduleResponse.GetCompositeScheduleResponse,
-        schema.SetChargingProfileResponse.SetChargingProfileResponse,
+        schema16.ClearChargingProfileResponse.ClearChargingProfileResponse,
+        schema16.GetCompositeScheduleResponse.GetCompositeScheduleResponse,
+        schema16.SetChargingProfileResponse.SetChargingProfileResponse,
     ], [ #recv
-        schema.ClearChargingProfile.ClearChargingProfileRequest,
-        schema.GetCompositeSchedule.GetCompositeScheduleRequest,
-        schema.SetChargingProfile.SetChargingProfileRequest,
+        schema16.ClearChargingProfile.ClearChargingProfileRequest,
+        schema16.GetCompositeSchedule.GetCompositeScheduleRequest,
+        schema16.SetChargingProfile.SetChargingProfileRequest,
 ]]
 
 remote_trigger_profile = [[ #send
-        schema.TriggerMessageResponse.TriggerMessageResponse,
+        schema16.TriggerMessageResponse.TriggerMessageResponse,
     ], [ #recv
-        schema.TriggerMessage.TriggerMessageRequest,
+        schema16.TriggerMessage.TriggerMessageRequest,
 ]]
 
 
 signed_meter_values = [[ #send
-        schema.ExtSMV.ExtSMV
+        schema16.ExtSMV.ExtSMV
     ], []]
 
 all_profiles = [core_profile,
@@ -1046,7 +1046,7 @@ if __name__ == "__main__":
         messages = messages.replace(old, new)
 
     os.makedirs('generated', exist_ok=True)
-    specialize_template("Messages.h.template", "generated/Messages.h", {
+    specialize_template("Messages16.h.template", "generated/Messages16.h", {
         "{{{enums}}}": '\n'.join([s.rstrip() for s in enums.split('\n')]),
         "{{{structs}}}": '\n'.join([s.rstrip() for s in structs.split('\n')]),
         "{{{messages}}}": '\n'.join([s.rstrip() for s in messages.split('\n')]),
@@ -1067,7 +1067,7 @@ if __name__ == "__main__":
         struct_method_impls = struct_method_impls.replace(old, new)
         message_impls = message_impls.replace(old, new)
 
-    specialize_template("Messages.cpp.template", "generated/Messages.cpp", {
+    specialize_template("Messages16.cpp.template", "generated/Messages16.cpp", {
         "{{{enum_strings}}}": '\n'.join([s.rstrip() for s in enum_strings.split('\n')]),
         "{{{struct_method_impls}}}": '\n'.join([s.rstrip() for s in struct_method_impls.split('\n')]),
         "{{{message_impls}}}": '\n'.join([s.rstrip() for s in message_impls.split('\n')]),

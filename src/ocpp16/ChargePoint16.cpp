@@ -1,13 +1,13 @@
-#include "ChargePoint.h"
+#include "ChargePoint16.h"
 
-#include "Defines.h"
-#include "Types.h"
-#include "Configuration.h"
-#include "Connector.h"
-#include "Platform.h"
+#include "Defines16.h"
+#include "Types16.h"
+#include "Configuration16.h"
+#include "Connector16.h"
+#include "Platform16.h"
 
-#include "Persistency.h"
-#include "Tools.h"
+#include "Persistency16.h"
+#include <common/Tools.h>
 
 #include <limits>
 #include <array>

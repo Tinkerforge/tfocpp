@@ -2,9 +2,9 @@
 
 #include "LinuxWS.h"
 
-#include "ocpp/Platform.h"
+#include "ocpp16/Platform16.h"
 
-#include "ocpp/ChargePoint.h"
+#include "ocpp16/ChargePoint16.h"
 #include "time.h"
 
 #include <dirent.h>

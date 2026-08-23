@@ -1,7 +1,7 @@
-#include "MeterValueHandler.h"
+#include "MeterValueHandler16.h"
 
-#include "ChargePoint.h"
-#include "Platform.h"
+#include "ChargePoint16.h"
+#include "Platform16.h"
 
 void OcppMeterValueHandler::init(int32_t connId, OcppChargePoint *chargePoint) {
     this->connectorId = connId;

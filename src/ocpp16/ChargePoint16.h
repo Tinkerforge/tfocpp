@@ -2,14 +2,14 @@
 
 #include <limits>
 
-#include "Connection.h"
-#include "Configuration.h"
-#include "Messages.h"
-#include "Tools.h"
-#include "Defines.h"
-#include "Connector.h"
-#include "ChargingProfile.h"
-#include "Types.h"
+#include "Connection16.h"
+#include "Configuration16.h"
+#include "Messages16.h"
+#include <common/Tools.h>
+#include "Defines16.h"
+#include "Connector16.h"
+#include "ChargingProfile16.h"
+#include "Types16.h"
 
 // keep in sync with ocpp_platform_gui.py charge_point_state_strings
 const char * const OcppStateStrings[] = {

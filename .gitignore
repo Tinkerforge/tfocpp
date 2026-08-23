@@ -2,7 +2,7 @@
 .vscode
 todo
 __pycache__
-ocpp_linux
+ocpp16_linux
 libocpp.so
 avail
 config

@@ -1,6 +1,6 @@
 #ifdef OCPP_PLATFORM_TEST
 
-#include "ocpp/Platform.h"
+#include "ocpp16/Platform16.h"
 
 extern "C" {
 void set_platform_now_ms_cb(uint32_t (*cb)());

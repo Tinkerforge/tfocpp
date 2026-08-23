@@ -5,8 +5,8 @@
 #include <deque>
 #include <memory>
 
-#include "Messages.h"
-#include "Types.h"
+#include "Messages16.h"
+#include "Types16.h"
 
 class OcppChargePoint;
 

@@ -1,9 +1,9 @@
-#include "Connector.h"
+#include "Connector16.h"
 
-#include "Tools.h"
-#include "ChargePoint.h"
-#include "Persistency.h"
-#include "Platform.h"
+#include <common/Tools.h>
+#include "ChargePoint16.h"
+#include "Persistency16.h"
+#include "Platform16.h"
 
 void Connector::deauth() {
     authorized_for = IdTagInfo{};

@@ -6,9 +6,9 @@
 
 #include <functional>
 
-#include "Messages.h"
-#include "ChargePoint.h"
-#include "Types.h"
+#include "Messages16.h"
+#include "ChargePoint16.h"
+#include "Types16.h"
 
 void *platform_init(const char *websocket_url, BasicAuthCredentials *credentials = nullptr, size_t credentials_length = 0);
 void platform_disconnect(void *ctx);
