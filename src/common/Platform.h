@@ -16,7 +16,24 @@ struct BasicAuthCredentials {
     size_t pass_length;
 };
 
-void *platform_init(const char *websocket_url, const char *subprotocol, BasicAuthCredentials *credentials = nullptr, size_t credentials_length = 0);
+// PEM file locations, interpreted by the platform (paths on Linux).
+// ca_cert_file is required for TLS connections (security profiles 2 and 3),
+// client_cert_file and client_key_file only for mTLS (security profile 3).
+struct PlatformTlsConfig {
+    const char *ca_cert_file = nullptr;
+    const char *client_cert_file = nullptr;
+    const char *client_key_file = nullptr;
+};
+
+enum class PlatformConnectionError : uint8_t {
+    Unknown,
+    InvalidCsmsCertificate,
+    InvalidTlsVersion,
+    InvalidTlsCipherSuite,
+};
+
+void *platform_init(const char *websocket_url, const char *subprotocol, BasicAuthCredentials *credentials = nullptr, size_t credentials_length = 0, const PlatformTlsConfig *tls = nullptr);
+void platform_update_credentials(void *ctx, BasicAuthCredentials *credentials, size_t credentials_length);
 void platform_disconnect(void *ctx);
 void platform_reconnect(void *ctx);
 void platform_destroy(void *ctx);
@@ -26,6 +43,7 @@ bool platform_ws_send(void *ctx, const char *buf, size_t buf_len);
 void platform_ws_register_receive_callback(void *ctx, void(*cb)(char *, size_t, void *), void *user_data);
 bool platform_ws_send_ping(void *ctx);
 void platform_ws_register_pong_callback(void *ctx, void (*cb)(void *), void *user_data);
+void platform_ws_register_connection_error_callback(void *ctx, void (*cb)(PlatformConnectionError, void *), void *user_data);
 
 uint32_t platform_now_ms();
 void platform_set_system_time(void *ctx, time_t t);

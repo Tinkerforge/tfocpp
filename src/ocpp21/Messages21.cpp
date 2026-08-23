@@ -1299,6 +1299,31 @@ size_t RequestStopTransactionResponse::serializeJson(char *buf, size_t buf_len) 
     return json.end();
 }
 
+SecurityEventNotification::SecurityEventNotification(const char type[51],
+        time_t timestamp,
+        const char techInfo[256]) :
+    ICall(CallAction::SECURITY_EVENT_NOTIFICATION, next_call_id++),
+    type(type),
+    timestamp(timestamp),
+    techInfo(techInfo)
+{}
+
+size_t SecurityEventNotification::serializeJson(char *buf, size_t buf_len) const {
+    TFJsonSerializer json{buf, buf_len};
+    json.addArray();
+        json.addNumber((int32_t)OcppRpcMessageType::CALL);
+        json.addNumber(this->ocppJmessageId, true);
+        json.addString(CallActionStrings[(size_t)this->action]);
+        json.addObject();
+            if (type != nullptr) json.addMemberString("type", type);
+            if (timestamp != OCPP_DATETIME_NOT_PASSED) unix_timestamp_to_iso_string(timestamp, json, "timestamp");
+            if (techInfo != nullptr) json.addMemberString("techInfo", techInfo);
+        json.endObject();
+    json.endArray();
+
+    return json.end();
+}
+
 static CallResponse parseBootNotificationResponseCurrentTime(JsonVariant var) {
 
     if (!var.is<const char *>())
@@ -10811,6 +10836,18 @@ CallResponse parseRequestStopTransaction(JsonObject obj) {
     return CallResponse{CallErrorCode::OK, nullptr};
 }
 
+CallResponse parseSecurityEventNotificationResponse(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "SecurityEventNotificationResponse: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
 CallResponse callHandler(const char *uid, const char *action_string, JsonObject obj, ChargePoint21 *cp) {
     size_t action_idx = 0;
     if (!lookup_key(&action_idx, action_string, CallActionStrings, ARRAY_SIZE(CallActionStrings)))
@@ -11106,6 +11143,14 @@ CallResponse callResultHandler(int32_t connectorId, CallAction resultTo, JsonObj
             return cp->handleMeterValuesResponse(connectorId, MeterValuesResponseView{obj});
         }
 
+        case CallAction::SECURITY_EVENT_NOTIFICATION: {
+            CallResponse res = parseSecurityEventNotificationResponse(obj);
+            if (res.result != CallErrorCode::OK)
+                return res;
+
+            return cp->handleSecurityEventNotificationResponse(connectorId, SecurityEventNotificationResponseView{obj});
+        }
+
         case CallAction::AFRR_SIGNAL:
         case CallAction::AFRR_SIGNAL_RESPONSE:
         case CallAction::ADJUST_PERIODIC_EVENT_STREAM:
@@ -11241,7 +11286,6 @@ CallResponse callResultHandler(int32_t connectorId, CallAction resultTo, JsonObj
         case CallAction::RESERVE_NOW_RESPONSE:
         case CallAction::RESET:
         case CallAction::RESET_RESPONSE:
-        case CallAction::SECURITY_EVENT_NOTIFICATION:
         case CallAction::SECURITY_EVENT_NOTIFICATION_RESPONSE:
         case CallAction::SEND_LOCAL_LIST:
         case CallAction::SEND_LOCAL_LIST_RESPONSE:

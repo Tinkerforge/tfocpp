@@ -5247,6 +5247,21 @@ long mg_tls_send(struct mg_connection *c, const void *buf, size_t len) {
 
 
 #if MG_ENABLE_OPENSSL
+// Local patch: last TLS handshake failure details for error classification
+// in the platform layer. Single threaded event loop, plain statics suffice.
+static unsigned long s_last_hs_openssl_error = 0;
+static long s_last_hs_verify_result = X509_V_OK;
+
+void mg_tls_get_last_handshake_error(unsigned long *openssl_error, long *verify_result) {
+  *openssl_error = s_last_hs_openssl_error;
+  *verify_result = s_last_hs_verify_result;
+}
+
+void mg_tls_clear_last_handshake_error(void) {
+  s_last_hs_openssl_error = 0;
+  s_last_hs_verify_result = X509_V_OK;
+}
+
 static int mg_tls_err(struct mg_tls *tls, int res) {
   int err = SSL_get_error(tls->ssl, res);
   // We've just fetched the last error from the queue.
@@ -5388,6 +5403,11 @@ void mg_tls_handshake(struct mg_connection *c) {
     MG_DEBUG(("%lu success", c->id));
     c->is_tls_hs = 0;
   } else {
+    // Local patch: stash the failure details before mg_tls_err clears the
+    // OpenSSL error queue, so that the platform layer can classify the
+    // handshake failure (certificate vs protocol version vs cipher suite).
+    s_last_hs_openssl_error = ERR_peek_last_error();
+    s_last_hs_verify_result = SSL_get_verify_result(tls->ssl);
     int code = mg_tls_err(tls, rc);
     if (code != 0) mg_error(c, "tls hs: rc %d, err %d", rc, code);
   }

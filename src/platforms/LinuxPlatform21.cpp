@@ -65,6 +65,26 @@ void platform_reset(bool hard) {
     log_info("Reset requested. (ignored on the Linux 2.1 host platform)");
 }
 
+size_t platform_read_file(const char *name, char *buf, size_t len)
+{
+    auto fd = open(name, O_RDONLY, 0644);
+    if (fd < 0)
+        return 0;
+    auto result = read(fd, buf, len);
+    close(fd);
+    return result < 0 ? 0 : result;
+}
+
+bool platform_write_file(const char *name, char *buf, size_t len)
+{
+    auto fd = open(name, O_WRONLY | O_TRUNC | O_CREAT, 0644);
+    if (fd < 0)
+        return false;
+    auto written = write(fd, buf, len);
+    close(fd);
+    return written >= 0 && (size_t)written == len;
+}
+
 [[gnu::noreturn]] void system_abort(const char *message) {
     fprintf(stderr, "abort: %s\n", message);
     abort();
@@ -168,7 +188,7 @@ float platform_get_energy_wh21(void *ctx, int32_t evse_id)
     return (float)e.energy_wh;
 }
 
-// Commands: plug, unplug, tag <id>, fault, ok
+// Commands: plug, unplug, tag <id>, fault, ok, secevent <type>
 static void sim_handle_command(char *line)
 {
     auto &e = sim_evses[0];
@@ -189,6 +209,9 @@ static void sim_handle_command(char *line)
                 break;
             }
         }
+    } else if (strncmp(line, "secevent ", 9) == 0) {
+        printf("[SIM  ] queueing security event %s\n", line + 9);
+        cp.sendSecurityEventNotification(line + 9, "triggered via host simulator");
     } else if (strcmp(line, "fault") == 0) {
         e.state = EvseState21::Faulted;
         printf("[SIM  ] EVSE faulted\n");
@@ -196,7 +219,7 @@ static void sim_handle_command(char *line)
         e.state = EvseState21::NotConnected;
         printf("[SIM  ] EVSE fault cleared\n");
     } else if (line[0] != '\0') {
-        printf("[SIM  ] unknown command %s (plug, unplug, tag <id>, fault, ok)\n", line);
+        printf("[SIM  ] unknown command %s (plug, unplug, tag <id>, fault, ok, secevent <type>)\n", line);
     }
 }
 
@@ -221,15 +244,39 @@ static void sim_poll_stdin()
 int main(int argc, char **argv)
 {
     if (argc < 3) {
-        fprintf(stderr, "Usage: %s <websocket-endpoint-url> <charge-point-name> [basic-auth-pass] [charge-point-name-2] [basic-auth-pass-2]\n", argv[0]);
-        fprintf(stderr, "A second charge point name starts a second, parallel client on the same endpoint.\n");
-        fprintf(stderr, "EVSE simulation via stdin: plug, unplug, tag <id>, fault, ok\n");
+        fprintf(stderr, "Usage: %s <websocket-endpoint-url> <charge-point-name> [basic-auth-pass] [--ca file] [--cert file] [--key file] [--name2 name] [--pass2 pass]\n", argv[0]);
+        fprintf(stderr, "wss:// URLs require --ca (security profile 2), --cert and --key add mTLS (security profile 3).\n");
+        fprintf(stderr, "--name2 starts a second, parallel client on the same endpoint.\n");
+        fprintf(stderr, "EVSE simulation via stdin: plug, unplug, tag <id>, fault, ok, secevent <type>\n");
         return 1;
     }
 
-    const char *pass = argc >= 4 ? argv[3] : nullptr;
-    const char *name2 = argc >= 5 ? argv[4] : nullptr;
-    const char *pass2 = argc >= 6 ? argv[5] : nullptr;
+    const char *pass = (argc >= 4 && strncmp(argv[3], "--", 2) != 0) ? argv[3] : nullptr;
+    const char *name2 = nullptr;
+    const char *pass2 = nullptr;
+    PlatformTlsConfig tls;
+
+    for (int i = pass != nullptr ? 4 : 3; i < argc - 1; ++i) {
+        if (strcmp(argv[i], "--ca") == 0)
+            tls.ca_cert_file = argv[++i];
+        else if (strcmp(argv[i], "--cert") == 0)
+            tls.client_cert_file = argv[++i];
+        else if (strcmp(argv[i], "--key") == 0)
+            tls.client_key_file = argv[++i];
+        else if (strcmp(argv[i], "--name2") == 0)
+            name2 = argv[++i];
+        else if (strcmp(argv[i], "--pass2") == 0)
+            pass2 = argv[++i];
+        else {
+            fprintf(stderr, "Unknown option %s\n", argv[i]);
+            return 1;
+        }
+    }
+
+    bool is_tls = strncmp(argv[1], "wss:", 4) == 0;
+    int32_t security_profile = 1;
+    if (is_tls)
+        security_profile = tls.client_cert_file != nullptr ? 3 : 2;
 
     setvbuf(stdout, nullptr, _IOLBF, 0);
     fcntl(STDIN_FILENO, F_SETFL, fcntl(STDIN_FILENO, F_GETFL) | O_NONBLOCK);
@@ -237,12 +284,12 @@ int main(int argc, char **argv)
 
     platform_set_system_time(nullptr, time(nullptr));
 
-    if (!cp.start(argv[1], argv[2], pass)) {
+    if (!cp.start(argv[1], argv[2], pass, security_profile, is_tls ? &tls : nullptr)) {
         fprintf(stderr, "Failed to start charge point\n");
         return 1;
     }
 
-    if (name2 != nullptr && !cp2.start(argv[1], name2, pass2)) {
+    if (name2 != nullptr && !cp2.start(argv[1], name2, pass2, security_profile, is_tls ? &tls : nullptr)) {
         fprintf(stderr, "Failed to start second charge point\n");
         return 1;
     }

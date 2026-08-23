@@ -1113,6 +1113,10 @@ long mg_tls_send(struct mg_connection *, const void *buf, size_t len);
 long mg_tls_recv(struct mg_connection *, void *buf, size_t len);
 size_t mg_tls_pending(struct mg_connection *);
 void mg_tls_handshake(struct mg_connection *);
+// Local patch (OpenSSL build only): details of the last failed TLS
+// handshake, for error classification in the platform layer.
+void mg_tls_get_last_handshake_error(unsigned long *openssl_error, long *verify_result);
+void mg_tls_clear_last_handshake_error(void);
 
 
 

@@ -363,8 +363,25 @@ bool QueueItem21::is_valid()
     return buf != nullptr;
 }
 
-void *Connection21::start(const char *websocket_endpoint_url, const char *charge_point_name_percent_encoded, const char *basic_auth_pass, ChargePoint21 *ocpp_handle) {
+static std::unique_ptr<BasicAuthCredentials[]> build_credentials(const char *user, const char *pass)
+{
+    auto creds = heap_alloc_array<BasicAuthCredentials>(1);
+
+    auto user_len = strlen(user) + 1;
+    creds[0].user = heap_alloc_array<char>(user_len);
+    memcpy(creds[0].user.get(), user, user_len);
+
+    auto pass_len = strlen(pass);
+    creds[0].pass = heap_alloc_array<uint8_t>(pass_len);
+    memcpy(creds[0].pass.get(), pass, pass_len);
+    creds[0].pass_length = pass_len;
+
+    return creds;
+}
+
+void *Connection21::start(const char *websocket_endpoint_url, const char *charge_point_name_percent_encoded, const char *basic_auth_pass, const PlatformTlsConfig *tls, ChargePoint21 *ocpp_handle) {
     this->cp = ocpp_handle;
+    this->charge_point_name = charge_point_name_percent_encoded;
 
     // Message ids restarting at 0 after a reboot collide with the previous
     // session. Some CSMS deduplicate calls by message id and answer with
@@ -381,21 +398,11 @@ void *Connection21::start(const char *websocket_endpoint_url, const char *charge
 
     size_t cred_used_count = 0;
     if (basic_auth_pass != nullptr && basic_auth_pass[0] != '\0') {
-        this->basic_auth_credentials = heap_alloc_array<BasicAuthCredentials>(1);
-
-        auto user_len = strlen(charge_point_name_percent_encoded) + 1;
-        this->basic_auth_credentials[0].user = heap_alloc_array<char>(user_len);
-        memcpy(this->basic_auth_credentials[0].user.get(), charge_point_name_percent_encoded, user_len);
-
-        auto pass_len = strlen(basic_auth_pass);
-        this->basic_auth_credentials[0].pass = heap_alloc_array<uint8_t>(pass_len);
-        memcpy(this->basic_auth_credentials[0].pass.get(), basic_auth_pass, pass_len);
-        this->basic_auth_credentials[0].pass_length = pass_len;
-
+        this->basic_auth_credentials = build_credentials(charge_point_name_percent_encoded, basic_auth_pass);
         cred_used_count = 1;
     }
 
-    platform_ctx = platform_init(ws_url.c_str(), "ocpp2.1", this->basic_auth_credentials.get(), cred_used_count);
+    platform_ctx = platform_init(ws_url.c_str(), "ocpp2.1", this->basic_auth_credentials.get(), cred_used_count, tls);
     if (platform_ctx == nullptr)
         return nullptr;
 
@@ -403,6 +410,19 @@ void *Connection21::start(const char *websocket_endpoint_url, const char *charge
     platform_ws_register_pong_callback(platform_ctx, [](void *user_data){((Connection21*)user_data)->setPongDeadline();}, this);
 
     return platform_ctx;
+}
+
+void Connection21::updateBasicAuthPassword(const char *basic_auth_pass) {
+    size_t cred_used_count = 0;
+    if (basic_auth_pass != nullptr && basic_auth_pass[0] != '\0') {
+        this->basic_auth_credentials = build_credentials(charge_point_name.c_str(), basic_auth_pass);
+        cred_used_count = 1;
+    } else {
+        this->basic_auth_credentials = nullptr;
+    }
+
+    platform_update_credentials(platform_ctx, this->basic_auth_credentials.get(), cred_used_count);
+    platform_reconnect(platform_ctx);
 }
 
 void Connection21::stop() {

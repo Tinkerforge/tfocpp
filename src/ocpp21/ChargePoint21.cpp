@@ -29,13 +29,26 @@ static void generate_transaction_id(char buf[OCPP21_TRANSACTION_ID_LEN + 1])
              (unsigned long long)(r2 & 0xffffffffffffull));
 }
 
-bool ChargePoint21::start(const char *websocket_endpoint_url, const char *charge_point_name, const char *basic_auth_pass)
+bool ChargePoint21::start(const char *websocket_endpoint_url, const char *charge_point_name, const char *basic_auth_pass, int32_t security_profile, const PlatformTlsConfig *tls)
 {
-    if (connection.start(websocket_endpoint_url, charge_point_name, basic_auth_pass, this) == nullptr)
+    this->charge_point_name = charge_point_name;
+    device_model.identity = this->charge_point_name.c_str();
+    device_model.security_profile = security_profile;
+
+    // A persisted password (A01 update) overrides the configured one.
+    loadSecurityPersistence();
+    if (device_model.basic_auth_password[0] == '\0' && basic_auth_pass != nullptr)
+        snprintf(device_model.basic_auth_password, sizeof(device_model.basic_auth_password), "%s", basic_auth_pass);
+
+    if (connection.start(websocket_endpoint_url, charge_point_name, device_model.basic_auth_password, tls, this) == nullptr)
         return false;
 
     platform_register_tag_seen_callback21(connection.platform_ctx, [](int32_t evse_id, const char *tag_id, void *user_data){
         ((ChargePoint21*)user_data)->onTagSeen(evse_id, tag_id);
+    }, this);
+
+    platform_ws_register_connection_error_callback(connection.platform_ctx, [](PlatformConnectionError error, void *user_data){
+        ((ChargePoint21*)user_data)->onConnectionError(error);
     }, this);
 
     boot_retry_deadline = set_deadline(0);
@@ -50,6 +63,13 @@ void ChargePoint21::stop()
 void ChargePoint21::tick()
 {
     connection.tick();
+
+    // A01: the SetVariablesResponse had time to leave, switch to the new
+    // password now.
+    if (password_reconnect_deadline != 0 && deadline_elapsed(password_reconnect_deadline)) {
+        password_reconnect_deadline = 0;
+        connection.updateBasicAuthPassword(device_model.basic_auth_password);
+    }
 
     // Transactions continue while offline, their events are queued and
     // flushed after the reconnect.
@@ -88,6 +108,7 @@ void ChargePoint21::tick()
 void ChargePoint21::onConnect()
 {
     log_info("Connected (subprotocol ocpp2.1)");
+    last_reported_conn_error = PlatformConnectionError::Unknown;
     if (state != OcppState21::Idle)
         boot_retry_deadline = set_deadline(0);
     else
@@ -98,6 +119,70 @@ void ChargePoint21::onDisconnect()
 {
     log_info("Disconnected");
     boot_notification_in_flight = false;
+}
+
+void ChargePoint21::onConnectionError(PlatformConnectionError error)
+{
+    const char *type;
+    switch (error) {
+        case PlatformConnectionError::InvalidCsmsCertificate: type = "InvalidCsmsCertificate"; break;
+        case PlatformConnectionError::InvalidTlsVersion:      type = "InvalidTLSVersion"; break;
+        case PlatformConnectionError::InvalidTlsCipherSuite:  type = "InvalidTLSCipherSuite"; break;
+        default: return;
+    }
+
+    // The connection is terminated by the failed handshake. Queue the
+    // security event once per failure streak, it is delivered when a
+    // connection is established again (A04.FR.02).
+    if (last_reported_conn_error == error)
+        return;
+    last_reported_conn_error = error;
+
+    log_warn("TLS connection failed: %s", type);
+    sendSecurityEventNotification(type);
+}
+
+void ChargePoint21::sendSecurityEventNotification(const char *type, const char *tech_info)
+{
+    connection.sendTransactionCallAction(SecurityEventNotification{type, platform_get_system_time(connection.platform_ctx), tech_info});
+}
+
+#define OCPP21_SECURITY_PERSISTENCE_BUF_LEN 256
+
+void ChargePoint21::loadSecurityPersistence()
+{
+    std::string name = charge_point_name + ".sec21";
+    char buf[OCPP21_SECURITY_PERSISTENCE_BUF_LEN];
+    size_t len = platform_read_file(name.c_str(), buf, sizeof(buf) - 1);
+    if (len == 0)
+        return;
+    buf[len] = '\0';
+
+    StaticJsonDocument<OCPP21_SECURITY_PERSISTENCE_BUF_LEN * 2> doc;
+    if (deserializeJson(doc, buf, len)) {
+        log_error("Failed to parse %s", name.c_str());
+        return;
+    }
+
+    if (doc["basic_auth_password"].is<const char *>())
+        snprintf(device_model.basic_auth_password, sizeof(device_model.basic_auth_password), "%s", doc["basic_auth_password"].as<const char *>());
+    if (doc["organization_name"].is<const char *>())
+        snprintf(device_model.organization_name, sizeof(device_model.organization_name), "%s", doc["organization_name"].as<const char *>());
+}
+
+void ChargePoint21::saveSecurityPersistence()
+{
+    std::string name = charge_point_name + ".sec21";
+    char buf[OCPP21_SECURITY_PERSISTENCE_BUF_LEN];
+    TFJsonSerializer json{buf, sizeof(buf)};
+    json.addObject();
+    json.addMemberString("basic_auth_password", device_model.basic_auth_password);
+    json.addMemberString("organization_name", device_model.organization_name);
+    json.endObject();
+    size_t len = json.end();
+
+    if (!platform_write_file(name.c_str(), buf, len))
+        log_error("Failed to write %s", name.c_str());
 }
 
 void ChargePoint21::onTimeout(CallAction action, uint64_t messageId)
@@ -565,6 +650,23 @@ CallResponse ChargePoint21::handleSetVariables(const char *uid, SetVariablesView
     }
 
     connection.sendCallResponse(SetVariablesResponse{uid, results.get(), count});
+
+    if (device_model.basic_auth_password_changed || device_model.organization_name_changed) {
+        bool password_changed = device_model.basic_auth_password_changed;
+        device_model.basic_auth_password_changed = false;
+        device_model.organization_name_changed = false;
+
+        saveSecurityPersistence();
+
+        if (password_changed) {
+            // A01: use the new password from the next connection on. Give
+            // the response time to leave before reconnecting. The password
+            // content is never logged (A01.FR.12).
+            log_info("BasicAuthPassword updated, reconnecting with the new password");
+            password_reconnect_deadline = set_deadline(3000);
+        }
+    }
+
     return CallResponse{CallErrorCode::OK, nullptr};
 }
 
@@ -690,6 +792,13 @@ CallResponse ChargePoint21::handleTransactionEventResponse(int32_t connectorId, 
 }
 
 CallResponse ChargePoint21::handleMeterValuesResponse(int32_t connectorId, MeterValuesResponseView conf)
+{
+    (void)connectorId;
+    (void)conf;
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+CallResponse ChargePoint21::handleSecurityEventNotificationResponse(int32_t connectorId, SecurityEventNotificationResponseView conf)
 {
     (void)connectorId;
     (void)conf;

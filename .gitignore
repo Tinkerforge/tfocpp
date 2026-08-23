@@ -10,3 +10,4 @@ txn_msg/
 profiles/
 ocpp21_linux
 build/
+*.sec21

@@ -743,6 +743,11 @@ struct ICall {
     const char *ocppJcallId;
 };
 
+struct SecurityEventNotificationResponseView {
+    JsonObject _obj;
+
+};
+
 struct RequestStopTransactionView {
     JsonObject _obj;
 
@@ -4526,6 +4531,20 @@ struct RequestStopTransactionResponse final : public ICall {
     size_t serializeJson(char *buf, size_t buf_len) const override;
 };
 
+struct SecurityEventNotification final : public ICall {
+    const char *type;
+    time_t timestamp;
+    const char *techInfo;
+
+    SecurityEventNotification(const char type[51],
+        time_t timestamp,
+        const char techInfo[256] = nullptr);
+    SecurityEventNotification(const SecurityEventNotification&) = delete;
+    SecurityEventNotification &operator=(const SecurityEventNotification&) = delete;
+
+    size_t serializeJson(char *buf, size_t buf_len) const override;
+};
+
 CallResponse parseBootNotificationResponse(JsonObject obj);
 
 CallResponse parseHeartbeatResponse(JsonObject obj);
@@ -4551,6 +4570,8 @@ CallResponse parseMeterValuesResponse(JsonObject obj);
 CallResponse parseRequestStartTransaction(JsonObject obj);
 
 CallResponse parseRequestStopTransaction(JsonObject obj);
+
+CallResponse parseSecurityEventNotificationResponse(JsonObject obj);
 
 CallResponse callResultHandler(int32_t connectorId, CallAction resultTo, JsonObject obj, ChargePoint21 *cp);
 

@@ -70,7 +70,14 @@ transactions_profile = [[ #send
         schema21.RequestStopTransactionRequest.RequestStopTransactionRequest,
 ]]
 
-supported_profiles = [provisioning_profile, transactions_profile]# All OCPP 2.1 actions, derived from the schema file names.
+# Messages for the security profiles (critical security events).
+security_profile = [[ #send
+        schema21.SecurityEventNotificationRequest.SecurityEventNotificationRequest,
+    ], [ #recv
+        schema21.SecurityEventNotificationResponse.SecurityEventNotificationResponse,
+]]
+
+supported_profiles = [provisioning_profile, transactions_profile, security_profile]# All OCPP 2.1 actions, derived from the schema file names.
 # Used to generate the full CallAction enum so that known but
 # unsupported actions are answered with NotSupported instead of
 # NotImplemented.

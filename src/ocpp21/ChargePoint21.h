@@ -2,6 +2,8 @@
 
 #include <time.h>
 
+#include <string>
+
 #include "Connection21.h"
 #include "DeviceModel21.h"
 #include "Messages21.h"
@@ -54,7 +56,7 @@ public:
     ChargePoint21(const ChargePoint21&) = delete;
     ChargePoint21 &operator=(const ChargePoint21&) = delete;
 
-    bool start(const char *websocket_endpoint_url, const char *charge_point_name, const char *basic_auth_pass);
+    bool start(const char *websocket_endpoint_url, const char *charge_point_name, const char *basic_auth_pass, int32_t security_profile = 1, const PlatformTlsConfig *tls = nullptr);
     void stop();
     void tick();
 
@@ -63,9 +65,13 @@ public:
     void onDisconnect();
     void onTimeout(CallAction action, uint64_t messageId);
     void onCallError(CallAction action, uint64_t messageId);
+    void onConnectionError(PlatformConnectionError error);
 
     // Platform events
     void onTagSeen(int32_t evse_id, const char *tag_id);
+
+    // Queues a critical security event for guaranteed delivery (A04).
+    void sendSecurityEventNotification(const char *type, const char *tech_info = nullptr);
 
     // Received call results
     CallResponse handleBootNotificationResponse(int32_t connectorId, BootNotificationResponseView conf);
@@ -74,6 +80,7 @@ public:
     CallResponse handleAuthorizeResponse(int32_t connectorId, AuthorizeResponseView conf);
     CallResponse handleTransactionEventResponse(int32_t connectorId, TransactionEventResponseView conf);
     CallResponse handleMeterValuesResponse(int32_t connectorId, MeterValuesResponseView conf);
+    CallResponse handleSecurityEventNotificationResponse(int32_t connectorId, SecurityEventNotificationResponseView conf);
 
     // Received calls
     CallResponse handleGetVariables(const char *uid, GetVariablesView req);
@@ -96,6 +103,8 @@ private:
     void startTransaction(int32_t evse_id, TransactionEventTriggerReason trigger);
     void stopTransaction(int32_t evse_id, TransactionEventTriggerReason trigger, TransactionEventTransactionInfoStoppedReason reason, bool include_token);
     void sendTransactionUpdated(int32_t evse_id, TransactionEventTriggerReason trigger, bool with_meter_value);
+    void loadSecurityPersistence();
+    void saveSecurityPersistence();
 
     uint32_t boot_retry_deadline = 0;
     // Interval requested by the CSMS in a Pending or Rejected boot response. 0 = use default.
@@ -121,6 +130,17 @@ private:
     bool authorize_in_flight = false;
     int32_t authorize_evse_id = 0;
     char authorize_token[OCPP21_ID_TOKEN_LEN + 1] = {};
+
+    // Also used as the persistence file name prefix.
+    std::string charge_point_name;
+
+    // A01: reconnect with the new BasicAuthPassword after the
+    // SetVariablesResponse left. 0 = not armed.
+    uint32_t password_reconnect_deadline = 0;
+
+    // Report a TLS failure security event once per failure streak
+    // (A00.FR.316). Unknown doubles as the none sentinel, reset on connect.
+    PlatformConnectionError last_reported_conn_error = PlatformConnectionError::Unknown;
 };
 
 } // namespace Ocpp21

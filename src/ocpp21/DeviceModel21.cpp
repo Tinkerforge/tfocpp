@@ -49,6 +49,33 @@ VariableResult DeviceModel21::getVariable(const char *component, const char *var
         return VariableResult::UnknownVariable;
     }
 
+    if (strcmp(component, "SecurityCtrlr") == 0) {
+        if (strcmp(variable, "SecurityProfile") == 0) {
+            snprintf(buf, buf_len, "%d", security_profile);
+            return VariableResult::Accepted;
+        }
+        if (strcmp(variable, "Identity") == 0) {
+            if (identity == nullptr)
+                return VariableResult::Rejected;
+            snprintf(buf, buf_len, "%s", identity);
+            return VariableResult::Accepted;
+        }
+        if (strcmp(variable, "OrganizationName") == 0) {
+            snprintf(buf, buf_len, "%s", organization_name);
+            return VariableResult::Accepted;
+        }
+        if (strcmp(variable, "CertificateEntries") == 0) {
+            // No certificate store yet.
+            snprintf(buf, buf_len, "0");
+            return VariableResult::Accepted;
+        }
+        if (strcmp(variable, "BasicAuthPassword") == 0) {
+            // WriteOnly, reads are rejected (B06.FR.09).
+            return VariableResult::Rejected;
+        }
+        return VariableResult::UnknownVariable;
+    }
+
     return VariableResult::UnknownComponent;
 }
 
@@ -93,6 +120,30 @@ VariableResult DeviceModel21::setVariable(const char *component, const char *var
 
     if (strcmp(component, "AuthCtrlr") == 0) {
         if (strcmp(variable, "AuthorizeRemoteStart") == 0)
+            return VariableResult::Rejected;
+        return VariableResult::UnknownVariable;
+    }
+
+    if (strcmp(component, "SecurityCtrlr") == 0) {
+        if (strcmp(variable, "BasicAuthPassword") == 0) {
+            size_t len = strlen(value);
+            if (len < OCPP21_BASIC_AUTH_PASSWORD_MIN_LEN || len > OCPP21_BASIC_AUTH_PASSWORD_MAX_LEN)
+                return VariableResult::Rejected;
+            memcpy(basic_auth_password, value, len + 1);
+            basic_auth_password_changed = true;
+            return VariableResult::Accepted;
+        }
+        if (strcmp(variable, "OrganizationName") == 0) {
+            size_t len = strlen(value);
+            if (len == 0 || len > OCPP21_ORGANIZATION_NAME_MAX_LEN)
+                return VariableResult::Rejected;
+            memcpy(organization_name, value, len + 1);
+            organization_name_changed = true;
+            return VariableResult::Accepted;
+        }
+        if (strcmp(variable, "SecurityProfile") == 0
+         || strcmp(variable, "Identity") == 0
+         || strcmp(variable, "CertificateEntries") == 0)
             return VariableResult::Rejected;
         return VariableResult::UnknownVariable;
     }

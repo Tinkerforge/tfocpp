@@ -4,9 +4,12 @@
 
 #include <deque>
 #include <memory>
+#include <string>
 
 #include "Messages21.h"
 #include "Types21.h"
+
+struct PlatformTlsConfig;
 
 namespace Ocpp21 {
 
@@ -28,9 +31,12 @@ public:
 
 class Connection21 {
 public:
-    void *start(const char *websocket_endpoint_url, const char *charge_point_name_percent_encoded, const char *basic_auth_pass, ChargePoint21 *ocpp_handle);
+    void *start(const char *websocket_endpoint_url, const char *charge_point_name_percent_encoded, const char *basic_auth_pass, const PlatformTlsConfig *tls, ChargePoint21 *ocpp_handle);
 
     void stop();
+
+    // A01: switch to a new basic auth password and reconnect.
+    void updateBasicAuthPassword(const char *basic_auth_pass);
 
     void tick();
 
@@ -68,6 +74,7 @@ public:
     QueueItem21 next_response;
 
     std::unique_ptr<BasicAuthCredentials[]> basic_auth_credentials;
+    std::string charge_point_name;
 
     bool was_connected = false;
 };
