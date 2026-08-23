@@ -5,6 +5,8 @@
 #include <deque>
 #include <memory>
 
+#include <common/Platform.h>
+
 #include "Messages16.h"
 #include "Types16.h"
 

@@ -1,7 +1,8 @@
 #pragma once
 
+#include <common/Platform.h>
+
 #include <stdint.h>
-#include <stdarg.h>
 #include <time.h>
 
 #include <functional>
@@ -10,59 +11,8 @@
 #include "ChargePoint16.h"
 #include "Types16.h"
 
-void *platform_init(const char *websocket_url, BasicAuthCredentials *credentials = nullptr, size_t credentials_length = 0);
-void platform_disconnect(void *ctx);
-void platform_reconnect(void *ctx);
-void platform_destroy(void *ctx);
-
-bool platform_ws_connected(void *ctx);
-bool platform_ws_send(void *ctx, const char *buf, size_t buf_len);
-void platform_ws_register_receive_callback(void *ctx, void(*cb)(char *, size_t, void *), void *user_data);
-bool platform_ws_send_ping(void *ctx);
-void platform_ws_register_pong_callback(void *ctx, void (*cb)(void *), void *user_data);
-
-uint32_t platform_now_ms();
-void platform_set_system_time(void *ctx, time_t t);
-time_t platform_get_system_time(void *ctx);
-
-#define OCPP_LOG_LEVEL_NONE 0
-#define OCPP_LOG_LEVEL_ERROR 1
-#define OCPP_LOG_LEVEL_WARN 2
-#define OCPP_LOG_LEVEL_INFO 3
-#define OCPP_LOG_LEVEL_DEBUG 4
-#define OCPP_LOG_LEVEL_TRACE 5
-
-#if OCPP_LOG_LEVEL >= OCPP_LOG_LEVEL_ERROR
-#define log_error(...) platform_printfln(OCPP_LOG_LEVEL_ERROR, __VA_ARGS__)
-#else
-#define log_error(...)
-#endif
-
-#if OCPP_LOG_LEVEL >= OCPP_LOG_LEVEL_WARN
-#define log_warn(...) platform_printfln(OCPP_LOG_LEVEL_WARN, __VA_ARGS__)
-#else
-#define log_warn(...)
-#endif
-
-#if OCPP_LOG_LEVEL >= OCPP_LOG_LEVEL_INFO
-#define log_info(...) platform_printfln(OCPP_LOG_LEVEL_INFO, __VA_ARGS__)
-#else
-#define log_info(...)
-#endif
-
-#if OCPP_LOG_LEVEL >= OCPP_LOG_LEVEL_DEBUG
-#define log_debug(...) platform_printfln(OCPP_LOG_LEVEL_DEBUG, __VA_ARGS__)
-#else
-#define log_debug(...)
-#endif
-
-#if OCPP_LOG_LEVEL >= OCPP_LOG_LEVEL_TRACE
-#define log_trace(...) platform_printfln(OCPP_LOG_LEVEL_TRACE, __VA_ARGS__)
-#else
-#define log_trace(...)
-#endif
-
-void platform_printfln(int level, const char *fmt, ...) __attribute__((__format__(__printf__, 2, 3)));
+// OCPP 1.6 specific platform hooks. The core platform API (websocket,
+// time, filesystem, logging, identity) lives in common/Platform.h.
 
 void platform_register_tag_seen_callback(void *ctx, void(*cb)(int32_t, const char *, void *), void *user_data);
 
@@ -136,38 +86,7 @@ float platform_get_raw_meter_value(int32_t connectorId, size_t measurand_idx);
 // This is the Energy.Active.Import.Register measurand in Wh
 int32_t platform_get_energy(int32_t connectorId);
 
-void platform_reset(bool hard);
-
 bool platform_prepare_meter(int32_t connector_id, SampledValueMeasurand *measurands, SampledValuePhase *phases, size_t measurand_count, std::unique_ptr<SupportedMeasurand[]> &out_supported_measurands, size_t *out_supported_measurand_count);
-
-size_t platform_read_file(const char *name, char *buf, size_t len);
-bool platform_write_file(const char *name, char *buf, size_t len);
-
-// return nullptr if name does not exist or is not a directory
-void *platform_open_dir(const char *name);
-
-struct OcppDirEnt {
-    bool is_dir;
-    char name[33] = "";
-};
-
-// return nullptr if no more files
-OcppDirEnt *platform_read_dir(void *dir_fd);
-void platform_close_dir(void *dir_fd);
-
-void platform_remove_file(const char *name);
-
-// Required
-const char *platform_get_charge_point_vendor();
-const char *platform_get_charge_point_model();
-
-// Optional - Return nullptr if not to be sent.
-const char *platform_get_charge_point_serial_number();
-const char *platform_get_firmware_version();
-const char *platform_get_iccid();
-const char *platform_get_imsi();
-const char *platform_get_meter_type();
-const char *platform_get_meter_serial_number();
 
 #ifdef OCPP_STATE_CALLBACKS
 void platform_update_chargepoint_state(OcppState state,

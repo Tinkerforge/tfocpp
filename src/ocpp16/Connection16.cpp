@@ -517,7 +517,7 @@ void* OcppConnection::start(const char *websocket_endpoint_url, const char *char
         }
     }
 
-    platform_ctx = platform_init(ws_url.c_str(), this->basic_auth_credentials.get(), cred_used_count);
+    platform_ctx = platform_init(ws_url.c_str(), "ocpp1.6", this->basic_auth_credentials.get(), cred_used_count);
     if (platform_ctx == nullptr)
         return nullptr;
 

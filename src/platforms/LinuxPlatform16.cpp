@@ -234,6 +234,30 @@ void platform_set_charging_current(int32_t connectorId, uint32_t milliAmps)
     send_message("Set charge current");
 }
 
+bool platform_supports_phase_switch()
+{
+    return false;
+}
+
+void platform_set_charging_phases(int32_t connectorId, uint8_t phases)
+{
+    (void)connectorId;
+    (void)phases;
+}
+
+bool platform_supports_signed_meter_values(void *ctx, int32_t connectorId)
+{
+    (void)ctx;
+    (void)connectorId;
+    return false;
+}
+
+[[gnu::noreturn]] void system_abort(const char *message)
+{
+    fprintf(stderr, "abort: %s\n", message);
+    abort();
+}
+
 #ifdef OCPP_STATE_CALLBACKS
 void platform_update_chargepoint_state(OcppState state,
                                        StatusNotificationStatus last_sent_status,
@@ -331,6 +355,12 @@ int main(int argc, char **argv) {
     sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     bind(sock, (const sockaddr *) &addr, sizeof(addr));
 
+    // Don't block the main loop if the simulator UI is not running.
+    struct timeval recv_timeout;
+    recv_timeout.tv_sec = 0;
+    recv_timeout.tv_usec = 10000;
+    setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &recv_timeout, sizeof(recv_timeout));
+
     addr.sin_addr.s_addr = inet_addr("127.0.0.2");
 
     char buf[sizeof(PlatformResponse)] = {0};
@@ -365,71 +395,71 @@ void platform_reset(bool hard) {
 
 static SupportedMeasurand supported_measurands[] = {
     //ENERGY_ACTIVE_EXPORT_REGISTER
-    {SampledValuePhase::L1, SampledValueLocation::OUTLET, SampledValueUnit::K_WH, false},
-    {SampledValuePhase::L2, SampledValueLocation::OUTLET, SampledValueUnit::K_WH, false},
-    {SampledValuePhase::L3, SampledValueLocation::OUTLET, SampledValueUnit::K_WH, false},
+    {SampledValueMeasurand::ENERGY_ACTIVE_EXPORT_REGISTER, SampledValuePhase::L1, SampledValueLocation::OUTLET, SampledValueUnit::K_WH, false},
+    {SampledValueMeasurand::ENERGY_ACTIVE_EXPORT_REGISTER, SampledValuePhase::L2, SampledValueLocation::OUTLET, SampledValueUnit::K_WH, false},
+    {SampledValueMeasurand::ENERGY_ACTIVE_EXPORT_REGISTER, SampledValuePhase::L3, SampledValueLocation::OUTLET, SampledValueUnit::K_WH, false},
 
     //ENERGY_ACTIVE_IMPORT_REGISTER
-    {SampledValuePhase::L1, SampledValueLocation::OUTLET, SampledValueUnit::K_WH, false},
-    {SampledValuePhase::L2, SampledValueLocation::OUTLET, SampledValueUnit::K_WH, false},
-    {SampledValuePhase::L3, SampledValueLocation::OUTLET, SampledValueUnit::K_WH, false},
+    {SampledValueMeasurand::ENERGY_ACTIVE_IMPORT_REGISTER, SampledValuePhase::L1, SampledValueLocation::OUTLET, SampledValueUnit::K_WH, false},
+    {SampledValueMeasurand::ENERGY_ACTIVE_IMPORT_REGISTER, SampledValuePhase::L2, SampledValueLocation::OUTLET, SampledValueUnit::K_WH, false},
+    {SampledValueMeasurand::ENERGY_ACTIVE_IMPORT_REGISTER, SampledValuePhase::L3, SampledValueLocation::OUTLET, SampledValueUnit::K_WH, false},
 
     //ENERGY_REACTIVE_EXPORT_REGISTER
-    {SampledValuePhase::L1, SampledValueLocation::OUTLET, SampledValueUnit::KVARH, false},
-    {SampledValuePhase::L2, SampledValueLocation::OUTLET, SampledValueUnit::KVARH, false},
-    {SampledValuePhase::L3, SampledValueLocation::OUTLET, SampledValueUnit::KVARH, false},
+    {SampledValueMeasurand::ENERGY_REACTIVE_EXPORT_REGISTER, SampledValuePhase::L1, SampledValueLocation::OUTLET, SampledValueUnit::KVARH, false},
+    {SampledValueMeasurand::ENERGY_REACTIVE_EXPORT_REGISTER, SampledValuePhase::L2, SampledValueLocation::OUTLET, SampledValueUnit::KVARH, false},
+    {SampledValueMeasurand::ENERGY_REACTIVE_EXPORT_REGISTER, SampledValuePhase::L3, SampledValueLocation::OUTLET, SampledValueUnit::KVARH, false},
 
     //ENERGY_REACTIVE_IMPORT_REGISTER
-    {SampledValuePhase::L1, SampledValueLocation::OUTLET, SampledValueUnit::KVARH, false},
-    {SampledValuePhase::L2, SampledValueLocation::OUTLET, SampledValueUnit::KVARH, false},
-    {SampledValuePhase::L3, SampledValueLocation::OUTLET, SampledValueUnit::KVARH, false},
+    {SampledValueMeasurand::ENERGY_REACTIVE_IMPORT_REGISTER, SampledValuePhase::L1, SampledValueLocation::OUTLET, SampledValueUnit::KVARH, false},
+    {SampledValueMeasurand::ENERGY_REACTIVE_IMPORT_REGISTER, SampledValuePhase::L2, SampledValueLocation::OUTLET, SampledValueUnit::KVARH, false},
+    {SampledValueMeasurand::ENERGY_REACTIVE_IMPORT_REGISTER, SampledValuePhase::L3, SampledValueLocation::OUTLET, SampledValueUnit::KVARH, false},
 
     //POWER_ACTIVE_EXPORT
-    {SampledValuePhase::L1, SampledValueLocation::OUTLET, SampledValueUnit::W, false},
-    {SampledValuePhase::L2, SampledValueLocation::OUTLET, SampledValueUnit::W, false},
-    {SampledValuePhase::L3, SampledValueLocation::OUTLET, SampledValueUnit::W, false},
+    {SampledValueMeasurand::POWER_ACTIVE_EXPORT, SampledValuePhase::L1, SampledValueLocation::OUTLET, SampledValueUnit::W, false},
+    {SampledValueMeasurand::POWER_ACTIVE_EXPORT, SampledValuePhase::L2, SampledValueLocation::OUTLET, SampledValueUnit::W, false},
+    {SampledValueMeasurand::POWER_ACTIVE_EXPORT, SampledValuePhase::L3, SampledValueLocation::OUTLET, SampledValueUnit::W, false},
 
     //POWER_ACTIVE_IMPORT
-    {SampledValuePhase::L1, SampledValueLocation::OUTLET, SampledValueUnit::W, false},
-    {SampledValuePhase::L2, SampledValueLocation::OUTLET, SampledValueUnit::W, false},
-    {SampledValuePhase::L3, SampledValueLocation::OUTLET, SampledValueUnit::W, false},
+    {SampledValueMeasurand::POWER_ACTIVE_IMPORT, SampledValuePhase::L1, SampledValueLocation::OUTLET, SampledValueUnit::W, false},
+    {SampledValueMeasurand::POWER_ACTIVE_IMPORT, SampledValuePhase::L2, SampledValueLocation::OUTLET, SampledValueUnit::W, false},
+    {SampledValueMeasurand::POWER_ACTIVE_IMPORT, SampledValuePhase::L3, SampledValueLocation::OUTLET, SampledValueUnit::W, false},
 
     //POWER_REACTIVE_EXPORT
-    {SampledValuePhase::L1, SampledValueLocation::OUTLET, SampledValueUnit::W, false},
-    {SampledValuePhase::L2, SampledValueLocation::OUTLET, SampledValueUnit::W, false},
-    {SampledValuePhase::L3, SampledValueLocation::OUTLET, SampledValueUnit::W, false},
+    {SampledValueMeasurand::POWER_REACTIVE_EXPORT, SampledValuePhase::L1, SampledValueLocation::OUTLET, SampledValueUnit::W, false},
+    {SampledValueMeasurand::POWER_REACTIVE_EXPORT, SampledValuePhase::L2, SampledValueLocation::OUTLET, SampledValueUnit::W, false},
+    {SampledValueMeasurand::POWER_REACTIVE_EXPORT, SampledValuePhase::L3, SampledValueLocation::OUTLET, SampledValueUnit::W, false},
 
     //POWER_REACTIVE_IMPORT
-    {SampledValuePhase::L1, SampledValueLocation::OUTLET, SampledValueUnit::W, false},
-    {SampledValuePhase::L2, SampledValueLocation::OUTLET, SampledValueUnit::W, false},
-    {SampledValuePhase::L3, SampledValueLocation::OUTLET, SampledValueUnit::W, false},
+    {SampledValueMeasurand::POWER_REACTIVE_IMPORT, SampledValuePhase::L1, SampledValueLocation::OUTLET, SampledValueUnit::W, false},
+    {SampledValueMeasurand::POWER_REACTIVE_IMPORT, SampledValuePhase::L2, SampledValueLocation::OUTLET, SampledValueUnit::W, false},
+    {SampledValueMeasurand::POWER_REACTIVE_IMPORT, SampledValuePhase::L3, SampledValueLocation::OUTLET, SampledValueUnit::W, false},
 
     //POWER_FACTOR
-    {SampledValuePhase::L1, SampledValueLocation::OUTLET, SampledValueUnit::NONE, false},
-    {SampledValuePhase::L2, SampledValueLocation::OUTLET, SampledValueUnit::NONE, false},
-    {SampledValuePhase::L3, SampledValueLocation::OUTLET, SampledValueUnit::NONE, false},
+    {SampledValueMeasurand::POWER_FACTOR, SampledValuePhase::L1, SampledValueLocation::OUTLET, SampledValueUnit::NONE, false},
+    {SampledValueMeasurand::POWER_FACTOR, SampledValuePhase::L2, SampledValueLocation::OUTLET, SampledValueUnit::NONE, false},
+    {SampledValueMeasurand::POWER_FACTOR, SampledValuePhase::L3, SampledValueLocation::OUTLET, SampledValueUnit::NONE, false},
 
     // We can measure this with 1. the offered current and 2. the connected phases
 
     //CURRENT_OFFERED
-    {SampledValuePhase::L1, SampledValueLocation::OUTLET, SampledValueUnit::A, false},
-    {SampledValuePhase::L2, SampledValueLocation::OUTLET, SampledValueUnit::A, false},
-    {SampledValuePhase::L3, SampledValueLocation::OUTLET, SampledValueUnit::A, false},
+    {SampledValueMeasurand::CURRENT_OFFERED, SampledValuePhase::L1, SampledValueLocation::OUTLET, SampledValueUnit::A, false},
+    {SampledValueMeasurand::CURRENT_OFFERED, SampledValuePhase::L2, SampledValueLocation::OUTLET, SampledValueUnit::A, false},
+    {SampledValueMeasurand::CURRENT_OFFERED, SampledValuePhase::L3, SampledValueLocation::OUTLET, SampledValueUnit::A, false},
 
     //VOLTAGE
-    {SampledValuePhase::L1_N, SampledValueLocation::OUTLET, SampledValueUnit::V, false},
-    {SampledValuePhase::L2_N, SampledValueLocation::OUTLET, SampledValueUnit::V, false},
-    {SampledValuePhase::L3_N, SampledValueLocation::OUTLET, SampledValueUnit::V, false},
-    {SampledValuePhase::L1_L2, SampledValueLocation::OUTLET, SampledValueUnit::V, false},
-    {SampledValuePhase::L2_L3, SampledValueLocation::OUTLET, SampledValueUnit::V, false},
-    {SampledValuePhase::L3_L1, SampledValueLocation::OUTLET, SampledValueUnit::V, false},
+    {SampledValueMeasurand::VOLTAGE, SampledValuePhase::L1_N, SampledValueLocation::OUTLET, SampledValueUnit::V, false},
+    {SampledValueMeasurand::VOLTAGE, SampledValuePhase::L2_N, SampledValueLocation::OUTLET, SampledValueUnit::V, false},
+    {SampledValueMeasurand::VOLTAGE, SampledValuePhase::L3_N, SampledValueLocation::OUTLET, SampledValueUnit::V, false},
+    {SampledValueMeasurand::VOLTAGE, SampledValuePhase::L1_L2, SampledValueLocation::OUTLET, SampledValueUnit::V, false},
+    {SampledValueMeasurand::VOLTAGE, SampledValuePhase::L2_L3, SampledValueLocation::OUTLET, SampledValueUnit::V, false},
+    {SampledValueMeasurand::VOLTAGE, SampledValuePhase::L3_L1, SampledValueLocation::OUTLET, SampledValueUnit::V, false},
 
     //FREQUENCY
     /*
     NOTE: OCPP 1.6 does not have a UnitOfMeasure for
     frequency, the UnitOfMeasure for any SampledValue with measurand: Frequency is Hertz.
     */
-    {SampledValuePhase::NONE, SampledValueLocation::OUTLET, SampledValueUnit::NONE, false},
+    {SampledValueMeasurand::FREQUENCY, SampledValuePhase::NONE, SampledValueLocation::OUTLET, SampledValueUnit::NONE, false},
 };
 
 static size_t supported_measurand_offsets[] = {
@@ -458,20 +488,35 @@ static size_t supported_measurand_offsets[] = {
     37  /*NONE*/
 };
 
-size_t platform_get_supported_measurand_count(int32_t connector_id, SampledValueMeasurand measurand) {
+bool platform_prepare_meter(int32_t connector_id, SampledValueMeasurand *measurands, SampledValuePhase *phases, size_t measurand_count, std::unique_ptr<SupportedMeasurand[]> &out_supported_measurands, size_t *out_supported_measurand_count) {
     if (connector_id == 0)
-        return 0;
-    if (measurand == SampledValueMeasurand::NONE)
-        return ARRAY_SIZE(supported_measurands);
-    return supported_measurand_offsets[(size_t)measurand + 1] - supported_measurand_offsets[(size_t)measurand];
-}
+        return false;
 
-const SupportedMeasurand *platform_get_supported_measurands(int32_t connector_id, SampledValueMeasurand measurand) {
-    if (connector_id == 0)
-        return nullptr;
-    if (measurand == SampledValueMeasurand::NONE)
-        return supported_measurands;
-    return supported_measurands + supported_measurand_offsets[(size_t)measurand];
+    std::vector<SupportedMeasurand> result;
+
+    for (size_t i = 0; i < measurand_count; ++i) {
+        auto measurand = measurands[i];
+        if (measurand == SampledValueMeasurand::NONE)
+            continue;
+
+        auto phase = phases == nullptr ? SampledValuePhase::NONE : phases[i];
+
+        size_t start = supported_measurand_offsets[(size_t)measurand];
+        size_t end = supported_measurand_offsets[(size_t)measurand + 1];
+
+        for (size_t j = start; j < end; ++j) {
+            if (phase != SampledValuePhase::NONE && supported_measurands[j].phase != phase)
+                continue;
+            result.push_back(supported_measurands[j]);
+        }
+    }
+
+    *out_supported_measurand_count = result.size();
+    out_supported_measurands = heap_alloc_array<SupportedMeasurand>(result.size());
+    for (size_t i = 0; i < result.size(); ++i)
+        out_supported_measurands[i] = result[i];
+
+    return true;
 }
 
 bool platform_get_signed_meter_value(int32_t connectorId, SampledValueMeasurand measurant, SampledValuePhase phase, SampledValueLocation location, char buf[OCPP_PLATFORM_MEASURAND_MAX_DATA_LEN]) {
@@ -484,11 +529,9 @@ bool platform_get_signed_meter_value(int32_t connectorId, SampledValueMeasurand 
     return false;
 }
 
-float platform_get_raw_meter_value(int32_t connectorId, SampledValueMeasurand measurant, SampledValuePhase phase, SampledValueLocation location) {
+float platform_get_raw_meter_value(int32_t connectorId, size_t measurand_idx) {
     (void)connectorId;
-    (void)measurant;
-    (void)phase;
-    (void)location;
+    (void)measurand_idx;
     return 123.456f;
 }
 

@@ -1,6 +1,6 @@
 #include "Tools.h"
 
-#include <ocpp16/Platform16.h>
+#include <common/Platform.h>
 
 #include <string.h>
 #include <stdlib.h>

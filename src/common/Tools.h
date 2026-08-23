@@ -1,7 +1,10 @@
 #pragma once
 
 #include "stdint.h"
-#include <ocpp16/Types16.h>
+
+#include <utility>
+
+#include <TFTools/Option.h>
 
 #include <memory>
 

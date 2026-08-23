@@ -61,9 +61,3 @@ enum StopReason {
     // SoftReset, // handled by OCPP
     // UnlockCommand, // handled by OCPP
 };
-
-struct BasicAuthCredentials {
-    std::unique_ptr<char[]> user;
-    std::unique_ptr<uint8_t[]> pass;
-    size_t pass_length;
-};

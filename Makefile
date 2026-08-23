@@ -71,23 +71,51 @@ else
 	LIBS += -lwebsockets -lc++
 endif
 
-SOURCES :=	$(wildcard src/ocpp16/*.cpp) \
-			lib/mongoose/mongoose.cpp \
-			src/platforms/LinuxWS.cpp
+SOURCES_COMMON :=	$(wildcard src/common/*.cpp) \
+					lib/mongoose/mongoose.cpp \
+					src/platforms/LinuxWS.cpp
+
+SOURCES_16 := $(wildcard src/ocpp16/*.cpp) $(SOURCES_COMMON)
+SOURCES_21 := $(wildcard src/ocpp21/*.cpp) $(SOURCES_COMMON)
 
 CFILES := src/lib/musl_libc_timegm.c \
 		  $(wildcard src/lib/libiso8601/*.c)
 
-SOURCES_LIB := $(SOURCES) src/platforms/TestPlatform.cpp
-SOURCES_EXEC := $(SOURCES) src/platforms/LinuxPlatform16.cpp
+SOURCES_LIB := $(SOURCES_16) src/platforms/TestPlatform.cpp
+SOURCES_EXEC := $(SOURCES_16) src/platforms/LinuxPlatform16.cpp
+SOURCES_EXEC_21 := $(SOURCES_21) src/platforms/LinuxPlatform21.cpp
 
-OBJECTS_LIB := ${SOURCES_LIB:.cpp=.o} ${CFILES:.c=.o}
-OBJECTS_EXEC := ${SOURCES_EXEC:.cpp=.o} ${CFILES:.c=.o}
+# Each build variant compiles with a different platform define,
+# so each variant gets its own object directory below build/.
+OBJECTS_LIB := $(SOURCES_LIB:%.cpp=build/test/%.o) $(CFILES:%.c=build/test/%.o)
+OBJECTS_EXEC := $(SOURCES_EXEC:%.cpp=build/linux/%.o) $(CFILES:%.c=build/linux/%.o)
+OBJECTS_21 := $(SOURCES_EXEC_21:%.cpp=build/linux21/%.o) $(CFILES:%.c=build/linux21/%.o)
 
-$(OBJECTS_LIB): CXXFLAGS := $(CXXFLAGS) -DOCPP_PLATFORM_TEST
-$(OBJECTS_EXEC): CXXFLAGS := $(CXXFLAGS) -DOCPP_PLATFORM_LINUX
+build/test/%.o: %.cpp
+	mkdir -p $(dir $@)
+	$(CXX) $(CXXFLAGS) -DOCPP_PLATFORM_TEST -c $< -o $@
 
-all: libocpp.so ocpp16_linux
+build/test/%.o: %.c
+	mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) -DOCPP_PLATFORM_TEST -c $< -o $@
+
+build/linux/%.o: %.cpp
+	mkdir -p $(dir $@)
+	$(CXX) $(CXXFLAGS) -DOCPP_PLATFORM_LINUX -c $< -o $@
+
+build/linux/%.o: %.c
+	mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) -DOCPP_PLATFORM_LINUX -c $< -o $@
+
+build/linux21/%.o: %.cpp
+	mkdir -p $(dir $@)
+	$(CXX) $(CXXFLAGS) -DOCPP_PLATFORM_LINUX21 -c $< -o $@
+
+build/linux21/%.o: %.c
+	mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) -DOCPP_PLATFORM_LINUX21 -c $< -o $@
+
+all: libocpp.so ocpp16_linux ocpp21_linux
 
 libocpp.so: $(OBJECTS_LIB)
 	$(CXX) $(OBJECTS_LIB) $(LIBS) $(LDFLAGS) $(LIB_LD_FLAGS) -shared -o $@
@@ -95,7 +123,10 @@ libocpp.so: $(OBJECTS_LIB)
 ocpp16_linux: $(OBJECTS_EXEC)
 	$(CXX) $(OBJECTS_EXEC) $(LIBS) $(LDFLAGS) -o $@ $(STATIC_FLAG)
 
+ocpp21_linux: $(OBJECTS_21)
+	$(CXX) $(OBJECTS_21) $(LIBS) $(LDFLAGS) -o $@ $(STATIC_FLAG)
+
 .PHONY: all clean
 
 clean: Makefile
-	$(E)$(RM) $(OBJECTS_LIB) $(OBJECTS_EXEC) libocpp.so
+	$(E)$(RM) -r build libocpp.so ocpp16_linux ocpp21_linux

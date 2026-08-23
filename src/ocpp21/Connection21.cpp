@@ -1,0 +1,367 @@
+#include "Connection21.h"
+
+#include "errno.h"
+#include "inttypes.h"
+#include "TFJson.h"
+
+#include "ChargePoint21.h"
+#include <common/Platform.h>
+#include <common/Tools.h>
+
+// TODO: make these configurable via the device model (OCPPCommCtrlr).
+#define OCPP21_MESSAGE_TIMEOUT_S 30
+#define OCPP21_WS_PING_INTERVAL_S 10
+#define OCPP21_RECONNECT_INTERVAL_S 10
+
+namespace Ocpp21 {
+
+static void log_payload(const char *prefix, const char *buf, size_t buf_len) {
+    log_debug("%s (len %zu) %.*s%s", prefix, buf_len, (int)std::min(buf_len, (size_t)100), buf, buf_len > 96 ? " ..." : "");
+}
+
+void Connection21::handleMessage(char *message, size_t message_len)
+{
+    (void)message_len;
+    log_payload("Received message", message, message_len);
+    DynamicJsonDocument doc{8192};
+    DeserializationError error = deserializeJson(doc, message);
+    if (error) {
+        log_error("deserializeJson() failed: %s", error.c_str());
+        return;
+    }
+    doc.shrinkToFit();
+
+    if (!doc.is<JsonArray>()) {
+        log_error("deserialized JSON is not an array at top level");
+        return;
+    }
+
+    if (!doc[0].is<int32_t>()) {
+        log_error("deserialized JSON array does not start with message type ID");
+        return;
+    }
+
+    if (!doc[1].is<const char *>()) {
+        log_error("deserialized JSON array does not contain unique ID as second member");
+        return;
+    }
+
+    int32_t messageType = doc[0];
+    const char *uniqueID = doc[1];
+
+    if (messageType == (int32_t)OcppRpcMessageType::CALL || messageType == (int32_t)OcppRpcMessageType::SEND) {
+        bool is_send = messageType == (int32_t)OcppRpcMessageType::SEND;
+        if (doc.size() != 4) {
+            log_error("received call with %d members, but expected 4.", (int)doc.size());
+            return;
+        }
+
+        if (!doc[2].is<const char *>()) {
+            log_error("received call with action not being a string.");
+            return;
+        }
+
+        if (doc[3].isNull() || !doc[3].is<JsonObject>()) {
+            log_error("received call with payload being neither an object nor null.");
+            return;
+        }
+
+        if (cp->state == OcppState21::Rejected) {
+            // B03.FR.06: while Rejected the Charging Station shall not respond to CSMS initiated messages.
+            log_warn("received call while being rejected. Ignoring call.");
+            return;
+        }
+
+        log_info("Received %s (id %s) action %s", is_send ? "send" : "call", uniqueID, doc[2].as<const char *>());
+
+        CallResponse res = callHandler(uniqueID, doc[2].as<const char *>(), doc[3].as<JsonObject>(), cp);
+
+        // SEND messages are fire and forget. Never respond with an error.
+        if (res.result != CallErrorCode::OK && !is_send)
+            sendCallError(uniqueID, res.result, res.error_description);
+
+        return;
+    }
+
+    if (messageType != (int32_t)OcppRpcMessageType::CALLRESULT
+     && messageType != (int32_t)OcppRpcMessageType::CALLERROR
+     && messageType != (int32_t)OcppRpcMessageType::CALLRESULTERROR) {
+        log_error("received unknown message type %" PRId32, messageType);
+        sendCallError(uniqueID, CallErrorCode::MessageTypeNotSupported, "message type number not supported");
+        return;
+    }
+
+    if (messageType == (int32_t)OcppRpcMessageType::CALLRESULTERROR) {
+        // The CSMS rejected one of our call results. We can not do anything
+        // about that at this level. Log and continue.
+        log_warn("received call result error (id %s): %s", uniqueID, doc[2].is<const char *>() ? doc[2].as<const char *>() : "unknown error code");
+        return;
+    }
+
+    errno = 0;
+    uint64_t uid = strtoull(uniqueID, nullptr, 10);
+    if (errno != 0) {
+        log_error("received %s with invalid message ID %s.", messageType == 3 ? "call result" : "call error", uniqueID);
+        return;
+    }
+
+    if (!message_in_flight.is_valid()) {
+        log_warn("received %s with message ID %" PRIu64 ", but no call is in flight", messageType == 3 ? "call result" : "call error", uid);
+        return;
+    }
+
+    if (uid != message_in_flight.message_id) {
+        log_error("received %s with message ID %" PRIu64 ". expected was %" PRIu64, messageType == 3 ? "call result" : "call error", uid, message_in_flight.message_id);
+        return;
+    }
+
+    if (messageType == (int32_t)OcppRpcMessageType::CALLRESULT) {
+        if (doc.size() != 3) {
+            log_error("received call result with %d members, but expected 3.", (int)doc.size());
+            return;
+        }
+
+        if (doc[2].isNull() || !doc[2].is<JsonObject>()) {
+            log_error("received call result with payload being neither an object nor null.");
+            return;
+        }
+
+        log_info("Received result for %s (id %" PRIu64 ")", CallActionStrings[(size_t)message_in_flight.action], uid);
+
+        CallAction result_to = message_in_flight.action;
+        message_in_flight = QueueItem21{};
+        message_timeout_deadline = 0;
+
+        CallResponse res = callResultHandler(0, result_to, doc[2].as<JsonObject>(), cp);
+        (void)res;
+        // TODO: send CALLRESULTERROR if res.result != OK.
+        return;
+    }
+
+    // CALLERROR
+    if (doc.size() != 5) {
+        log_error("received call error with %d members, but expected 5.", (int)doc.size());
+        return;
+    }
+
+    log_warn("Received call error (id %" PRIu64 ") %s: %s",
+             uid,
+             doc[2].is<const char *>() ? doc[2].as<const char *>() : "?",
+             doc[3].is<const char *>() ? doc[3].as<const char *>() : "?");
+
+    cp->onCallError(message_in_flight.action, message_in_flight.message_id);
+    message_in_flight = QueueItem21{};
+    message_timeout_deadline = 0;
+}
+
+static size_t buildCallError(TFJsonSerializer &json, const char *uid, CallErrorCode code, const char *desc) {
+    json.addArray();
+    json.addNumber((int32_t)OcppRpcMessageType::CALLERROR);
+    json.addString(uid);
+    json.addString(CallErrorCodeStrings[(size_t)code]);
+    json.addString(desc);
+    json.addObject();
+    json.endObject();
+    json.endArray();
+    return json.end();
+}
+
+void Connection21::sendCallError(const char *uid, CallErrorCode code, const char *desc)
+{
+    log_info("Sending error %s (%s) for id %s", CallErrorCodeStrings[(size_t)code], desc, uid);
+
+    size_t len = 0;
+    {
+        TFJsonSerializer json{nullptr, 0};
+        len = buildCallError(json, uid, code, desc);
+    }
+    auto buf = heap_alloc_array<char>(len + 1);
+    TFJsonSerializer json{buf.get(), len + 1};
+    buildCallError(json, uid, code, desc);
+
+    next_response.buf = std::move(buf);
+    next_response.len = len;
+}
+
+bool Connection21::sendCallResponse(const ICall &call)
+{
+    log_info("Sending response for %s (id %s)", CallActionStrings[(size_t)call.action], call.ocppJcallId);
+    next_response = QueueItem21{call};
+    return true;
+}
+
+bool Connection21::sendCallAction(const ICall &call)
+{
+    if (!platform_ws_connected(platform_ctx))
+        return false;
+
+    if (call.action == CallAction::STATUS_NOTIFICATION) {
+        if (status_notifications.size() > 5)
+            status_notifications.pop_front();
+        status_notifications.emplace_back(call);
+    } else {
+        if (messages.size() > 5)
+            messages.pop_front();
+        messages.emplace_back(call);
+    }
+
+    return true;
+}
+
+void Connection21::setPongDeadline() {
+    this->pong_deadline = set_deadline(1000 * (OCPP21_WS_PING_INTERVAL_S * 3 + OCPP21_WS_PING_INTERVAL_S / 2));
+}
+
+void Connection21::tick() {
+    bool connected = platform_ws_connected(platform_ctx);
+
+    if (!connected && was_connected) {
+        cp->onDisconnect();
+        connection_state_change_time = platform_get_system_time(platform_ctx);
+    } else if (connected && !was_connected) {
+        cp->onConnect();
+        connection_state_change_time = platform_get_system_time(platform_ctx);
+
+        // Connection establishment counts as successful ping/pong
+        last_ping_sent = platform_now_ms();
+        this->setPongDeadline();
+        // Arm the ping deadline. A plain 0 would never elapse on systems
+        // with more than 24.8 days of uptime (uint32 wraparound arithmetic
+        // in deadline_elapsed).
+        next_ping_deadline = set_deadline(OCPP21_WS_PING_INTERVAL_S * 1000);
+
+        next_reconnect_deadline = 0;
+    } else if (!connected && !was_connected) {
+        if (next_reconnect_deadline == 0) {
+            next_reconnect_deadline = set_deadline(OCPP21_RECONNECT_INTERVAL_S * 1000);
+        } else if (deadline_elapsed(next_reconnect_deadline)) {
+            platform_reconnect(platform_ctx);
+            next_reconnect_deadline = set_deadline(OCPP21_RECONNECT_INTERVAL_S * 1000);
+        }
+    }
+
+    was_connected = connected;
+
+    if (!connected) {
+        status_notifications.clear();
+        messages.clear();
+        next_response = QueueItem21{};
+        return;
+    }
+
+    if (deadline_elapsed(next_ping_deadline)) {
+        if (platform_ws_send_ping(platform_ctx)) {
+            last_ping_sent = platform_now_ms();
+            next_ping_deadline = last_ping_sent + OCPP21_WS_PING_INTERVAL_S * 1000;
+        } else {
+            log_info("Failed to send ping");
+        }
+    }
+
+    if (deadline_elapsed(pong_deadline)) {
+        log_info("Pong timeout");
+        platform_disconnect(platform_ctx);
+        return;
+    }
+
+    if (next_response.is_valid()) {
+        log_payload("Sending response", next_response.buf.get(), next_response.len);
+        if (platform_ws_send(platform_ctx, next_response.buf.get(), next_response.len))
+            next_response = QueueItem21{};
+        return;
+    }
+
+    if (message_in_flight.is_valid()) {
+        if (!deadline_elapsed(message_timeout_deadline))
+            return;
+
+        log_info("%s (id %" PRIu64 ") timed out. Dropping", CallActionStrings[(size_t)message_in_flight.action], message_in_flight.message_id);
+        cp->onTimeout(message_in_flight.action, message_in_flight.message_id);
+        message_in_flight = QueueItem21{};
+    }
+
+    std::deque<QueueItem21> *to_pop = nullptr;
+    if (!status_notifications.empty()) {
+        to_pop = &status_notifications;
+    } else if (!messages.empty()) {
+        to_pop = &messages;
+    } else
+        return;
+
+    {
+        QueueItem21 *to_send = &to_pop->front();
+
+        auto new_deadline = set_deadline(1000 * OCPP21_MESSAGE_TIMEOUT_S);
+
+        log_payload("Sending request", to_send->buf.get(), to_send->len);
+        if (!platform_ws_send(platform_ctx, to_send->buf.get(), to_send->len)) {
+            log_info("Send failed");
+            return;
+        }
+
+        this->message_timeout_deadline = new_deadline;
+    }
+
+    message_in_flight = std::move(to_pop->front());
+    to_pop->pop_front();
+}
+
+QueueItem21::QueueItem21(const ICall &call) :
+        action(call.action),
+        buf(nullptr),
+        message_id(call.ocppJmessageId),
+        len(0) {
+    auto length = call.measureJson();
+    this->buf = heap_alloc_array<char>(length + 1);
+    call.serializeJson(this->buf.get(), length + 1);
+    this->len = length;
+}
+
+bool QueueItem21::is_valid()
+{
+    return buf != nullptr;
+}
+
+void *Connection21::start(const char *websocket_endpoint_url, const char *charge_point_name_percent_encoded, const char *basic_auth_pass, ChargePoint21 *ocpp_handle) {
+    this->cp = ocpp_handle;
+    std::string ws_url;
+    ws_url.reserve(strlen(websocket_endpoint_url) + 1 + strlen(charge_point_name_percent_encoded));
+    ws_url += websocket_endpoint_url;
+    ws_url += '/';
+    ws_url += charge_point_name_percent_encoded;
+
+    size_t cred_used_count = 0;
+    if (basic_auth_pass != nullptr && basic_auth_pass[0] != '\0') {
+        this->basic_auth_credentials = heap_alloc_array<BasicAuthCredentials>(1);
+
+        auto user_len = strlen(charge_point_name_percent_encoded) + 1;
+        this->basic_auth_credentials[0].user = heap_alloc_array<char>(user_len);
+        memcpy(this->basic_auth_credentials[0].user.get(), charge_point_name_percent_encoded, user_len);
+
+        auto pass_len = strlen(basic_auth_pass);
+        this->basic_auth_credentials[0].pass = heap_alloc_array<uint8_t>(pass_len);
+        memcpy(this->basic_auth_credentials[0].pass.get(), basic_auth_pass, pass_len);
+        this->basic_auth_credentials[0].pass_length = pass_len;
+
+        cred_used_count = 1;
+    }
+
+    platform_ctx = platform_init(ws_url.c_str(), "ocpp2.1", this->basic_auth_credentials.get(), cred_used_count);
+    if (platform_ctx == nullptr)
+        return nullptr;
+
+    platform_ws_register_receive_callback(platform_ctx, [](char *c, size_t s, void *user_data){((Connection21*)user_data)->handleMessage(c, s);}, this);
+    platform_ws_register_pong_callback(platform_ctx, [](void *user_data){((Connection21*)user_data)->setPongDeadline();}, this);
+
+    return platform_ctx;
+}
+
+void Connection21::stop() {
+    platform_ws_register_pong_callback(platform_ctx, nullptr, nullptr);
+    platform_ws_register_receive_callback(platform_ctx, nullptr, nullptr);
+
+    platform_disconnect(platform_ctx);
+    platform_destroy(platform_ctx);
+}
+
+} // namespace Ocpp21
