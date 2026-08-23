@@ -39,6 +39,9 @@ public:
     void sendCallError(const char *uid, CallErrorCode code, const char *desc);
 
     bool sendCallAction(const ICall &call);
+    // Transaction related calls survive disconnects and timeouts. They are
+    // queued even while offline and retried until the CSMS answers.
+    bool sendTransactionCallAction(const ICall &call);
     bool sendCallResponse(const ICall &call);
 
     void setPongDeadline();
@@ -47,7 +50,9 @@ public:
     ChargePoint21 *cp = nullptr;
 
     QueueItem21 message_in_flight;
+    bool in_flight_is_transaction = false;
     uint32_t message_timeout_deadline = 0;
+    uint32_t transaction_retry_deadline = 0;
 
     time_t connection_state_change_time = 0;
     uint32_t next_ping_deadline = 0;
@@ -57,6 +62,8 @@ public:
 
     std::deque<QueueItem21> messages;
     std::deque<QueueItem21> status_notifications;
+    // Not cleared on disconnect. Strict FIFO to keep the seqNo order.
+    std::deque<QueueItem21> transaction_messages;
     // As there can only be one call in flight, we don't need a queue here.
     QueueItem21 next_response;
 

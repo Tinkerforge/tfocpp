@@ -17,6 +17,9 @@
 #ifndef OCPP_DATETIME_NOT_PASSED
 #define OCPP_DATETIME_NOT_PASSED 0
 #endif
+#ifndef OCPP_BOOL_NOT_PASSED
+#define OCPP_BOOL_NOT_PASSED -1
+#endif
 
 namespace Ocpp21 {
 

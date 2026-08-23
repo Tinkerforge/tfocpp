@@ -121,6 +121,159 @@ const char * const ResetTypeStrings[] = {
     "ImmediateAndResume"
 };
 
+const char * const TransactionEventEventTypeStrings[] = {
+    "Ended",
+    "Started",
+    "Updated"
+};
+
+const char * const TransactionEventTriggerReasonStrings[] = {
+    "AbnormalCondition",
+    "Authorized",
+    "CablePluggedIn",
+    "ChargingRateChanged",
+    "ChargingStateChanged",
+    "CostLimitReached",
+    "Deauthorized",
+    "EnergyLimitReached",
+    "EVCommunicationLost",
+    "EVConnectTimeout",
+    "EVDeparted",
+    "EVDetected",
+    "LimitSet",
+    "MeterValueClock",
+    "MeterValuePeriodic",
+    "OperationModeChanged",
+    "RemoteStart",
+    "RemoteStop",
+    "ResetCommand",
+    "RunningCost",
+    "SignedDataReceived",
+    "SoCLimitReached",
+    "StopAuthorized",
+    "TariffChanged",
+    "TariffNotAccepted",
+    "TimeLimitReached",
+    "Trigger",
+    "TxResumed",
+    "UnlockCommand"
+};
+
+const char * const TransactionEventPreconditioningStatusStrings[] = {
+    "Unknown",
+    "Ready",
+    "NotReady",
+    "Preconditioning"
+};
+
+const char * const TransactionResponseStatusStrings[] = {
+    "Accepted",
+    "Rejected"
+};
+
+const char * const ResponseIdTokenInfoEntriesStatusStrings[] = {
+    "Accepted",
+    "Blocked",
+    "ConcurrentTx",
+    "Expired",
+    "Invalid",
+    "NoCredit",
+    "NotAllowedTypeEVSE",
+    "NotAtThisLocation",
+    "NotAtThisTime",
+    "Unknown"
+};
+
+const char * const EntriesFormatStrings[] = {
+    "ASCII",
+    "HTML",
+    "URI",
+    "UTF8",
+    "QRCODE"
+};
+
+const char * const AuthorizeResponseCertificateStatusStrings[] = {
+    "Accepted",
+    "SignatureError",
+    "CertificateExpired",
+    "CertificateRevoked",
+    "NoCertificateAvailable",
+    "CertChainError",
+    "ContractCancelled"
+};
+
+const char * const AuthorizeResponseAllowedEnergyTransferEntryStrings[] = {
+    "AC_single_phase",
+    "AC_two_phase",
+    "AC_three_phase",
+    "DC",
+    "AC_BPT",
+    "AC_BPT_DER",
+    "AC_DER",
+    "DC_BPT",
+    "DC_ACDP",
+    "DC_ACDP_BPT",
+    "WPT"
+};
+
+const char * const EntriesPricesEntryEntriesConditionsEntriesDayOfWeekEntryStrings[] = {
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+    "Sunday"
+};
+
+const char * const EntriesPricesEntryEntriesConditionsEntriesEvseKindStrings[] = {
+    "AC",
+    "DC"
+};
+
+const char * const RequestStartTransactionChargingProfileEntriesChargingProfilePurposeStrings[] = {
+    "ChargingStationExternalConstraints",
+    "ChargingStationMaxProfile",
+    "TxDefaultProfile",
+    "TxProfile",
+    "PriorityCharging",
+    "LocalGeneration"
+};
+
+const char * const RequestStartTransactionChargingProfileEntriesChargingProfileKindStrings[] = {
+    "Absolute",
+    "Recurring",
+    "Relative",
+    "Dynamic"
+};
+
+const char * const RequestStartTransactionChargingProfileEntriesRecurrencyKindStrings[] = {
+    "Daily",
+    "Weekly"
+};
+
+const char * const RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingRateUnitStrings[] = {
+    "W",
+    "A"
+};
+
+const char * const RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingSchedulePeriodEntryEntriesOperationModeStrings[] = {
+    "Idle",
+    "ChargingOnly",
+    "CentralSetpoint",
+    "ExternalSetpoint",
+    "ExternalLimits",
+    "CentralFrequency",
+    "LocalFrequency",
+    "LocalLoadBalancing"
+};
+
+const char * const RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesSalesTariffEntriesSalesTariffEntryEntryEntriesConsumptionCostEntryEntriesCostEntryEntriesCostKindStrings[] = {
+    "CarbonDioxideEmission",
+    "RelativePricePercentage",
+    "RenewableGenerationPercentage"
+};
+
 const char * const GetVariablesResponseGetVariableResultAttributeStatusStrings[] = {
     "Accepted",
     "Rejected",
@@ -143,6 +296,162 @@ const char * const SetVariablesResponseSetVariableResultAttributeStatusStrings[]
     "UnknownVariable",
     "NotSupportedAttributeType",
     "RebootRequired"
+};
+
+const char * const AuthorizeIso15118CertificateHashDataHashAlgorithmStrings[] = {
+    "SHA256",
+    "SHA384",
+    "SHA512"
+};
+
+const char * const TransactionEventTransactionInfoChargingStateStrings[] = {
+    "EVConnected",
+    "Charging",
+    "SuspendedEV",
+    "SuspendedEVSE",
+    "Idle"
+};
+
+const char * const TransactionEventTransactionInfoStoppedReasonStrings[] = {
+    "DeAuthorized",
+    "EmergencyStop",
+    "EnergyLimitReached",
+    "EVDisconnected",
+    "GroundFault",
+    "ImmediateReset",
+    "MasterPass",
+    "Local",
+    "LocalOutOfCredit",
+    "Other",
+    "OvercurrentFault",
+    "PowerLoss",
+    "PowerQuality",
+    "Reboot",
+    "Remote",
+    "SOCLimitReached",
+    "StoppedByEV",
+    "TimeLimitReached",
+    "Timeout",
+    "ReqEnergyTransferRejected"
+};
+
+const char * const TransactionEventTransactionInfoOperationModeStrings[] = {
+    "Idle",
+    "ChargingOnly",
+    "CentralSetpoint",
+    "ExternalSetpoint",
+    "ExternalLimits",
+    "CentralFrequency",
+    "LocalFrequency",
+    "LocalLoadBalancing"
+};
+
+const char * const TransactionEventCostDetailsTotalCostTypeOfCostStrings[] = {
+    "NormalCost",
+    "MinCost",
+    "MaxCost"
+};
+
+const char * const MeterValueSampledValueMeasurandStrings[] = {
+    "Current.Export",
+    "Current.Export.Offered",
+    "Current.Export.Minimum",
+    "Current.Import",
+    "Current.Import.Offered",
+    "Current.Import.Minimum",
+    "Current.Offered",
+    "Display.PresentSOC",
+    "Display.MinimumSOC",
+    "Display.TargetSOC",
+    "Display.MaximumSOC",
+    "Display.RemainingTimeToMinimumSOC",
+    "Display.RemainingTimeToTargetSOC",
+    "Display.RemainingTimeToMaximumSOC",
+    "Display.ChargingComplete",
+    "Display.BatteryEnergyCapacity",
+    "Display.InletHot",
+    "Energy.Active.Export.Interval",
+    "Energy.Active.Export.Register",
+    "Energy.Active.Import.Interval",
+    "Energy.Active.Import.Register",
+    "Energy.Active.Import.CableLoss",
+    "Energy.Active.Import.LocalGeneration.Register",
+    "Energy.Active.Net",
+    "Energy.Active.Setpoint.Interval",
+    "Energy.Apparent.Export",
+    "Energy.Apparent.Import",
+    "Energy.Apparent.Net",
+    "Energy.Reactive.Export.Interval",
+    "Energy.Reactive.Export.Register",
+    "Energy.Reactive.Import.Interval",
+    "Energy.Reactive.Import.Register",
+    "Energy.Reactive.Net",
+    "EnergyRequest.Target",
+    "EnergyRequest.Minimum",
+    "EnergyRequest.Maximum",
+    "EnergyRequest.Minimum.V2X",
+    "EnergyRequest.Maximum.V2X",
+    "EnergyRequest.Bulk",
+    "Frequency",
+    "Power.Active.Export",
+    "Power.Active.Import",
+    "Power.Active.Setpoint",
+    "Power.Active.Residual",
+    "Power.Export.Minimum",
+    "Power.Export.Offered",
+    "Power.Factor",
+    "Power.Import.Offered",
+    "Power.Import.Minimum",
+    "Power.Offered",
+    "Power.Reactive.Export",
+    "Power.Reactive.Import",
+    "SoC",
+    "Voltage",
+    "Voltage.Minimum",
+    "Voltage.Maximum"
+};
+
+const char * const MeterValueSampledValueContextStrings[] = {
+    "Interruption.Begin",
+    "Interruption.End",
+    "Other",
+    "Sample.Clock",
+    "Sample.Periodic",
+    "Transaction.Begin",
+    "Transaction.End",
+    "Trigger"
+};
+
+const char * const MeterValueSampledValuePhaseStrings[] = {
+    "L1",
+    "L2",
+    "L3",
+    "N",
+    "L1-N",
+    "L2-N",
+    "L3-N",
+    "L1-L2",
+    "L2-L3",
+    "L3-L1"
+};
+
+const char * const MeterValueSampledValueLocationStrings[] = {
+    "Body",
+    "Cable",
+    "EV",
+    "Inlet",
+    "Outlet",
+    "Upstream"
+};
+
+const char * const TransactionEventCostDetailsChargingPeriodsDimensionsTypeStrings[] = {
+    "Energy",
+    "MaxCurrent",
+    "MinCurrent",
+    "MaxPower",
+    "MinPower",
+    "IdleTIme",
+    "ChargingTime"
 };
 
 const char * const CallActionStrings[] = {
@@ -370,6 +679,70 @@ void ResetResponseStatusInfo::serializeInto(TFJsonSerializer &json) {
         if (additionalInfo != nullptr) json.addMemberString("additionalInfo", additionalInfo);
     }
 
+void AuthorizeIdToken::serializeInto(TFJsonSerializer &json) {
+        if (additionalInfo != nullptr) { json.addMemberArray("additionalInfo"); for(size_t i = 0; i < additionalInfo_length; ++i) { json.addObject(); additionalInfo[i].serializeInto(json); json.endObject(); } json.endArray(); }
+        if (idToken != nullptr) json.addMemberString("idToken", idToken);
+        if (type != nullptr) json.addMemberString("type", type);
+    }
+
+void AuthorizeIso15118CertificateHashData::serializeInto(TFJsonSerializer &json) {
+        if (hashAlgorithm != AuthorizeIso15118CertificateHashDataHashAlgorithm::NONE) json.addMemberString("hashAlgorithm", AuthorizeIso15118CertificateHashDataHashAlgorithmStrings[(size_t)hashAlgorithm]);
+        if (issuerNameHash != nullptr) json.addMemberString("issuerNameHash", issuerNameHash);
+        if (issuerKeyHash != nullptr) json.addMemberString("issuerKeyHash", issuerKeyHash);
+        if (serialNumber != nullptr) json.addMemberString("serialNumber", serialNumber);
+        if (responderURL != nullptr) json.addMemberString("responderURL", responderURL);
+    }
+
+void TransactionEventCostDetails::serializeInto(TFJsonSerializer &json) {
+        if (chargingPeriods != nullptr) { json.addMemberArray("chargingPeriods"); for(size_t i = 0; i < chargingPeriods_length; ++i) { json.addObject(); chargingPeriods[i].serializeInto(json); json.endObject(); } json.endArray(); }
+        if (totalCost != nullptr) { json.addMemberObject("totalCost"); totalCost->serializeInto(json); json.endObject(); }
+        if (totalUsage != nullptr) { json.addMemberObject("totalUsage"); totalUsage->serializeInto(json); json.endObject(); }
+        if (failureToCalculate != OCPP_BOOL_NOT_PASSED) json.addMemberBoolean("failureToCalculate", failureToCalculate == 1);
+        if (failureReason != nullptr) json.addMemberString("failureReason", failureReason);
+    }
+
+void TransactionEventMeterValue::serializeInto(TFJsonSerializer &json) {
+        if (sampledValue != nullptr) { json.addMemberArray("sampledValue"); for(size_t i = 0; i < sampledValue_length; ++i) { json.addObject(); sampledValue[i].serializeInto(json); json.endObject(); } json.endArray(); }
+        if (timestamp != OCPP_DATETIME_NOT_PASSED) unix_timestamp_to_iso_string(timestamp, json, "timestamp");
+    }
+
+void TransactionEventTransactionInfo::serializeInto(TFJsonSerializer &json) {
+        if (transactionId != nullptr) json.addMemberString("transactionId", transactionId);
+        if (chargingState != TransactionEventTransactionInfoChargingState::NONE) json.addMemberString("chargingState", TransactionEventTransactionInfoChargingStateStrings[(size_t)chargingState]);
+        if (timeSpentCharging != OCPP_INTEGER_NOT_PASSED) json.addMemberNumber("timeSpentCharging", timeSpentCharging);
+        if (stoppedReason != TransactionEventTransactionInfoStoppedReason::NONE) json.addMemberString("stoppedReason", TransactionEventTransactionInfoStoppedReasonStrings[(size_t)stoppedReason]);
+        if (remoteStartId != OCPP_INTEGER_NOT_PASSED) json.addMemberNumber("remoteStartId", remoteStartId);
+        if (operationMode != TransactionEventTransactionInfoOperationMode::NONE) json.addMemberString("operationMode", TransactionEventTransactionInfoOperationModeStrings[(size_t)operationMode]);
+        if (tariffId != nullptr) json.addMemberString("tariffId", tariffId);
+        if (transactionLimit != nullptr) { json.addMemberObject("transactionLimit"); transactionLimit->serializeInto(json); json.endObject(); }
+    }
+
+void TransactionEventEvse::serializeInto(TFJsonSerializer &json) {
+        if (id != OCPP_INTEGER_NOT_PASSED) json.addMemberNumber("id", id);
+        if (connectorId != OCPP_INTEGER_NOT_PASSED) json.addMemberNumber("connectorId", connectorId);
+    }
+
+void TransactionEventIdToken::serializeInto(TFJsonSerializer &json) {
+        if (additionalInfo != nullptr) { json.addMemberArray("additionalInfo"); for(size_t i = 0; i < additionalInfo_length; ++i) { json.addObject(); additionalInfo[i].serializeInto(json); json.endObject(); } json.endArray(); }
+        if (idToken != nullptr) json.addMemberString("idToken", idToken);
+        if (type != nullptr) json.addMemberString("type", type);
+    }
+
+void MeterValuesMeterValue::serializeInto(TFJsonSerializer &json) {
+        if (sampledValue != nullptr) { json.addMemberArray("sampledValue"); for(size_t i = 0; i < sampledValue_length; ++i) { json.addObject(); sampledValue[i].serializeInto(json); json.endObject(); } json.endArray(); }
+        if (timestamp != OCPP_DATETIME_NOT_PASSED) unix_timestamp_to_iso_string(timestamp, json, "timestamp");
+    }
+
+void RequestStartTransactionResponseStatusInfo::serializeInto(TFJsonSerializer &json) {
+        if (reasonCode != nullptr) json.addMemberString("reasonCode", reasonCode);
+        if (additionalInfo != nullptr) json.addMemberString("additionalInfo", additionalInfo);
+    }
+
+void RequestStopTransactionResponseStatusInfo::serializeInto(TFJsonSerializer &json) {
+        if (reasonCode != nullptr) json.addMemberString("reasonCode", reasonCode);
+        if (additionalInfo != nullptr) json.addMemberString("additionalInfo", additionalInfo);
+    }
+
 void BootNotificationChargingStationModem::serializeInto(TFJsonSerializer &json) {
         if (iccid != nullptr) json.addMemberString("iccid", iccid);
         if (imsi != nullptr) json.addMemberString("imsi", imsi);
@@ -407,6 +780,68 @@ void SetVariablesResponseSetVariableResultVariable::serializeInto(TFJsonSerializ
         if (instance != nullptr) json.addMemberString("instance", instance);
     }
 
+void AuthorizeIdTokenAdditionalInfo::serializeInto(TFJsonSerializer &json) {
+        if (additionalIdToken != nullptr) json.addMemberString("additionalIdToken", additionalIdToken);
+        if (type != nullptr) json.addMemberString("type", type);
+    }
+
+void TransactionEventCostDetailsChargingPeriods::serializeInto(TFJsonSerializer &json) {
+        if (dimensions != nullptr) { json.addMemberArray("dimensions"); for(size_t i = 0; i < dimensions_length; ++i) { json.addObject(); dimensions[i].serializeInto(json); json.endObject(); } json.endArray(); }
+        if (tariffId != nullptr) json.addMemberString("tariffId", tariffId);
+        if (startPeriod != OCPP_DATETIME_NOT_PASSED) unix_timestamp_to_iso_string(startPeriod, json, "startPeriod");
+    }
+
+void TransactionEventCostDetailsTotalCost::serializeInto(TFJsonSerializer &json) {
+        if (currency != nullptr) json.addMemberString("currency", currency);
+        if (typeOfCost != TransactionEventCostDetailsTotalCostTypeOfCost::NONE) json.addMemberString("typeOfCost", TransactionEventCostDetailsTotalCostTypeOfCostStrings[(size_t)typeOfCost]);
+        if (fixed != nullptr) { json.addMemberObject("fixed"); fixed->serializeInto(json); json.endObject(); }
+        if (energy != nullptr) { json.addMemberObject("energy"); energy->serializeInto(json); json.endObject(); }
+        if (chargingTime != nullptr) { json.addMemberObject("chargingTime"); chargingTime->serializeInto(json); json.endObject(); }
+        if (idleTime != nullptr) { json.addMemberObject("idleTime"); idleTime->serializeInto(json); json.endObject(); }
+        if (reservationTime != nullptr) { json.addMemberObject("reservationTime"); reservationTime->serializeInto(json); json.endObject(); }
+        if (reservationFixed != nullptr) { json.addMemberObject("reservationFixed"); reservationFixed->serializeInto(json); json.endObject(); }
+        if (total != nullptr) { json.addMemberObject("total"); total->serializeInto(json); json.endObject(); }
+    }
+
+void TransactionEventCostDetailsTotalUsage::serializeInto(TFJsonSerializer &json) {
+        if (!isnan(energy)) json.addMemberNumber("energy", energy, "%.1f");
+        if (chargingTime != OCPP_INTEGER_NOT_PASSED) json.addMemberNumber("chargingTime", chargingTime);
+        if (idleTime != OCPP_INTEGER_NOT_PASSED) json.addMemberNumber("idleTime", idleTime);
+        if (reservationTime != OCPP_INTEGER_NOT_PASSED) json.addMemberNumber("reservationTime", reservationTime);
+    }
+
+void TransactionEventMeterValueSampledValue::serializeInto(TFJsonSerializer &json) {
+        if (!isnan(value)) json.addMemberNumber("value", value, "%.1f");
+        if (measurand != MeterValueSampledValueMeasurand::NONE) json.addMemberString("measurand", MeterValueSampledValueMeasurandStrings[(size_t)measurand]);
+        if (context != MeterValueSampledValueContext::NONE) json.addMemberString("context", MeterValueSampledValueContextStrings[(size_t)context]);
+        if (phase != MeterValueSampledValuePhase::NONE) json.addMemberString("phase", MeterValueSampledValuePhaseStrings[(size_t)phase]);
+        if (location != MeterValueSampledValueLocation::NONE) json.addMemberString("location", MeterValueSampledValueLocationStrings[(size_t)location]);
+        if (signedMeterValue != nullptr) { json.addMemberObject("signedMeterValue"); signedMeterValue->serializeInto(json); json.endObject(); }
+        if (unitOfMeasure != nullptr) { json.addMemberObject("unitOfMeasure"); unitOfMeasure->serializeInto(json); json.endObject(); }
+    }
+
+void TransactionEventTransactionInfoTransactionLimit::serializeInto(TFJsonSerializer &json) {
+        if (!isnan(maxCost)) json.addMemberNumber("maxCost", maxCost, "%.1f");
+        if (!isnan(maxEnergy)) json.addMemberNumber("maxEnergy", maxEnergy, "%.1f");
+        if (maxTime != OCPP_INTEGER_NOT_PASSED) json.addMemberNumber("maxTime", maxTime);
+        if (maxSoC != OCPP_INTEGER_NOT_PASSED) json.addMemberNumber("maxSoC", maxSoC);
+    }
+
+void TransactionEventIdTokenAdditionalInfo::serializeInto(TFJsonSerializer &json) {
+        if (additionalIdToken != nullptr) json.addMemberString("additionalIdToken", additionalIdToken);
+        if (type != nullptr) json.addMemberString("type", type);
+    }
+
+void MeterValuesMeterValueSampledValue::serializeInto(TFJsonSerializer &json) {
+        if (!isnan(value)) json.addMemberNumber("value", value, "%.1f");
+        if (measurand != MeterValueSampledValueMeasurand::NONE) json.addMemberString("measurand", MeterValueSampledValueMeasurandStrings[(size_t)measurand]);
+        if (context != MeterValueSampledValueContext::NONE) json.addMemberString("context", MeterValueSampledValueContextStrings[(size_t)context]);
+        if (phase != MeterValueSampledValuePhase::NONE) json.addMemberString("phase", MeterValueSampledValuePhaseStrings[(size_t)phase]);
+        if (location != MeterValueSampledValueLocation::NONE) json.addMemberString("location", MeterValueSampledValueLocationStrings[(size_t)location]);
+        if (signedMeterValue != nullptr) { json.addMemberObject("signedMeterValue"); signedMeterValue->serializeInto(json); json.endObject(); }
+        if (unitOfMeasure != nullptr) { json.addMemberObject("unitOfMeasure"); unitOfMeasure->serializeInto(json); json.endObject(); }
+    }
+
 void GetVariablesResponseGetVariableResultComponentEvse::serializeInto(TFJsonSerializer &json) {
         if (id != OCPP_INTEGER_NOT_PASSED) json.addMemberNumber("id", id);
         if (connectorId != OCPP_INTEGER_NOT_PASSED) json.addMemberNumber("connectorId", connectorId);
@@ -415,6 +850,112 @@ void GetVariablesResponseGetVariableResultComponentEvse::serializeInto(TFJsonSer
 void SetVariablesResponseSetVariableResultComponentEvse::serializeInto(TFJsonSerializer &json) {
         if (id != OCPP_INTEGER_NOT_PASSED) json.addMemberNumber("id", id);
         if (connectorId != OCPP_INTEGER_NOT_PASSED) json.addMemberNumber("connectorId", connectorId);
+    }
+
+void TransactionEventCostDetailsChargingPeriodsDimensions::serializeInto(TFJsonSerializer &json) {
+        if (type != TransactionEventCostDetailsChargingPeriodsDimensionsType::NONE) json.addMemberString("type", TransactionEventCostDetailsChargingPeriodsDimensionsTypeStrings[(size_t)type]);
+        if (!isnan(volume)) json.addMemberNumber("volume", volume, "%.1f");
+    }
+
+void TransactionEventCostDetailsTotalCostFixed::serializeInto(TFJsonSerializer &json) {
+        if (!isnan(exclTax)) json.addMemberNumber("exclTax", exclTax, "%.1f");
+        if (!isnan(inclTax)) json.addMemberNumber("inclTax", inclTax, "%.1f");
+        if (taxRates != nullptr) { json.addMemberArray("taxRates"); for(size_t i = 0; i < taxRates_length; ++i) { json.addObject(); taxRates[i].serializeInto(json); json.endObject(); } json.endArray(); }
+    }
+
+void TransactionEventCostDetailsTotalCostEnergy::serializeInto(TFJsonSerializer &json) {
+        if (!isnan(exclTax)) json.addMemberNumber("exclTax", exclTax, "%.1f");
+        if (!isnan(inclTax)) json.addMemberNumber("inclTax", inclTax, "%.1f");
+        if (taxRates != nullptr) { json.addMemberArray("taxRates"); for(size_t i = 0; i < taxRates_length; ++i) { json.addObject(); taxRates[i].serializeInto(json); json.endObject(); } json.endArray(); }
+    }
+
+void TransactionEventCostDetailsTotalCostChargingTime::serializeInto(TFJsonSerializer &json) {
+        if (!isnan(exclTax)) json.addMemberNumber("exclTax", exclTax, "%.1f");
+        if (!isnan(inclTax)) json.addMemberNumber("inclTax", inclTax, "%.1f");
+        if (taxRates != nullptr) { json.addMemberArray("taxRates"); for(size_t i = 0; i < taxRates_length; ++i) { json.addObject(); taxRates[i].serializeInto(json); json.endObject(); } json.endArray(); }
+    }
+
+void TransactionEventCostDetailsTotalCostIdleTime::serializeInto(TFJsonSerializer &json) {
+        if (!isnan(exclTax)) json.addMemberNumber("exclTax", exclTax, "%.1f");
+        if (!isnan(inclTax)) json.addMemberNumber("inclTax", inclTax, "%.1f");
+        if (taxRates != nullptr) { json.addMemberArray("taxRates"); for(size_t i = 0; i < taxRates_length; ++i) { json.addObject(); taxRates[i].serializeInto(json); json.endObject(); } json.endArray(); }
+    }
+
+void TransactionEventCostDetailsTotalCostReservationTime::serializeInto(TFJsonSerializer &json) {
+        if (!isnan(exclTax)) json.addMemberNumber("exclTax", exclTax, "%.1f");
+        if (!isnan(inclTax)) json.addMemberNumber("inclTax", inclTax, "%.1f");
+        if (taxRates != nullptr) { json.addMemberArray("taxRates"); for(size_t i = 0; i < taxRates_length; ++i) { json.addObject(); taxRates[i].serializeInto(json); json.endObject(); } json.endArray(); }
+    }
+
+void TransactionEventCostDetailsTotalCostReservationFixed::serializeInto(TFJsonSerializer &json) {
+        if (!isnan(exclTax)) json.addMemberNumber("exclTax", exclTax, "%.1f");
+        if (!isnan(inclTax)) json.addMemberNumber("inclTax", inclTax, "%.1f");
+        if (taxRates != nullptr) { json.addMemberArray("taxRates"); for(size_t i = 0; i < taxRates_length; ++i) { json.addObject(); taxRates[i].serializeInto(json); json.endObject(); } json.endArray(); }
+    }
+
+void TransactionEventCostDetailsTotalCostTotal::serializeInto(TFJsonSerializer &json) {
+        if (!isnan(exclTax)) json.addMemberNumber("exclTax", exclTax, "%.1f");
+        if (!isnan(inclTax)) json.addMemberNumber("inclTax", inclTax, "%.1f");
+    }
+
+void TransactionEventMeterValueSampledValueSignedMeterValue::serializeInto(TFJsonSerializer &json) {
+        if (signedMeterData != nullptr) json.addMemberString("signedMeterData", signedMeterData);
+        if (signingMethod != nullptr) json.addMemberString("signingMethod", signingMethod);
+        if (encodingMethod != nullptr) json.addMemberString("encodingMethod", encodingMethod);
+        if (publicKey != nullptr) json.addMemberString("publicKey", publicKey);
+    }
+
+void TransactionEventMeterValueSampledValueUnitOfMeasure::serializeInto(TFJsonSerializer &json) {
+        if (unit != nullptr) json.addMemberString("unit", unit);
+        if (multiplier != OCPP_INTEGER_NOT_PASSED) json.addMemberNumber("multiplier", multiplier);
+    }
+
+void MeterValuesMeterValueSampledValueSignedMeterValue::serializeInto(TFJsonSerializer &json) {
+        if (signedMeterData != nullptr) json.addMemberString("signedMeterData", signedMeterData);
+        if (signingMethod != nullptr) json.addMemberString("signingMethod", signingMethod);
+        if (encodingMethod != nullptr) json.addMemberString("encodingMethod", encodingMethod);
+        if (publicKey != nullptr) json.addMemberString("publicKey", publicKey);
+    }
+
+void MeterValuesMeterValueSampledValueUnitOfMeasure::serializeInto(TFJsonSerializer &json) {
+        if (unit != nullptr) json.addMemberString("unit", unit);
+        if (multiplier != OCPP_INTEGER_NOT_PASSED) json.addMemberNumber("multiplier", multiplier);
+    }
+
+void TransactionEventCostDetailsTotalCostFixedTaxRates::serializeInto(TFJsonSerializer &json) {
+        if (type != nullptr) json.addMemberString("type", type);
+        if (!isnan(tax)) json.addMemberNumber("tax", tax, "%.1f");
+        if (stack != OCPP_INTEGER_NOT_PASSED) json.addMemberNumber("stack", stack);
+    }
+
+void TransactionEventCostDetailsTotalCostEnergyTaxRates::serializeInto(TFJsonSerializer &json) {
+        if (type != nullptr) json.addMemberString("type", type);
+        if (!isnan(tax)) json.addMemberNumber("tax", tax, "%.1f");
+        if (stack != OCPP_INTEGER_NOT_PASSED) json.addMemberNumber("stack", stack);
+    }
+
+void TransactionEventCostDetailsTotalCostChargingTimeTaxRates::serializeInto(TFJsonSerializer &json) {
+        if (type != nullptr) json.addMemberString("type", type);
+        if (!isnan(tax)) json.addMemberNumber("tax", tax, "%.1f");
+        if (stack != OCPP_INTEGER_NOT_PASSED) json.addMemberNumber("stack", stack);
+    }
+
+void TransactionEventCostDetailsTotalCostIdleTimeTaxRates::serializeInto(TFJsonSerializer &json) {
+        if (type != nullptr) json.addMemberString("type", type);
+        if (!isnan(tax)) json.addMemberNumber("tax", tax, "%.1f");
+        if (stack != OCPP_INTEGER_NOT_PASSED) json.addMemberNumber("stack", stack);
+    }
+
+void TransactionEventCostDetailsTotalCostReservationTimeTaxRates::serializeInto(TFJsonSerializer &json) {
+        if (type != nullptr) json.addMemberString("type", type);
+        if (!isnan(tax)) json.addMemberNumber("tax", tax, "%.1f");
+        if (stack != OCPP_INTEGER_NOT_PASSED) json.addMemberNumber("stack", stack);
+    }
+
+void TransactionEventCostDetailsTotalCostReservationFixedTaxRates::serializeInto(TFJsonSerializer &json) {
+        if (type != nullptr) json.addMemberString("type", type);
+        if (!isnan(tax)) json.addMemberNumber("tax", tax, "%.1f");
+        if (stack != OCPP_INTEGER_NOT_PASSED) json.addMemberNumber("stack", stack);
     }
 
 
@@ -591,6 +1132,166 @@ size_t ResetResponse::serializeJson(char *buf, size_t buf_len) const {
 
         json.addObject();
             if (status != ResetResponseStatus::NONE) json.addMemberString("status", ResetResponseStatusStrings[(size_t)status]);
+            if (statusInfo != nullptr) { json.addMemberObject("statusInfo"); statusInfo->serializeInto(json); json.endObject(); }
+        json.endObject();
+    json.endArray();
+
+    return json.end();
+}
+
+Authorize::Authorize(AuthorizeIdToken *idToken,
+        const char certificate[10001],
+        AuthorizeIso15118CertificateHashData *iso15118CertificateHashData, size_t iso15118CertificateHashData_length) :
+    ICall(CallAction::AUTHORIZE, next_call_id++),
+    idToken(idToken),
+    certificate(certificate),
+    iso15118CertificateHashData(iso15118CertificateHashData),
+    iso15118CertificateHashData_length(iso15118CertificateHashData_length)
+{}
+
+size_t Authorize::serializeJson(char *buf, size_t buf_len) const {
+    TFJsonSerializer json{buf, buf_len};
+    json.addArray();
+        json.addNumber((int32_t)OcppRpcMessageType::CALL);
+        json.addNumber(this->ocppJmessageId, true);
+        json.addString(CallActionStrings[(size_t)this->action]);
+        json.addObject();
+            if (idToken != nullptr) { json.addMemberObject("idToken"); idToken->serializeInto(json); json.endObject(); }
+            if (certificate != nullptr) json.addMemberString("certificate", certificate);
+            if (iso15118CertificateHashData != nullptr) { json.addMemberArray("iso15118CertificateHashData"); for(size_t i = 0; i < iso15118CertificateHashData_length; ++i) { json.addObject(); iso15118CertificateHashData[i].serializeInto(json); json.endObject(); } json.endArray(); }
+        json.endObject();
+    json.endArray();
+
+    return json.end();
+}
+
+TransactionEvent::TransactionEvent(TransactionEventEventType eventType,
+        time_t timestamp,
+        TransactionEventTriggerReason triggerReason,
+        int32_t seqNo,
+        TransactionEventTransactionInfo *transactionInfo,
+        TransactionEventCostDetails *costDetails,
+        TransactionEventMeterValue *meterValue, size_t meterValue_length,
+        int8_t offline,
+        int32_t numberOfPhasesUsed,
+        int32_t cableMaxCurrent,
+        int32_t reservationId,
+        TransactionEventPreconditioningStatus preconditioningStatus,
+        int8_t evseSleep,
+        TransactionEventEvse *evse,
+        TransactionEventIdToken *idToken) :
+    ICall(CallAction::TRANSACTION_EVENT, next_call_id++),
+    costDetails(costDetails),
+    eventType(eventType),
+    meterValue(meterValue),
+    meterValue_length(meterValue_length),
+    timestamp(timestamp),
+    triggerReason(triggerReason),
+    seqNo(seqNo),
+    offline(offline),
+    numberOfPhasesUsed(numberOfPhasesUsed),
+    cableMaxCurrent(cableMaxCurrent),
+    reservationId(reservationId),
+    preconditioningStatus(preconditioningStatus),
+    evseSleep(evseSleep),
+    transactionInfo(transactionInfo),
+    evse(evse),
+    idToken(idToken)
+{}
+
+size_t TransactionEvent::serializeJson(char *buf, size_t buf_len) const {
+    TFJsonSerializer json{buf, buf_len};
+    json.addArray();
+        json.addNumber((int32_t)OcppRpcMessageType::CALL);
+        json.addNumber(this->ocppJmessageId, true);
+        json.addString(CallActionStrings[(size_t)this->action]);
+        json.addObject();
+            if (costDetails != nullptr) { json.addMemberObject("costDetails"); costDetails->serializeInto(json); json.endObject(); }
+            if (eventType != TransactionEventEventType::NONE) json.addMemberString("eventType", TransactionEventEventTypeStrings[(size_t)eventType]);
+            if (meterValue != nullptr) { json.addMemberArray("meterValue"); for(size_t i = 0; i < meterValue_length; ++i) { json.addObject(); meterValue[i].serializeInto(json); json.endObject(); } json.endArray(); }
+            if (timestamp != OCPP_DATETIME_NOT_PASSED) unix_timestamp_to_iso_string(timestamp, json, "timestamp");
+            if (triggerReason != TransactionEventTriggerReason::NONE) json.addMemberString("triggerReason", TransactionEventTriggerReasonStrings[(size_t)triggerReason]);
+            if (seqNo != OCPP_INTEGER_NOT_PASSED) json.addMemberNumber("seqNo", seqNo);
+            if (offline != OCPP_BOOL_NOT_PASSED) json.addMemberBoolean("offline", offline == 1);
+            if (numberOfPhasesUsed != OCPP_INTEGER_NOT_PASSED) json.addMemberNumber("numberOfPhasesUsed", numberOfPhasesUsed);
+            if (cableMaxCurrent != OCPP_INTEGER_NOT_PASSED) json.addMemberNumber("cableMaxCurrent", cableMaxCurrent);
+            if (reservationId != OCPP_INTEGER_NOT_PASSED) json.addMemberNumber("reservationId", reservationId);
+            if (preconditioningStatus != TransactionEventPreconditioningStatus::NONE) json.addMemberString("preconditioningStatus", TransactionEventPreconditioningStatusStrings[(size_t)preconditioningStatus]);
+            if (evseSleep != OCPP_BOOL_NOT_PASSED) json.addMemberBoolean("evseSleep", evseSleep == 1);
+            if (transactionInfo != nullptr) { json.addMemberObject("transactionInfo"); transactionInfo->serializeInto(json); json.endObject(); }
+            if (evse != nullptr) { json.addMemberObject("evse"); evse->serializeInto(json); json.endObject(); }
+            if (idToken != nullptr) { json.addMemberObject("idToken"); idToken->serializeInto(json); json.endObject(); }
+        json.endObject();
+    json.endArray();
+
+    return json.end();
+}
+
+MeterValues::MeterValues(int32_t evseId,
+        MeterValuesMeterValue *meterValue, size_t meterValue_length) :
+    ICall(CallAction::METER_VALUES, next_call_id++),
+    evseId(evseId),
+    meterValue(meterValue),
+    meterValue_length(meterValue_length)
+{}
+
+size_t MeterValues::serializeJson(char *buf, size_t buf_len) const {
+    TFJsonSerializer json{buf, buf_len};
+    json.addArray();
+        json.addNumber((int32_t)OcppRpcMessageType::CALL);
+        json.addNumber(this->ocppJmessageId, true);
+        json.addString(CallActionStrings[(size_t)this->action]);
+        json.addObject();
+            if (evseId != OCPP_INTEGER_NOT_PASSED) json.addMemberNumber("evseId", evseId);
+            if (meterValue != nullptr) { json.addMemberArray("meterValue"); for(size_t i = 0; i < meterValue_length; ++i) { json.addObject(); meterValue[i].serializeInto(json); json.endObject(); } json.endArray(); }
+        json.endObject();
+    json.endArray();
+
+    return json.end();
+}
+
+RequestStartTransactionResponse::RequestStartTransactionResponse(const char *call_id,
+        TransactionResponseStatus status,
+        RequestStartTransactionResponseStatusInfo *statusInfo,
+        const char transactionId[37]) :
+    ICall(CallAction::REQUEST_START_TRANSACTION_RESPONSE, call_id),
+    status(status),
+    statusInfo(statusInfo),
+    transactionId(transactionId)
+{}
+
+size_t RequestStartTransactionResponse::serializeJson(char *buf, size_t buf_len) const {
+    TFJsonSerializer json{buf, buf_len};
+    json.addArray();
+        json.addNumber((int32_t)OcppRpcMessageType::CALLRESULT);
+        json.addString(this->ocppJcallId);
+
+        json.addObject();
+            if (status != TransactionResponseStatus::NONE) json.addMemberString("status", TransactionResponseStatusStrings[(size_t)status]);
+            if (statusInfo != nullptr) { json.addMemberObject("statusInfo"); statusInfo->serializeInto(json); json.endObject(); }
+            if (transactionId != nullptr) json.addMemberString("transactionId", transactionId);
+        json.endObject();
+    json.endArray();
+
+    return json.end();
+}
+
+RequestStopTransactionResponse::RequestStopTransactionResponse(const char *call_id,
+        TransactionResponseStatus status,
+        RequestStopTransactionResponseStatusInfo *statusInfo) :
+    ICall(CallAction::REQUEST_STOP_TRANSACTION_RESPONSE, call_id),
+    status(status),
+    statusInfo(statusInfo)
+{}
+
+size_t RequestStopTransactionResponse::serializeJson(char *buf, size_t buf_len) const {
+    TFJsonSerializer json{buf, buf_len};
+    json.addArray();
+        json.addNumber((int32_t)OcppRpcMessageType::CALLRESULT);
+        json.addString(this->ocppJcallId);
+
+        json.addObject();
+            if (status != TransactionResponseStatus::NONE) json.addMemberString("status", TransactionResponseStatusStrings[(size_t)status]);
             if (statusInfo != nullptr) { json.addMemberObject("statusInfo"); statusInfo->serializeInto(json); json.endObject(); }
         json.endObject();
     json.endArray();
@@ -1677,6 +2378,8439 @@ CallResponse parseReset(JsonObject obj) {
     return CallResponse{CallErrorCode::OK, nullptr};
 }
 
+static CallResponse parseAuthorizeResponseIdTokenInfoEntriesStatus(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "status: wrong type"};
+
+    {
+        bool found = false;
+        for(size_t i = 0; i < ARRAY_SIZE(ResponseIdTokenInfoEntriesStatusStrings); ++i) {
+            if (strcmp(var.as<const char *>(), ResponseIdTokenInfoEntriesStatusStrings[i]) != 0)
+                continue;
+
+            var.set(i);
+            found = true;
+            break;
+        }
+
+        if (!found)
+            return CallResponse{CallErrorCode::PropertyConstraintViolation, "status: unknown enum value received"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseIdTokenInfoEntriesCacheExpiryDateTime(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "cacheExpiryDateTime: wrong type"};
+
+    {
+        time_t result;
+        if (!iso_string_to_unix_timestamp(var.as<const char *>(), &result))
+            return CallResponse{CallErrorCode::TypeConstraintViolation, "cacheExpiryDateTime: failed to parse as ISO 8601 date-time string"};
+
+        var.set(result);
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseIdTokenInfoEntriesChargingPriority(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "chargingPriority: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseIdTokenInfoEntriesGroupIdTokenEntriesAdditionalInfoEntryEntriesAdditionalIdToken(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "additionalIdToken: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 255)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "additionalIdToken: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseIdTokenInfoEntriesGroupIdTokenEntriesAdditionalInfoEntryEntriesType(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "type: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 50)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "type: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseIdTokenInfoEntriesGroupIdTokenEntriesAdditionalInfoEntryEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (!obj.containsKey("additionalIdToken"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "additionalIdToken: required, but missing"};
+
+    {
+        CallResponse inner_result = parseAuthorizeResponseIdTokenInfoEntriesGroupIdTokenEntriesAdditionalInfoEntryEntriesAdditionalIdToken(obj["additionalIdToken"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+
+    if (!obj.containsKey("type"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "type: required, but missing"};
+
+    {
+        CallResponse inner_result = parseAuthorizeResponseIdTokenInfoEntriesGroupIdTokenEntriesAdditionalInfoEntryEntriesType(obj["type"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "AuthorizeResponseIdTokenInfoEntriesGroupIdTokenEntriesAdditionalInfoEntryEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseIdTokenInfoEntriesGroupIdTokenEntriesAdditionalInfoEntry(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "additionalInfoEntry: wrong type"};
+
+    {
+        CallResponse inner_result = parseAuthorizeResponseIdTokenInfoEntriesGroupIdTokenEntriesAdditionalInfoEntryEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseIdTokenInfoEntriesGroupIdTokenEntriesAdditionalInfo(JsonVariant var) {
+
+    if (!var.is<JsonArray>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "additionalInfo: wrong type"};
+
+    {
+        for(size_t i = 0; i < var.as<JsonArray>().size(); ++i) {
+            CallResponse inner_result = parseAuthorizeResponseIdTokenInfoEntriesGroupIdTokenEntriesAdditionalInfoEntry(var[i]);
+            if (inner_result.result != CallErrorCode::OK)
+                return inner_result;
+        }
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseIdTokenInfoEntriesGroupIdTokenEntriesIdToken(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "idToken: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 255)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "idToken: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseIdTokenInfoEntriesGroupIdTokenEntriesType(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "type: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 20)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "type: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseIdTokenInfoEntriesGroupIdTokenEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (obj.containsKey("additionalInfo")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseIdTokenInfoEntriesGroupIdTokenEntriesAdditionalInfo(obj["additionalInfo"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+
+    if (!obj.containsKey("idToken"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "idToken: required, but missing"};
+
+    {
+        CallResponse inner_result = parseAuthorizeResponseIdTokenInfoEntriesGroupIdTokenEntriesIdToken(obj["idToken"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+
+    if (!obj.containsKey("type"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "type: required, but missing"};
+
+    {
+        CallResponse inner_result = parseAuthorizeResponseIdTokenInfoEntriesGroupIdTokenEntriesType(obj["type"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "AuthorizeResponseIdTokenInfoEntriesGroupIdTokenEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseIdTokenInfoEntriesGroupIdToken(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "groupIdToken: wrong type"};
+
+    {
+        CallResponse inner_result = parseAuthorizeResponseIdTokenInfoEntriesGroupIdTokenEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseIdTokenInfoEntriesLanguage1(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "language1: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 8)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "language1: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseIdTokenInfoEntriesLanguage2(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "language2: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 8)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "language2: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseIdTokenInfoEntriesEvseIdEntry(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "evseIdEntry: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseIdTokenInfoEntriesEvseId(JsonVariant var) {
+
+    if (!var.is<JsonArray>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "evseId: wrong type"};
+
+    {
+        for(size_t i = 0; i < var.as<JsonArray>().size(); ++i) {
+            CallResponse inner_result = parseAuthorizeResponseIdTokenInfoEntriesEvseIdEntry(var[i]);
+            if (inner_result.result != CallErrorCode::OK)
+                return inner_result;
+        }
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseIdTokenInfoEntriesPersonalMessageEntriesFormat(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "format: wrong type"};
+
+    {
+        bool found = false;
+        for(size_t i = 0; i < ARRAY_SIZE(EntriesFormatStrings); ++i) {
+            if (strcmp(var.as<const char *>(), EntriesFormatStrings[i]) != 0)
+                continue;
+
+            var.set(i);
+            found = true;
+            break;
+        }
+
+        if (!found)
+            return CallResponse{CallErrorCode::PropertyConstraintViolation, "format: unknown enum value received"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseIdTokenInfoEntriesPersonalMessageEntriesLanguage(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "language: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 8)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "language: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseIdTokenInfoEntriesPersonalMessageEntriesContent(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "content: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 1024)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "content: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseIdTokenInfoEntriesPersonalMessageEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (!obj.containsKey("format"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "format: required, but missing"};
+
+    {
+        CallResponse inner_result = parseAuthorizeResponseIdTokenInfoEntriesPersonalMessageEntriesFormat(obj["format"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("language")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseIdTokenInfoEntriesPersonalMessageEntriesLanguage(obj["language"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+
+    if (!obj.containsKey("content"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "content: required, but missing"};
+
+    {
+        CallResponse inner_result = parseAuthorizeResponseIdTokenInfoEntriesPersonalMessageEntriesContent(obj["content"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "AuthorizeResponseIdTokenInfoEntriesPersonalMessageEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseIdTokenInfoEntriesPersonalMessage(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "personalMessage: wrong type"};
+
+    {
+        CallResponse inner_result = parseAuthorizeResponseIdTokenInfoEntriesPersonalMessageEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseIdTokenInfoEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (!obj.containsKey("status"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "status: required, but missing"};
+
+    {
+        CallResponse inner_result = parseAuthorizeResponseIdTokenInfoEntriesStatus(obj["status"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("cacheExpiryDateTime")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseIdTokenInfoEntriesCacheExpiryDateTime(obj["cacheExpiryDateTime"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("chargingPriority")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseIdTokenInfoEntriesChargingPriority(obj["chargingPriority"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("groupIdToken")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseIdTokenInfoEntriesGroupIdToken(obj["groupIdToken"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("language1")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseIdTokenInfoEntriesLanguage1(obj["language1"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("language2")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseIdTokenInfoEntriesLanguage2(obj["language2"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("evseId")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseIdTokenInfoEntriesEvseId(obj["evseId"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("personalMessage")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseIdTokenInfoEntriesPersonalMessage(obj["personalMessage"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "AuthorizeResponseIdTokenInfoEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseIdTokenInfo(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "idTokenInfo: wrong type"};
+
+    {
+        CallResponse inner_result = parseAuthorizeResponseIdTokenInfoEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseCertificateStatus(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "certificateStatus: wrong type"};
+
+    {
+        bool found = false;
+        for(size_t i = 0; i < ARRAY_SIZE(AuthorizeResponseCertificateStatusStrings); ++i) {
+            if (strcmp(var.as<const char *>(), AuthorizeResponseCertificateStatusStrings[i]) != 0)
+                continue;
+
+            var.set(i);
+            found = true;
+            break;
+        }
+
+        if (!found)
+            return CallResponse{CallErrorCode::PropertyConstraintViolation, "certificateStatus: unknown enum value received"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseAllowedEnergyTransferEntry(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "allowedEnergyTransferEntry: wrong type"};
+
+    {
+        bool found = false;
+        for(size_t i = 0; i < ARRAY_SIZE(AuthorizeResponseAllowedEnergyTransferEntryStrings); ++i) {
+            if (strcmp(var.as<const char *>(), AuthorizeResponseAllowedEnergyTransferEntryStrings[i]) != 0)
+                continue;
+
+            var.set(i);
+            found = true;
+            break;
+        }
+
+        if (!found)
+            return CallResponse{CallErrorCode::PropertyConstraintViolation, "allowedEnergyTransferEntry: unknown enum value received"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseAllowedEnergyTransfer(JsonVariant var) {
+
+    if (!var.is<JsonArray>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "allowedEnergyTransfer: wrong type"};
+
+    {
+        for(size_t i = 0; i < var.as<JsonArray>().size(); ++i) {
+            CallResponse inner_result = parseAuthorizeResponseAllowedEnergyTransferEntry(var[i]);
+            if (inner_result.result != CallErrorCode::OK)
+                return inner_result;
+        }
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesTariffId(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "tariffId: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 60)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "tariffId: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesDescriptionEntryEntriesFormat(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "format: wrong type"};
+
+    {
+        bool found = false;
+        for(size_t i = 0; i < ARRAY_SIZE(EntriesFormatStrings); ++i) {
+            if (strcmp(var.as<const char *>(), EntriesFormatStrings[i]) != 0)
+                continue;
+
+            var.set(i);
+            found = true;
+            break;
+        }
+
+        if (!found)
+            return CallResponse{CallErrorCode::PropertyConstraintViolation, "format: unknown enum value received"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesDescriptionEntryEntriesLanguage(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "language: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 8)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "language: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesDescriptionEntryEntriesContent(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "content: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 1024)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "content: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseTariffEntriesDescriptionEntryEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (!obj.containsKey("format"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "format: required, but missing"};
+
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesDescriptionEntryEntriesFormat(obj["format"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("language")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesDescriptionEntryEntriesLanguage(obj["language"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+
+    if (!obj.containsKey("content"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "content: required, but missing"};
+
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesDescriptionEntryEntriesContent(obj["content"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "AuthorizeResponseTariffEntriesDescriptionEntryEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseTariffEntriesDescriptionEntry(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "descriptionEntry: wrong type"};
+
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesDescriptionEntryEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseTariffEntriesDescription(JsonVariant var) {
+
+    if (!var.is<JsonArray>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "description: wrong type"};
+
+    {
+        for(size_t i = 0; i < var.as<JsonArray>().size(); ++i) {
+            CallResponse inner_result = parseAuthorizeResponseTariffEntriesDescriptionEntry(var[i]);
+            if (inner_result.result != CallErrorCode::OK)
+                return inner_result;
+        }
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesCurrency(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "currency: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 3)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "currency: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesEnergyEntriesPricesEntryEntriesPriceKwh(JsonVariant var) {
+
+    if (!var.is<float>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "priceKwh: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesEnergyEntriesPricesEntryEntriesConditionsEntriesStartTimeOfDay(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "startTimeOfDay: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesEnergyEntriesPricesEntryEntriesConditionsEntriesEndTimeOfDay(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "endTimeOfDay: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesEnergyEntriesPricesEntryEntriesConditionsEntriesDayOfWeekEntry(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "dayOfWeekEntry: wrong type"};
+
+    {
+        bool found = false;
+        for(size_t i = 0; i < ARRAY_SIZE(EntriesPricesEntryEntriesConditionsEntriesDayOfWeekEntryStrings); ++i) {
+            if (strcmp(var.as<const char *>(), EntriesPricesEntryEntriesConditionsEntriesDayOfWeekEntryStrings[i]) != 0)
+                continue;
+
+            var.set(i);
+            found = true;
+            break;
+        }
+
+        if (!found)
+            return CallResponse{CallErrorCode::PropertyConstraintViolation, "dayOfWeekEntry: unknown enum value received"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseTariffEntriesEnergyEntriesPricesEntryEntriesConditionsEntriesDayOfWeek(JsonVariant var) {
+
+    if (!var.is<JsonArray>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "dayOfWeek: wrong type"};
+
+    {
+        for(size_t i = 0; i < var.as<JsonArray>().size(); ++i) {
+            CallResponse inner_result = parseAuthorizeResponseTariffEntriesEnergyEntriesPricesEntryEntriesConditionsEntriesDayOfWeekEntry(var[i]);
+            if (inner_result.result != CallErrorCode::OK)
+                return inner_result;
+        }
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesEnergyEntriesPricesEntryEntriesConditionsEntriesValidFromDate(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "validFromDate: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesEnergyEntriesPricesEntryEntriesConditionsEntriesValidToDate(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "validToDate: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesEnergyEntriesPricesEntryEntriesConditionsEntriesEvseKind(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "evseKind: wrong type"};
+
+    {
+        bool found = false;
+        for(size_t i = 0; i < ARRAY_SIZE(EntriesPricesEntryEntriesConditionsEntriesEvseKindStrings); ++i) {
+            if (strcmp(var.as<const char *>(), EntriesPricesEntryEntriesConditionsEntriesEvseKindStrings[i]) != 0)
+                continue;
+
+            var.set(i);
+            found = true;
+            break;
+        }
+
+        if (!found)
+            return CallResponse{CallErrorCode::PropertyConstraintViolation, "evseKind: unknown enum value received"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesEnergyEntriesPricesEntryEntriesConditionsEntriesMinEnergy(JsonVariant var) {
+
+    if (!var.is<float>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "minEnergy: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesEnergyEntriesPricesEntryEntriesConditionsEntriesMaxEnergy(JsonVariant var) {
+
+    if (!var.is<float>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "maxEnergy: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesEnergyEntriesPricesEntryEntriesConditionsEntriesMinCurrent(JsonVariant var) {
+
+    if (!var.is<float>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "minCurrent: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesEnergyEntriesPricesEntryEntriesConditionsEntriesMaxCurrent(JsonVariant var) {
+
+    if (!var.is<float>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "maxCurrent: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesEnergyEntriesPricesEntryEntriesConditionsEntriesMinPower(JsonVariant var) {
+
+    if (!var.is<float>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "minPower: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesEnergyEntriesPricesEntryEntriesConditionsEntriesMaxPower(JsonVariant var) {
+
+    if (!var.is<float>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "maxPower: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesEnergyEntriesPricesEntryEntriesConditionsEntriesMinTime(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "minTime: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesEnergyEntriesPricesEntryEntriesConditionsEntriesMaxTime(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "maxTime: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesEnergyEntriesPricesEntryEntriesConditionsEntriesMinChargingTime(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "minChargingTime: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesEnergyEntriesPricesEntryEntriesConditionsEntriesMaxChargingTime(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "maxChargingTime: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesEnergyEntriesPricesEntryEntriesConditionsEntriesMinIdleTime(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "minIdleTime: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesEnergyEntriesPricesEntryEntriesConditionsEntriesMaxIdleTime(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "maxIdleTime: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseTariffEntriesEnergyEntriesPricesEntryEntriesConditionsEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (obj.containsKey("startTimeOfDay")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesEnergyEntriesPricesEntryEntriesConditionsEntriesStartTimeOfDay(obj["startTimeOfDay"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("endTimeOfDay")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesEnergyEntriesPricesEntryEntriesConditionsEntriesEndTimeOfDay(obj["endTimeOfDay"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("dayOfWeek")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesEnergyEntriesPricesEntryEntriesConditionsEntriesDayOfWeek(obj["dayOfWeek"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("validFromDate")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesEnergyEntriesPricesEntryEntriesConditionsEntriesValidFromDate(obj["validFromDate"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("validToDate")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesEnergyEntriesPricesEntryEntriesConditionsEntriesValidToDate(obj["validToDate"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("evseKind")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesEnergyEntriesPricesEntryEntriesConditionsEntriesEvseKind(obj["evseKind"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("minEnergy")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesEnergyEntriesPricesEntryEntriesConditionsEntriesMinEnergy(obj["minEnergy"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("maxEnergy")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesEnergyEntriesPricesEntryEntriesConditionsEntriesMaxEnergy(obj["maxEnergy"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("minCurrent")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesEnergyEntriesPricesEntryEntriesConditionsEntriesMinCurrent(obj["minCurrent"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("maxCurrent")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesEnergyEntriesPricesEntryEntriesConditionsEntriesMaxCurrent(obj["maxCurrent"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("minPower")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesEnergyEntriesPricesEntryEntriesConditionsEntriesMinPower(obj["minPower"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("maxPower")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesEnergyEntriesPricesEntryEntriesConditionsEntriesMaxPower(obj["maxPower"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("minTime")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesEnergyEntriesPricesEntryEntriesConditionsEntriesMinTime(obj["minTime"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("maxTime")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesEnergyEntriesPricesEntryEntriesConditionsEntriesMaxTime(obj["maxTime"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("minChargingTime")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesEnergyEntriesPricesEntryEntriesConditionsEntriesMinChargingTime(obj["minChargingTime"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("maxChargingTime")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesEnergyEntriesPricesEntryEntriesConditionsEntriesMaxChargingTime(obj["maxChargingTime"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("minIdleTime")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesEnergyEntriesPricesEntryEntriesConditionsEntriesMinIdleTime(obj["minIdleTime"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("maxIdleTime")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesEnergyEntriesPricesEntryEntriesConditionsEntriesMaxIdleTime(obj["maxIdleTime"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "AuthorizeResponseTariffEntriesEnergyEntriesPricesEntryEntriesConditionsEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseTariffEntriesEnergyEntriesPricesEntryEntriesConditions(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "conditions: wrong type"};
+
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesEnergyEntriesPricesEntryEntriesConditionsEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseTariffEntriesEnergyEntriesPricesEntryEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (!obj.containsKey("priceKwh"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "priceKwh: required, but missing"};
+
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesEnergyEntriesPricesEntryEntriesPriceKwh(obj["priceKwh"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("conditions")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesEnergyEntriesPricesEntryEntriesConditions(obj["conditions"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "AuthorizeResponseTariffEntriesEnergyEntriesPricesEntryEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseTariffEntriesEnergyEntriesPricesEntry(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "pricesEntry: wrong type"};
+
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesEnergyEntriesPricesEntryEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseTariffEntriesEnergyEntriesPrices(JsonVariant var) {
+
+    if (!var.is<JsonArray>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "prices: wrong type"};
+
+    {
+        for(size_t i = 0; i < var.as<JsonArray>().size(); ++i) {
+            CallResponse inner_result = parseAuthorizeResponseTariffEntriesEnergyEntriesPricesEntry(var[i]);
+            if (inner_result.result != CallErrorCode::OK)
+                return inner_result;
+        }
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesEnergyEntriesTaxRatesEntryEntriesType(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "type: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 20)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "type: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesEnergyEntriesTaxRatesEntryEntriesTax(JsonVariant var) {
+
+    if (!var.is<float>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "tax: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesEnergyEntriesTaxRatesEntryEntriesStack(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "stack: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseTariffEntriesEnergyEntriesTaxRatesEntryEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (!obj.containsKey("type"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "type: required, but missing"};
+
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesEnergyEntriesTaxRatesEntryEntriesType(obj["type"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+
+    if (!obj.containsKey("tax"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "tax: required, but missing"};
+
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesEnergyEntriesTaxRatesEntryEntriesTax(obj["tax"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("stack")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesEnergyEntriesTaxRatesEntryEntriesStack(obj["stack"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "AuthorizeResponseTariffEntriesEnergyEntriesTaxRatesEntryEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseTariffEntriesEnergyEntriesTaxRatesEntry(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "taxRatesEntry: wrong type"};
+
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesEnergyEntriesTaxRatesEntryEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseTariffEntriesEnergyEntriesTaxRates(JsonVariant var) {
+
+    if (!var.is<JsonArray>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "taxRates: wrong type"};
+
+    {
+        for(size_t i = 0; i < var.as<JsonArray>().size(); ++i) {
+            CallResponse inner_result = parseAuthorizeResponseTariffEntriesEnergyEntriesTaxRatesEntry(var[i]);
+            if (inner_result.result != CallErrorCode::OK)
+                return inner_result;
+        }
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseTariffEntriesEnergyEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (!obj.containsKey("prices"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "prices: required, but missing"};
+
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesEnergyEntriesPrices(obj["prices"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("taxRates")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesEnergyEntriesTaxRates(obj["taxRates"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "AuthorizeResponseTariffEntriesEnergyEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseTariffEntriesEnergy(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "energy: wrong type"};
+
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesEnergyEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesValidFrom(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "validFrom: wrong type"};
+
+    {
+        time_t result;
+        if (!iso_string_to_unix_timestamp(var.as<const char *>(), &result))
+            return CallResponse{CallErrorCode::TypeConstraintViolation, "validFrom: failed to parse as ISO 8601 date-time string"};
+
+        var.set(result);
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesChargingTimeEntriesPricesEntryEntriesPriceMinute(JsonVariant var) {
+
+    if (!var.is<float>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "priceMinute: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesChargingTimeEntriesPricesEntryEntriesConditionsEntriesStartTimeOfDay(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "startTimeOfDay: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesChargingTimeEntriesPricesEntryEntriesConditionsEntriesEndTimeOfDay(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "endTimeOfDay: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesChargingTimeEntriesPricesEntryEntriesConditionsEntriesDayOfWeekEntry(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "dayOfWeekEntry: wrong type"};
+
+    {
+        bool found = false;
+        for(size_t i = 0; i < ARRAY_SIZE(EntriesPricesEntryEntriesConditionsEntriesDayOfWeekEntryStrings); ++i) {
+            if (strcmp(var.as<const char *>(), EntriesPricesEntryEntriesConditionsEntriesDayOfWeekEntryStrings[i]) != 0)
+                continue;
+
+            var.set(i);
+            found = true;
+            break;
+        }
+
+        if (!found)
+            return CallResponse{CallErrorCode::PropertyConstraintViolation, "dayOfWeekEntry: unknown enum value received"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseTariffEntriesChargingTimeEntriesPricesEntryEntriesConditionsEntriesDayOfWeek(JsonVariant var) {
+
+    if (!var.is<JsonArray>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "dayOfWeek: wrong type"};
+
+    {
+        for(size_t i = 0; i < var.as<JsonArray>().size(); ++i) {
+            CallResponse inner_result = parseAuthorizeResponseTariffEntriesChargingTimeEntriesPricesEntryEntriesConditionsEntriesDayOfWeekEntry(var[i]);
+            if (inner_result.result != CallErrorCode::OK)
+                return inner_result;
+        }
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesChargingTimeEntriesPricesEntryEntriesConditionsEntriesValidFromDate(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "validFromDate: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesChargingTimeEntriesPricesEntryEntriesConditionsEntriesValidToDate(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "validToDate: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesChargingTimeEntriesPricesEntryEntriesConditionsEntriesEvseKind(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "evseKind: wrong type"};
+
+    {
+        bool found = false;
+        for(size_t i = 0; i < ARRAY_SIZE(EntriesPricesEntryEntriesConditionsEntriesEvseKindStrings); ++i) {
+            if (strcmp(var.as<const char *>(), EntriesPricesEntryEntriesConditionsEntriesEvseKindStrings[i]) != 0)
+                continue;
+
+            var.set(i);
+            found = true;
+            break;
+        }
+
+        if (!found)
+            return CallResponse{CallErrorCode::PropertyConstraintViolation, "evseKind: unknown enum value received"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesChargingTimeEntriesPricesEntryEntriesConditionsEntriesMinEnergy(JsonVariant var) {
+
+    if (!var.is<float>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "minEnergy: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesChargingTimeEntriesPricesEntryEntriesConditionsEntriesMaxEnergy(JsonVariant var) {
+
+    if (!var.is<float>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "maxEnergy: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesChargingTimeEntriesPricesEntryEntriesConditionsEntriesMinCurrent(JsonVariant var) {
+
+    if (!var.is<float>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "minCurrent: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesChargingTimeEntriesPricesEntryEntriesConditionsEntriesMaxCurrent(JsonVariant var) {
+
+    if (!var.is<float>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "maxCurrent: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesChargingTimeEntriesPricesEntryEntriesConditionsEntriesMinPower(JsonVariant var) {
+
+    if (!var.is<float>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "minPower: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesChargingTimeEntriesPricesEntryEntriesConditionsEntriesMaxPower(JsonVariant var) {
+
+    if (!var.is<float>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "maxPower: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesChargingTimeEntriesPricesEntryEntriesConditionsEntriesMinTime(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "minTime: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesChargingTimeEntriesPricesEntryEntriesConditionsEntriesMaxTime(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "maxTime: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesChargingTimeEntriesPricesEntryEntriesConditionsEntriesMinChargingTime(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "minChargingTime: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesChargingTimeEntriesPricesEntryEntriesConditionsEntriesMaxChargingTime(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "maxChargingTime: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesChargingTimeEntriesPricesEntryEntriesConditionsEntriesMinIdleTime(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "minIdleTime: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesChargingTimeEntriesPricesEntryEntriesConditionsEntriesMaxIdleTime(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "maxIdleTime: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseTariffEntriesChargingTimeEntriesPricesEntryEntriesConditionsEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (obj.containsKey("startTimeOfDay")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesChargingTimeEntriesPricesEntryEntriesConditionsEntriesStartTimeOfDay(obj["startTimeOfDay"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("endTimeOfDay")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesChargingTimeEntriesPricesEntryEntriesConditionsEntriesEndTimeOfDay(obj["endTimeOfDay"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("dayOfWeek")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesChargingTimeEntriesPricesEntryEntriesConditionsEntriesDayOfWeek(obj["dayOfWeek"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("validFromDate")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesChargingTimeEntriesPricesEntryEntriesConditionsEntriesValidFromDate(obj["validFromDate"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("validToDate")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesChargingTimeEntriesPricesEntryEntriesConditionsEntriesValidToDate(obj["validToDate"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("evseKind")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesChargingTimeEntriesPricesEntryEntriesConditionsEntriesEvseKind(obj["evseKind"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("minEnergy")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesChargingTimeEntriesPricesEntryEntriesConditionsEntriesMinEnergy(obj["minEnergy"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("maxEnergy")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesChargingTimeEntriesPricesEntryEntriesConditionsEntriesMaxEnergy(obj["maxEnergy"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("minCurrent")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesChargingTimeEntriesPricesEntryEntriesConditionsEntriesMinCurrent(obj["minCurrent"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("maxCurrent")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesChargingTimeEntriesPricesEntryEntriesConditionsEntriesMaxCurrent(obj["maxCurrent"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("minPower")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesChargingTimeEntriesPricesEntryEntriesConditionsEntriesMinPower(obj["minPower"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("maxPower")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesChargingTimeEntriesPricesEntryEntriesConditionsEntriesMaxPower(obj["maxPower"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("minTime")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesChargingTimeEntriesPricesEntryEntriesConditionsEntriesMinTime(obj["minTime"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("maxTime")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesChargingTimeEntriesPricesEntryEntriesConditionsEntriesMaxTime(obj["maxTime"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("minChargingTime")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesChargingTimeEntriesPricesEntryEntriesConditionsEntriesMinChargingTime(obj["minChargingTime"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("maxChargingTime")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesChargingTimeEntriesPricesEntryEntriesConditionsEntriesMaxChargingTime(obj["maxChargingTime"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("minIdleTime")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesChargingTimeEntriesPricesEntryEntriesConditionsEntriesMinIdleTime(obj["minIdleTime"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("maxIdleTime")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesChargingTimeEntriesPricesEntryEntriesConditionsEntriesMaxIdleTime(obj["maxIdleTime"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "AuthorizeResponseTariffEntriesChargingTimeEntriesPricesEntryEntriesConditionsEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseTariffEntriesChargingTimeEntriesPricesEntryEntriesConditions(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "conditions: wrong type"};
+
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesChargingTimeEntriesPricesEntryEntriesConditionsEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseTariffEntriesChargingTimeEntriesPricesEntryEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (!obj.containsKey("priceMinute"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "priceMinute: required, but missing"};
+
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesChargingTimeEntriesPricesEntryEntriesPriceMinute(obj["priceMinute"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("conditions")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesChargingTimeEntriesPricesEntryEntriesConditions(obj["conditions"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "AuthorizeResponseTariffEntriesChargingTimeEntriesPricesEntryEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseTariffEntriesChargingTimeEntriesPricesEntry(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "pricesEntry: wrong type"};
+
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesChargingTimeEntriesPricesEntryEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseTariffEntriesChargingTimeEntriesPrices(JsonVariant var) {
+
+    if (!var.is<JsonArray>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "prices: wrong type"};
+
+    {
+        for(size_t i = 0; i < var.as<JsonArray>().size(); ++i) {
+            CallResponse inner_result = parseAuthorizeResponseTariffEntriesChargingTimeEntriesPricesEntry(var[i]);
+            if (inner_result.result != CallErrorCode::OK)
+                return inner_result;
+        }
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesChargingTimeEntriesTaxRatesEntryEntriesType(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "type: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 20)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "type: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesChargingTimeEntriesTaxRatesEntryEntriesTax(JsonVariant var) {
+
+    if (!var.is<float>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "tax: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesChargingTimeEntriesTaxRatesEntryEntriesStack(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "stack: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseTariffEntriesChargingTimeEntriesTaxRatesEntryEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (!obj.containsKey("type"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "type: required, but missing"};
+
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesChargingTimeEntriesTaxRatesEntryEntriesType(obj["type"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+
+    if (!obj.containsKey("tax"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "tax: required, but missing"};
+
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesChargingTimeEntriesTaxRatesEntryEntriesTax(obj["tax"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("stack")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesChargingTimeEntriesTaxRatesEntryEntriesStack(obj["stack"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "AuthorizeResponseTariffEntriesChargingTimeEntriesTaxRatesEntryEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseTariffEntriesChargingTimeEntriesTaxRatesEntry(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "taxRatesEntry: wrong type"};
+
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesChargingTimeEntriesTaxRatesEntryEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseTariffEntriesChargingTimeEntriesTaxRates(JsonVariant var) {
+
+    if (!var.is<JsonArray>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "taxRates: wrong type"};
+
+    {
+        for(size_t i = 0; i < var.as<JsonArray>().size(); ++i) {
+            CallResponse inner_result = parseAuthorizeResponseTariffEntriesChargingTimeEntriesTaxRatesEntry(var[i]);
+            if (inner_result.result != CallErrorCode::OK)
+                return inner_result;
+        }
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseTariffEntriesChargingTimeEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (!obj.containsKey("prices"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "prices: required, but missing"};
+
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesChargingTimeEntriesPrices(obj["prices"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("taxRates")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesChargingTimeEntriesTaxRates(obj["taxRates"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "AuthorizeResponseTariffEntriesChargingTimeEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseTariffEntriesChargingTime(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "chargingTime: wrong type"};
+
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesChargingTimeEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesIdleTimeEntriesPricesEntryEntriesPriceMinute(JsonVariant var) {
+
+    if (!var.is<float>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "priceMinute: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesIdleTimeEntriesPricesEntryEntriesConditionsEntriesStartTimeOfDay(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "startTimeOfDay: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesIdleTimeEntriesPricesEntryEntriesConditionsEntriesEndTimeOfDay(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "endTimeOfDay: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesIdleTimeEntriesPricesEntryEntriesConditionsEntriesDayOfWeekEntry(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "dayOfWeekEntry: wrong type"};
+
+    {
+        bool found = false;
+        for(size_t i = 0; i < ARRAY_SIZE(EntriesPricesEntryEntriesConditionsEntriesDayOfWeekEntryStrings); ++i) {
+            if (strcmp(var.as<const char *>(), EntriesPricesEntryEntriesConditionsEntriesDayOfWeekEntryStrings[i]) != 0)
+                continue;
+
+            var.set(i);
+            found = true;
+            break;
+        }
+
+        if (!found)
+            return CallResponse{CallErrorCode::PropertyConstraintViolation, "dayOfWeekEntry: unknown enum value received"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseTariffEntriesIdleTimeEntriesPricesEntryEntriesConditionsEntriesDayOfWeek(JsonVariant var) {
+
+    if (!var.is<JsonArray>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "dayOfWeek: wrong type"};
+
+    {
+        for(size_t i = 0; i < var.as<JsonArray>().size(); ++i) {
+            CallResponse inner_result = parseAuthorizeResponseTariffEntriesIdleTimeEntriesPricesEntryEntriesConditionsEntriesDayOfWeekEntry(var[i]);
+            if (inner_result.result != CallErrorCode::OK)
+                return inner_result;
+        }
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesIdleTimeEntriesPricesEntryEntriesConditionsEntriesValidFromDate(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "validFromDate: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesIdleTimeEntriesPricesEntryEntriesConditionsEntriesValidToDate(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "validToDate: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesIdleTimeEntriesPricesEntryEntriesConditionsEntriesEvseKind(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "evseKind: wrong type"};
+
+    {
+        bool found = false;
+        for(size_t i = 0; i < ARRAY_SIZE(EntriesPricesEntryEntriesConditionsEntriesEvseKindStrings); ++i) {
+            if (strcmp(var.as<const char *>(), EntriesPricesEntryEntriesConditionsEntriesEvseKindStrings[i]) != 0)
+                continue;
+
+            var.set(i);
+            found = true;
+            break;
+        }
+
+        if (!found)
+            return CallResponse{CallErrorCode::PropertyConstraintViolation, "evseKind: unknown enum value received"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesIdleTimeEntriesPricesEntryEntriesConditionsEntriesMinEnergy(JsonVariant var) {
+
+    if (!var.is<float>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "minEnergy: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesIdleTimeEntriesPricesEntryEntriesConditionsEntriesMaxEnergy(JsonVariant var) {
+
+    if (!var.is<float>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "maxEnergy: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesIdleTimeEntriesPricesEntryEntriesConditionsEntriesMinCurrent(JsonVariant var) {
+
+    if (!var.is<float>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "minCurrent: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesIdleTimeEntriesPricesEntryEntriesConditionsEntriesMaxCurrent(JsonVariant var) {
+
+    if (!var.is<float>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "maxCurrent: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesIdleTimeEntriesPricesEntryEntriesConditionsEntriesMinPower(JsonVariant var) {
+
+    if (!var.is<float>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "minPower: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesIdleTimeEntriesPricesEntryEntriesConditionsEntriesMaxPower(JsonVariant var) {
+
+    if (!var.is<float>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "maxPower: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesIdleTimeEntriesPricesEntryEntriesConditionsEntriesMinTime(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "minTime: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesIdleTimeEntriesPricesEntryEntriesConditionsEntriesMaxTime(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "maxTime: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesIdleTimeEntriesPricesEntryEntriesConditionsEntriesMinChargingTime(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "minChargingTime: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesIdleTimeEntriesPricesEntryEntriesConditionsEntriesMaxChargingTime(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "maxChargingTime: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesIdleTimeEntriesPricesEntryEntriesConditionsEntriesMinIdleTime(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "minIdleTime: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesIdleTimeEntriesPricesEntryEntriesConditionsEntriesMaxIdleTime(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "maxIdleTime: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseTariffEntriesIdleTimeEntriesPricesEntryEntriesConditionsEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (obj.containsKey("startTimeOfDay")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesIdleTimeEntriesPricesEntryEntriesConditionsEntriesStartTimeOfDay(obj["startTimeOfDay"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("endTimeOfDay")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesIdleTimeEntriesPricesEntryEntriesConditionsEntriesEndTimeOfDay(obj["endTimeOfDay"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("dayOfWeek")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesIdleTimeEntriesPricesEntryEntriesConditionsEntriesDayOfWeek(obj["dayOfWeek"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("validFromDate")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesIdleTimeEntriesPricesEntryEntriesConditionsEntriesValidFromDate(obj["validFromDate"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("validToDate")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesIdleTimeEntriesPricesEntryEntriesConditionsEntriesValidToDate(obj["validToDate"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("evseKind")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesIdleTimeEntriesPricesEntryEntriesConditionsEntriesEvseKind(obj["evseKind"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("minEnergy")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesIdleTimeEntriesPricesEntryEntriesConditionsEntriesMinEnergy(obj["minEnergy"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("maxEnergy")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesIdleTimeEntriesPricesEntryEntriesConditionsEntriesMaxEnergy(obj["maxEnergy"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("minCurrent")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesIdleTimeEntriesPricesEntryEntriesConditionsEntriesMinCurrent(obj["minCurrent"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("maxCurrent")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesIdleTimeEntriesPricesEntryEntriesConditionsEntriesMaxCurrent(obj["maxCurrent"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("minPower")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesIdleTimeEntriesPricesEntryEntriesConditionsEntriesMinPower(obj["minPower"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("maxPower")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesIdleTimeEntriesPricesEntryEntriesConditionsEntriesMaxPower(obj["maxPower"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("minTime")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesIdleTimeEntriesPricesEntryEntriesConditionsEntriesMinTime(obj["minTime"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("maxTime")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesIdleTimeEntriesPricesEntryEntriesConditionsEntriesMaxTime(obj["maxTime"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("minChargingTime")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesIdleTimeEntriesPricesEntryEntriesConditionsEntriesMinChargingTime(obj["minChargingTime"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("maxChargingTime")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesIdleTimeEntriesPricesEntryEntriesConditionsEntriesMaxChargingTime(obj["maxChargingTime"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("minIdleTime")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesIdleTimeEntriesPricesEntryEntriesConditionsEntriesMinIdleTime(obj["minIdleTime"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("maxIdleTime")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesIdleTimeEntriesPricesEntryEntriesConditionsEntriesMaxIdleTime(obj["maxIdleTime"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "AuthorizeResponseTariffEntriesIdleTimeEntriesPricesEntryEntriesConditionsEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseTariffEntriesIdleTimeEntriesPricesEntryEntriesConditions(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "conditions: wrong type"};
+
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesIdleTimeEntriesPricesEntryEntriesConditionsEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseTariffEntriesIdleTimeEntriesPricesEntryEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (!obj.containsKey("priceMinute"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "priceMinute: required, but missing"};
+
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesIdleTimeEntriesPricesEntryEntriesPriceMinute(obj["priceMinute"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("conditions")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesIdleTimeEntriesPricesEntryEntriesConditions(obj["conditions"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "AuthorizeResponseTariffEntriesIdleTimeEntriesPricesEntryEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseTariffEntriesIdleTimeEntriesPricesEntry(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "pricesEntry: wrong type"};
+
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesIdleTimeEntriesPricesEntryEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseTariffEntriesIdleTimeEntriesPrices(JsonVariant var) {
+
+    if (!var.is<JsonArray>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "prices: wrong type"};
+
+    {
+        for(size_t i = 0; i < var.as<JsonArray>().size(); ++i) {
+            CallResponse inner_result = parseAuthorizeResponseTariffEntriesIdleTimeEntriesPricesEntry(var[i]);
+            if (inner_result.result != CallErrorCode::OK)
+                return inner_result;
+        }
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesIdleTimeEntriesTaxRatesEntryEntriesType(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "type: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 20)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "type: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesIdleTimeEntriesTaxRatesEntryEntriesTax(JsonVariant var) {
+
+    if (!var.is<float>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "tax: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesIdleTimeEntriesTaxRatesEntryEntriesStack(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "stack: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseTariffEntriesIdleTimeEntriesTaxRatesEntryEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (!obj.containsKey("type"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "type: required, but missing"};
+
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesIdleTimeEntriesTaxRatesEntryEntriesType(obj["type"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+
+    if (!obj.containsKey("tax"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "tax: required, but missing"};
+
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesIdleTimeEntriesTaxRatesEntryEntriesTax(obj["tax"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("stack")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesIdleTimeEntriesTaxRatesEntryEntriesStack(obj["stack"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "AuthorizeResponseTariffEntriesIdleTimeEntriesTaxRatesEntryEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseTariffEntriesIdleTimeEntriesTaxRatesEntry(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "taxRatesEntry: wrong type"};
+
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesIdleTimeEntriesTaxRatesEntryEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseTariffEntriesIdleTimeEntriesTaxRates(JsonVariant var) {
+
+    if (!var.is<JsonArray>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "taxRates: wrong type"};
+
+    {
+        for(size_t i = 0; i < var.as<JsonArray>().size(); ++i) {
+            CallResponse inner_result = parseAuthorizeResponseTariffEntriesIdleTimeEntriesTaxRatesEntry(var[i]);
+            if (inner_result.result != CallErrorCode::OK)
+                return inner_result;
+        }
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseTariffEntriesIdleTimeEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (!obj.containsKey("prices"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "prices: required, but missing"};
+
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesIdleTimeEntriesPrices(obj["prices"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("taxRates")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesIdleTimeEntriesTaxRates(obj["taxRates"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "AuthorizeResponseTariffEntriesIdleTimeEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseTariffEntriesIdleTime(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "idleTime: wrong type"};
+
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesIdleTimeEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesFixedFeeEntriesPricesEntryEntriesConditionsEntriesStartTimeOfDay(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "startTimeOfDay: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesFixedFeeEntriesPricesEntryEntriesConditionsEntriesEndTimeOfDay(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "endTimeOfDay: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesFixedFeeEntriesPricesEntryEntriesConditionsEntriesDayOfWeekEntry(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "dayOfWeekEntry: wrong type"};
+
+    {
+        bool found = false;
+        for(size_t i = 0; i < ARRAY_SIZE(EntriesPricesEntryEntriesConditionsEntriesDayOfWeekEntryStrings); ++i) {
+            if (strcmp(var.as<const char *>(), EntriesPricesEntryEntriesConditionsEntriesDayOfWeekEntryStrings[i]) != 0)
+                continue;
+
+            var.set(i);
+            found = true;
+            break;
+        }
+
+        if (!found)
+            return CallResponse{CallErrorCode::PropertyConstraintViolation, "dayOfWeekEntry: unknown enum value received"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseTariffEntriesFixedFeeEntriesPricesEntryEntriesConditionsEntriesDayOfWeek(JsonVariant var) {
+
+    if (!var.is<JsonArray>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "dayOfWeek: wrong type"};
+
+    {
+        for(size_t i = 0; i < var.as<JsonArray>().size(); ++i) {
+            CallResponse inner_result = parseAuthorizeResponseTariffEntriesFixedFeeEntriesPricesEntryEntriesConditionsEntriesDayOfWeekEntry(var[i]);
+            if (inner_result.result != CallErrorCode::OK)
+                return inner_result;
+        }
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesFixedFeeEntriesPricesEntryEntriesConditionsEntriesValidFromDate(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "validFromDate: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesFixedFeeEntriesPricesEntryEntriesConditionsEntriesValidToDate(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "validToDate: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesFixedFeeEntriesPricesEntryEntriesConditionsEntriesEvseKind(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "evseKind: wrong type"};
+
+    {
+        bool found = false;
+        for(size_t i = 0; i < ARRAY_SIZE(EntriesPricesEntryEntriesConditionsEntriesEvseKindStrings); ++i) {
+            if (strcmp(var.as<const char *>(), EntriesPricesEntryEntriesConditionsEntriesEvseKindStrings[i]) != 0)
+                continue;
+
+            var.set(i);
+            found = true;
+            break;
+        }
+
+        if (!found)
+            return CallResponse{CallErrorCode::PropertyConstraintViolation, "evseKind: unknown enum value received"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesFixedFeeEntriesPricesEntryEntriesConditionsEntriesPaymentBrand(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "paymentBrand: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 20)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "paymentBrand: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesFixedFeeEntriesPricesEntryEntriesConditionsEntriesPaymentRecognition(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "paymentRecognition: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 20)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "paymentRecognition: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseTariffEntriesFixedFeeEntriesPricesEntryEntriesConditionsEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (obj.containsKey("startTimeOfDay")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesFixedFeeEntriesPricesEntryEntriesConditionsEntriesStartTimeOfDay(obj["startTimeOfDay"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("endTimeOfDay")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesFixedFeeEntriesPricesEntryEntriesConditionsEntriesEndTimeOfDay(obj["endTimeOfDay"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("dayOfWeek")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesFixedFeeEntriesPricesEntryEntriesConditionsEntriesDayOfWeek(obj["dayOfWeek"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("validFromDate")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesFixedFeeEntriesPricesEntryEntriesConditionsEntriesValidFromDate(obj["validFromDate"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("validToDate")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesFixedFeeEntriesPricesEntryEntriesConditionsEntriesValidToDate(obj["validToDate"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("evseKind")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesFixedFeeEntriesPricesEntryEntriesConditionsEntriesEvseKind(obj["evseKind"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("paymentBrand")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesFixedFeeEntriesPricesEntryEntriesConditionsEntriesPaymentBrand(obj["paymentBrand"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("paymentRecognition")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesFixedFeeEntriesPricesEntryEntriesConditionsEntriesPaymentRecognition(obj["paymentRecognition"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "AuthorizeResponseTariffEntriesFixedFeeEntriesPricesEntryEntriesConditionsEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseTariffEntriesFixedFeeEntriesPricesEntryEntriesConditions(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "conditions: wrong type"};
+
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesFixedFeeEntriesPricesEntryEntriesConditionsEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesFixedFeeEntriesPricesEntryEntriesPriceFixed(JsonVariant var) {
+
+    if (!var.is<float>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "priceFixed: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseTariffEntriesFixedFeeEntriesPricesEntryEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (obj.containsKey("conditions")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesFixedFeeEntriesPricesEntryEntriesConditions(obj["conditions"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+
+    if (!obj.containsKey("priceFixed"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "priceFixed: required, but missing"};
+
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesFixedFeeEntriesPricesEntryEntriesPriceFixed(obj["priceFixed"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "AuthorizeResponseTariffEntriesFixedFeeEntriesPricesEntryEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseTariffEntriesFixedFeeEntriesPricesEntry(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "pricesEntry: wrong type"};
+
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesFixedFeeEntriesPricesEntryEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseTariffEntriesFixedFeeEntriesPrices(JsonVariant var) {
+
+    if (!var.is<JsonArray>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "prices: wrong type"};
+
+    {
+        for(size_t i = 0; i < var.as<JsonArray>().size(); ++i) {
+            CallResponse inner_result = parseAuthorizeResponseTariffEntriesFixedFeeEntriesPricesEntry(var[i]);
+            if (inner_result.result != CallErrorCode::OK)
+                return inner_result;
+        }
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesFixedFeeEntriesTaxRatesEntryEntriesType(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "type: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 20)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "type: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesFixedFeeEntriesTaxRatesEntryEntriesTax(JsonVariant var) {
+
+    if (!var.is<float>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "tax: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesFixedFeeEntriesTaxRatesEntryEntriesStack(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "stack: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseTariffEntriesFixedFeeEntriesTaxRatesEntryEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (!obj.containsKey("type"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "type: required, but missing"};
+
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesFixedFeeEntriesTaxRatesEntryEntriesType(obj["type"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+
+    if (!obj.containsKey("tax"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "tax: required, but missing"};
+
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesFixedFeeEntriesTaxRatesEntryEntriesTax(obj["tax"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("stack")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesFixedFeeEntriesTaxRatesEntryEntriesStack(obj["stack"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "AuthorizeResponseTariffEntriesFixedFeeEntriesTaxRatesEntryEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseTariffEntriesFixedFeeEntriesTaxRatesEntry(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "taxRatesEntry: wrong type"};
+
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesFixedFeeEntriesTaxRatesEntryEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseTariffEntriesFixedFeeEntriesTaxRates(JsonVariant var) {
+
+    if (!var.is<JsonArray>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "taxRates: wrong type"};
+
+    {
+        for(size_t i = 0; i < var.as<JsonArray>().size(); ++i) {
+            CallResponse inner_result = parseAuthorizeResponseTariffEntriesFixedFeeEntriesTaxRatesEntry(var[i]);
+            if (inner_result.result != CallErrorCode::OK)
+                return inner_result;
+        }
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseTariffEntriesFixedFeeEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (!obj.containsKey("prices"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "prices: required, but missing"};
+
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesFixedFeeEntriesPrices(obj["prices"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("taxRates")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesFixedFeeEntriesTaxRates(obj["taxRates"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "AuthorizeResponseTariffEntriesFixedFeeEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseTariffEntriesFixedFee(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "fixedFee: wrong type"};
+
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesFixedFeeEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesReservationTimeEntriesPricesEntryEntriesPriceMinute(JsonVariant var) {
+
+    if (!var.is<float>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "priceMinute: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesReservationTimeEntriesPricesEntryEntriesConditionsEntriesStartTimeOfDay(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "startTimeOfDay: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesReservationTimeEntriesPricesEntryEntriesConditionsEntriesEndTimeOfDay(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "endTimeOfDay: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesReservationTimeEntriesPricesEntryEntriesConditionsEntriesDayOfWeekEntry(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "dayOfWeekEntry: wrong type"};
+
+    {
+        bool found = false;
+        for(size_t i = 0; i < ARRAY_SIZE(EntriesPricesEntryEntriesConditionsEntriesDayOfWeekEntryStrings); ++i) {
+            if (strcmp(var.as<const char *>(), EntriesPricesEntryEntriesConditionsEntriesDayOfWeekEntryStrings[i]) != 0)
+                continue;
+
+            var.set(i);
+            found = true;
+            break;
+        }
+
+        if (!found)
+            return CallResponse{CallErrorCode::PropertyConstraintViolation, "dayOfWeekEntry: unknown enum value received"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseTariffEntriesReservationTimeEntriesPricesEntryEntriesConditionsEntriesDayOfWeek(JsonVariant var) {
+
+    if (!var.is<JsonArray>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "dayOfWeek: wrong type"};
+
+    {
+        for(size_t i = 0; i < var.as<JsonArray>().size(); ++i) {
+            CallResponse inner_result = parseAuthorizeResponseTariffEntriesReservationTimeEntriesPricesEntryEntriesConditionsEntriesDayOfWeekEntry(var[i]);
+            if (inner_result.result != CallErrorCode::OK)
+                return inner_result;
+        }
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesReservationTimeEntriesPricesEntryEntriesConditionsEntriesValidFromDate(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "validFromDate: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesReservationTimeEntriesPricesEntryEntriesConditionsEntriesValidToDate(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "validToDate: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesReservationTimeEntriesPricesEntryEntriesConditionsEntriesEvseKind(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "evseKind: wrong type"};
+
+    {
+        bool found = false;
+        for(size_t i = 0; i < ARRAY_SIZE(EntriesPricesEntryEntriesConditionsEntriesEvseKindStrings); ++i) {
+            if (strcmp(var.as<const char *>(), EntriesPricesEntryEntriesConditionsEntriesEvseKindStrings[i]) != 0)
+                continue;
+
+            var.set(i);
+            found = true;
+            break;
+        }
+
+        if (!found)
+            return CallResponse{CallErrorCode::PropertyConstraintViolation, "evseKind: unknown enum value received"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesReservationTimeEntriesPricesEntryEntriesConditionsEntriesMinEnergy(JsonVariant var) {
+
+    if (!var.is<float>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "minEnergy: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesReservationTimeEntriesPricesEntryEntriesConditionsEntriesMaxEnergy(JsonVariant var) {
+
+    if (!var.is<float>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "maxEnergy: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesReservationTimeEntriesPricesEntryEntriesConditionsEntriesMinCurrent(JsonVariant var) {
+
+    if (!var.is<float>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "minCurrent: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesReservationTimeEntriesPricesEntryEntriesConditionsEntriesMaxCurrent(JsonVariant var) {
+
+    if (!var.is<float>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "maxCurrent: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesReservationTimeEntriesPricesEntryEntriesConditionsEntriesMinPower(JsonVariant var) {
+
+    if (!var.is<float>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "minPower: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesReservationTimeEntriesPricesEntryEntriesConditionsEntriesMaxPower(JsonVariant var) {
+
+    if (!var.is<float>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "maxPower: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesReservationTimeEntriesPricesEntryEntriesConditionsEntriesMinTime(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "minTime: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesReservationTimeEntriesPricesEntryEntriesConditionsEntriesMaxTime(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "maxTime: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesReservationTimeEntriesPricesEntryEntriesConditionsEntriesMinChargingTime(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "minChargingTime: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesReservationTimeEntriesPricesEntryEntriesConditionsEntriesMaxChargingTime(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "maxChargingTime: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesReservationTimeEntriesPricesEntryEntriesConditionsEntriesMinIdleTime(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "minIdleTime: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesReservationTimeEntriesPricesEntryEntriesConditionsEntriesMaxIdleTime(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "maxIdleTime: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseTariffEntriesReservationTimeEntriesPricesEntryEntriesConditionsEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (obj.containsKey("startTimeOfDay")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesReservationTimeEntriesPricesEntryEntriesConditionsEntriesStartTimeOfDay(obj["startTimeOfDay"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("endTimeOfDay")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesReservationTimeEntriesPricesEntryEntriesConditionsEntriesEndTimeOfDay(obj["endTimeOfDay"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("dayOfWeek")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesReservationTimeEntriesPricesEntryEntriesConditionsEntriesDayOfWeek(obj["dayOfWeek"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("validFromDate")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesReservationTimeEntriesPricesEntryEntriesConditionsEntriesValidFromDate(obj["validFromDate"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("validToDate")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesReservationTimeEntriesPricesEntryEntriesConditionsEntriesValidToDate(obj["validToDate"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("evseKind")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesReservationTimeEntriesPricesEntryEntriesConditionsEntriesEvseKind(obj["evseKind"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("minEnergy")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesReservationTimeEntriesPricesEntryEntriesConditionsEntriesMinEnergy(obj["minEnergy"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("maxEnergy")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesReservationTimeEntriesPricesEntryEntriesConditionsEntriesMaxEnergy(obj["maxEnergy"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("minCurrent")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesReservationTimeEntriesPricesEntryEntriesConditionsEntriesMinCurrent(obj["minCurrent"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("maxCurrent")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesReservationTimeEntriesPricesEntryEntriesConditionsEntriesMaxCurrent(obj["maxCurrent"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("minPower")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesReservationTimeEntriesPricesEntryEntriesConditionsEntriesMinPower(obj["minPower"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("maxPower")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesReservationTimeEntriesPricesEntryEntriesConditionsEntriesMaxPower(obj["maxPower"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("minTime")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesReservationTimeEntriesPricesEntryEntriesConditionsEntriesMinTime(obj["minTime"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("maxTime")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesReservationTimeEntriesPricesEntryEntriesConditionsEntriesMaxTime(obj["maxTime"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("minChargingTime")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesReservationTimeEntriesPricesEntryEntriesConditionsEntriesMinChargingTime(obj["minChargingTime"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("maxChargingTime")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesReservationTimeEntriesPricesEntryEntriesConditionsEntriesMaxChargingTime(obj["maxChargingTime"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("minIdleTime")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesReservationTimeEntriesPricesEntryEntriesConditionsEntriesMinIdleTime(obj["minIdleTime"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("maxIdleTime")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesReservationTimeEntriesPricesEntryEntriesConditionsEntriesMaxIdleTime(obj["maxIdleTime"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "AuthorizeResponseTariffEntriesReservationTimeEntriesPricesEntryEntriesConditionsEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseTariffEntriesReservationTimeEntriesPricesEntryEntriesConditions(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "conditions: wrong type"};
+
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesReservationTimeEntriesPricesEntryEntriesConditionsEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseTariffEntriesReservationTimeEntriesPricesEntryEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (!obj.containsKey("priceMinute"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "priceMinute: required, but missing"};
+
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesReservationTimeEntriesPricesEntryEntriesPriceMinute(obj["priceMinute"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("conditions")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesReservationTimeEntriesPricesEntryEntriesConditions(obj["conditions"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "AuthorizeResponseTariffEntriesReservationTimeEntriesPricesEntryEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseTariffEntriesReservationTimeEntriesPricesEntry(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "pricesEntry: wrong type"};
+
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesReservationTimeEntriesPricesEntryEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseTariffEntriesReservationTimeEntriesPrices(JsonVariant var) {
+
+    if (!var.is<JsonArray>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "prices: wrong type"};
+
+    {
+        for(size_t i = 0; i < var.as<JsonArray>().size(); ++i) {
+            CallResponse inner_result = parseAuthorizeResponseTariffEntriesReservationTimeEntriesPricesEntry(var[i]);
+            if (inner_result.result != CallErrorCode::OK)
+                return inner_result;
+        }
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesReservationTimeEntriesTaxRatesEntryEntriesType(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "type: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 20)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "type: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesReservationTimeEntriesTaxRatesEntryEntriesTax(JsonVariant var) {
+
+    if (!var.is<float>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "tax: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesReservationTimeEntriesTaxRatesEntryEntriesStack(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "stack: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseTariffEntriesReservationTimeEntriesTaxRatesEntryEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (!obj.containsKey("type"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "type: required, but missing"};
+
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesReservationTimeEntriesTaxRatesEntryEntriesType(obj["type"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+
+    if (!obj.containsKey("tax"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "tax: required, but missing"};
+
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesReservationTimeEntriesTaxRatesEntryEntriesTax(obj["tax"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("stack")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesReservationTimeEntriesTaxRatesEntryEntriesStack(obj["stack"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "AuthorizeResponseTariffEntriesReservationTimeEntriesTaxRatesEntryEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseTariffEntriesReservationTimeEntriesTaxRatesEntry(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "taxRatesEntry: wrong type"};
+
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesReservationTimeEntriesTaxRatesEntryEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseTariffEntriesReservationTimeEntriesTaxRates(JsonVariant var) {
+
+    if (!var.is<JsonArray>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "taxRates: wrong type"};
+
+    {
+        for(size_t i = 0; i < var.as<JsonArray>().size(); ++i) {
+            CallResponse inner_result = parseAuthorizeResponseTariffEntriesReservationTimeEntriesTaxRatesEntry(var[i]);
+            if (inner_result.result != CallErrorCode::OK)
+                return inner_result;
+        }
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseTariffEntriesReservationTimeEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (!obj.containsKey("prices"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "prices: required, but missing"};
+
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesReservationTimeEntriesPrices(obj["prices"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("taxRates")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesReservationTimeEntriesTaxRates(obj["taxRates"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "AuthorizeResponseTariffEntriesReservationTimeEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseTariffEntriesReservationTime(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "reservationTime: wrong type"};
+
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesReservationTimeEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesReservationFixedEntriesPricesEntryEntriesConditionsEntriesStartTimeOfDay(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "startTimeOfDay: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesReservationFixedEntriesPricesEntryEntriesConditionsEntriesEndTimeOfDay(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "endTimeOfDay: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesReservationFixedEntriesPricesEntryEntriesConditionsEntriesDayOfWeekEntry(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "dayOfWeekEntry: wrong type"};
+
+    {
+        bool found = false;
+        for(size_t i = 0; i < ARRAY_SIZE(EntriesPricesEntryEntriesConditionsEntriesDayOfWeekEntryStrings); ++i) {
+            if (strcmp(var.as<const char *>(), EntriesPricesEntryEntriesConditionsEntriesDayOfWeekEntryStrings[i]) != 0)
+                continue;
+
+            var.set(i);
+            found = true;
+            break;
+        }
+
+        if (!found)
+            return CallResponse{CallErrorCode::PropertyConstraintViolation, "dayOfWeekEntry: unknown enum value received"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseTariffEntriesReservationFixedEntriesPricesEntryEntriesConditionsEntriesDayOfWeek(JsonVariant var) {
+
+    if (!var.is<JsonArray>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "dayOfWeek: wrong type"};
+
+    {
+        for(size_t i = 0; i < var.as<JsonArray>().size(); ++i) {
+            CallResponse inner_result = parseAuthorizeResponseTariffEntriesReservationFixedEntriesPricesEntryEntriesConditionsEntriesDayOfWeekEntry(var[i]);
+            if (inner_result.result != CallErrorCode::OK)
+                return inner_result;
+        }
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesReservationFixedEntriesPricesEntryEntriesConditionsEntriesValidFromDate(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "validFromDate: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesReservationFixedEntriesPricesEntryEntriesConditionsEntriesValidToDate(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "validToDate: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesReservationFixedEntriesPricesEntryEntriesConditionsEntriesEvseKind(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "evseKind: wrong type"};
+
+    {
+        bool found = false;
+        for(size_t i = 0; i < ARRAY_SIZE(EntriesPricesEntryEntriesConditionsEntriesEvseKindStrings); ++i) {
+            if (strcmp(var.as<const char *>(), EntriesPricesEntryEntriesConditionsEntriesEvseKindStrings[i]) != 0)
+                continue;
+
+            var.set(i);
+            found = true;
+            break;
+        }
+
+        if (!found)
+            return CallResponse{CallErrorCode::PropertyConstraintViolation, "evseKind: unknown enum value received"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesReservationFixedEntriesPricesEntryEntriesConditionsEntriesPaymentBrand(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "paymentBrand: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 20)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "paymentBrand: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesReservationFixedEntriesPricesEntryEntriesConditionsEntriesPaymentRecognition(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "paymentRecognition: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 20)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "paymentRecognition: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseTariffEntriesReservationFixedEntriesPricesEntryEntriesConditionsEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (obj.containsKey("startTimeOfDay")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesReservationFixedEntriesPricesEntryEntriesConditionsEntriesStartTimeOfDay(obj["startTimeOfDay"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("endTimeOfDay")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesReservationFixedEntriesPricesEntryEntriesConditionsEntriesEndTimeOfDay(obj["endTimeOfDay"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("dayOfWeek")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesReservationFixedEntriesPricesEntryEntriesConditionsEntriesDayOfWeek(obj["dayOfWeek"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("validFromDate")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesReservationFixedEntriesPricesEntryEntriesConditionsEntriesValidFromDate(obj["validFromDate"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("validToDate")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesReservationFixedEntriesPricesEntryEntriesConditionsEntriesValidToDate(obj["validToDate"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("evseKind")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesReservationFixedEntriesPricesEntryEntriesConditionsEntriesEvseKind(obj["evseKind"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("paymentBrand")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesReservationFixedEntriesPricesEntryEntriesConditionsEntriesPaymentBrand(obj["paymentBrand"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("paymentRecognition")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesReservationFixedEntriesPricesEntryEntriesConditionsEntriesPaymentRecognition(obj["paymentRecognition"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "AuthorizeResponseTariffEntriesReservationFixedEntriesPricesEntryEntriesConditionsEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseTariffEntriesReservationFixedEntriesPricesEntryEntriesConditions(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "conditions: wrong type"};
+
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesReservationFixedEntriesPricesEntryEntriesConditionsEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesReservationFixedEntriesPricesEntryEntriesPriceFixed(JsonVariant var) {
+
+    if (!var.is<float>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "priceFixed: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseTariffEntriesReservationFixedEntriesPricesEntryEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (obj.containsKey("conditions")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesReservationFixedEntriesPricesEntryEntriesConditions(obj["conditions"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+
+    if (!obj.containsKey("priceFixed"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "priceFixed: required, but missing"};
+
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesReservationFixedEntriesPricesEntryEntriesPriceFixed(obj["priceFixed"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "AuthorizeResponseTariffEntriesReservationFixedEntriesPricesEntryEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseTariffEntriesReservationFixedEntriesPricesEntry(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "pricesEntry: wrong type"};
+
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesReservationFixedEntriesPricesEntryEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseTariffEntriesReservationFixedEntriesPrices(JsonVariant var) {
+
+    if (!var.is<JsonArray>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "prices: wrong type"};
+
+    {
+        for(size_t i = 0; i < var.as<JsonArray>().size(); ++i) {
+            CallResponse inner_result = parseAuthorizeResponseTariffEntriesReservationFixedEntriesPricesEntry(var[i]);
+            if (inner_result.result != CallErrorCode::OK)
+                return inner_result;
+        }
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesReservationFixedEntriesTaxRatesEntryEntriesType(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "type: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 20)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "type: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesReservationFixedEntriesTaxRatesEntryEntriesTax(JsonVariant var) {
+
+    if (!var.is<float>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "tax: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesReservationFixedEntriesTaxRatesEntryEntriesStack(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "stack: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseTariffEntriesReservationFixedEntriesTaxRatesEntryEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (!obj.containsKey("type"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "type: required, but missing"};
+
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesReservationFixedEntriesTaxRatesEntryEntriesType(obj["type"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+
+    if (!obj.containsKey("tax"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "tax: required, but missing"};
+
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesReservationFixedEntriesTaxRatesEntryEntriesTax(obj["tax"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("stack")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesReservationFixedEntriesTaxRatesEntryEntriesStack(obj["stack"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "AuthorizeResponseTariffEntriesReservationFixedEntriesTaxRatesEntryEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseTariffEntriesReservationFixedEntriesTaxRatesEntry(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "taxRatesEntry: wrong type"};
+
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesReservationFixedEntriesTaxRatesEntryEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseTariffEntriesReservationFixedEntriesTaxRates(JsonVariant var) {
+
+    if (!var.is<JsonArray>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "taxRates: wrong type"};
+
+    {
+        for(size_t i = 0; i < var.as<JsonArray>().size(); ++i) {
+            CallResponse inner_result = parseAuthorizeResponseTariffEntriesReservationFixedEntriesTaxRatesEntry(var[i]);
+            if (inner_result.result != CallErrorCode::OK)
+                return inner_result;
+        }
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseTariffEntriesReservationFixedEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (!obj.containsKey("prices"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "prices: required, but missing"};
+
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesReservationFixedEntriesPrices(obj["prices"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("taxRates")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesReservationFixedEntriesTaxRates(obj["taxRates"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "AuthorizeResponseTariffEntriesReservationFixedEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseTariffEntriesReservationFixed(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "reservationFixed: wrong type"};
+
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesReservationFixedEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesMinCostEntriesExclTax(JsonVariant var) {
+
+    if (!var.is<float>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "exclTax: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesMinCostEntriesInclTax(JsonVariant var) {
+
+    if (!var.is<float>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "inclTax: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesMinCostEntriesTaxRatesEntryEntriesType(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "type: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 20)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "type: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesMinCostEntriesTaxRatesEntryEntriesTax(JsonVariant var) {
+
+    if (!var.is<float>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "tax: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesMinCostEntriesTaxRatesEntryEntriesStack(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "stack: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseTariffEntriesMinCostEntriesTaxRatesEntryEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (!obj.containsKey("type"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "type: required, but missing"};
+
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesMinCostEntriesTaxRatesEntryEntriesType(obj["type"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+
+    if (!obj.containsKey("tax"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "tax: required, but missing"};
+
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesMinCostEntriesTaxRatesEntryEntriesTax(obj["tax"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("stack")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesMinCostEntriesTaxRatesEntryEntriesStack(obj["stack"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "AuthorizeResponseTariffEntriesMinCostEntriesTaxRatesEntryEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseTariffEntriesMinCostEntriesTaxRatesEntry(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "taxRatesEntry: wrong type"};
+
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesMinCostEntriesTaxRatesEntryEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseTariffEntriesMinCostEntriesTaxRates(JsonVariant var) {
+
+    if (!var.is<JsonArray>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "taxRates: wrong type"};
+
+    {
+        for(size_t i = 0; i < var.as<JsonArray>().size(); ++i) {
+            CallResponse inner_result = parseAuthorizeResponseTariffEntriesMinCostEntriesTaxRatesEntry(var[i]);
+            if (inner_result.result != CallErrorCode::OK)
+                return inner_result;
+        }
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseTariffEntriesMinCostEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (obj.containsKey("exclTax")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesMinCostEntriesExclTax(obj["exclTax"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("inclTax")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesMinCostEntriesInclTax(obj["inclTax"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("taxRates")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesMinCostEntriesTaxRates(obj["taxRates"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "AuthorizeResponseTariffEntriesMinCostEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseTariffEntriesMinCost(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "minCost: wrong type"};
+
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesMinCostEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesMaxCostEntriesExclTax(JsonVariant var) {
+
+    if (!var.is<float>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "exclTax: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesMaxCostEntriesInclTax(JsonVariant var) {
+
+    if (!var.is<float>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "inclTax: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesMaxCostEntriesTaxRatesEntryEntriesType(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "type: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 20)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "type: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesMaxCostEntriesTaxRatesEntryEntriesTax(JsonVariant var) {
+
+    if (!var.is<float>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "tax: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseAuthorizeResponseTariffEntriesMaxCostEntriesTaxRatesEntryEntriesStack(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "stack: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseTariffEntriesMaxCostEntriesTaxRatesEntryEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (!obj.containsKey("type"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "type: required, but missing"};
+
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesMaxCostEntriesTaxRatesEntryEntriesType(obj["type"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+
+    if (!obj.containsKey("tax"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "tax: required, but missing"};
+
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesMaxCostEntriesTaxRatesEntryEntriesTax(obj["tax"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("stack")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesMaxCostEntriesTaxRatesEntryEntriesStack(obj["stack"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "AuthorizeResponseTariffEntriesMaxCostEntriesTaxRatesEntryEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseTariffEntriesMaxCostEntriesTaxRatesEntry(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "taxRatesEntry: wrong type"};
+
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesMaxCostEntriesTaxRatesEntryEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseTariffEntriesMaxCostEntriesTaxRates(JsonVariant var) {
+
+    if (!var.is<JsonArray>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "taxRates: wrong type"};
+
+    {
+        for(size_t i = 0; i < var.as<JsonArray>().size(); ++i) {
+            CallResponse inner_result = parseAuthorizeResponseTariffEntriesMaxCostEntriesTaxRatesEntry(var[i]);
+            if (inner_result.result != CallErrorCode::OK)
+                return inner_result;
+        }
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseTariffEntriesMaxCostEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (obj.containsKey("exclTax")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesMaxCostEntriesExclTax(obj["exclTax"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("inclTax")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesMaxCostEntriesInclTax(obj["inclTax"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("taxRates")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesMaxCostEntriesTaxRates(obj["taxRates"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "AuthorizeResponseTariffEntriesMaxCostEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseTariffEntriesMaxCost(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "maxCost: wrong type"};
+
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesMaxCostEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseTariffEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (!obj.containsKey("tariffId"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "tariffId: required, but missing"};
+
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesTariffId(obj["tariffId"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("description")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesDescription(obj["description"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+
+    if (!obj.containsKey("currency"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "currency: required, but missing"};
+
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesCurrency(obj["currency"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("energy")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesEnergy(obj["energy"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("validFrom")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesValidFrom(obj["validFrom"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("chargingTime")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesChargingTime(obj["chargingTime"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("idleTime")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesIdleTime(obj["idleTime"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("fixedFee")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesFixedFee(obj["fixedFee"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("reservationTime")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesReservationTime(obj["reservationTime"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("reservationFixed")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesReservationFixed(obj["reservationFixed"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("minCost")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesMinCost(obj["minCost"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("maxCost")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntriesMaxCost(obj["maxCost"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "AuthorizeResponseTariffEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseAuthorizeResponseTariff(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "tariff: wrong type"};
+
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariffEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+CallResponse parseAuthorizeResponse(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (!obj.containsKey("idTokenInfo"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "idTokenInfo: required, but missing"};
+
+    {
+        CallResponse inner_result = parseAuthorizeResponseIdTokenInfo(obj["idTokenInfo"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("certificateStatus")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseCertificateStatus(obj["certificateStatus"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("allowedEnergyTransfer")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseAllowedEnergyTransfer(obj["allowedEnergyTransfer"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("tariff")) {
+    {
+        CallResponse inner_result = parseAuthorizeResponseTariff(obj["tariff"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "AuthorizeResponse: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseTransactionEventResponseTotalCost(JsonVariant var) {
+
+    if (!var.is<float>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "totalCost: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseTransactionEventResponseChargingPriority(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "chargingPriority: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseTransactionEventResponseIdTokenInfoEntriesStatus(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "status: wrong type"};
+
+    {
+        bool found = false;
+        for(size_t i = 0; i < ARRAY_SIZE(ResponseIdTokenInfoEntriesStatusStrings); ++i) {
+            if (strcmp(var.as<const char *>(), ResponseIdTokenInfoEntriesStatusStrings[i]) != 0)
+                continue;
+
+            var.set(i);
+            found = true;
+            break;
+        }
+
+        if (!found)
+            return CallResponse{CallErrorCode::PropertyConstraintViolation, "status: unknown enum value received"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseTransactionEventResponseIdTokenInfoEntriesCacheExpiryDateTime(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "cacheExpiryDateTime: wrong type"};
+
+    {
+        time_t result;
+        if (!iso_string_to_unix_timestamp(var.as<const char *>(), &result))
+            return CallResponse{CallErrorCode::TypeConstraintViolation, "cacheExpiryDateTime: failed to parse as ISO 8601 date-time string"};
+
+        var.set(result);
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseTransactionEventResponseIdTokenInfoEntriesChargingPriority(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "chargingPriority: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseTransactionEventResponseIdTokenInfoEntriesGroupIdTokenEntriesAdditionalInfoEntryEntriesAdditionalIdToken(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "additionalIdToken: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 255)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "additionalIdToken: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseTransactionEventResponseIdTokenInfoEntriesGroupIdTokenEntriesAdditionalInfoEntryEntriesType(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "type: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 50)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "type: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseTransactionEventResponseIdTokenInfoEntriesGroupIdTokenEntriesAdditionalInfoEntryEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (!obj.containsKey("additionalIdToken"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "additionalIdToken: required, but missing"};
+
+    {
+        CallResponse inner_result = parseTransactionEventResponseIdTokenInfoEntriesGroupIdTokenEntriesAdditionalInfoEntryEntriesAdditionalIdToken(obj["additionalIdToken"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+
+    if (!obj.containsKey("type"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "type: required, but missing"};
+
+    {
+        CallResponse inner_result = parseTransactionEventResponseIdTokenInfoEntriesGroupIdTokenEntriesAdditionalInfoEntryEntriesType(obj["type"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "TransactionEventResponseIdTokenInfoEntriesGroupIdTokenEntriesAdditionalInfoEntryEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseTransactionEventResponseIdTokenInfoEntriesGroupIdTokenEntriesAdditionalInfoEntry(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "additionalInfoEntry: wrong type"};
+
+    {
+        CallResponse inner_result = parseTransactionEventResponseIdTokenInfoEntriesGroupIdTokenEntriesAdditionalInfoEntryEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseTransactionEventResponseIdTokenInfoEntriesGroupIdTokenEntriesAdditionalInfo(JsonVariant var) {
+
+    if (!var.is<JsonArray>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "additionalInfo: wrong type"};
+
+    {
+        for(size_t i = 0; i < var.as<JsonArray>().size(); ++i) {
+            CallResponse inner_result = parseTransactionEventResponseIdTokenInfoEntriesGroupIdTokenEntriesAdditionalInfoEntry(var[i]);
+            if (inner_result.result != CallErrorCode::OK)
+                return inner_result;
+        }
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseTransactionEventResponseIdTokenInfoEntriesGroupIdTokenEntriesIdToken(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "idToken: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 255)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "idToken: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseTransactionEventResponseIdTokenInfoEntriesGroupIdTokenEntriesType(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "type: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 20)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "type: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseTransactionEventResponseIdTokenInfoEntriesGroupIdTokenEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (obj.containsKey("additionalInfo")) {
+    {
+        CallResponse inner_result = parseTransactionEventResponseIdTokenInfoEntriesGroupIdTokenEntriesAdditionalInfo(obj["additionalInfo"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+
+    if (!obj.containsKey("idToken"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "idToken: required, but missing"};
+
+    {
+        CallResponse inner_result = parseTransactionEventResponseIdTokenInfoEntriesGroupIdTokenEntriesIdToken(obj["idToken"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+
+    if (!obj.containsKey("type"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "type: required, but missing"};
+
+    {
+        CallResponse inner_result = parseTransactionEventResponseIdTokenInfoEntriesGroupIdTokenEntriesType(obj["type"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "TransactionEventResponseIdTokenInfoEntriesGroupIdTokenEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseTransactionEventResponseIdTokenInfoEntriesGroupIdToken(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "groupIdToken: wrong type"};
+
+    {
+        CallResponse inner_result = parseTransactionEventResponseIdTokenInfoEntriesGroupIdTokenEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseTransactionEventResponseIdTokenInfoEntriesLanguage1(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "language1: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 8)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "language1: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseTransactionEventResponseIdTokenInfoEntriesLanguage2(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "language2: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 8)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "language2: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseTransactionEventResponseIdTokenInfoEntriesEvseIdEntry(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "evseIdEntry: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseTransactionEventResponseIdTokenInfoEntriesEvseId(JsonVariant var) {
+
+    if (!var.is<JsonArray>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "evseId: wrong type"};
+
+    {
+        for(size_t i = 0; i < var.as<JsonArray>().size(); ++i) {
+            CallResponse inner_result = parseTransactionEventResponseIdTokenInfoEntriesEvseIdEntry(var[i]);
+            if (inner_result.result != CallErrorCode::OK)
+                return inner_result;
+        }
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseTransactionEventResponseIdTokenInfoEntriesPersonalMessageEntriesFormat(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "format: wrong type"};
+
+    {
+        bool found = false;
+        for(size_t i = 0; i < ARRAY_SIZE(EntriesFormatStrings); ++i) {
+            if (strcmp(var.as<const char *>(), EntriesFormatStrings[i]) != 0)
+                continue;
+
+            var.set(i);
+            found = true;
+            break;
+        }
+
+        if (!found)
+            return CallResponse{CallErrorCode::PropertyConstraintViolation, "format: unknown enum value received"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseTransactionEventResponseIdTokenInfoEntriesPersonalMessageEntriesLanguage(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "language: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 8)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "language: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseTransactionEventResponseIdTokenInfoEntriesPersonalMessageEntriesContent(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "content: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 1024)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "content: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseTransactionEventResponseIdTokenInfoEntriesPersonalMessageEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (!obj.containsKey("format"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "format: required, but missing"};
+
+    {
+        CallResponse inner_result = parseTransactionEventResponseIdTokenInfoEntriesPersonalMessageEntriesFormat(obj["format"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("language")) {
+    {
+        CallResponse inner_result = parseTransactionEventResponseIdTokenInfoEntriesPersonalMessageEntriesLanguage(obj["language"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+
+    if (!obj.containsKey("content"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "content: required, but missing"};
+
+    {
+        CallResponse inner_result = parseTransactionEventResponseIdTokenInfoEntriesPersonalMessageEntriesContent(obj["content"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "TransactionEventResponseIdTokenInfoEntriesPersonalMessageEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseTransactionEventResponseIdTokenInfoEntriesPersonalMessage(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "personalMessage: wrong type"};
+
+    {
+        CallResponse inner_result = parseTransactionEventResponseIdTokenInfoEntriesPersonalMessageEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseTransactionEventResponseIdTokenInfoEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (!obj.containsKey("status"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "status: required, but missing"};
+
+    {
+        CallResponse inner_result = parseTransactionEventResponseIdTokenInfoEntriesStatus(obj["status"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("cacheExpiryDateTime")) {
+    {
+        CallResponse inner_result = parseTransactionEventResponseIdTokenInfoEntriesCacheExpiryDateTime(obj["cacheExpiryDateTime"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("chargingPriority")) {
+    {
+        CallResponse inner_result = parseTransactionEventResponseIdTokenInfoEntriesChargingPriority(obj["chargingPriority"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("groupIdToken")) {
+    {
+        CallResponse inner_result = parseTransactionEventResponseIdTokenInfoEntriesGroupIdToken(obj["groupIdToken"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("language1")) {
+    {
+        CallResponse inner_result = parseTransactionEventResponseIdTokenInfoEntriesLanguage1(obj["language1"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("language2")) {
+    {
+        CallResponse inner_result = parseTransactionEventResponseIdTokenInfoEntriesLanguage2(obj["language2"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("evseId")) {
+    {
+        CallResponse inner_result = parseTransactionEventResponseIdTokenInfoEntriesEvseId(obj["evseId"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("personalMessage")) {
+    {
+        CallResponse inner_result = parseTransactionEventResponseIdTokenInfoEntriesPersonalMessage(obj["personalMessage"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "TransactionEventResponseIdTokenInfoEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseTransactionEventResponseIdTokenInfo(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "idTokenInfo: wrong type"};
+
+    {
+        CallResponse inner_result = parseTransactionEventResponseIdTokenInfoEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseTransactionEventResponseTransactionLimitEntriesMaxCost(JsonVariant var) {
+
+    if (!var.is<float>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "maxCost: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseTransactionEventResponseTransactionLimitEntriesMaxEnergy(JsonVariant var) {
+
+    if (!var.is<float>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "maxEnergy: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseTransactionEventResponseTransactionLimitEntriesMaxTime(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "maxTime: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseTransactionEventResponseTransactionLimitEntriesMaxSoC(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "maxSoC: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseTransactionEventResponseTransactionLimitEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (obj.containsKey("maxCost")) {
+    {
+        CallResponse inner_result = parseTransactionEventResponseTransactionLimitEntriesMaxCost(obj["maxCost"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("maxEnergy")) {
+    {
+        CallResponse inner_result = parseTransactionEventResponseTransactionLimitEntriesMaxEnergy(obj["maxEnergy"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("maxTime")) {
+    {
+        CallResponse inner_result = parseTransactionEventResponseTransactionLimitEntriesMaxTime(obj["maxTime"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("maxSoC")) {
+    {
+        CallResponse inner_result = parseTransactionEventResponseTransactionLimitEntriesMaxSoC(obj["maxSoC"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "TransactionEventResponseTransactionLimitEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseTransactionEventResponseTransactionLimit(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "transactionLimit: wrong type"};
+
+    {
+        CallResponse inner_result = parseTransactionEventResponseTransactionLimitEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseTransactionEventResponseUpdatedPersonalMessageEntriesFormat(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "format: wrong type"};
+
+    {
+        bool found = false;
+        for(size_t i = 0; i < ARRAY_SIZE(EntriesFormatStrings); ++i) {
+            if (strcmp(var.as<const char *>(), EntriesFormatStrings[i]) != 0)
+                continue;
+
+            var.set(i);
+            found = true;
+            break;
+        }
+
+        if (!found)
+            return CallResponse{CallErrorCode::PropertyConstraintViolation, "format: unknown enum value received"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseTransactionEventResponseUpdatedPersonalMessageEntriesLanguage(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "language: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 8)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "language: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseTransactionEventResponseUpdatedPersonalMessageEntriesContent(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "content: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 1024)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "content: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseTransactionEventResponseUpdatedPersonalMessageEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (!obj.containsKey("format"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "format: required, but missing"};
+
+    {
+        CallResponse inner_result = parseTransactionEventResponseUpdatedPersonalMessageEntriesFormat(obj["format"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("language")) {
+    {
+        CallResponse inner_result = parseTransactionEventResponseUpdatedPersonalMessageEntriesLanguage(obj["language"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+
+    if (!obj.containsKey("content"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "content: required, but missing"};
+
+    {
+        CallResponse inner_result = parseTransactionEventResponseUpdatedPersonalMessageEntriesContent(obj["content"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "TransactionEventResponseUpdatedPersonalMessageEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseTransactionEventResponseUpdatedPersonalMessage(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "updatedPersonalMessage: wrong type"};
+
+    {
+        CallResponse inner_result = parseTransactionEventResponseUpdatedPersonalMessageEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseTransactionEventResponseUpdatedPersonalMessageExtraEntryEntriesFormat(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "format: wrong type"};
+
+    {
+        bool found = false;
+        for(size_t i = 0; i < ARRAY_SIZE(EntriesFormatStrings); ++i) {
+            if (strcmp(var.as<const char *>(), EntriesFormatStrings[i]) != 0)
+                continue;
+
+            var.set(i);
+            found = true;
+            break;
+        }
+
+        if (!found)
+            return CallResponse{CallErrorCode::PropertyConstraintViolation, "format: unknown enum value received"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseTransactionEventResponseUpdatedPersonalMessageExtraEntryEntriesLanguage(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "language: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 8)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "language: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseTransactionEventResponseUpdatedPersonalMessageExtraEntryEntriesContent(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "content: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 1024)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "content: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseTransactionEventResponseUpdatedPersonalMessageExtraEntryEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (!obj.containsKey("format"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "format: required, but missing"};
+
+    {
+        CallResponse inner_result = parseTransactionEventResponseUpdatedPersonalMessageExtraEntryEntriesFormat(obj["format"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("language")) {
+    {
+        CallResponse inner_result = parseTransactionEventResponseUpdatedPersonalMessageExtraEntryEntriesLanguage(obj["language"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+
+    if (!obj.containsKey("content"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "content: required, but missing"};
+
+    {
+        CallResponse inner_result = parseTransactionEventResponseUpdatedPersonalMessageExtraEntryEntriesContent(obj["content"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "TransactionEventResponseUpdatedPersonalMessageExtraEntryEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseTransactionEventResponseUpdatedPersonalMessageExtraEntry(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "updatedPersonalMessageExtraEntry: wrong type"};
+
+    {
+        CallResponse inner_result = parseTransactionEventResponseUpdatedPersonalMessageExtraEntryEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseTransactionEventResponseUpdatedPersonalMessageExtra(JsonVariant var) {
+
+    if (!var.is<JsonArray>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "updatedPersonalMessageExtra: wrong type"};
+
+    {
+        for(size_t i = 0; i < var.as<JsonArray>().size(); ++i) {
+            CallResponse inner_result = parseTransactionEventResponseUpdatedPersonalMessageExtraEntry(var[i]);
+            if (inner_result.result != CallErrorCode::OK)
+                return inner_result;
+        }
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+CallResponse parseTransactionEventResponse(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (obj.containsKey("totalCost")) {
+    {
+        CallResponse inner_result = parseTransactionEventResponseTotalCost(obj["totalCost"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("chargingPriority")) {
+    {
+        CallResponse inner_result = parseTransactionEventResponseChargingPriority(obj["chargingPriority"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("idTokenInfo")) {
+    {
+        CallResponse inner_result = parseTransactionEventResponseIdTokenInfo(obj["idTokenInfo"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("transactionLimit")) {
+    {
+        CallResponse inner_result = parseTransactionEventResponseTransactionLimit(obj["transactionLimit"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("updatedPersonalMessage")) {
+    {
+        CallResponse inner_result = parseTransactionEventResponseUpdatedPersonalMessage(obj["updatedPersonalMessage"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("updatedPersonalMessageExtra")) {
+    {
+        CallResponse inner_result = parseTransactionEventResponseUpdatedPersonalMessageExtra(obj["updatedPersonalMessageExtra"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "TransactionEventResponse: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+CallResponse parseMeterValuesResponse(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "MeterValuesResponse: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionEvseId(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "evseId: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionGroupIdTokenEntriesAdditionalInfoEntryEntriesAdditionalIdToken(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "additionalIdToken: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 255)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "additionalIdToken: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionGroupIdTokenEntriesAdditionalInfoEntryEntriesType(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "type: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 50)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "type: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseRequestStartTransactionGroupIdTokenEntriesAdditionalInfoEntryEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (!obj.containsKey("additionalIdToken"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "additionalIdToken: required, but missing"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionGroupIdTokenEntriesAdditionalInfoEntryEntriesAdditionalIdToken(obj["additionalIdToken"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+
+    if (!obj.containsKey("type"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "type: required, but missing"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionGroupIdTokenEntriesAdditionalInfoEntryEntriesType(obj["type"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "RequestStartTransactionGroupIdTokenEntriesAdditionalInfoEntryEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseRequestStartTransactionGroupIdTokenEntriesAdditionalInfoEntry(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "additionalInfoEntry: wrong type"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionGroupIdTokenEntriesAdditionalInfoEntryEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseRequestStartTransactionGroupIdTokenEntriesAdditionalInfo(JsonVariant var) {
+
+    if (!var.is<JsonArray>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "additionalInfo: wrong type"};
+
+    {
+        for(size_t i = 0; i < var.as<JsonArray>().size(); ++i) {
+            CallResponse inner_result = parseRequestStartTransactionGroupIdTokenEntriesAdditionalInfoEntry(var[i]);
+            if (inner_result.result != CallErrorCode::OK)
+                return inner_result;
+        }
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionGroupIdTokenEntriesIdToken(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "idToken: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 255)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "idToken: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionGroupIdTokenEntriesType(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "type: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 20)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "type: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseRequestStartTransactionGroupIdTokenEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (obj.containsKey("additionalInfo")) {
+    {
+        CallResponse inner_result = parseRequestStartTransactionGroupIdTokenEntriesAdditionalInfo(obj["additionalInfo"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+
+    if (!obj.containsKey("idToken"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "idToken: required, but missing"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionGroupIdTokenEntriesIdToken(obj["idToken"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+
+    if (!obj.containsKey("type"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "type: required, but missing"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionGroupIdTokenEntriesType(obj["type"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "RequestStartTransactionGroupIdTokenEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseRequestStartTransactionGroupIdToken(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "groupIdToken: wrong type"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionGroupIdTokenEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionIdTokenEntriesAdditionalInfoEntryEntriesAdditionalIdToken(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "additionalIdToken: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 255)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "additionalIdToken: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionIdTokenEntriesAdditionalInfoEntryEntriesType(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "type: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 50)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "type: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseRequestStartTransactionIdTokenEntriesAdditionalInfoEntryEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (!obj.containsKey("additionalIdToken"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "additionalIdToken: required, but missing"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionIdTokenEntriesAdditionalInfoEntryEntriesAdditionalIdToken(obj["additionalIdToken"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+
+    if (!obj.containsKey("type"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "type: required, but missing"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionIdTokenEntriesAdditionalInfoEntryEntriesType(obj["type"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "RequestStartTransactionIdTokenEntriesAdditionalInfoEntryEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseRequestStartTransactionIdTokenEntriesAdditionalInfoEntry(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "additionalInfoEntry: wrong type"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionIdTokenEntriesAdditionalInfoEntryEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseRequestStartTransactionIdTokenEntriesAdditionalInfo(JsonVariant var) {
+
+    if (!var.is<JsonArray>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "additionalInfo: wrong type"};
+
+    {
+        for(size_t i = 0; i < var.as<JsonArray>().size(); ++i) {
+            CallResponse inner_result = parseRequestStartTransactionIdTokenEntriesAdditionalInfoEntry(var[i]);
+            if (inner_result.result != CallErrorCode::OK)
+                return inner_result;
+        }
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionIdTokenEntriesIdToken(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "idToken: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 255)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "idToken: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionIdTokenEntriesType(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "type: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 20)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "type: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseRequestStartTransactionIdTokenEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (obj.containsKey("additionalInfo")) {
+    {
+        CallResponse inner_result = parseRequestStartTransactionIdTokenEntriesAdditionalInfo(obj["additionalInfo"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+
+    if (!obj.containsKey("idToken"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "idToken: required, but missing"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionIdTokenEntriesIdToken(obj["idToken"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+
+    if (!obj.containsKey("type"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "type: required, but missing"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionIdTokenEntriesType(obj["type"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "RequestStartTransactionIdTokenEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseRequestStartTransactionIdToken(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "idToken: wrong type"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionIdTokenEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionRemoteStartId(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "remoteStartId: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesId(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "id: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesStackLevel(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "stackLevel: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingProfilePurpose(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "chargingProfilePurpose: wrong type"};
+
+    {
+        bool found = false;
+        for(size_t i = 0; i < ARRAY_SIZE(RequestStartTransactionChargingProfileEntriesChargingProfilePurposeStrings); ++i) {
+            if (strcmp(var.as<const char *>(), RequestStartTransactionChargingProfileEntriesChargingProfilePurposeStrings[i]) != 0)
+                continue;
+
+            var.set(i);
+            found = true;
+            break;
+        }
+
+        if (!found)
+            return CallResponse{CallErrorCode::PropertyConstraintViolation, "chargingProfilePurpose: unknown enum value received"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingProfileKind(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "chargingProfileKind: wrong type"};
+
+    {
+        bool found = false;
+        for(size_t i = 0; i < ARRAY_SIZE(RequestStartTransactionChargingProfileEntriesChargingProfileKindStrings); ++i) {
+            if (strcmp(var.as<const char *>(), RequestStartTransactionChargingProfileEntriesChargingProfileKindStrings[i]) != 0)
+                continue;
+
+            var.set(i);
+            found = true;
+            break;
+        }
+
+        if (!found)
+            return CallResponse{CallErrorCode::PropertyConstraintViolation, "chargingProfileKind: unknown enum value received"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesRecurrencyKind(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "recurrencyKind: wrong type"};
+
+    {
+        bool found = false;
+        for(size_t i = 0; i < ARRAY_SIZE(RequestStartTransactionChargingProfileEntriesRecurrencyKindStrings); ++i) {
+            if (strcmp(var.as<const char *>(), RequestStartTransactionChargingProfileEntriesRecurrencyKindStrings[i]) != 0)
+                continue;
+
+            var.set(i);
+            found = true;
+            break;
+        }
+
+        if (!found)
+            return CallResponse{CallErrorCode::PropertyConstraintViolation, "recurrencyKind: unknown enum value received"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesValidFrom(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "validFrom: wrong type"};
+
+    {
+        time_t result;
+        if (!iso_string_to_unix_timestamp(var.as<const char *>(), &result))
+            return CallResponse{CallErrorCode::TypeConstraintViolation, "validFrom: failed to parse as ISO 8601 date-time string"};
+
+        var.set(result);
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesValidTo(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "validTo: wrong type"};
+
+    {
+        time_t result;
+        if (!iso_string_to_unix_timestamp(var.as<const char *>(), &result))
+            return CallResponse{CallErrorCode::TypeConstraintViolation, "validTo: failed to parse as ISO 8601 date-time string"};
+
+        var.set(result);
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesTransactionId(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "transactionId: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 36)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "transactionId: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesMaxOfflineDuration(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "maxOfflineDuration: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesId(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "id: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesLimitAtSoCEntriesSoc(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "soc: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesLimitAtSoCEntriesLimit(JsonVariant var) {
+
+    if (!var.is<float>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "limit: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesLimitAtSoCEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (!obj.containsKey("soc"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "soc: required, but missing"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesLimitAtSoCEntriesSoc(obj["soc"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+
+    if (!obj.containsKey("limit"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "limit: required, but missing"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesLimitAtSoCEntriesLimit(obj["limit"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesLimitAtSoCEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesLimitAtSoC(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "limitAtSoC: wrong type"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesLimitAtSoCEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesStartSchedule(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "startSchedule: wrong type"};
+
+    {
+        time_t result;
+        if (!iso_string_to_unix_timestamp(var.as<const char *>(), &result))
+            return CallResponse{CallErrorCode::TypeConstraintViolation, "startSchedule: failed to parse as ISO 8601 date-time string"};
+
+        var.set(result);
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesDuration(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "duration: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingRateUnit(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "chargingRateUnit: wrong type"};
+
+    {
+        bool found = false;
+        for(size_t i = 0; i < ARRAY_SIZE(RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingRateUnitStrings); ++i) {
+            if (strcmp(var.as<const char *>(), RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingRateUnitStrings[i]) != 0)
+                continue;
+
+            var.set(i);
+            found = true;
+            break;
+        }
+
+        if (!found)
+            return CallResponse{CallErrorCode::PropertyConstraintViolation, "chargingRateUnit: unknown enum value received"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesMinChargingRate(JsonVariant var) {
+
+    if (!var.is<float>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "minChargingRate: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesPowerTolerance(JsonVariant var) {
+
+    if (!var.is<float>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "powerTolerance: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesSignatureId(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "signatureId: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesDigestValue(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "digestValue: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 88)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "digestValue: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesUseLocalTime(JsonVariant var) {
+
+    if (!var.is<bool>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "useLocalTime: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingSchedulePeriodEntryEntriesStartPeriod(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "startPeriod: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingSchedulePeriodEntryEntriesLimit(JsonVariant var) {
+
+    if (!var.is<float>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "limit: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingSchedulePeriodEntryEntriesLimit_L2(JsonVariant var) {
+
+    if (!var.is<float>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "limit_L2: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingSchedulePeriodEntryEntriesLimit_L3(JsonVariant var) {
+
+    if (!var.is<float>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "limit_L3: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingSchedulePeriodEntryEntriesNumberPhases(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "numberPhases: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingSchedulePeriodEntryEntriesPhaseToUse(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "phaseToUse: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingSchedulePeriodEntryEntriesDischargeLimit(JsonVariant var) {
+
+    if (!var.is<float>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "dischargeLimit: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingSchedulePeriodEntryEntriesDischargeLimit_L2(JsonVariant var) {
+
+    if (!var.is<float>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "dischargeLimit_L2: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingSchedulePeriodEntryEntriesDischargeLimit_L3(JsonVariant var) {
+
+    if (!var.is<float>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "dischargeLimit_L3: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingSchedulePeriodEntryEntriesSetpoint(JsonVariant var) {
+
+    if (!var.is<float>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "setpoint: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingSchedulePeriodEntryEntriesSetpoint_L2(JsonVariant var) {
+
+    if (!var.is<float>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "setpoint_L2: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingSchedulePeriodEntryEntriesSetpoint_L3(JsonVariant var) {
+
+    if (!var.is<float>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "setpoint_L3: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingSchedulePeriodEntryEntriesSetpointReactive(JsonVariant var) {
+
+    if (!var.is<float>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "setpointReactive: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingSchedulePeriodEntryEntriesSetpointReactive_L2(JsonVariant var) {
+
+    if (!var.is<float>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "setpointReactive_L2: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingSchedulePeriodEntryEntriesSetpointReactive_L3(JsonVariant var) {
+
+    if (!var.is<float>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "setpointReactive_L3: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingSchedulePeriodEntryEntriesPreconditioningRequest(JsonVariant var) {
+
+    if (!var.is<bool>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "preconditioningRequest: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingSchedulePeriodEntryEntriesEvseSleep(JsonVariant var) {
+
+    if (!var.is<bool>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "evseSleep: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingSchedulePeriodEntryEntriesV2xBaseline(JsonVariant var) {
+
+    if (!var.is<float>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "v2xBaseline: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingSchedulePeriodEntryEntriesOperationMode(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "operationMode: wrong type"};
+
+    {
+        bool found = false;
+        for(size_t i = 0; i < ARRAY_SIZE(RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingSchedulePeriodEntryEntriesOperationModeStrings); ++i) {
+            if (strcmp(var.as<const char *>(), RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingSchedulePeriodEntryEntriesOperationModeStrings[i]) != 0)
+                continue;
+
+            var.set(i);
+            found = true;
+            break;
+        }
+
+        if (!found)
+            return CallResponse{CallErrorCode::PropertyConstraintViolation, "operationMode: unknown enum value received"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingSchedulePeriodEntryEntriesV2xFreqWattCurveEntryEntriesFrequency(JsonVariant var) {
+
+    if (!var.is<float>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "frequency: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingSchedulePeriodEntryEntriesV2xFreqWattCurveEntryEntriesPower(JsonVariant var) {
+
+    if (!var.is<float>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "power: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingSchedulePeriodEntryEntriesV2xFreqWattCurveEntryEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (!obj.containsKey("frequency"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "frequency: required, but missing"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingSchedulePeriodEntryEntriesV2xFreqWattCurveEntryEntriesFrequency(obj["frequency"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+
+    if (!obj.containsKey("power"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "power: required, but missing"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingSchedulePeriodEntryEntriesV2xFreqWattCurveEntryEntriesPower(obj["power"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingSchedulePeriodEntryEntriesV2xFreqWattCurveEntryEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingSchedulePeriodEntryEntriesV2xFreqWattCurveEntry(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "v2xFreqWattCurveEntry: wrong type"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingSchedulePeriodEntryEntriesV2xFreqWattCurveEntryEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingSchedulePeriodEntryEntriesV2xFreqWattCurve(JsonVariant var) {
+
+    if (!var.is<JsonArray>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "v2xFreqWattCurve: wrong type"};
+
+    {
+        for(size_t i = 0; i < var.as<JsonArray>().size(); ++i) {
+            CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingSchedulePeriodEntryEntriesV2xFreqWattCurveEntry(var[i]);
+            if (inner_result.result != CallErrorCode::OK)
+                return inner_result;
+        }
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingSchedulePeriodEntryEntriesV2xSignalWattCurveEntryEntriesSignal(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "signal: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingSchedulePeriodEntryEntriesV2xSignalWattCurveEntryEntriesPower(JsonVariant var) {
+
+    if (!var.is<float>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "power: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingSchedulePeriodEntryEntriesV2xSignalWattCurveEntryEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (!obj.containsKey("signal"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "signal: required, but missing"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingSchedulePeriodEntryEntriesV2xSignalWattCurveEntryEntriesSignal(obj["signal"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+
+    if (!obj.containsKey("power"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "power: required, but missing"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingSchedulePeriodEntryEntriesV2xSignalWattCurveEntryEntriesPower(obj["power"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingSchedulePeriodEntryEntriesV2xSignalWattCurveEntryEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingSchedulePeriodEntryEntriesV2xSignalWattCurveEntry(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "v2xSignalWattCurveEntry: wrong type"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingSchedulePeriodEntryEntriesV2xSignalWattCurveEntryEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingSchedulePeriodEntryEntriesV2xSignalWattCurve(JsonVariant var) {
+
+    if (!var.is<JsonArray>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "v2xSignalWattCurve: wrong type"};
+
+    {
+        for(size_t i = 0; i < var.as<JsonArray>().size(); ++i) {
+            CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingSchedulePeriodEntryEntriesV2xSignalWattCurveEntry(var[i]);
+            if (inner_result.result != CallErrorCode::OK)
+                return inner_result;
+        }
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingSchedulePeriodEntryEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (!obj.containsKey("startPeriod"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "startPeriod: required, but missing"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingSchedulePeriodEntryEntriesStartPeriod(obj["startPeriod"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("limit")) {
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingSchedulePeriodEntryEntriesLimit(obj["limit"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("limit_L2")) {
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingSchedulePeriodEntryEntriesLimit_L2(obj["limit_L2"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("limit_L3")) {
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingSchedulePeriodEntryEntriesLimit_L3(obj["limit_L3"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("numberPhases")) {
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingSchedulePeriodEntryEntriesNumberPhases(obj["numberPhases"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("phaseToUse")) {
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingSchedulePeriodEntryEntriesPhaseToUse(obj["phaseToUse"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("dischargeLimit")) {
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingSchedulePeriodEntryEntriesDischargeLimit(obj["dischargeLimit"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("dischargeLimit_L2")) {
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingSchedulePeriodEntryEntriesDischargeLimit_L2(obj["dischargeLimit_L2"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("dischargeLimit_L3")) {
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingSchedulePeriodEntryEntriesDischargeLimit_L3(obj["dischargeLimit_L3"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("setpoint")) {
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingSchedulePeriodEntryEntriesSetpoint(obj["setpoint"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("setpoint_L2")) {
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingSchedulePeriodEntryEntriesSetpoint_L2(obj["setpoint_L2"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("setpoint_L3")) {
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingSchedulePeriodEntryEntriesSetpoint_L3(obj["setpoint_L3"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("setpointReactive")) {
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingSchedulePeriodEntryEntriesSetpointReactive(obj["setpointReactive"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("setpointReactive_L2")) {
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingSchedulePeriodEntryEntriesSetpointReactive_L2(obj["setpointReactive_L2"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("setpointReactive_L3")) {
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingSchedulePeriodEntryEntriesSetpointReactive_L3(obj["setpointReactive_L3"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("preconditioningRequest")) {
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingSchedulePeriodEntryEntriesPreconditioningRequest(obj["preconditioningRequest"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("evseSleep")) {
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingSchedulePeriodEntryEntriesEvseSleep(obj["evseSleep"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("v2xBaseline")) {
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingSchedulePeriodEntryEntriesV2xBaseline(obj["v2xBaseline"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("operationMode")) {
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingSchedulePeriodEntryEntriesOperationMode(obj["operationMode"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("v2xFreqWattCurve")) {
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingSchedulePeriodEntryEntriesV2xFreqWattCurve(obj["v2xFreqWattCurve"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("v2xSignalWattCurve")) {
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingSchedulePeriodEntryEntriesV2xSignalWattCurve(obj["v2xSignalWattCurve"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingSchedulePeriodEntryEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingSchedulePeriodEntry(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "chargingSchedulePeriodEntry: wrong type"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingSchedulePeriodEntryEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingSchedulePeriod(JsonVariant var) {
+
+    if (!var.is<JsonArray>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "chargingSchedulePeriod: wrong type"};
+
+    {
+        for(size_t i = 0; i < var.as<JsonArray>().size(); ++i) {
+            CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingSchedulePeriodEntry(var[i]);
+            if (inner_result.result != CallErrorCode::OK)
+                return inner_result;
+        }
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesRandomizedDelay(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "randomizedDelay: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesSalesTariffEntriesId(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "id: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesSalesTariffEntriesSalesTariffDescription(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "salesTariffDescription: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 32)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "salesTariffDescription: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesSalesTariffEntriesNumEPriceLevels(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "numEPriceLevels: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesSalesTariffEntriesSalesTariffEntryEntryEntriesRelativeTimeIntervalEntriesStart(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "start: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesSalesTariffEntriesSalesTariffEntryEntryEntriesRelativeTimeIntervalEntriesDuration(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "duration: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesSalesTariffEntriesSalesTariffEntryEntryEntriesRelativeTimeIntervalEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (!obj.containsKey("start"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "start: required, but missing"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesSalesTariffEntriesSalesTariffEntryEntryEntriesRelativeTimeIntervalEntriesStart(obj["start"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("duration")) {
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesSalesTariffEntriesSalesTariffEntryEntryEntriesRelativeTimeIntervalEntriesDuration(obj["duration"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesSalesTariffEntriesSalesTariffEntryEntryEntriesRelativeTimeIntervalEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesSalesTariffEntriesSalesTariffEntryEntryEntriesRelativeTimeInterval(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "relativeTimeInterval: wrong type"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesSalesTariffEntriesSalesTariffEntryEntryEntriesRelativeTimeIntervalEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesSalesTariffEntriesSalesTariffEntryEntryEntriesEPriceLevel(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "ePriceLevel: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesSalesTariffEntriesSalesTariffEntryEntryEntriesConsumptionCostEntryEntriesStartValue(JsonVariant var) {
+
+    if (!var.is<float>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "startValue: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesSalesTariffEntriesSalesTariffEntryEntryEntriesConsumptionCostEntryEntriesCostEntryEntriesCostKind(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "costKind: wrong type"};
+
+    {
+        bool found = false;
+        for(size_t i = 0; i < ARRAY_SIZE(RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesSalesTariffEntriesSalesTariffEntryEntryEntriesConsumptionCostEntryEntriesCostEntryEntriesCostKindStrings); ++i) {
+            if (strcmp(var.as<const char *>(), RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesSalesTariffEntriesSalesTariffEntryEntryEntriesConsumptionCostEntryEntriesCostEntryEntriesCostKindStrings[i]) != 0)
+                continue;
+
+            var.set(i);
+            found = true;
+            break;
+        }
+
+        if (!found)
+            return CallResponse{CallErrorCode::PropertyConstraintViolation, "costKind: unknown enum value received"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesSalesTariffEntriesSalesTariffEntryEntryEntriesConsumptionCostEntryEntriesCostEntryEntriesAmount(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "amount: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesSalesTariffEntriesSalesTariffEntryEntryEntriesConsumptionCostEntryEntriesCostEntryEntriesAmountMultiplier(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "amountMultiplier: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesSalesTariffEntriesSalesTariffEntryEntryEntriesConsumptionCostEntryEntriesCostEntryEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (!obj.containsKey("costKind"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "costKind: required, but missing"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesSalesTariffEntriesSalesTariffEntryEntryEntriesConsumptionCostEntryEntriesCostEntryEntriesCostKind(obj["costKind"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+
+    if (!obj.containsKey("amount"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "amount: required, but missing"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesSalesTariffEntriesSalesTariffEntryEntryEntriesConsumptionCostEntryEntriesCostEntryEntriesAmount(obj["amount"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("amountMultiplier")) {
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesSalesTariffEntriesSalesTariffEntryEntryEntriesConsumptionCostEntryEntriesCostEntryEntriesAmountMultiplier(obj["amountMultiplier"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesSalesTariffEntriesSalesTariffEntryEntryEntriesConsumptionCostEntryEntriesCostEntryEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesSalesTariffEntriesSalesTariffEntryEntryEntriesConsumptionCostEntryEntriesCostEntry(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "costEntry: wrong type"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesSalesTariffEntriesSalesTariffEntryEntryEntriesConsumptionCostEntryEntriesCostEntryEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesSalesTariffEntriesSalesTariffEntryEntryEntriesConsumptionCostEntryEntriesCost(JsonVariant var) {
+
+    if (!var.is<JsonArray>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "cost: wrong type"};
+
+    {
+        for(size_t i = 0; i < var.as<JsonArray>().size(); ++i) {
+            CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesSalesTariffEntriesSalesTariffEntryEntryEntriesConsumptionCostEntryEntriesCostEntry(var[i]);
+            if (inner_result.result != CallErrorCode::OK)
+                return inner_result;
+        }
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesSalesTariffEntriesSalesTariffEntryEntryEntriesConsumptionCostEntryEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (!obj.containsKey("startValue"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "startValue: required, but missing"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesSalesTariffEntriesSalesTariffEntryEntryEntriesConsumptionCostEntryEntriesStartValue(obj["startValue"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+
+    if (!obj.containsKey("cost"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "cost: required, but missing"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesSalesTariffEntriesSalesTariffEntryEntryEntriesConsumptionCostEntryEntriesCost(obj["cost"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesSalesTariffEntriesSalesTariffEntryEntryEntriesConsumptionCostEntryEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesSalesTariffEntriesSalesTariffEntryEntryEntriesConsumptionCostEntry(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "consumptionCostEntry: wrong type"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesSalesTariffEntriesSalesTariffEntryEntryEntriesConsumptionCostEntryEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesSalesTariffEntriesSalesTariffEntryEntryEntriesConsumptionCost(JsonVariant var) {
+
+    if (!var.is<JsonArray>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "consumptionCost: wrong type"};
+
+    {
+        for(size_t i = 0; i < var.as<JsonArray>().size(); ++i) {
+            CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesSalesTariffEntriesSalesTariffEntryEntryEntriesConsumptionCostEntry(var[i]);
+            if (inner_result.result != CallErrorCode::OK)
+                return inner_result;
+        }
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesSalesTariffEntriesSalesTariffEntryEntryEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (!obj.containsKey("relativeTimeInterval"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "relativeTimeInterval: required, but missing"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesSalesTariffEntriesSalesTariffEntryEntryEntriesRelativeTimeInterval(obj["relativeTimeInterval"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("ePriceLevel")) {
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesSalesTariffEntriesSalesTariffEntryEntryEntriesEPriceLevel(obj["ePriceLevel"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("consumptionCost")) {
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesSalesTariffEntriesSalesTariffEntryEntryEntriesConsumptionCost(obj["consumptionCost"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesSalesTariffEntriesSalesTariffEntryEntryEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesSalesTariffEntriesSalesTariffEntryEntry(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "salesTariffEntryEntry: wrong type"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesSalesTariffEntriesSalesTariffEntryEntryEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesSalesTariffEntriesSalesTariffEntry(JsonVariant var) {
+
+    if (!var.is<JsonArray>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "salesTariffEntry: wrong type"};
+
+    {
+        for(size_t i = 0; i < var.as<JsonArray>().size(); ++i) {
+            CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesSalesTariffEntriesSalesTariffEntryEntry(var[i]);
+            if (inner_result.result != CallErrorCode::OK)
+                return inner_result;
+        }
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesSalesTariffEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (!obj.containsKey("id"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "id: required, but missing"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesSalesTariffEntriesId(obj["id"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("salesTariffDescription")) {
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesSalesTariffEntriesSalesTariffDescription(obj["salesTariffDescription"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("numEPriceLevels")) {
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesSalesTariffEntriesNumEPriceLevels(obj["numEPriceLevels"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+
+    if (!obj.containsKey("salesTariffEntry"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "salesTariffEntry: required, but missing"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesSalesTariffEntriesSalesTariffEntry(obj["salesTariffEntry"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesSalesTariffEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesSalesTariff(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "salesTariff: wrong type"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesSalesTariffEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesTimeAnchor(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "timeAnchor: wrong type"};
+
+    {
+        time_t result;
+        if (!iso_string_to_unix_timestamp(var.as<const char *>(), &result))
+            return CallResponse{CallErrorCode::TypeConstraintViolation, "timeAnchor: failed to parse as ISO 8601 date-time string"};
+
+        var.set(result);
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesPriceScheduleID(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "priceScheduleID: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesPriceScheduleDescription(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "priceScheduleDescription: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 160)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "priceScheduleDescription: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesCurrency(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "currency: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 3)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "currency: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesLanguage(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "language: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 8)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "language: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesPriceAlgorithm(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "priceAlgorithm: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 2000)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "priceAlgorithm: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesMinimumCostEntriesExponent(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "exponent: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesMinimumCostEntriesValue(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "value: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesMinimumCostEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (!obj.containsKey("exponent"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "exponent: required, but missing"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesMinimumCostEntriesExponent(obj["exponent"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+
+    if (!obj.containsKey("value"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "value: required, but missing"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesMinimumCostEntriesValue(obj["value"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesMinimumCostEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesMinimumCost(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "minimumCost: wrong type"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesMinimumCostEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesMaximumCostEntriesExponent(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "exponent: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesMaximumCostEntriesValue(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "value: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesMaximumCostEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (!obj.containsKey("exponent"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "exponent: required, but missing"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesMaximumCostEntriesExponent(obj["exponent"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+
+    if (!obj.containsKey("value"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "value: required, but missing"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesMaximumCostEntriesValue(obj["value"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesMaximumCostEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesMaximumCost(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "maximumCost: wrong type"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesMaximumCostEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesPriceRuleStacksEntryEntriesDuration(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "duration: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesPriceRuleStacksEntryEntriesPriceRuleEntryEntriesParkingFeePeriod(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "parkingFeePeriod: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesPriceRuleStacksEntryEntriesPriceRuleEntryEntriesCarbonDioxideEmission(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "carbonDioxideEmission: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesPriceRuleStacksEntryEntriesPriceRuleEntryEntriesRenewableGenerationPercentage(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "renewableGenerationPercentage: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesPriceRuleStacksEntryEntriesPriceRuleEntryEntriesEnergyFeeEntriesExponent(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "exponent: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesPriceRuleStacksEntryEntriesPriceRuleEntryEntriesEnergyFeeEntriesValue(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "value: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesPriceRuleStacksEntryEntriesPriceRuleEntryEntriesEnergyFeeEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (!obj.containsKey("exponent"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "exponent: required, but missing"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesPriceRuleStacksEntryEntriesPriceRuleEntryEntriesEnergyFeeEntriesExponent(obj["exponent"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+
+    if (!obj.containsKey("value"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "value: required, but missing"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesPriceRuleStacksEntryEntriesPriceRuleEntryEntriesEnergyFeeEntriesValue(obj["value"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesPriceRuleStacksEntryEntriesPriceRuleEntryEntriesEnergyFeeEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesPriceRuleStacksEntryEntriesPriceRuleEntryEntriesEnergyFee(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "energyFee: wrong type"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesPriceRuleStacksEntryEntriesPriceRuleEntryEntriesEnergyFeeEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesPriceRuleStacksEntryEntriesPriceRuleEntryEntriesParkingFeeEntriesExponent(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "exponent: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesPriceRuleStacksEntryEntriesPriceRuleEntryEntriesParkingFeeEntriesValue(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "value: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesPriceRuleStacksEntryEntriesPriceRuleEntryEntriesParkingFeeEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (!obj.containsKey("exponent"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "exponent: required, but missing"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesPriceRuleStacksEntryEntriesPriceRuleEntryEntriesParkingFeeEntriesExponent(obj["exponent"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+
+    if (!obj.containsKey("value"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "value: required, but missing"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesPriceRuleStacksEntryEntriesPriceRuleEntryEntriesParkingFeeEntriesValue(obj["value"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesPriceRuleStacksEntryEntriesPriceRuleEntryEntriesParkingFeeEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesPriceRuleStacksEntryEntriesPriceRuleEntryEntriesParkingFee(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "parkingFee: wrong type"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesPriceRuleStacksEntryEntriesPriceRuleEntryEntriesParkingFeeEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesPriceRuleStacksEntryEntriesPriceRuleEntryEntriesPowerRangeStartEntriesExponent(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "exponent: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesPriceRuleStacksEntryEntriesPriceRuleEntryEntriesPowerRangeStartEntriesValue(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "value: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesPriceRuleStacksEntryEntriesPriceRuleEntryEntriesPowerRangeStartEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (!obj.containsKey("exponent"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "exponent: required, but missing"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesPriceRuleStacksEntryEntriesPriceRuleEntryEntriesPowerRangeStartEntriesExponent(obj["exponent"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+
+    if (!obj.containsKey("value"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "value: required, but missing"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesPriceRuleStacksEntryEntriesPriceRuleEntryEntriesPowerRangeStartEntriesValue(obj["value"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesPriceRuleStacksEntryEntriesPriceRuleEntryEntriesPowerRangeStartEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesPriceRuleStacksEntryEntriesPriceRuleEntryEntriesPowerRangeStart(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "powerRangeStart: wrong type"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesPriceRuleStacksEntryEntriesPriceRuleEntryEntriesPowerRangeStartEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesPriceRuleStacksEntryEntriesPriceRuleEntryEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (obj.containsKey("parkingFeePeriod")) {
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesPriceRuleStacksEntryEntriesPriceRuleEntryEntriesParkingFeePeriod(obj["parkingFeePeriod"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("carbonDioxideEmission")) {
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesPriceRuleStacksEntryEntriesPriceRuleEntryEntriesCarbonDioxideEmission(obj["carbonDioxideEmission"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("renewableGenerationPercentage")) {
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesPriceRuleStacksEntryEntriesPriceRuleEntryEntriesRenewableGenerationPercentage(obj["renewableGenerationPercentage"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+
+    if (!obj.containsKey("energyFee"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "energyFee: required, but missing"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesPriceRuleStacksEntryEntriesPriceRuleEntryEntriesEnergyFee(obj["energyFee"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("parkingFee")) {
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesPriceRuleStacksEntryEntriesPriceRuleEntryEntriesParkingFee(obj["parkingFee"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+
+    if (!obj.containsKey("powerRangeStart"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "powerRangeStart: required, but missing"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesPriceRuleStacksEntryEntriesPriceRuleEntryEntriesPowerRangeStart(obj["powerRangeStart"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesPriceRuleStacksEntryEntriesPriceRuleEntryEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesPriceRuleStacksEntryEntriesPriceRuleEntry(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "priceRuleEntry: wrong type"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesPriceRuleStacksEntryEntriesPriceRuleEntryEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesPriceRuleStacksEntryEntriesPriceRule(JsonVariant var) {
+
+    if (!var.is<JsonArray>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "priceRule: wrong type"};
+
+    {
+        for(size_t i = 0; i < var.as<JsonArray>().size(); ++i) {
+            CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesPriceRuleStacksEntryEntriesPriceRuleEntry(var[i]);
+            if (inner_result.result != CallErrorCode::OK)
+                return inner_result;
+        }
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesPriceRuleStacksEntryEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (!obj.containsKey("duration"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "duration: required, but missing"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesPriceRuleStacksEntryEntriesDuration(obj["duration"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+
+    if (!obj.containsKey("priceRule"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "priceRule: required, but missing"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesPriceRuleStacksEntryEntriesPriceRule(obj["priceRule"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesPriceRuleStacksEntryEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesPriceRuleStacksEntry(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "priceRuleStacksEntry: wrong type"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesPriceRuleStacksEntryEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesPriceRuleStacks(JsonVariant var) {
+
+    if (!var.is<JsonArray>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "priceRuleStacks: wrong type"};
+
+    {
+        for(size_t i = 0; i < var.as<JsonArray>().size(); ++i) {
+            CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesPriceRuleStacksEntry(var[i]);
+            if (inner_result.result != CallErrorCode::OK)
+                return inner_result;
+        }
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesTaxRulesEntryEntriesTaxRuleID(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "taxRuleID: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesTaxRulesEntryEntriesTaxRuleName(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "taxRuleName: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 100)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "taxRuleName: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesTaxRulesEntryEntriesTaxIncludedInPrice(JsonVariant var) {
+
+    if (!var.is<bool>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "taxIncludedInPrice: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesTaxRulesEntryEntriesAppliesToEnergyFee(JsonVariant var) {
+
+    if (!var.is<bool>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "appliesToEnergyFee: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesTaxRulesEntryEntriesAppliesToParkingFee(JsonVariant var) {
+
+    if (!var.is<bool>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "appliesToParkingFee: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesTaxRulesEntryEntriesAppliesToOverstayFee(JsonVariant var) {
+
+    if (!var.is<bool>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "appliesToOverstayFee: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesTaxRulesEntryEntriesAppliesToMinimumMaximumCost(JsonVariant var) {
+
+    if (!var.is<bool>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "appliesToMinimumMaximumCost: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesTaxRulesEntryEntriesTaxRateEntriesExponent(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "exponent: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesTaxRulesEntryEntriesTaxRateEntriesValue(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "value: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesTaxRulesEntryEntriesTaxRateEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (!obj.containsKey("exponent"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "exponent: required, but missing"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesTaxRulesEntryEntriesTaxRateEntriesExponent(obj["exponent"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+
+    if (!obj.containsKey("value"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "value: required, but missing"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesTaxRulesEntryEntriesTaxRateEntriesValue(obj["value"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesTaxRulesEntryEntriesTaxRateEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesTaxRulesEntryEntriesTaxRate(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "taxRate: wrong type"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesTaxRulesEntryEntriesTaxRateEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesTaxRulesEntryEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (!obj.containsKey("taxRuleID"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "taxRuleID: required, but missing"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesTaxRulesEntryEntriesTaxRuleID(obj["taxRuleID"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("taxRuleName")) {
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesTaxRulesEntryEntriesTaxRuleName(obj["taxRuleName"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("taxIncludedInPrice")) {
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesTaxRulesEntryEntriesTaxIncludedInPrice(obj["taxIncludedInPrice"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+
+    if (!obj.containsKey("appliesToEnergyFee"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "appliesToEnergyFee: required, but missing"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesTaxRulesEntryEntriesAppliesToEnergyFee(obj["appliesToEnergyFee"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+
+    if (!obj.containsKey("appliesToParkingFee"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "appliesToParkingFee: required, but missing"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesTaxRulesEntryEntriesAppliesToParkingFee(obj["appliesToParkingFee"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+
+    if (!obj.containsKey("appliesToOverstayFee"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "appliesToOverstayFee: required, but missing"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesTaxRulesEntryEntriesAppliesToOverstayFee(obj["appliesToOverstayFee"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+
+    if (!obj.containsKey("appliesToMinimumMaximumCost"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "appliesToMinimumMaximumCost: required, but missing"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesTaxRulesEntryEntriesAppliesToMinimumMaximumCost(obj["appliesToMinimumMaximumCost"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+
+    if (!obj.containsKey("taxRate"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "taxRate: required, but missing"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesTaxRulesEntryEntriesTaxRate(obj["taxRate"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesTaxRulesEntryEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesTaxRulesEntry(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "taxRulesEntry: wrong type"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesTaxRulesEntryEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesTaxRules(JsonVariant var) {
+
+    if (!var.is<JsonArray>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "taxRules: wrong type"};
+
+    {
+        for(size_t i = 0; i < var.as<JsonArray>().size(); ++i) {
+            CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesTaxRulesEntry(var[i]);
+            if (inner_result.result != CallErrorCode::OK)
+                return inner_result;
+        }
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesOverstayRuleListEntriesOverstayPowerThresholdEntriesExponent(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "exponent: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesOverstayRuleListEntriesOverstayPowerThresholdEntriesValue(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "value: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesOverstayRuleListEntriesOverstayPowerThresholdEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (!obj.containsKey("exponent"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "exponent: required, but missing"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesOverstayRuleListEntriesOverstayPowerThresholdEntriesExponent(obj["exponent"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+
+    if (!obj.containsKey("value"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "value: required, but missing"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesOverstayRuleListEntriesOverstayPowerThresholdEntriesValue(obj["value"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesOverstayRuleListEntriesOverstayPowerThresholdEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesOverstayRuleListEntriesOverstayPowerThreshold(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "overstayPowerThreshold: wrong type"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesOverstayRuleListEntriesOverstayPowerThresholdEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesOverstayRuleListEntriesOverstayRuleEntryEntriesOverstayFeeEntriesExponent(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "exponent: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesOverstayRuleListEntriesOverstayRuleEntryEntriesOverstayFeeEntriesValue(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "value: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesOverstayRuleListEntriesOverstayRuleEntryEntriesOverstayFeeEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (!obj.containsKey("exponent"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "exponent: required, but missing"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesOverstayRuleListEntriesOverstayRuleEntryEntriesOverstayFeeEntriesExponent(obj["exponent"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+
+    if (!obj.containsKey("value"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "value: required, but missing"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesOverstayRuleListEntriesOverstayRuleEntryEntriesOverstayFeeEntriesValue(obj["value"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesOverstayRuleListEntriesOverstayRuleEntryEntriesOverstayFeeEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesOverstayRuleListEntriesOverstayRuleEntryEntriesOverstayFee(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "overstayFee: wrong type"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesOverstayRuleListEntriesOverstayRuleEntryEntriesOverstayFeeEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesOverstayRuleListEntriesOverstayRuleEntryEntriesOverstayRuleDescription(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "overstayRuleDescription: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 32)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "overstayRuleDescription: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesOverstayRuleListEntriesOverstayRuleEntryEntriesStartTime(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "startTime: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesOverstayRuleListEntriesOverstayRuleEntryEntriesOverstayFeePeriod(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "overstayFeePeriod: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesOverstayRuleListEntriesOverstayRuleEntryEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (!obj.containsKey("overstayFee"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "overstayFee: required, but missing"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesOverstayRuleListEntriesOverstayRuleEntryEntriesOverstayFee(obj["overstayFee"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("overstayRuleDescription")) {
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesOverstayRuleListEntriesOverstayRuleEntryEntriesOverstayRuleDescription(obj["overstayRuleDescription"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+
+    if (!obj.containsKey("startTime"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "startTime: required, but missing"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesOverstayRuleListEntriesOverstayRuleEntryEntriesStartTime(obj["startTime"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+
+    if (!obj.containsKey("overstayFeePeriod"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "overstayFeePeriod: required, but missing"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesOverstayRuleListEntriesOverstayRuleEntryEntriesOverstayFeePeriod(obj["overstayFeePeriod"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesOverstayRuleListEntriesOverstayRuleEntryEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesOverstayRuleListEntriesOverstayRuleEntry(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "overstayRuleEntry: wrong type"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesOverstayRuleListEntriesOverstayRuleEntryEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesOverstayRuleListEntriesOverstayRule(JsonVariant var) {
+
+    if (!var.is<JsonArray>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "overstayRule: wrong type"};
+
+    {
+        for(size_t i = 0; i < var.as<JsonArray>().size(); ++i) {
+            CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesOverstayRuleListEntriesOverstayRuleEntry(var[i]);
+            if (inner_result.result != CallErrorCode::OK)
+                return inner_result;
+        }
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesOverstayRuleListEntriesOverstayTimeThreshold(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "overstayTimeThreshold: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesOverstayRuleListEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (obj.containsKey("overstayPowerThreshold")) {
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesOverstayRuleListEntriesOverstayPowerThreshold(obj["overstayPowerThreshold"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+
+    if (!obj.containsKey("overstayRule"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "overstayRule: required, but missing"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesOverstayRuleListEntriesOverstayRule(obj["overstayRule"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("overstayTimeThreshold")) {
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesOverstayRuleListEntriesOverstayTimeThreshold(obj["overstayTimeThreshold"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesOverstayRuleListEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesOverstayRuleList(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "overstayRuleList: wrong type"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesOverstayRuleListEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesAdditionalSelectedServicesEntryEntriesServiceFeeEntriesExponent(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "exponent: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesAdditionalSelectedServicesEntryEntriesServiceFeeEntriesValue(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "value: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesAdditionalSelectedServicesEntryEntriesServiceFeeEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (!obj.containsKey("exponent"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "exponent: required, but missing"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesAdditionalSelectedServicesEntryEntriesServiceFeeEntriesExponent(obj["exponent"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+
+    if (!obj.containsKey("value"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "value: required, but missing"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesAdditionalSelectedServicesEntryEntriesServiceFeeEntriesValue(obj["value"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesAdditionalSelectedServicesEntryEntriesServiceFeeEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesAdditionalSelectedServicesEntryEntriesServiceFee(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "serviceFee: wrong type"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesAdditionalSelectedServicesEntryEntriesServiceFeeEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesAdditionalSelectedServicesEntryEntriesServiceName(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "serviceName: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 80)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "serviceName: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesAdditionalSelectedServicesEntryEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (!obj.containsKey("serviceFee"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "serviceFee: required, but missing"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesAdditionalSelectedServicesEntryEntriesServiceFee(obj["serviceFee"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+
+    if (!obj.containsKey("serviceName"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "serviceName: required, but missing"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesAdditionalSelectedServicesEntryEntriesServiceName(obj["serviceName"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesAdditionalSelectedServicesEntryEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesAdditionalSelectedServicesEntry(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "additionalSelectedServicesEntry: wrong type"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesAdditionalSelectedServicesEntryEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesAdditionalSelectedServices(JsonVariant var) {
+
+    if (!var.is<JsonArray>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "additionalSelectedServices: wrong type"};
+
+    {
+        for(size_t i = 0; i < var.as<JsonArray>().size(); ++i) {
+            CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesAdditionalSelectedServicesEntry(var[i]);
+            if (inner_result.result != CallErrorCode::OK)
+                return inner_result;
+        }
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (!obj.containsKey("timeAnchor"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "timeAnchor: required, but missing"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesTimeAnchor(obj["timeAnchor"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+
+    if (!obj.containsKey("priceScheduleID"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "priceScheduleID: required, but missing"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesPriceScheduleID(obj["priceScheduleID"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("priceScheduleDescription")) {
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesPriceScheduleDescription(obj["priceScheduleDescription"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+
+    if (!obj.containsKey("currency"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "currency: required, but missing"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesCurrency(obj["currency"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+
+    if (!obj.containsKey("language"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "language: required, but missing"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesLanguage(obj["language"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+
+    if (!obj.containsKey("priceAlgorithm"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "priceAlgorithm: required, but missing"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesPriceAlgorithm(obj["priceAlgorithm"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("minimumCost")) {
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesMinimumCost(obj["minimumCost"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("maximumCost")) {
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesMaximumCost(obj["maximumCost"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+
+    if (!obj.containsKey("priceRuleStacks"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "priceRuleStacks: required, but missing"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesPriceRuleStacks(obj["priceRuleStacks"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("taxRules")) {
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesTaxRules(obj["taxRules"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("overstayRuleList")) {
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesOverstayRuleList(obj["overstayRuleList"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("additionalSelectedServices")) {
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesAdditionalSelectedServices(obj["additionalSelectedServices"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceSchedule(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "absolutePriceSchedule: wrong type"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesPriceLevelScheduleEntriesPriceLevelScheduleEntriesEntryEntriesDuration(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "duration: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesPriceLevelScheduleEntriesPriceLevelScheduleEntriesEntryEntriesPriceLevel(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "priceLevel: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesPriceLevelScheduleEntriesPriceLevelScheduleEntriesEntryEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (!obj.containsKey("duration"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "duration: required, but missing"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesPriceLevelScheduleEntriesPriceLevelScheduleEntriesEntryEntriesDuration(obj["duration"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+
+    if (!obj.containsKey("priceLevel"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "priceLevel: required, but missing"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesPriceLevelScheduleEntriesPriceLevelScheduleEntriesEntryEntriesPriceLevel(obj["priceLevel"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesPriceLevelScheduleEntriesPriceLevelScheduleEntriesEntryEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesPriceLevelScheduleEntriesPriceLevelScheduleEntriesEntry(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "priceLevelScheduleEntriesEntry: wrong type"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesPriceLevelScheduleEntriesPriceLevelScheduleEntriesEntryEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesPriceLevelScheduleEntriesPriceLevelScheduleEntries(JsonVariant var) {
+
+    if (!var.is<JsonArray>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "priceLevelScheduleEntries: wrong type"};
+
+    {
+        for(size_t i = 0; i < var.as<JsonArray>().size(); ++i) {
+            CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesPriceLevelScheduleEntriesPriceLevelScheduleEntriesEntry(var[i]);
+            if (inner_result.result != CallErrorCode::OK)
+                return inner_result;
+        }
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesPriceLevelScheduleEntriesTimeAnchor(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "timeAnchor: wrong type"};
+
+    {
+        time_t result;
+        if (!iso_string_to_unix_timestamp(var.as<const char *>(), &result))
+            return CallResponse{CallErrorCode::TypeConstraintViolation, "timeAnchor: failed to parse as ISO 8601 date-time string"};
+
+        var.set(result);
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesPriceLevelScheduleEntriesPriceScheduleId(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "priceScheduleId: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesPriceLevelScheduleEntriesPriceScheduleDescription(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "priceScheduleDescription: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 32)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "priceScheduleDescription: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesPriceLevelScheduleEntriesNumberOfPriceLevels(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "numberOfPriceLevels: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesPriceLevelScheduleEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (!obj.containsKey("priceLevelScheduleEntries"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "priceLevelScheduleEntries: required, but missing"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesPriceLevelScheduleEntriesPriceLevelScheduleEntries(obj["priceLevelScheduleEntries"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+
+    if (!obj.containsKey("timeAnchor"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "timeAnchor: required, but missing"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesPriceLevelScheduleEntriesTimeAnchor(obj["timeAnchor"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+
+    if (!obj.containsKey("priceScheduleId"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "priceScheduleId: required, but missing"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesPriceLevelScheduleEntriesPriceScheduleId(obj["priceScheduleId"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("priceScheduleDescription")) {
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesPriceLevelScheduleEntriesPriceScheduleDescription(obj["priceScheduleDescription"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+
+    if (!obj.containsKey("numberOfPriceLevels"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "numberOfPriceLevels: required, but missing"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesPriceLevelScheduleEntriesNumberOfPriceLevels(obj["numberOfPriceLevels"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesPriceLevelScheduleEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesPriceLevelSchedule(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "priceLevelSchedule: wrong type"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesPriceLevelScheduleEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (!obj.containsKey("id"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "id: required, but missing"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesId(obj["id"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("limitAtSoC")) {
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesLimitAtSoC(obj["limitAtSoC"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("startSchedule")) {
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesStartSchedule(obj["startSchedule"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("duration")) {
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesDuration(obj["duration"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+
+    if (!obj.containsKey("chargingRateUnit"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "chargingRateUnit: required, but missing"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingRateUnit(obj["chargingRateUnit"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("minChargingRate")) {
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesMinChargingRate(obj["minChargingRate"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("powerTolerance")) {
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesPowerTolerance(obj["powerTolerance"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("signatureId")) {
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesSignatureId(obj["signatureId"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("digestValue")) {
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesDigestValue(obj["digestValue"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("useLocalTime")) {
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesUseLocalTime(obj["useLocalTime"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+
+    if (!obj.containsKey("chargingSchedulePeriod"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "chargingSchedulePeriod: required, but missing"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingSchedulePeriod(obj["chargingSchedulePeriod"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("randomizedDelay")) {
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesRandomizedDelay(obj["randomizedDelay"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("salesTariff")) {
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesSalesTariff(obj["salesTariff"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("absolutePriceSchedule")) {
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceSchedule(obj["absolutePriceSchedule"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("priceLevelSchedule")) {
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesPriceLevelSchedule(obj["priceLevelSchedule"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntry(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "chargingScheduleEntry: wrong type"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseRequestStartTransactionChargingProfileEntriesChargingSchedule(JsonVariant var) {
+
+    if (!var.is<JsonArray>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "chargingSchedule: wrong type"};
+
+    {
+        for(size_t i = 0; i < var.as<JsonArray>().size(); ++i) {
+            CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingScheduleEntry(var[i]);
+            if (inner_result.result != CallErrorCode::OK)
+                return inner_result;
+        }
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesInvalidAfterOfflineDuration(JsonVariant var) {
+
+    if (!var.is<bool>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "invalidAfterOfflineDuration: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesDynUpdateInterval(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "dynUpdateInterval: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesDynUpdateTime(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "dynUpdateTime: wrong type"};
+
+    {
+        time_t result;
+        if (!iso_string_to_unix_timestamp(var.as<const char *>(), &result))
+            return CallResponse{CallErrorCode::TypeConstraintViolation, "dynUpdateTime: failed to parse as ISO 8601 date-time string"};
+
+        var.set(result);
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStartTransactionChargingProfileEntriesPriceScheduleSignature(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "priceScheduleSignature: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 256)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "priceScheduleSignature: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseRequestStartTransactionChargingProfileEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (!obj.containsKey("id"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "id: required, but missing"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesId(obj["id"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+
+    if (!obj.containsKey("stackLevel"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "stackLevel: required, but missing"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesStackLevel(obj["stackLevel"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+
+    if (!obj.containsKey("chargingProfilePurpose"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "chargingProfilePurpose: required, but missing"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingProfilePurpose(obj["chargingProfilePurpose"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+
+    if (!obj.containsKey("chargingProfileKind"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "chargingProfileKind: required, but missing"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingProfileKind(obj["chargingProfileKind"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("recurrencyKind")) {
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesRecurrencyKind(obj["recurrencyKind"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("validFrom")) {
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesValidFrom(obj["validFrom"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("validTo")) {
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesValidTo(obj["validTo"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("transactionId")) {
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesTransactionId(obj["transactionId"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("maxOfflineDuration")) {
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesMaxOfflineDuration(obj["maxOfflineDuration"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+
+    if (!obj.containsKey("chargingSchedule"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "chargingSchedule: required, but missing"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesChargingSchedule(obj["chargingSchedule"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("invalidAfterOfflineDuration")) {
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesInvalidAfterOfflineDuration(obj["invalidAfterOfflineDuration"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("dynUpdateInterval")) {
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesDynUpdateInterval(obj["dynUpdateInterval"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("dynUpdateTime")) {
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesDynUpdateTime(obj["dynUpdateTime"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("priceScheduleSignature")) {
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntriesPriceScheduleSignature(obj["priceScheduleSignature"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "RequestStartTransactionChargingProfileEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseRequestStartTransactionChargingProfile(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "chargingProfile: wrong type"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfileEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+CallResponse parseRequestStartTransaction(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (obj.containsKey("evseId")) {
+    {
+        CallResponse inner_result = parseRequestStartTransactionEvseId(obj["evseId"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("groupIdToken")) {
+    {
+        CallResponse inner_result = parseRequestStartTransactionGroupIdToken(obj["groupIdToken"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+
+    if (!obj.containsKey("idToken"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "idToken: required, but missing"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionIdToken(obj["idToken"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+
+    if (!obj.containsKey("remoteStartId"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "remoteStartId: required, but missing"};
+
+    {
+        CallResponse inner_result = parseRequestStartTransactionRemoteStartId(obj["remoteStartId"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("chargingProfile")) {
+    {
+        CallResponse inner_result = parseRequestStartTransactionChargingProfile(obj["chargingProfile"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "RequestStartTransaction: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseRequestStopTransactionTransactionId(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "transactionId: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 36)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "transactionId: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+CallResponse parseRequestStopTransaction(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (!obj.containsKey("transactionId"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "transactionId: required, but missing"};
+
+    {
+        CallResponse inner_result = parseRequestStopTransactionTransactionId(obj["transactionId"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "RequestStopTransaction: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
 CallResponse callHandler(const char *uid, const char *action_string, JsonObject obj, ChargePoint21 *cp) {
     size_t action_idx = 0;
     if (!lookup_key(&action_idx, action_string, CallActionStrings, ARRAY_SIZE(CallActionStrings)))
@@ -1723,6 +10857,22 @@ CallResponse callHandler(const char *uid, const char *action_string, JsonObject 
                 return res;
 
             return cp->handleReset(uid, ResetView{obj});
+        }
+
+        case CallAction::REQUEST_START_TRANSACTION: {
+            CallResponse res = parseRequestStartTransaction(obj);
+            if (res.result != CallErrorCode::OK)
+                return res;
+
+            return cp->handleRequestStartTransaction(uid, RequestStartTransactionView{obj});
+        }
+
+        case CallAction::REQUEST_STOP_TRANSACTION: {
+            CallResponse res = parseRequestStopTransaction(obj);
+            if (res.result != CallErrorCode::OK)
+                return res;
+
+            return cp->handleRequestStopTransaction(uid, RequestStopTransactionView{obj});
         }
 
         case CallAction::AFRR_SIGNAL:
@@ -1852,9 +11002,7 @@ CallResponse callHandler(const char *uid, const char *action_string, JsonObject 
         case CallAction::REPORT_DER_CONTROL_RESPONSE:
         case CallAction::REQUEST_BATTERY_SWAP:
         case CallAction::REQUEST_BATTERY_SWAP_RESPONSE:
-        case CallAction::REQUEST_START_TRANSACTION:
         case CallAction::REQUEST_START_TRANSACTION_RESPONSE:
-        case CallAction::REQUEST_STOP_TRANSACTION:
         case CallAction::REQUEST_STOP_TRANSACTION_RESPONSE:
         case CallAction::RESERVATION_STATUS_UPDATE:
         case CallAction::RESERVATION_STATUS_UPDATE_RESPONSE:
@@ -1934,11 +11082,34 @@ CallResponse callResultHandler(int32_t connectorId, CallAction resultTo, JsonObj
             return cp->handleStatusNotificationResponse(connectorId, StatusNotificationResponseView{obj});
         }
 
+        case CallAction::AUTHORIZE: {
+            CallResponse res = parseAuthorizeResponse(obj);
+            if (res.result != CallErrorCode::OK)
+                return res;
+
+            return cp->handleAuthorizeResponse(connectorId, AuthorizeResponseView{obj});
+        }
+
+        case CallAction::TRANSACTION_EVENT: {
+            CallResponse res = parseTransactionEventResponse(obj);
+            if (res.result != CallErrorCode::OK)
+                return res;
+
+            return cp->handleTransactionEventResponse(connectorId, TransactionEventResponseView{obj});
+        }
+
+        case CallAction::METER_VALUES: {
+            CallResponse res = parseMeterValuesResponse(obj);
+            if (res.result != CallErrorCode::OK)
+                return res;
+
+            return cp->handleMeterValuesResponse(connectorId, MeterValuesResponseView{obj});
+        }
+
         case CallAction::AFRR_SIGNAL:
         case CallAction::AFRR_SIGNAL_RESPONSE:
         case CallAction::ADJUST_PERIODIC_EVENT_STREAM:
         case CallAction::ADJUST_PERIODIC_EVENT_STREAM_RESPONSE:
-        case CallAction::AUTHORIZE:
         case CallAction::AUTHORIZE_RESPONSE:
         case CallAction::BATTERY_SWAP:
         case CallAction::BATTERY_SWAP_RESPONSE:
@@ -2016,7 +11187,6 @@ CallResponse callResultHandler(int32_t connectorId, CallAction resultTo, JsonObj
         case CallAction::INSTALL_CERTIFICATE_RESPONSE:
         case CallAction::LOG_STATUS_NOTIFICATION:
         case CallAction::LOG_STATUS_NOTIFICATION_RESPONSE:
-        case CallAction::METER_VALUES:
         case CallAction::METER_VALUES_RESPONSE:
         case CallAction::NOTIFY_ALLOWED_ENERGY_TRANSFER:
         case CallAction::NOTIFY_ALLOWED_ENERGY_TRANSFER_RESPONSE:
@@ -2096,7 +11266,6 @@ CallResponse callResultHandler(int32_t connectorId, CallAction resultTo, JsonObj
         case CallAction::SIGN_CERTIFICATE:
         case CallAction::SIGN_CERTIFICATE_RESPONSE:
         case CallAction::STATUS_NOTIFICATION_RESPONSE:
-        case CallAction::TRANSACTION_EVENT:
         case CallAction::TRANSACTION_EVENT_RESPONSE:
         case CallAction::TRIGGER_MESSAGE:
         case CallAction::TRIGGER_MESSAGE_RESPONSE:

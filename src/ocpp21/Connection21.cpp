@@ -2,6 +2,7 @@
 
 #include "errno.h"
 #include "inttypes.h"
+#include "time.h"
 #include "TFJson.h"
 
 #include "ChargePoint21.h"
@@ -12,6 +13,9 @@
 #define OCPP21_MESSAGE_TIMEOUT_S 30
 #define OCPP21_WS_PING_INTERVAL_S 10
 #define OCPP21_RECONNECT_INTERVAL_S 10
+#define OCPP21_TRANSACTION_RETRY_INTERVAL_S 10
+// TODO: make the depth configurable and persist the queue across reboots.
+#define OCPP21_TRANSACTION_QUEUE_DEPTH 32
 
 namespace Ocpp21 {
 
@@ -130,6 +134,7 @@ void Connection21::handleMessage(char *message, size_t message_len)
 
         CallAction result_to = message_in_flight.action;
         message_in_flight = QueueItem21{};
+        in_flight_is_transaction = false;
         message_timeout_deadline = 0;
 
         CallResponse res = callResultHandler(0, result_to, doc[2].as<JsonObject>(), cp);
@@ -151,6 +156,7 @@ void Connection21::handleMessage(char *message, size_t message_len)
 
     cp->onCallError(message_in_flight.action, message_in_flight.message_id);
     message_in_flight = QueueItem21{};
+    in_flight_is_transaction = false;
     message_timeout_deadline = 0;
 }
 
@@ -208,6 +214,16 @@ bool Connection21::sendCallAction(const ICall &call)
     return true;
 }
 
+bool Connection21::sendTransactionCallAction(const ICall &call)
+{
+    if (transaction_messages.size() >= OCPP21_TRANSACTION_QUEUE_DEPTH) {
+        log_warn("Transaction message queue full. Dropping oldest %s", CallActionStrings[(size_t)transaction_messages.front().action]);
+        transaction_messages.pop_front();
+    }
+    transaction_messages.emplace_back(call);
+    return true;
+}
+
 void Connection21::setPongDeadline() {
     this->pong_deadline = set_deadline(1000 * (OCPP21_WS_PING_INTERVAL_S * 3 + OCPP21_WS_PING_INTERVAL_S / 2));
 }
@@ -229,6 +245,7 @@ void Connection21::tick() {
         // with more than 24.8 days of uptime (uint32 wraparound arithmetic
         // in deadline_elapsed).
         next_ping_deadline = set_deadline(OCPP21_WS_PING_INTERVAL_S * 1000);
+        transaction_retry_deadline = set_deadline(0);
 
         next_reconnect_deadline = 0;
     } else if (!connected && !was_connected) {
@@ -246,6 +263,15 @@ void Connection21::tick() {
         status_notifications.clear();
         messages.clear();
         next_response = QueueItem21{};
+        // Transaction messages survive the disconnect. An in flight
+        // transaction message goes back to the queue front, it is unknown
+        // whether the CSMS received it.
+        if (message_in_flight.is_valid() && in_flight_is_transaction) {
+            transaction_messages.push_front(std::move(message_in_flight));
+            message_in_flight = QueueItem21{};
+            in_flight_is_transaction = false;
+            message_timeout_deadline = 0;
+        }
         return;
     }
 
@@ -275,13 +301,27 @@ void Connection21::tick() {
         if (!deadline_elapsed(message_timeout_deadline))
             return;
 
-        log_info("%s (id %" PRIu64 ") timed out. Dropping", CallActionStrings[(size_t)message_in_flight.action], message_in_flight.message_id);
-        cp->onTimeout(message_in_flight.action, message_in_flight.message_id);
+        if (in_flight_is_transaction) {
+            log_info("%s (id %" PRIu64 ") timed out. Retrying in %d s", CallActionStrings[(size_t)message_in_flight.action], message_in_flight.message_id, OCPP21_TRANSACTION_RETRY_INTERVAL_S);
+            transaction_messages.push_front(std::move(message_in_flight));
+            transaction_retry_deadline = set_deadline(OCPP21_TRANSACTION_RETRY_INTERVAL_S * 1000);
+            in_flight_is_transaction = false;
+        } else {
+            log_info("%s (id %" PRIu64 ") timed out. Dropping", CallActionStrings[(size_t)message_in_flight.action], message_in_flight.message_id);
+            cp->onTimeout(message_in_flight.action, message_in_flight.message_id);
+        }
         message_in_flight = QueueItem21{};
     }
 
+    bool sending_transaction = false;
     std::deque<QueueItem21> *to_pop = nullptr;
-    if (!status_notifications.empty()) {
+    // Transaction events first, they are the authoritative session record
+    // and their order relative to the status notifications matters at
+    // transaction end (Ended before Available).
+    if (!transaction_messages.empty() && deadline_elapsed(transaction_retry_deadline)) {
+        to_pop = &transaction_messages;
+        sending_transaction = true;
+    } else if (!status_notifications.empty()) {
         to_pop = &status_notifications;
     } else if (!messages.empty()) {
         to_pop = &messages;
@@ -304,6 +344,7 @@ void Connection21::tick() {
 
     message_in_flight = std::move(to_pop->front());
     to_pop->pop_front();
+    in_flight_is_transaction = sending_transaction;
 }
 
 QueueItem21::QueueItem21(const ICall &call) :
@@ -324,6 +365,14 @@ bool QueueItem21::is_valid()
 
 void *Connection21::start(const char *websocket_endpoint_url, const char *charge_point_name_percent_encoded, const char *basic_auth_pass, ChargePoint21 *ocpp_handle) {
     this->cp = ocpp_handle;
+
+    // Message ids restarting at 0 after a reboot collide with the previous
+    // session. Some CSMS deduplicate calls by message id and answer with
+    // the cached response of the previous session. Seed the counter once
+    // per boot.
+    if (next_call_id == 0)
+        next_call_id = (uint64_t)time(nullptr) * 1000;
+
     std::string ws_url;
     ws_url.reserve(strlen(websocket_endpoint_url) + 1 + strlen(charge_point_name_percent_encoded));
     ws_url += websocket_endpoint_url;

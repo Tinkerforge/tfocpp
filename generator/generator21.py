@@ -54,9 +54,23 @@ provisioning_profile = [[ #send
         schema21.ResetRequest.ResetRequest,
 ]]
 
-supported_profiles = [provisioning_profile]
+# Messages for TransactionEvent based charging sessions with remote and
+# local start/stop.
+transactions_profile = [[ #send
+        schema21.AuthorizeRequest.AuthorizeRequest,
+        schema21.TransactionEventRequest.TransactionEventRequest,
+        schema21.MeterValuesRequest.MeterValuesRequest,
+        schema21.RequestStartTransactionResponse.RequestStartTransactionResponse,
+        schema21.RequestStopTransactionResponse.RequestStopTransactionResponse,
+    ], [ #recv
+        schema21.AuthorizeResponse.AuthorizeResponse,
+        schema21.TransactionEventResponse.TransactionEventResponse,
+        schema21.MeterValuesResponse.MeterValuesResponse,
+        schema21.RequestStartTransactionRequest.RequestStartTransactionRequest,
+        schema21.RequestStopTransactionRequest.RequestStopTransactionRequest,
+]]
 
-# All OCPP 2.1 actions, derived from the schema file names.
+supported_profiles = [provisioning_profile, transactions_profile]# All OCPP 2.1 actions, derived from the schema file names.
 # Used to generate the full CallAction enum so that known but
 # unsupported actions are answered with NotSupported instead of
 # NotImplemented.
@@ -223,7 +237,7 @@ def param_insertion(message: str, name: str, p: Property):
         return 'if (!isnan({name})) json.addMemberNumber("{name}", {name}, "%.1f");'.format(name=name)
     elif isinstance(p.element, Boolean):
         if not p.required:
-            raise Exception("Non-required bools are not supported")
+            return 'if ({name} != OCPP_BOOL_NOT_PASSED) json.addMemberBoolean("{name}", {name} == 1);'.format(name=name)
         return 'json.addMemberBoolean("{name}", {name});'.format(name=name)
     elif inspect.isclass(p.element):
         #return 'if ({name} != nullptr) {name}->serializeInto(json, "{name}");'.format(name=name)
@@ -265,8 +279,8 @@ def param_arg(message: str, name: str, p: Property, strings_as_arrays=True, defa
     elif isinstance(p.element, Number):
         return '{} {}{}'.format(OCPP_FLOAT_TYPE, name, " = OCPP_DECIMAL_NOT_PASSED" if default_values and not p.required else "")
     elif isinstance(p.element, Boolean):
-        if default_values and not p.required:
-            raise Exception("Non-required bools are not supported")
+        if not p.required:
+            return 'int8_t {}{}'.format(name, " = OCPP_BOOL_NOT_PASSED" if default_values else "")
         return 'bool {}'.format(name)
     elif inspect.isclass(p.element):
         structs_to_generate["{message}{name_camel}".format(message=message, name_camel=name_camel)] = p.element
@@ -531,6 +545,30 @@ def generate_view(name: str, obj: Object):
     }}
 """
 
+    object_array_opt_template = """
+    size_t {name}_count() {{
+        {size_opt_check}
+        return _obj["{name}"].size();
+    }}
+
+    {ret_type} {name}(size_t i) {{
+        {opt_check}
+        return {ret_type}{{{ret_type_plain}{{_obj["{name}"][i]}}}};
+    }}
+"""
+
+    enum_array_template = """
+    size_t {name}_count() {{
+        {size_opt_check}
+        return _obj["{name}"].size();
+    }}
+
+    {ret_type} {name}(size_t i) {{
+        {opt_check}
+        return {ret_type}{{({ret_type_plain})_obj["{name}"][i].as<size_t>()}};
+    }}
+"""
+
     methods = []
 
     def get_primitive_type(p):
@@ -603,10 +641,23 @@ def generate_view(name: str, obj: Object):
                                                   opt_check=opt_check(param_name, param)))
         elif isinstance(param.element, Array):
             if inspect.isclass(param.element.items):
-                methods.append(object_array_template.format(ret_type=add_opt(camel(name, param_name, "EntryEntriesView"), param),
-                                                            name=param_name,
-                                                            opt_check=opt_check(param_name, param),
-                                                            size_opt_check=""))
+                if param.required:
+                    methods.append(object_array_template.format(ret_type=camel(name, param_name, "EntryEntriesView"),
+                                                                name=param_name,
+                                                                opt_check=opt_check(param_name, param),
+                                                                size_opt_check=""))
+                else:
+                    methods.append(object_array_opt_template.format(ret_type=add_opt(camel(name, param_name, "EntryEntriesView"), param),
+                                                                    ret_type_plain=camel(name, param_name, "EntryEntriesView"),
+                                                                    name=param_name,
+                                                                    opt_check=opt_check(param_name, param),
+                                                                    size_opt_check=""))
+            elif isinstance(param.element.items, String) and param.element.items.enum:
+                methods.append(enum_array_template.format(ret_type=add_opt("{{{}}}".format(camel(name, param_name, "Entry")), param),
+                                                          ret_type_plain="{{{}}}".format(camel(name, param_name, "Entry")),
+                                                          name=param_name,
+                                                          opt_check=opt_check(param_name, param),
+                                                          size_opt_check=""))
             else:
                 methods.append(array_template.format(ret_type=add_opt(get_primitive_type(param.element.items), param), ret_type_plain=get_primitive_type(param.element.items),
                                                      name=param_name,

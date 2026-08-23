@@ -17,6 +17,9 @@
 #ifndef OCPP_DATETIME_NOT_PASSED
 #define OCPP_DATETIME_NOT_PASSED 0
 #endif
+#ifndef OCPP_BOOL_NOT_PASSED
+#define OCPP_BOOL_NOT_PASSED -1
+#endif
 
 namespace Ocpp21 {
 
@@ -129,6 +132,195 @@ enum class ResetType : uint8_t {
     IMMEDIATE_AND_RESUME
 };
 
+extern const char * const TransactionEventEventTypeStrings[];
+
+enum class TransactionEventEventType : uint8_t {
+    ENDED,
+    STARTED,
+    UPDATED,
+    NONE
+};
+
+extern const char * const TransactionEventTriggerReasonStrings[];
+
+enum class TransactionEventTriggerReason : uint8_t {
+    ABNORMAL_CONDITION,
+    AUTHORIZED,
+    CABLE_PLUGGED_IN,
+    CHARGING_RATE_CHANGED,
+    CHARGING_STATE_CHANGED,
+    COST_LIMIT_REACHED,
+    DEAUTHORIZED,
+    ENERGY_LIMIT_REACHED,
+    EV_COMMUNICATION_LOST,
+    EV_CONNECT_TIMEOUT,
+    EV_DEPARTED,
+    EV_DETECTED,
+    LIMIT_SET,
+    METER_VALUE_CLOCK,
+    METER_VALUE_PERIODIC,
+    OPERATION_MODE_CHANGED,
+    REMOTE_START,
+    REMOTE_STOP,
+    RESET_COMMAND,
+    RUNNING_COST,
+    SIGNED_DATA_RECEIVED,
+    SO_C_LIMIT_REACHED,
+    STOP_AUTHORIZED,
+    TARIFF_CHANGED,
+    TARIFF_NOT_ACCEPTED,
+    TIME_LIMIT_REACHED,
+    TRIGGER,
+    TX_RESUMED,
+    UNLOCK_COMMAND,
+    NONE
+};
+
+extern const char * const TransactionEventPreconditioningStatusStrings[];
+
+enum class TransactionEventPreconditioningStatus : uint8_t {
+    UNKNOWN,
+    READY,
+    NOT_READY,
+    PRECONDITIONING,
+    NONE
+};
+
+extern const char * const TransactionResponseStatusStrings[];
+
+enum class TransactionResponseStatus : uint8_t {
+    ACCEPTED,
+    REJECTED,
+    NONE
+};
+
+extern const char * const ResponseIdTokenInfoEntriesStatusStrings[];
+
+enum class ResponseIdTokenInfoEntriesStatus : uint8_t {
+    ACCEPTED,
+    BLOCKED,
+    CONCURRENT_TX,
+    EXPIRED,
+    INVALID,
+    NO_CREDIT,
+    NOT_ALLOWED_TYPE_EVSE,
+    NOT_AT_THIS_LOCATION,
+    NOT_AT_THIS_TIME,
+    UNKNOWN
+};
+
+extern const char * const EntriesFormatStrings[];
+
+enum class EntriesFormat : uint8_t {
+    ASCII,
+    HTML,
+    URI,
+    UTF8,
+    QRCODE
+};
+
+extern const char * const AuthorizeResponseCertificateStatusStrings[];
+
+enum class AuthorizeResponseCertificateStatus : uint8_t {
+    ACCEPTED,
+    SIGNATURE_ERROR,
+    CERTIFICATE_EXPIRED,
+    CERTIFICATE_REVOKED,
+    NO_CERTIFICATE_AVAILABLE,
+    CERT_CHAIN_ERROR,
+    CONTRACT_CANCELLED
+};
+
+extern const char * const AuthorizeResponseAllowedEnergyTransferEntryStrings[];
+
+enum class AuthorizeResponseAllowedEnergyTransferEntry : uint8_t {
+    AC_SINGLE_PHASE,
+    AC_TWO_PHASE,
+    AC_THREE_PHASE,
+    DC,
+    AC_BPT,
+    AC_BPT_DER,
+    AC_DER,
+    DC_BPT,
+    DC_ACDP,
+    DC_ACDP_BPT,
+    WPT
+};
+
+extern const char * const EntriesPricesEntryEntriesConditionsEntriesDayOfWeekEntryStrings[];
+
+enum class EntriesPricesEntryEntriesConditionsEntriesDayOfWeekEntry : uint8_t {
+    MONDAY,
+    TUESDAY,
+    WEDNESDAY,
+    THURSDAY,
+    FRIDAY,
+    SATURDAY,
+    SUNDAY
+};
+
+extern const char * const EntriesPricesEntryEntriesConditionsEntriesEvseKindStrings[];
+
+enum class EntriesPricesEntryEntriesConditionsEntriesEvseKind : uint8_t {
+    AC,
+    DC
+};
+
+extern const char * const RequestStartTransactionChargingProfileEntriesChargingProfilePurposeStrings[];
+
+enum class RequestStartTransactionChargingProfileEntriesChargingProfilePurpose : uint8_t {
+    CHARGING_STATION_EXTERNAL_CONSTRAINTS,
+    CHARGING_STATION_MAX_PROFILE,
+    TX_DEFAULT_PROFILE,
+    TX_PROFILE,
+    PRIORITY_CHARGING,
+    LOCAL_GENERATION
+};
+
+extern const char * const RequestStartTransactionChargingProfileEntriesChargingProfileKindStrings[];
+
+enum class RequestStartTransactionChargingProfileEntriesChargingProfileKind : uint8_t {
+    ABSOLUTE,
+    RECURRING,
+    RELATIVE,
+    DYNAMIC
+};
+
+extern const char * const RequestStartTransactionChargingProfileEntriesRecurrencyKindStrings[];
+
+enum class RequestStartTransactionChargingProfileEntriesRecurrencyKind : uint8_t {
+    DAILY,
+    WEEKLY
+};
+
+extern const char * const RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingRateUnitStrings[];
+
+enum class RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingRateUnit : uint8_t {
+    W,
+    A
+};
+
+extern const char * const RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingSchedulePeriodEntryEntriesOperationModeStrings[];
+
+enum class RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingSchedulePeriodEntryEntriesOperationMode : uint8_t {
+    IDLE,
+    CHARGING_ONLY,
+    CENTRAL_SETPOINT,
+    EXTERNAL_SETPOINT,
+    EXTERNAL_LIMITS,
+    CENTRAL_FREQUENCY,
+    LOCAL_FREQUENCY,
+    LOCAL_LOAD_BALANCING
+};
+
+extern const char * const RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesSalesTariffEntriesSalesTariffEntryEntryEntriesConsumptionCostEntryEntriesCostEntryEntriesCostKindStrings[];
+
+enum class RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesSalesTariffEntriesSalesTariffEntryEntryEntriesConsumptionCostEntryEntriesCostEntryEntriesCostKind : uint8_t {
+    CARBON_DIOXIDE_EMISSION,
+    RELATIVE_PRICE_PERCENTAGE,
+    RENEWABLE_GENERATION_PERCENTAGE
+};
+
 extern const char * const GetVariablesResponseGetVariableResultAttributeStatusStrings[];
 
 enum class GetVariablesResponseGetVariableResultAttributeStatus : uint8_t {
@@ -159,6 +351,192 @@ enum class SetVariablesResponseSetVariableResultAttributeStatus : uint8_t {
     UNKNOWN_VARIABLE,
     NOT_SUPPORTED_ATTRIBUTE_TYPE,
     REBOOT_REQUIRED,
+    NONE
+};
+
+extern const char * const AuthorizeIso15118CertificateHashDataHashAlgorithmStrings[];
+
+enum class AuthorizeIso15118CertificateHashDataHashAlgorithm : uint8_t {
+    SHA256,
+    SHA384,
+    SHA512,
+    NONE
+};
+
+extern const char * const TransactionEventTransactionInfoChargingStateStrings[];
+
+enum class TransactionEventTransactionInfoChargingState : uint8_t {
+    EV_CONNECTED,
+    CHARGING,
+    SUSPENDED_EV,
+    SUSPENDED_EVSE,
+    IDLE,
+    NONE
+};
+
+extern const char * const TransactionEventTransactionInfoStoppedReasonStrings[];
+
+enum class TransactionEventTransactionInfoStoppedReason : uint8_t {
+    DE_AUTHORIZED,
+    EMERGENCY_STOP,
+    ENERGY_LIMIT_REACHED,
+    EV_DISCONNECTED,
+    GROUND_FAULT,
+    IMMEDIATE_RESET,
+    MASTER_PASS,
+    LOCAL,
+    LOCAL_OUT_OF_CREDIT,
+    OTHER,
+    OVERCURRENT_FAULT,
+    POWER_LOSS,
+    POWER_QUALITY,
+    REBOOT,
+    REMOTE,
+    SOC_LIMIT_REACHED,
+    STOPPED_BY_EV,
+    TIME_LIMIT_REACHED,
+    TIMEOUT,
+    REQ_ENERGY_TRANSFER_REJECTED,
+    NONE
+};
+
+extern const char * const TransactionEventTransactionInfoOperationModeStrings[];
+
+enum class TransactionEventTransactionInfoOperationMode : uint8_t {
+    IDLE,
+    CHARGING_ONLY,
+    CENTRAL_SETPOINT,
+    EXTERNAL_SETPOINT,
+    EXTERNAL_LIMITS,
+    CENTRAL_FREQUENCY,
+    LOCAL_FREQUENCY,
+    LOCAL_LOAD_BALANCING,
+    NONE
+};
+
+extern const char * const TransactionEventCostDetailsTotalCostTypeOfCostStrings[];
+
+enum class TransactionEventCostDetailsTotalCostTypeOfCost : uint8_t {
+    NORMAL_COST,
+    MIN_COST,
+    MAX_COST,
+    NONE
+};
+
+extern const char * const MeterValueSampledValueMeasurandStrings[];
+
+enum class MeterValueSampledValueMeasurand : uint8_t {
+    CURRENT_EXPORT,
+    CURRENT_EXPORT_OFFERED,
+    CURRENT_EXPORT_MINIMUM,
+    CURRENT_IMPORT,
+    CURRENT_IMPORT_OFFERED,
+    CURRENT_IMPORT_MINIMUM,
+    CURRENT_OFFERED,
+    DISPLAY_PRESENT_SOC,
+    DISPLAY_MINIMUM_SOC,
+    DISPLAY_TARGET_SOC,
+    DISPLAY_MAXIMUM_SOC,
+    DISPLAY_REMAINING_TIME_TO_MINIMUM_SOC,
+    DISPLAY_REMAINING_TIME_TO_TARGET_SOC,
+    DISPLAY_REMAINING_TIME_TO_MAXIMUM_SOC,
+    DISPLAY_CHARGING_COMPLETE,
+    DISPLAY_BATTERY_ENERGY_CAPACITY,
+    DISPLAY_INLET_HOT,
+    ENERGY_ACTIVE_EXPORT_INTERVAL,
+    ENERGY_ACTIVE_EXPORT_REGISTER,
+    ENERGY_ACTIVE_IMPORT_INTERVAL,
+    ENERGY_ACTIVE_IMPORT_REGISTER,
+    ENERGY_ACTIVE_IMPORT_CABLE_LOSS,
+    ENERGY_ACTIVE_IMPORT_LOCAL_GENERATION_REGISTER,
+    ENERGY_ACTIVE_NET,
+    ENERGY_ACTIVE_SETPOINT_INTERVAL,
+    ENERGY_APPARENT_EXPORT,
+    ENERGY_APPARENT_IMPORT,
+    ENERGY_APPARENT_NET,
+    ENERGY_REACTIVE_EXPORT_INTERVAL,
+    ENERGY_REACTIVE_EXPORT_REGISTER,
+    ENERGY_REACTIVE_IMPORT_INTERVAL,
+    ENERGY_REACTIVE_IMPORT_REGISTER,
+    ENERGY_REACTIVE_NET,
+    ENERGY_REQUEST_TARGET,
+    ENERGY_REQUEST_MINIMUM,
+    ENERGY_REQUEST_MAXIMUM,
+    ENERGY_REQUEST_MINIMUM_V2_X,
+    ENERGY_REQUEST_MAXIMUM_V2_X,
+    ENERGY_REQUEST_BULK,
+    FREQUENCY,
+    POWER_ACTIVE_EXPORT,
+    POWER_ACTIVE_IMPORT,
+    POWER_ACTIVE_SETPOINT,
+    POWER_ACTIVE_RESIDUAL,
+    POWER_EXPORT_MINIMUM,
+    POWER_EXPORT_OFFERED,
+    POWER_FACTOR,
+    POWER_IMPORT_OFFERED,
+    POWER_IMPORT_MINIMUM,
+    POWER_OFFERED,
+    POWER_REACTIVE_EXPORT,
+    POWER_REACTIVE_IMPORT,
+    SO_C,
+    VOLTAGE,
+    VOLTAGE_MINIMUM,
+    VOLTAGE_MAXIMUM,
+    NONE
+};
+
+extern const char * const MeterValueSampledValueContextStrings[];
+
+enum class MeterValueSampledValueContext : uint8_t {
+    INTERRUPTION_BEGIN,
+    INTERRUPTION_END,
+    OTHER,
+    SAMPLE_CLOCK,
+    SAMPLE_PERIODIC,
+    TRANSACTION_BEGIN,
+    TRANSACTION_END,
+    TRIGGER,
+    NONE
+};
+
+extern const char * const MeterValueSampledValuePhaseStrings[];
+
+enum class MeterValueSampledValuePhase : uint8_t {
+    L1,
+    L2,
+    L3,
+    N,
+    L1_N,
+    L2_N,
+    L3_N,
+    L1_L2,
+    L2_L3,
+    L3_L1,
+    NONE
+};
+
+extern const char * const MeterValueSampledValueLocationStrings[];
+
+enum class MeterValueSampledValueLocation : uint8_t {
+    BODY,
+    CABLE,
+    EV,
+    INLET,
+    OUTLET,
+    UPSTREAM,
+    NONE
+};
+
+extern const char * const TransactionEventCostDetailsChargingPeriodsDimensionsTypeStrings[];
+
+enum class TransactionEventCostDetailsChargingPeriodsDimensionsType : uint8_t {
+    ENERGY,
+    MAX_CURRENT,
+    MIN_CURRENT,
+    MAX_POWER,
+    MIN_POWER,
+    IDLE_T_IME,
+    CHARGING_TIME,
     NONE
 };
 
@@ -363,6 +741,2848 @@ struct ICall {
     CallAction action;
     uint64_t ocppJmessageId;
     const char *ocppJcallId;
+};
+
+struct RequestStopTransactionView {
+    JsonObject _obj;
+
+    const char * transactionId() {
+
+        return _obj["transactionId"].as<const char *>();
+    }
+
+};
+
+struct RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesPriceLevelScheduleEntriesPriceLevelScheduleEntriesEntryEntriesView {
+    JsonObject _obj;
+
+    int32_t duration() {
+
+        return _obj["duration"].as<int32_t>();
+    }
+
+    int32_t priceLevel() {
+
+        return _obj["priceLevel"].as<int32_t>();
+    }
+
+};
+
+struct RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesPriceLevelScheduleEntriesView {
+    JsonObject _obj;
+
+    size_t priceLevelScheduleEntries_count() {
+
+        return _obj["priceLevelScheduleEntries"].size();
+    }
+
+    RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesPriceLevelScheduleEntriesPriceLevelScheduleEntriesEntryEntriesView priceLevelScheduleEntries(size_t i) {
+
+        return RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesPriceLevelScheduleEntriesPriceLevelScheduleEntriesEntryEntriesView{_obj["priceLevelScheduleEntries"][i]};
+    }
+
+    time_t timeAnchor() {
+
+        return _obj["timeAnchor"].as<time_t>();
+    }
+
+    int32_t priceScheduleId() {
+
+        return _obj["priceScheduleId"].as<int32_t>();
+    }
+
+    Option<const char *> priceScheduleDescription() {
+        if (!_obj.containsKey("priceScheduleDescription"))
+                return {};
+
+        return _obj["priceScheduleDescription"].as<const char *>();
+    }
+
+    int32_t numberOfPriceLevels() {
+
+        return _obj["numberOfPriceLevels"].as<int32_t>();
+    }
+
+};
+
+struct RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesAdditionalSelectedServicesEntryEntriesServiceFeeEntriesView {
+    JsonObject _obj;
+
+    int32_t exponent() {
+
+        return _obj["exponent"].as<int32_t>();
+    }
+
+    int32_t value() {
+
+        return _obj["value"].as<int32_t>();
+    }
+
+};
+
+struct RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesAdditionalSelectedServicesEntryEntriesView {
+    JsonObject _obj;
+
+    RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesAdditionalSelectedServicesEntryEntriesServiceFeeEntriesView serviceFee() {
+
+        return RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesAdditionalSelectedServicesEntryEntriesServiceFeeEntriesView{_obj["serviceFee"].as<JsonObject>()};
+    }
+
+    const char * serviceName() {
+
+        return _obj["serviceName"].as<const char *>();
+    }
+
+};
+
+struct RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesOverstayRuleListEntriesOverstayRuleEntryEntriesOverstayFeeEntriesView {
+    JsonObject _obj;
+
+    int32_t exponent() {
+
+        return _obj["exponent"].as<int32_t>();
+    }
+
+    int32_t value() {
+
+        return _obj["value"].as<int32_t>();
+    }
+
+};
+
+struct RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesOverstayRuleListEntriesOverstayRuleEntryEntriesView {
+    JsonObject _obj;
+
+    RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesOverstayRuleListEntriesOverstayRuleEntryEntriesOverstayFeeEntriesView overstayFee() {
+
+        return RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesOverstayRuleListEntriesOverstayRuleEntryEntriesOverstayFeeEntriesView{_obj["overstayFee"].as<JsonObject>()};
+    }
+
+    Option<const char *> overstayRuleDescription() {
+        if (!_obj.containsKey("overstayRuleDescription"))
+                return {};
+
+        return _obj["overstayRuleDescription"].as<const char *>();
+    }
+
+    int32_t startTime() {
+
+        return _obj["startTime"].as<int32_t>();
+    }
+
+    int32_t overstayFeePeriod() {
+
+        return _obj["overstayFeePeriod"].as<int32_t>();
+    }
+
+};
+
+struct RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesOverstayRuleListEntriesOverstayPowerThresholdEntriesView {
+    JsonObject _obj;
+
+    int32_t exponent() {
+
+        return _obj["exponent"].as<int32_t>();
+    }
+
+    int32_t value() {
+
+        return _obj["value"].as<int32_t>();
+    }
+
+};
+
+struct RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesOverstayRuleListEntriesView {
+    JsonObject _obj;
+
+    Option<RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesOverstayRuleListEntriesOverstayPowerThresholdEntriesView> overstayPowerThreshold() {
+        if (!_obj.containsKey("overstayPowerThreshold"))
+                return {};
+
+        return Option<RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesOverstayRuleListEntriesOverstayPowerThresholdEntriesView>{RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesOverstayRuleListEntriesOverstayPowerThresholdEntriesView{_obj["overstayPowerThreshold"].as<JsonObject>()}};
+    }
+
+    size_t overstayRule_count() {
+
+        return _obj["overstayRule"].size();
+    }
+
+    RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesOverstayRuleListEntriesOverstayRuleEntryEntriesView overstayRule(size_t i) {
+
+        return RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesOverstayRuleListEntriesOverstayRuleEntryEntriesView{_obj["overstayRule"][i]};
+    }
+
+    Option<int32_t> overstayTimeThreshold() {
+        if (!_obj.containsKey("overstayTimeThreshold"))
+                return {};
+
+        return _obj["overstayTimeThreshold"].as<int32_t>();
+    }
+
+};
+
+struct RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesTaxRulesEntryEntriesTaxRateEntriesView {
+    JsonObject _obj;
+
+    int32_t exponent() {
+
+        return _obj["exponent"].as<int32_t>();
+    }
+
+    int32_t value() {
+
+        return _obj["value"].as<int32_t>();
+    }
+
+};
+
+struct RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesTaxRulesEntryEntriesView {
+    JsonObject _obj;
+
+    int32_t taxRuleID() {
+
+        return _obj["taxRuleID"].as<int32_t>();
+    }
+
+    Option<const char *> taxRuleName() {
+        if (!_obj.containsKey("taxRuleName"))
+                return {};
+
+        return _obj["taxRuleName"].as<const char *>();
+    }
+
+    Option<bool> taxIncludedInPrice() {
+        if (!_obj.containsKey("taxIncludedInPrice"))
+                return {};
+
+        return _obj["taxIncludedInPrice"].as<bool>();
+    }
+
+    bool appliesToEnergyFee() {
+
+        return _obj["appliesToEnergyFee"].as<bool>();
+    }
+
+    bool appliesToParkingFee() {
+
+        return _obj["appliesToParkingFee"].as<bool>();
+    }
+
+    bool appliesToOverstayFee() {
+
+        return _obj["appliesToOverstayFee"].as<bool>();
+    }
+
+    bool appliesToMinimumMaximumCost() {
+
+        return _obj["appliesToMinimumMaximumCost"].as<bool>();
+    }
+
+    RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesTaxRulesEntryEntriesTaxRateEntriesView taxRate() {
+
+        return RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesTaxRulesEntryEntriesTaxRateEntriesView{_obj["taxRate"].as<JsonObject>()};
+    }
+
+};
+
+struct RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesPriceRuleStacksEntryEntriesPriceRuleEntryEntriesPowerRangeStartEntriesView {
+    JsonObject _obj;
+
+    int32_t exponent() {
+
+        return _obj["exponent"].as<int32_t>();
+    }
+
+    int32_t value() {
+
+        return _obj["value"].as<int32_t>();
+    }
+
+};
+
+struct RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesPriceRuleStacksEntryEntriesPriceRuleEntryEntriesParkingFeeEntriesView {
+    JsonObject _obj;
+
+    int32_t exponent() {
+
+        return _obj["exponent"].as<int32_t>();
+    }
+
+    int32_t value() {
+
+        return _obj["value"].as<int32_t>();
+    }
+
+};
+
+struct RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesPriceRuleStacksEntryEntriesPriceRuleEntryEntriesEnergyFeeEntriesView {
+    JsonObject _obj;
+
+    int32_t exponent() {
+
+        return _obj["exponent"].as<int32_t>();
+    }
+
+    int32_t value() {
+
+        return _obj["value"].as<int32_t>();
+    }
+
+};
+
+struct RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesPriceRuleStacksEntryEntriesPriceRuleEntryEntriesView {
+    JsonObject _obj;
+
+    Option<int32_t> parkingFeePeriod() {
+        if (!_obj.containsKey("parkingFeePeriod"))
+                return {};
+
+        return _obj["parkingFeePeriod"].as<int32_t>();
+    }
+
+    Option<int32_t> carbonDioxideEmission() {
+        if (!_obj.containsKey("carbonDioxideEmission"))
+                return {};
+
+        return _obj["carbonDioxideEmission"].as<int32_t>();
+    }
+
+    Option<int32_t> renewableGenerationPercentage() {
+        if (!_obj.containsKey("renewableGenerationPercentage"))
+                return {};
+
+        return _obj["renewableGenerationPercentage"].as<int32_t>();
+    }
+
+    RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesPriceRuleStacksEntryEntriesPriceRuleEntryEntriesEnergyFeeEntriesView energyFee() {
+
+        return RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesPriceRuleStacksEntryEntriesPriceRuleEntryEntriesEnergyFeeEntriesView{_obj["energyFee"].as<JsonObject>()};
+    }
+
+    Option<RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesPriceRuleStacksEntryEntriesPriceRuleEntryEntriesParkingFeeEntriesView> parkingFee() {
+        if (!_obj.containsKey("parkingFee"))
+                return {};
+
+        return Option<RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesPriceRuleStacksEntryEntriesPriceRuleEntryEntriesParkingFeeEntriesView>{RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesPriceRuleStacksEntryEntriesPriceRuleEntryEntriesParkingFeeEntriesView{_obj["parkingFee"].as<JsonObject>()}};
+    }
+
+    RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesPriceRuleStacksEntryEntriesPriceRuleEntryEntriesPowerRangeStartEntriesView powerRangeStart() {
+
+        return RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesPriceRuleStacksEntryEntriesPriceRuleEntryEntriesPowerRangeStartEntriesView{_obj["powerRangeStart"].as<JsonObject>()};
+    }
+
+};
+
+struct RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesPriceRuleStacksEntryEntriesView {
+    JsonObject _obj;
+
+    int32_t duration() {
+
+        return _obj["duration"].as<int32_t>();
+    }
+
+    size_t priceRule_count() {
+
+        return _obj["priceRule"].size();
+    }
+
+    RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesPriceRuleStacksEntryEntriesPriceRuleEntryEntriesView priceRule(size_t i) {
+
+        return RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesPriceRuleStacksEntryEntriesPriceRuleEntryEntriesView{_obj["priceRule"][i]};
+    }
+
+};
+
+struct RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesMaximumCostEntriesView {
+    JsonObject _obj;
+
+    int32_t exponent() {
+
+        return _obj["exponent"].as<int32_t>();
+    }
+
+    int32_t value() {
+
+        return _obj["value"].as<int32_t>();
+    }
+
+};
+
+struct RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesMinimumCostEntriesView {
+    JsonObject _obj;
+
+    int32_t exponent() {
+
+        return _obj["exponent"].as<int32_t>();
+    }
+
+    int32_t value() {
+
+        return _obj["value"].as<int32_t>();
+    }
+
+};
+
+struct RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesView {
+    JsonObject _obj;
+
+    time_t timeAnchor() {
+
+        return _obj["timeAnchor"].as<time_t>();
+    }
+
+    int32_t priceScheduleID() {
+
+        return _obj["priceScheduleID"].as<int32_t>();
+    }
+
+    Option<const char *> priceScheduleDescription() {
+        if (!_obj.containsKey("priceScheduleDescription"))
+                return {};
+
+        return _obj["priceScheduleDescription"].as<const char *>();
+    }
+
+    const char * currency() {
+
+        return _obj["currency"].as<const char *>();
+    }
+
+    const char * language() {
+
+        return _obj["language"].as<const char *>();
+    }
+
+    const char * priceAlgorithm() {
+
+        return _obj["priceAlgorithm"].as<const char *>();
+    }
+
+    Option<RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesMinimumCostEntriesView> minimumCost() {
+        if (!_obj.containsKey("minimumCost"))
+                return {};
+
+        return Option<RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesMinimumCostEntriesView>{RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesMinimumCostEntriesView{_obj["minimumCost"].as<JsonObject>()}};
+    }
+
+    Option<RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesMaximumCostEntriesView> maximumCost() {
+        if (!_obj.containsKey("maximumCost"))
+                return {};
+
+        return Option<RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesMaximumCostEntriesView>{RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesMaximumCostEntriesView{_obj["maximumCost"].as<JsonObject>()}};
+    }
+
+    size_t priceRuleStacks_count() {
+
+        return _obj["priceRuleStacks"].size();
+    }
+
+    RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesPriceRuleStacksEntryEntriesView priceRuleStacks(size_t i) {
+
+        return RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesPriceRuleStacksEntryEntriesView{_obj["priceRuleStacks"][i]};
+    }
+
+    size_t taxRules_count() {
+
+        return _obj["taxRules"].size();
+    }
+
+    Option<RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesTaxRulesEntryEntriesView> taxRules(size_t i) {
+        if (!_obj.containsKey("taxRules"))
+                return {};
+
+        return Option<RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesTaxRulesEntryEntriesView>{RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesTaxRulesEntryEntriesView{_obj["taxRules"][i]}};
+    }
+
+    Option<RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesOverstayRuleListEntriesView> overstayRuleList() {
+        if (!_obj.containsKey("overstayRuleList"))
+                return {};
+
+        return Option<RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesOverstayRuleListEntriesView>{RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesOverstayRuleListEntriesView{_obj["overstayRuleList"].as<JsonObject>()}};
+    }
+
+    size_t additionalSelectedServices_count() {
+
+        return _obj["additionalSelectedServices"].size();
+    }
+
+    Option<RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesAdditionalSelectedServicesEntryEntriesView> additionalSelectedServices(size_t i) {
+        if (!_obj.containsKey("additionalSelectedServices"))
+                return {};
+
+        return Option<RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesAdditionalSelectedServicesEntryEntriesView>{RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesAdditionalSelectedServicesEntryEntriesView{_obj["additionalSelectedServices"][i]}};
+    }
+
+};
+
+struct RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesSalesTariffEntriesSalesTariffEntryEntryEntriesConsumptionCostEntryEntriesCostEntryEntriesView {
+    JsonObject _obj;
+
+    RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesSalesTariffEntriesSalesTariffEntryEntryEntriesConsumptionCostEntryEntriesCostEntryEntriesCostKind costKind() {
+
+        return (RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesSalesTariffEntriesSalesTariffEntryEntryEntriesConsumptionCostEntryEntriesCostEntryEntriesCostKind)_obj["costKind"].as<size_t>();
+    }
+
+    int32_t amount() {
+
+        return _obj["amount"].as<int32_t>();
+    }
+
+    Option<int32_t> amountMultiplier() {
+        if (!_obj.containsKey("amountMultiplier"))
+                return {};
+
+        return _obj["amountMultiplier"].as<int32_t>();
+    }
+
+};
+
+struct RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesSalesTariffEntriesSalesTariffEntryEntryEntriesConsumptionCostEntryEntriesView {
+    JsonObject _obj;
+
+    float startValue() {
+
+        return _obj["startValue"].as<float>();
+    }
+
+    size_t cost_count() {
+
+        return _obj["cost"].size();
+    }
+
+    RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesSalesTariffEntriesSalesTariffEntryEntryEntriesConsumptionCostEntryEntriesCostEntryEntriesView cost(size_t i) {
+
+        return RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesSalesTariffEntriesSalesTariffEntryEntryEntriesConsumptionCostEntryEntriesCostEntryEntriesView{_obj["cost"][i]};
+    }
+
+};
+
+struct RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesSalesTariffEntriesSalesTariffEntryEntryEntriesRelativeTimeIntervalEntriesView {
+    JsonObject _obj;
+
+    int32_t start() {
+
+        return _obj["start"].as<int32_t>();
+    }
+
+    Option<int32_t> duration() {
+        if (!_obj.containsKey("duration"))
+                return {};
+
+        return _obj["duration"].as<int32_t>();
+    }
+
+};
+
+struct RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesSalesTariffEntriesSalesTariffEntryEntryEntriesView {
+    JsonObject _obj;
+
+    RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesSalesTariffEntriesSalesTariffEntryEntryEntriesRelativeTimeIntervalEntriesView relativeTimeInterval() {
+
+        return RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesSalesTariffEntriesSalesTariffEntryEntryEntriesRelativeTimeIntervalEntriesView{_obj["relativeTimeInterval"].as<JsonObject>()};
+    }
+
+    Option<int32_t> ePriceLevel() {
+        if (!_obj.containsKey("ePriceLevel"))
+                return {};
+
+        return _obj["ePriceLevel"].as<int32_t>();
+    }
+
+    size_t consumptionCost_count() {
+
+        return _obj["consumptionCost"].size();
+    }
+
+    Option<RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesSalesTariffEntriesSalesTariffEntryEntryEntriesConsumptionCostEntryEntriesView> consumptionCost(size_t i) {
+        if (!_obj.containsKey("consumptionCost"))
+                return {};
+
+        return Option<RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesSalesTariffEntriesSalesTariffEntryEntryEntriesConsumptionCostEntryEntriesView>{RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesSalesTariffEntriesSalesTariffEntryEntryEntriesConsumptionCostEntryEntriesView{_obj["consumptionCost"][i]}};
+    }
+
+};
+
+struct RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesSalesTariffEntriesView {
+    JsonObject _obj;
+
+    int32_t id() {
+
+        return _obj["id"].as<int32_t>();
+    }
+
+    Option<const char *> salesTariffDescription() {
+        if (!_obj.containsKey("salesTariffDescription"))
+                return {};
+
+        return _obj["salesTariffDescription"].as<const char *>();
+    }
+
+    Option<int32_t> numEPriceLevels() {
+        if (!_obj.containsKey("numEPriceLevels"))
+                return {};
+
+        return _obj["numEPriceLevels"].as<int32_t>();
+    }
+
+    size_t salesTariffEntry_count() {
+
+        return _obj["salesTariffEntry"].size();
+    }
+
+    RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesSalesTariffEntriesSalesTariffEntryEntryEntriesView salesTariffEntry(size_t i) {
+
+        return RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesSalesTariffEntriesSalesTariffEntryEntryEntriesView{_obj["salesTariffEntry"][i]};
+    }
+
+};
+
+struct RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingSchedulePeriodEntryEntriesV2xSignalWattCurveEntryEntriesView {
+    JsonObject _obj;
+
+    int32_t signal() {
+
+        return _obj["signal"].as<int32_t>();
+    }
+
+    float power() {
+
+        return _obj["power"].as<float>();
+    }
+
+};
+
+struct RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingSchedulePeriodEntryEntriesV2xFreqWattCurveEntryEntriesView {
+    JsonObject _obj;
+
+    float frequency() {
+
+        return _obj["frequency"].as<float>();
+    }
+
+    float power() {
+
+        return _obj["power"].as<float>();
+    }
+
+};
+
+struct RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingSchedulePeriodEntryEntriesView {
+    JsonObject _obj;
+
+    int32_t startPeriod() {
+
+        return _obj["startPeriod"].as<int32_t>();
+    }
+
+    Option<float> limit() {
+        if (!_obj.containsKey("limit"))
+                return {};
+
+        return _obj["limit"].as<float>();
+    }
+
+    Option<float> limit_L2() {
+        if (!_obj.containsKey("limit_L2"))
+                return {};
+
+        return _obj["limit_L2"].as<float>();
+    }
+
+    Option<float> limit_L3() {
+        if (!_obj.containsKey("limit_L3"))
+                return {};
+
+        return _obj["limit_L3"].as<float>();
+    }
+
+    Option<int32_t> numberPhases() {
+        if (!_obj.containsKey("numberPhases"))
+                return {};
+
+        return _obj["numberPhases"].as<int32_t>();
+    }
+
+    Option<int32_t> phaseToUse() {
+        if (!_obj.containsKey("phaseToUse"))
+                return {};
+
+        return _obj["phaseToUse"].as<int32_t>();
+    }
+
+    Option<float> dischargeLimit() {
+        if (!_obj.containsKey("dischargeLimit"))
+                return {};
+
+        return _obj["dischargeLimit"].as<float>();
+    }
+
+    Option<float> dischargeLimit_L2() {
+        if (!_obj.containsKey("dischargeLimit_L2"))
+                return {};
+
+        return _obj["dischargeLimit_L2"].as<float>();
+    }
+
+    Option<float> dischargeLimit_L3() {
+        if (!_obj.containsKey("dischargeLimit_L3"))
+                return {};
+
+        return _obj["dischargeLimit_L3"].as<float>();
+    }
+
+    Option<float> setpoint() {
+        if (!_obj.containsKey("setpoint"))
+                return {};
+
+        return _obj["setpoint"].as<float>();
+    }
+
+    Option<float> setpoint_L2() {
+        if (!_obj.containsKey("setpoint_L2"))
+                return {};
+
+        return _obj["setpoint_L2"].as<float>();
+    }
+
+    Option<float> setpoint_L3() {
+        if (!_obj.containsKey("setpoint_L3"))
+                return {};
+
+        return _obj["setpoint_L3"].as<float>();
+    }
+
+    Option<float> setpointReactive() {
+        if (!_obj.containsKey("setpointReactive"))
+                return {};
+
+        return _obj["setpointReactive"].as<float>();
+    }
+
+    Option<float> setpointReactive_L2() {
+        if (!_obj.containsKey("setpointReactive_L2"))
+                return {};
+
+        return _obj["setpointReactive_L2"].as<float>();
+    }
+
+    Option<float> setpointReactive_L3() {
+        if (!_obj.containsKey("setpointReactive_L3"))
+                return {};
+
+        return _obj["setpointReactive_L3"].as<float>();
+    }
+
+    Option<bool> preconditioningRequest() {
+        if (!_obj.containsKey("preconditioningRequest"))
+                return {};
+
+        return _obj["preconditioningRequest"].as<bool>();
+    }
+
+    Option<bool> evseSleep() {
+        if (!_obj.containsKey("evseSleep"))
+                return {};
+
+        return _obj["evseSleep"].as<bool>();
+    }
+
+    Option<float> v2xBaseline() {
+        if (!_obj.containsKey("v2xBaseline"))
+                return {};
+
+        return _obj["v2xBaseline"].as<float>();
+    }
+
+    Option<RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingSchedulePeriodEntryEntriesOperationMode> operationMode() {
+        if (!_obj.containsKey("operationMode"))
+                return {};
+
+        return Option<RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingSchedulePeriodEntryEntriesOperationMode>{(RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingSchedulePeriodEntryEntriesOperationMode)_obj["operationMode"].as<size_t>()};
+    }
+
+    size_t v2xFreqWattCurve_count() {
+
+        return _obj["v2xFreqWattCurve"].size();
+    }
+
+    Option<RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingSchedulePeriodEntryEntriesV2xFreqWattCurveEntryEntriesView> v2xFreqWattCurve(size_t i) {
+        if (!_obj.containsKey("v2xFreqWattCurve"))
+                return {};
+
+        return Option<RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingSchedulePeriodEntryEntriesV2xFreqWattCurveEntryEntriesView>{RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingSchedulePeriodEntryEntriesV2xFreqWattCurveEntryEntriesView{_obj["v2xFreqWattCurve"][i]}};
+    }
+
+    size_t v2xSignalWattCurve_count() {
+
+        return _obj["v2xSignalWattCurve"].size();
+    }
+
+    Option<RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingSchedulePeriodEntryEntriesV2xSignalWattCurveEntryEntriesView> v2xSignalWattCurve(size_t i) {
+        if (!_obj.containsKey("v2xSignalWattCurve"))
+                return {};
+
+        return Option<RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingSchedulePeriodEntryEntriesV2xSignalWattCurveEntryEntriesView>{RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingSchedulePeriodEntryEntriesV2xSignalWattCurveEntryEntriesView{_obj["v2xSignalWattCurve"][i]}};
+    }
+
+};
+
+struct RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesLimitAtSoCEntriesView {
+    JsonObject _obj;
+
+    int32_t soc() {
+
+        return _obj["soc"].as<int32_t>();
+    }
+
+    float limit() {
+
+        return _obj["limit"].as<float>();
+    }
+
+};
+
+struct RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesView {
+    JsonObject _obj;
+
+    int32_t id() {
+
+        return _obj["id"].as<int32_t>();
+    }
+
+    Option<RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesLimitAtSoCEntriesView> limitAtSoC() {
+        if (!_obj.containsKey("limitAtSoC"))
+                return {};
+
+        return Option<RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesLimitAtSoCEntriesView>{RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesLimitAtSoCEntriesView{_obj["limitAtSoC"].as<JsonObject>()}};
+    }
+
+    Option<time_t> startSchedule() {
+        if (!_obj.containsKey("startSchedule"))
+                return {};
+
+        return _obj["startSchedule"].as<time_t>();
+    }
+
+    Option<int32_t> duration() {
+        if (!_obj.containsKey("duration"))
+                return {};
+
+        return _obj["duration"].as<int32_t>();
+    }
+
+    RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingRateUnit chargingRateUnit() {
+
+        return (RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingRateUnit)_obj["chargingRateUnit"].as<size_t>();
+    }
+
+    Option<float> minChargingRate() {
+        if (!_obj.containsKey("minChargingRate"))
+                return {};
+
+        return _obj["minChargingRate"].as<float>();
+    }
+
+    Option<float> powerTolerance() {
+        if (!_obj.containsKey("powerTolerance"))
+                return {};
+
+        return _obj["powerTolerance"].as<float>();
+    }
+
+    Option<int32_t> signatureId() {
+        if (!_obj.containsKey("signatureId"))
+                return {};
+
+        return _obj["signatureId"].as<int32_t>();
+    }
+
+    Option<const char *> digestValue() {
+        if (!_obj.containsKey("digestValue"))
+                return {};
+
+        return _obj["digestValue"].as<const char *>();
+    }
+
+    Option<bool> useLocalTime() {
+        if (!_obj.containsKey("useLocalTime"))
+                return {};
+
+        return _obj["useLocalTime"].as<bool>();
+    }
+
+    size_t chargingSchedulePeriod_count() {
+
+        return _obj["chargingSchedulePeriod"].size();
+    }
+
+    RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingSchedulePeriodEntryEntriesView chargingSchedulePeriod(size_t i) {
+
+        return RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesChargingSchedulePeriodEntryEntriesView{_obj["chargingSchedulePeriod"][i]};
+    }
+
+    Option<int32_t> randomizedDelay() {
+        if (!_obj.containsKey("randomizedDelay"))
+                return {};
+
+        return _obj["randomizedDelay"].as<int32_t>();
+    }
+
+    Option<RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesSalesTariffEntriesView> salesTariff() {
+        if (!_obj.containsKey("salesTariff"))
+                return {};
+
+        return Option<RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesSalesTariffEntriesView>{RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesSalesTariffEntriesView{_obj["salesTariff"].as<JsonObject>()}};
+    }
+
+    Option<RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesView> absolutePriceSchedule() {
+        if (!_obj.containsKey("absolutePriceSchedule"))
+                return {};
+
+        return Option<RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesView>{RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesAbsolutePriceScheduleEntriesView{_obj["absolutePriceSchedule"].as<JsonObject>()}};
+    }
+
+    Option<RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesPriceLevelScheduleEntriesView> priceLevelSchedule() {
+        if (!_obj.containsKey("priceLevelSchedule"))
+                return {};
+
+        return Option<RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesPriceLevelScheduleEntriesView>{RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesPriceLevelScheduleEntriesView{_obj["priceLevelSchedule"].as<JsonObject>()}};
+    }
+
+};
+
+struct RequestStartTransactionChargingProfileEntriesView {
+    JsonObject _obj;
+
+    int32_t id() {
+
+        return _obj["id"].as<int32_t>();
+    }
+
+    int32_t stackLevel() {
+
+        return _obj["stackLevel"].as<int32_t>();
+    }
+
+    RequestStartTransactionChargingProfileEntriesChargingProfilePurpose chargingProfilePurpose() {
+
+        return (RequestStartTransactionChargingProfileEntriesChargingProfilePurpose)_obj["chargingProfilePurpose"].as<size_t>();
+    }
+
+    RequestStartTransactionChargingProfileEntriesChargingProfileKind chargingProfileKind() {
+
+        return (RequestStartTransactionChargingProfileEntriesChargingProfileKind)_obj["chargingProfileKind"].as<size_t>();
+    }
+
+    Option<RequestStartTransactionChargingProfileEntriesRecurrencyKind> recurrencyKind() {
+        if (!_obj.containsKey("recurrencyKind"))
+                return {};
+
+        return Option<RequestStartTransactionChargingProfileEntriesRecurrencyKind>{(RequestStartTransactionChargingProfileEntriesRecurrencyKind)_obj["recurrencyKind"].as<size_t>()};
+    }
+
+    Option<time_t> validFrom() {
+        if (!_obj.containsKey("validFrom"))
+                return {};
+
+        return _obj["validFrom"].as<time_t>();
+    }
+
+    Option<time_t> validTo() {
+        if (!_obj.containsKey("validTo"))
+                return {};
+
+        return _obj["validTo"].as<time_t>();
+    }
+
+    Option<const char *> transactionId() {
+        if (!_obj.containsKey("transactionId"))
+                return {};
+
+        return _obj["transactionId"].as<const char *>();
+    }
+
+    Option<int32_t> maxOfflineDuration() {
+        if (!_obj.containsKey("maxOfflineDuration"))
+                return {};
+
+        return _obj["maxOfflineDuration"].as<int32_t>();
+    }
+
+    size_t chargingSchedule_count() {
+
+        return _obj["chargingSchedule"].size();
+    }
+
+    RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesView chargingSchedule(size_t i) {
+
+        return RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEntriesView{_obj["chargingSchedule"][i]};
+    }
+
+    Option<bool> invalidAfterOfflineDuration() {
+        if (!_obj.containsKey("invalidAfterOfflineDuration"))
+                return {};
+
+        return _obj["invalidAfterOfflineDuration"].as<bool>();
+    }
+
+    Option<int32_t> dynUpdateInterval() {
+        if (!_obj.containsKey("dynUpdateInterval"))
+                return {};
+
+        return _obj["dynUpdateInterval"].as<int32_t>();
+    }
+
+    Option<time_t> dynUpdateTime() {
+        if (!_obj.containsKey("dynUpdateTime"))
+                return {};
+
+        return _obj["dynUpdateTime"].as<time_t>();
+    }
+
+    Option<const char *> priceScheduleSignature() {
+        if (!_obj.containsKey("priceScheduleSignature"))
+                return {};
+
+        return _obj["priceScheduleSignature"].as<const char *>();
+    }
+
+};
+
+struct RequestStartTransactionIdTokenEntriesAdditionalInfoEntryEntriesView {
+    JsonObject _obj;
+
+    const char * additionalIdToken() {
+
+        return _obj["additionalIdToken"].as<const char *>();
+    }
+
+    const char * type() {
+
+        return _obj["type"].as<const char *>();
+    }
+
+};
+
+struct RequestStartTransactionIdTokenEntriesView {
+    JsonObject _obj;
+
+    size_t additionalInfo_count() {
+
+        return _obj["additionalInfo"].size();
+    }
+
+    Option<RequestStartTransactionIdTokenEntriesAdditionalInfoEntryEntriesView> additionalInfo(size_t i) {
+        if (!_obj.containsKey("additionalInfo"))
+                return {};
+
+        return Option<RequestStartTransactionIdTokenEntriesAdditionalInfoEntryEntriesView>{RequestStartTransactionIdTokenEntriesAdditionalInfoEntryEntriesView{_obj["additionalInfo"][i]}};
+    }
+
+    const char * idToken() {
+
+        return _obj["idToken"].as<const char *>();
+    }
+
+    const char * type() {
+
+        return _obj["type"].as<const char *>();
+    }
+
+};
+
+struct RequestStartTransactionGroupIdTokenEntriesAdditionalInfoEntryEntriesView {
+    JsonObject _obj;
+
+    const char * additionalIdToken() {
+
+        return _obj["additionalIdToken"].as<const char *>();
+    }
+
+    const char * type() {
+
+        return _obj["type"].as<const char *>();
+    }
+
+};
+
+struct RequestStartTransactionGroupIdTokenEntriesView {
+    JsonObject _obj;
+
+    size_t additionalInfo_count() {
+
+        return _obj["additionalInfo"].size();
+    }
+
+    Option<RequestStartTransactionGroupIdTokenEntriesAdditionalInfoEntryEntriesView> additionalInfo(size_t i) {
+        if (!_obj.containsKey("additionalInfo"))
+                return {};
+
+        return Option<RequestStartTransactionGroupIdTokenEntriesAdditionalInfoEntryEntriesView>{RequestStartTransactionGroupIdTokenEntriesAdditionalInfoEntryEntriesView{_obj["additionalInfo"][i]}};
+    }
+
+    const char * idToken() {
+
+        return _obj["idToken"].as<const char *>();
+    }
+
+    const char * type() {
+
+        return _obj["type"].as<const char *>();
+    }
+
+};
+
+struct RequestStartTransactionView {
+    JsonObject _obj;
+
+    Option<int32_t> evseId() {
+        if (!_obj.containsKey("evseId"))
+                return {};
+
+        return _obj["evseId"].as<int32_t>();
+    }
+
+    Option<RequestStartTransactionGroupIdTokenEntriesView> groupIdToken() {
+        if (!_obj.containsKey("groupIdToken"))
+                return {};
+
+        return Option<RequestStartTransactionGroupIdTokenEntriesView>{RequestStartTransactionGroupIdTokenEntriesView{_obj["groupIdToken"].as<JsonObject>()}};
+    }
+
+    RequestStartTransactionIdTokenEntriesView idToken() {
+
+        return RequestStartTransactionIdTokenEntriesView{_obj["idToken"].as<JsonObject>()};
+    }
+
+    int32_t remoteStartId() {
+
+        return _obj["remoteStartId"].as<int32_t>();
+    }
+
+    Option<RequestStartTransactionChargingProfileEntriesView> chargingProfile() {
+        if (!_obj.containsKey("chargingProfile"))
+                return {};
+
+        return Option<RequestStartTransactionChargingProfileEntriesView>{RequestStartTransactionChargingProfileEntriesView{_obj["chargingProfile"].as<JsonObject>()}};
+    }
+
+};
+
+struct MeterValuesResponseView {
+    JsonObject _obj;
+
+};
+
+struct TransactionEventResponseUpdatedPersonalMessageExtraEntryEntriesView {
+    JsonObject _obj;
+
+    EntriesFormat format() {
+
+        return (EntriesFormat)_obj["format"].as<size_t>();
+    }
+
+    Option<const char *> language() {
+        if (!_obj.containsKey("language"))
+                return {};
+
+        return _obj["language"].as<const char *>();
+    }
+
+    const char * content() {
+
+        return _obj["content"].as<const char *>();
+    }
+
+};
+
+struct TransactionEventResponseUpdatedPersonalMessageEntriesView {
+    JsonObject _obj;
+
+    EntriesFormat format() {
+
+        return (EntriesFormat)_obj["format"].as<size_t>();
+    }
+
+    Option<const char *> language() {
+        if (!_obj.containsKey("language"))
+                return {};
+
+        return _obj["language"].as<const char *>();
+    }
+
+    const char * content() {
+
+        return _obj["content"].as<const char *>();
+    }
+
+};
+
+struct TransactionEventResponseTransactionLimitEntriesView {
+    JsonObject _obj;
+
+    Option<float> maxCost() {
+        if (!_obj.containsKey("maxCost"))
+                return {};
+
+        return _obj["maxCost"].as<float>();
+    }
+
+    Option<float> maxEnergy() {
+        if (!_obj.containsKey("maxEnergy"))
+                return {};
+
+        return _obj["maxEnergy"].as<float>();
+    }
+
+    Option<int32_t> maxTime() {
+        if (!_obj.containsKey("maxTime"))
+                return {};
+
+        return _obj["maxTime"].as<int32_t>();
+    }
+
+    Option<int32_t> maxSoC() {
+        if (!_obj.containsKey("maxSoC"))
+                return {};
+
+        return _obj["maxSoC"].as<int32_t>();
+    }
+
+};
+
+struct TransactionEventResponseIdTokenInfoEntriesPersonalMessageEntriesView {
+    JsonObject _obj;
+
+    EntriesFormat format() {
+
+        return (EntriesFormat)_obj["format"].as<size_t>();
+    }
+
+    Option<const char *> language() {
+        if (!_obj.containsKey("language"))
+                return {};
+
+        return _obj["language"].as<const char *>();
+    }
+
+    const char * content() {
+
+        return _obj["content"].as<const char *>();
+    }
+
+};
+
+struct TransactionEventResponseIdTokenInfoEntriesGroupIdTokenEntriesAdditionalInfoEntryEntriesView {
+    JsonObject _obj;
+
+    const char * additionalIdToken() {
+
+        return _obj["additionalIdToken"].as<const char *>();
+    }
+
+    const char * type() {
+
+        return _obj["type"].as<const char *>();
+    }
+
+};
+
+struct TransactionEventResponseIdTokenInfoEntriesGroupIdTokenEntriesView {
+    JsonObject _obj;
+
+    size_t additionalInfo_count() {
+
+        return _obj["additionalInfo"].size();
+    }
+
+    Option<TransactionEventResponseIdTokenInfoEntriesGroupIdTokenEntriesAdditionalInfoEntryEntriesView> additionalInfo(size_t i) {
+        if (!_obj.containsKey("additionalInfo"))
+                return {};
+
+        return Option<TransactionEventResponseIdTokenInfoEntriesGroupIdTokenEntriesAdditionalInfoEntryEntriesView>{TransactionEventResponseIdTokenInfoEntriesGroupIdTokenEntriesAdditionalInfoEntryEntriesView{_obj["additionalInfo"][i]}};
+    }
+
+    const char * idToken() {
+
+        return _obj["idToken"].as<const char *>();
+    }
+
+    const char * type() {
+
+        return _obj["type"].as<const char *>();
+    }
+
+};
+
+struct TransactionEventResponseIdTokenInfoEntriesView {
+    JsonObject _obj;
+
+    ResponseIdTokenInfoEntriesStatus status() {
+
+        return (ResponseIdTokenInfoEntriesStatus)_obj["status"].as<size_t>();
+    }
+
+    Option<time_t> cacheExpiryDateTime() {
+        if (!_obj.containsKey("cacheExpiryDateTime"))
+                return {};
+
+        return _obj["cacheExpiryDateTime"].as<time_t>();
+    }
+
+    Option<int32_t> chargingPriority() {
+        if (!_obj.containsKey("chargingPriority"))
+                return {};
+
+        return _obj["chargingPriority"].as<int32_t>();
+    }
+
+    Option<TransactionEventResponseIdTokenInfoEntriesGroupIdTokenEntriesView> groupIdToken() {
+        if (!_obj.containsKey("groupIdToken"))
+                return {};
+
+        return Option<TransactionEventResponseIdTokenInfoEntriesGroupIdTokenEntriesView>{TransactionEventResponseIdTokenInfoEntriesGroupIdTokenEntriesView{_obj["groupIdToken"].as<JsonObject>()}};
+    }
+
+    Option<const char *> language1() {
+        if (!_obj.containsKey("language1"))
+                return {};
+
+        return _obj["language1"].as<const char *>();
+    }
+
+    Option<const char *> language2() {
+        if (!_obj.containsKey("language2"))
+                return {};
+
+        return _obj["language2"].as<const char *>();
+    }
+
+    size_t evseId_count() {
+
+        return _obj["evseId"].size();
+    }
+
+    Option<int32_t> evseId(size_t i) {
+        if (!_obj.containsKey("evseId"))
+                return {};
+
+        return _obj["evseId"][i].as<int32_t>();
+    }
+
+    Option<TransactionEventResponseIdTokenInfoEntriesPersonalMessageEntriesView> personalMessage() {
+        if (!_obj.containsKey("personalMessage"))
+                return {};
+
+        return Option<TransactionEventResponseIdTokenInfoEntriesPersonalMessageEntriesView>{TransactionEventResponseIdTokenInfoEntriesPersonalMessageEntriesView{_obj["personalMessage"].as<JsonObject>()}};
+    }
+
+};
+
+struct TransactionEventResponseView {
+    JsonObject _obj;
+
+    Option<float> totalCost() {
+        if (!_obj.containsKey("totalCost"))
+                return {};
+
+        return _obj["totalCost"].as<float>();
+    }
+
+    Option<int32_t> chargingPriority() {
+        if (!_obj.containsKey("chargingPriority"))
+                return {};
+
+        return _obj["chargingPriority"].as<int32_t>();
+    }
+
+    Option<TransactionEventResponseIdTokenInfoEntriesView> idTokenInfo() {
+        if (!_obj.containsKey("idTokenInfo"))
+                return {};
+
+        return Option<TransactionEventResponseIdTokenInfoEntriesView>{TransactionEventResponseIdTokenInfoEntriesView{_obj["idTokenInfo"].as<JsonObject>()}};
+    }
+
+    Option<TransactionEventResponseTransactionLimitEntriesView> transactionLimit() {
+        if (!_obj.containsKey("transactionLimit"))
+                return {};
+
+        return Option<TransactionEventResponseTransactionLimitEntriesView>{TransactionEventResponseTransactionLimitEntriesView{_obj["transactionLimit"].as<JsonObject>()}};
+    }
+
+    Option<TransactionEventResponseUpdatedPersonalMessageEntriesView> updatedPersonalMessage() {
+        if (!_obj.containsKey("updatedPersonalMessage"))
+                return {};
+
+        return Option<TransactionEventResponseUpdatedPersonalMessageEntriesView>{TransactionEventResponseUpdatedPersonalMessageEntriesView{_obj["updatedPersonalMessage"].as<JsonObject>()}};
+    }
+
+    size_t updatedPersonalMessageExtra_count() {
+
+        return _obj["updatedPersonalMessageExtra"].size();
+    }
+
+    Option<TransactionEventResponseUpdatedPersonalMessageExtraEntryEntriesView> updatedPersonalMessageExtra(size_t i) {
+        if (!_obj.containsKey("updatedPersonalMessageExtra"))
+                return {};
+
+        return Option<TransactionEventResponseUpdatedPersonalMessageExtraEntryEntriesView>{TransactionEventResponseUpdatedPersonalMessageExtraEntryEntriesView{_obj["updatedPersonalMessageExtra"][i]}};
+    }
+
+};
+
+struct AuthorizeResponseTariffEntriesMaxCostEntriesTaxRatesEntryEntriesView {
+    JsonObject _obj;
+
+    const char * type() {
+
+        return _obj["type"].as<const char *>();
+    }
+
+    float tax() {
+
+        return _obj["tax"].as<float>();
+    }
+
+    Option<int32_t> stack() {
+        if (!_obj.containsKey("stack"))
+                return {};
+
+        return _obj["stack"].as<int32_t>();
+    }
+
+};
+
+struct AuthorizeResponseTariffEntriesMaxCostEntriesView {
+    JsonObject _obj;
+
+    Option<float> exclTax() {
+        if (!_obj.containsKey("exclTax"))
+                return {};
+
+        return _obj["exclTax"].as<float>();
+    }
+
+    Option<float> inclTax() {
+        if (!_obj.containsKey("inclTax"))
+                return {};
+
+        return _obj["inclTax"].as<float>();
+    }
+
+    size_t taxRates_count() {
+
+        return _obj["taxRates"].size();
+    }
+
+    Option<AuthorizeResponseTariffEntriesMaxCostEntriesTaxRatesEntryEntriesView> taxRates(size_t i) {
+        if (!_obj.containsKey("taxRates"))
+                return {};
+
+        return Option<AuthorizeResponseTariffEntriesMaxCostEntriesTaxRatesEntryEntriesView>{AuthorizeResponseTariffEntriesMaxCostEntriesTaxRatesEntryEntriesView{_obj["taxRates"][i]}};
+    }
+
+};
+
+struct AuthorizeResponseTariffEntriesMinCostEntriesTaxRatesEntryEntriesView {
+    JsonObject _obj;
+
+    const char * type() {
+
+        return _obj["type"].as<const char *>();
+    }
+
+    float tax() {
+
+        return _obj["tax"].as<float>();
+    }
+
+    Option<int32_t> stack() {
+        if (!_obj.containsKey("stack"))
+                return {};
+
+        return _obj["stack"].as<int32_t>();
+    }
+
+};
+
+struct AuthorizeResponseTariffEntriesMinCostEntriesView {
+    JsonObject _obj;
+
+    Option<float> exclTax() {
+        if (!_obj.containsKey("exclTax"))
+                return {};
+
+        return _obj["exclTax"].as<float>();
+    }
+
+    Option<float> inclTax() {
+        if (!_obj.containsKey("inclTax"))
+                return {};
+
+        return _obj["inclTax"].as<float>();
+    }
+
+    size_t taxRates_count() {
+
+        return _obj["taxRates"].size();
+    }
+
+    Option<AuthorizeResponseTariffEntriesMinCostEntriesTaxRatesEntryEntriesView> taxRates(size_t i) {
+        if (!_obj.containsKey("taxRates"))
+                return {};
+
+        return Option<AuthorizeResponseTariffEntriesMinCostEntriesTaxRatesEntryEntriesView>{AuthorizeResponseTariffEntriesMinCostEntriesTaxRatesEntryEntriesView{_obj["taxRates"][i]}};
+    }
+
+};
+
+struct AuthorizeResponseTariffEntriesReservationFixedEntriesTaxRatesEntryEntriesView {
+    JsonObject _obj;
+
+    const char * type() {
+
+        return _obj["type"].as<const char *>();
+    }
+
+    float tax() {
+
+        return _obj["tax"].as<float>();
+    }
+
+    Option<int32_t> stack() {
+        if (!_obj.containsKey("stack"))
+                return {};
+
+        return _obj["stack"].as<int32_t>();
+    }
+
+};
+
+struct AuthorizeResponseTariffEntriesReservationFixedEntriesPricesEntryEntriesConditionsEntriesView {
+    JsonObject _obj;
+
+    Option<const char *> startTimeOfDay() {
+        if (!_obj.containsKey("startTimeOfDay"))
+                return {};
+
+        return _obj["startTimeOfDay"].as<const char *>();
+    }
+
+    Option<const char *> endTimeOfDay() {
+        if (!_obj.containsKey("endTimeOfDay"))
+                return {};
+
+        return _obj["endTimeOfDay"].as<const char *>();
+    }
+
+    size_t dayOfWeek_count() {
+
+        return _obj["dayOfWeek"].size();
+    }
+
+    Option<EntriesPricesEntryEntriesConditionsEntriesDayOfWeekEntry> dayOfWeek(size_t i) {
+        if (!_obj.containsKey("dayOfWeek"))
+                return {};
+
+        return Option<EntriesPricesEntryEntriesConditionsEntriesDayOfWeekEntry>{(EntriesPricesEntryEntriesConditionsEntriesDayOfWeekEntry)_obj["dayOfWeek"][i].as<size_t>()};
+    }
+
+    Option<const char *> validFromDate() {
+        if (!_obj.containsKey("validFromDate"))
+                return {};
+
+        return _obj["validFromDate"].as<const char *>();
+    }
+
+    Option<const char *> validToDate() {
+        if (!_obj.containsKey("validToDate"))
+                return {};
+
+        return _obj["validToDate"].as<const char *>();
+    }
+
+    Option<EntriesPricesEntryEntriesConditionsEntriesEvseKind> evseKind() {
+        if (!_obj.containsKey("evseKind"))
+                return {};
+
+        return Option<EntriesPricesEntryEntriesConditionsEntriesEvseKind>{(EntriesPricesEntryEntriesConditionsEntriesEvseKind)_obj["evseKind"].as<size_t>()};
+    }
+
+    Option<const char *> paymentBrand() {
+        if (!_obj.containsKey("paymentBrand"))
+                return {};
+
+        return _obj["paymentBrand"].as<const char *>();
+    }
+
+    Option<const char *> paymentRecognition() {
+        if (!_obj.containsKey("paymentRecognition"))
+                return {};
+
+        return _obj["paymentRecognition"].as<const char *>();
+    }
+
+};
+
+struct AuthorizeResponseTariffEntriesReservationFixedEntriesPricesEntryEntriesView {
+    JsonObject _obj;
+
+    Option<AuthorizeResponseTariffEntriesReservationFixedEntriesPricesEntryEntriesConditionsEntriesView> conditions() {
+        if (!_obj.containsKey("conditions"))
+                return {};
+
+        return Option<AuthorizeResponseTariffEntriesReservationFixedEntriesPricesEntryEntriesConditionsEntriesView>{AuthorizeResponseTariffEntriesReservationFixedEntriesPricesEntryEntriesConditionsEntriesView{_obj["conditions"].as<JsonObject>()}};
+    }
+
+    float priceFixed() {
+
+        return _obj["priceFixed"].as<float>();
+    }
+
+};
+
+struct AuthorizeResponseTariffEntriesReservationFixedEntriesView {
+    JsonObject _obj;
+
+    size_t prices_count() {
+
+        return _obj["prices"].size();
+    }
+
+    AuthorizeResponseTariffEntriesReservationFixedEntriesPricesEntryEntriesView prices(size_t i) {
+
+        return AuthorizeResponseTariffEntriesReservationFixedEntriesPricesEntryEntriesView{_obj["prices"][i]};
+    }
+
+    size_t taxRates_count() {
+
+        return _obj["taxRates"].size();
+    }
+
+    Option<AuthorizeResponseTariffEntriesReservationFixedEntriesTaxRatesEntryEntriesView> taxRates(size_t i) {
+        if (!_obj.containsKey("taxRates"))
+                return {};
+
+        return Option<AuthorizeResponseTariffEntriesReservationFixedEntriesTaxRatesEntryEntriesView>{AuthorizeResponseTariffEntriesReservationFixedEntriesTaxRatesEntryEntriesView{_obj["taxRates"][i]}};
+    }
+
+};
+
+struct AuthorizeResponseTariffEntriesReservationTimeEntriesTaxRatesEntryEntriesView {
+    JsonObject _obj;
+
+    const char * type() {
+
+        return _obj["type"].as<const char *>();
+    }
+
+    float tax() {
+
+        return _obj["tax"].as<float>();
+    }
+
+    Option<int32_t> stack() {
+        if (!_obj.containsKey("stack"))
+                return {};
+
+        return _obj["stack"].as<int32_t>();
+    }
+
+};
+
+struct AuthorizeResponseTariffEntriesReservationTimeEntriesPricesEntryEntriesConditionsEntriesView {
+    JsonObject _obj;
+
+    Option<const char *> startTimeOfDay() {
+        if (!_obj.containsKey("startTimeOfDay"))
+                return {};
+
+        return _obj["startTimeOfDay"].as<const char *>();
+    }
+
+    Option<const char *> endTimeOfDay() {
+        if (!_obj.containsKey("endTimeOfDay"))
+                return {};
+
+        return _obj["endTimeOfDay"].as<const char *>();
+    }
+
+    size_t dayOfWeek_count() {
+
+        return _obj["dayOfWeek"].size();
+    }
+
+    Option<EntriesPricesEntryEntriesConditionsEntriesDayOfWeekEntry> dayOfWeek(size_t i) {
+        if (!_obj.containsKey("dayOfWeek"))
+                return {};
+
+        return Option<EntriesPricesEntryEntriesConditionsEntriesDayOfWeekEntry>{(EntriesPricesEntryEntriesConditionsEntriesDayOfWeekEntry)_obj["dayOfWeek"][i].as<size_t>()};
+    }
+
+    Option<const char *> validFromDate() {
+        if (!_obj.containsKey("validFromDate"))
+                return {};
+
+        return _obj["validFromDate"].as<const char *>();
+    }
+
+    Option<const char *> validToDate() {
+        if (!_obj.containsKey("validToDate"))
+                return {};
+
+        return _obj["validToDate"].as<const char *>();
+    }
+
+    Option<EntriesPricesEntryEntriesConditionsEntriesEvseKind> evseKind() {
+        if (!_obj.containsKey("evseKind"))
+                return {};
+
+        return Option<EntriesPricesEntryEntriesConditionsEntriesEvseKind>{(EntriesPricesEntryEntriesConditionsEntriesEvseKind)_obj["evseKind"].as<size_t>()};
+    }
+
+    Option<float> minEnergy() {
+        if (!_obj.containsKey("minEnergy"))
+                return {};
+
+        return _obj["minEnergy"].as<float>();
+    }
+
+    Option<float> maxEnergy() {
+        if (!_obj.containsKey("maxEnergy"))
+                return {};
+
+        return _obj["maxEnergy"].as<float>();
+    }
+
+    Option<float> minCurrent() {
+        if (!_obj.containsKey("minCurrent"))
+                return {};
+
+        return _obj["minCurrent"].as<float>();
+    }
+
+    Option<float> maxCurrent() {
+        if (!_obj.containsKey("maxCurrent"))
+                return {};
+
+        return _obj["maxCurrent"].as<float>();
+    }
+
+    Option<float> minPower() {
+        if (!_obj.containsKey("minPower"))
+                return {};
+
+        return _obj["minPower"].as<float>();
+    }
+
+    Option<float> maxPower() {
+        if (!_obj.containsKey("maxPower"))
+                return {};
+
+        return _obj["maxPower"].as<float>();
+    }
+
+    Option<int32_t> minTime() {
+        if (!_obj.containsKey("minTime"))
+                return {};
+
+        return _obj["minTime"].as<int32_t>();
+    }
+
+    Option<int32_t> maxTime() {
+        if (!_obj.containsKey("maxTime"))
+                return {};
+
+        return _obj["maxTime"].as<int32_t>();
+    }
+
+    Option<int32_t> minChargingTime() {
+        if (!_obj.containsKey("minChargingTime"))
+                return {};
+
+        return _obj["minChargingTime"].as<int32_t>();
+    }
+
+    Option<int32_t> maxChargingTime() {
+        if (!_obj.containsKey("maxChargingTime"))
+                return {};
+
+        return _obj["maxChargingTime"].as<int32_t>();
+    }
+
+    Option<int32_t> minIdleTime() {
+        if (!_obj.containsKey("minIdleTime"))
+                return {};
+
+        return _obj["minIdleTime"].as<int32_t>();
+    }
+
+    Option<int32_t> maxIdleTime() {
+        if (!_obj.containsKey("maxIdleTime"))
+                return {};
+
+        return _obj["maxIdleTime"].as<int32_t>();
+    }
+
+};
+
+struct AuthorizeResponseTariffEntriesReservationTimeEntriesPricesEntryEntriesView {
+    JsonObject _obj;
+
+    float priceMinute() {
+
+        return _obj["priceMinute"].as<float>();
+    }
+
+    Option<AuthorizeResponseTariffEntriesReservationTimeEntriesPricesEntryEntriesConditionsEntriesView> conditions() {
+        if (!_obj.containsKey("conditions"))
+                return {};
+
+        return Option<AuthorizeResponseTariffEntriesReservationTimeEntriesPricesEntryEntriesConditionsEntriesView>{AuthorizeResponseTariffEntriesReservationTimeEntriesPricesEntryEntriesConditionsEntriesView{_obj["conditions"].as<JsonObject>()}};
+    }
+
+};
+
+struct AuthorizeResponseTariffEntriesReservationTimeEntriesView {
+    JsonObject _obj;
+
+    size_t prices_count() {
+
+        return _obj["prices"].size();
+    }
+
+    AuthorizeResponseTariffEntriesReservationTimeEntriesPricesEntryEntriesView prices(size_t i) {
+
+        return AuthorizeResponseTariffEntriesReservationTimeEntriesPricesEntryEntriesView{_obj["prices"][i]};
+    }
+
+    size_t taxRates_count() {
+
+        return _obj["taxRates"].size();
+    }
+
+    Option<AuthorizeResponseTariffEntriesReservationTimeEntriesTaxRatesEntryEntriesView> taxRates(size_t i) {
+        if (!_obj.containsKey("taxRates"))
+                return {};
+
+        return Option<AuthorizeResponseTariffEntriesReservationTimeEntriesTaxRatesEntryEntriesView>{AuthorizeResponseTariffEntriesReservationTimeEntriesTaxRatesEntryEntriesView{_obj["taxRates"][i]}};
+    }
+
+};
+
+struct AuthorizeResponseTariffEntriesFixedFeeEntriesTaxRatesEntryEntriesView {
+    JsonObject _obj;
+
+    const char * type() {
+
+        return _obj["type"].as<const char *>();
+    }
+
+    float tax() {
+
+        return _obj["tax"].as<float>();
+    }
+
+    Option<int32_t> stack() {
+        if (!_obj.containsKey("stack"))
+                return {};
+
+        return _obj["stack"].as<int32_t>();
+    }
+
+};
+
+struct AuthorizeResponseTariffEntriesFixedFeeEntriesPricesEntryEntriesConditionsEntriesView {
+    JsonObject _obj;
+
+    Option<const char *> startTimeOfDay() {
+        if (!_obj.containsKey("startTimeOfDay"))
+                return {};
+
+        return _obj["startTimeOfDay"].as<const char *>();
+    }
+
+    Option<const char *> endTimeOfDay() {
+        if (!_obj.containsKey("endTimeOfDay"))
+                return {};
+
+        return _obj["endTimeOfDay"].as<const char *>();
+    }
+
+    size_t dayOfWeek_count() {
+
+        return _obj["dayOfWeek"].size();
+    }
+
+    Option<EntriesPricesEntryEntriesConditionsEntriesDayOfWeekEntry> dayOfWeek(size_t i) {
+        if (!_obj.containsKey("dayOfWeek"))
+                return {};
+
+        return Option<EntriesPricesEntryEntriesConditionsEntriesDayOfWeekEntry>{(EntriesPricesEntryEntriesConditionsEntriesDayOfWeekEntry)_obj["dayOfWeek"][i].as<size_t>()};
+    }
+
+    Option<const char *> validFromDate() {
+        if (!_obj.containsKey("validFromDate"))
+                return {};
+
+        return _obj["validFromDate"].as<const char *>();
+    }
+
+    Option<const char *> validToDate() {
+        if (!_obj.containsKey("validToDate"))
+                return {};
+
+        return _obj["validToDate"].as<const char *>();
+    }
+
+    Option<EntriesPricesEntryEntriesConditionsEntriesEvseKind> evseKind() {
+        if (!_obj.containsKey("evseKind"))
+                return {};
+
+        return Option<EntriesPricesEntryEntriesConditionsEntriesEvseKind>{(EntriesPricesEntryEntriesConditionsEntriesEvseKind)_obj["evseKind"].as<size_t>()};
+    }
+
+    Option<const char *> paymentBrand() {
+        if (!_obj.containsKey("paymentBrand"))
+                return {};
+
+        return _obj["paymentBrand"].as<const char *>();
+    }
+
+    Option<const char *> paymentRecognition() {
+        if (!_obj.containsKey("paymentRecognition"))
+                return {};
+
+        return _obj["paymentRecognition"].as<const char *>();
+    }
+
+};
+
+struct AuthorizeResponseTariffEntriesFixedFeeEntriesPricesEntryEntriesView {
+    JsonObject _obj;
+
+    Option<AuthorizeResponseTariffEntriesFixedFeeEntriesPricesEntryEntriesConditionsEntriesView> conditions() {
+        if (!_obj.containsKey("conditions"))
+                return {};
+
+        return Option<AuthorizeResponseTariffEntriesFixedFeeEntriesPricesEntryEntriesConditionsEntriesView>{AuthorizeResponseTariffEntriesFixedFeeEntriesPricesEntryEntriesConditionsEntriesView{_obj["conditions"].as<JsonObject>()}};
+    }
+
+    float priceFixed() {
+
+        return _obj["priceFixed"].as<float>();
+    }
+
+};
+
+struct AuthorizeResponseTariffEntriesFixedFeeEntriesView {
+    JsonObject _obj;
+
+    size_t prices_count() {
+
+        return _obj["prices"].size();
+    }
+
+    AuthorizeResponseTariffEntriesFixedFeeEntriesPricesEntryEntriesView prices(size_t i) {
+
+        return AuthorizeResponseTariffEntriesFixedFeeEntriesPricesEntryEntriesView{_obj["prices"][i]};
+    }
+
+    size_t taxRates_count() {
+
+        return _obj["taxRates"].size();
+    }
+
+    Option<AuthorizeResponseTariffEntriesFixedFeeEntriesTaxRatesEntryEntriesView> taxRates(size_t i) {
+        if (!_obj.containsKey("taxRates"))
+                return {};
+
+        return Option<AuthorizeResponseTariffEntriesFixedFeeEntriesTaxRatesEntryEntriesView>{AuthorizeResponseTariffEntriesFixedFeeEntriesTaxRatesEntryEntriesView{_obj["taxRates"][i]}};
+    }
+
+};
+
+struct AuthorizeResponseTariffEntriesIdleTimeEntriesTaxRatesEntryEntriesView {
+    JsonObject _obj;
+
+    const char * type() {
+
+        return _obj["type"].as<const char *>();
+    }
+
+    float tax() {
+
+        return _obj["tax"].as<float>();
+    }
+
+    Option<int32_t> stack() {
+        if (!_obj.containsKey("stack"))
+                return {};
+
+        return _obj["stack"].as<int32_t>();
+    }
+
+};
+
+struct AuthorizeResponseTariffEntriesIdleTimeEntriesPricesEntryEntriesConditionsEntriesView {
+    JsonObject _obj;
+
+    Option<const char *> startTimeOfDay() {
+        if (!_obj.containsKey("startTimeOfDay"))
+                return {};
+
+        return _obj["startTimeOfDay"].as<const char *>();
+    }
+
+    Option<const char *> endTimeOfDay() {
+        if (!_obj.containsKey("endTimeOfDay"))
+                return {};
+
+        return _obj["endTimeOfDay"].as<const char *>();
+    }
+
+    size_t dayOfWeek_count() {
+
+        return _obj["dayOfWeek"].size();
+    }
+
+    Option<EntriesPricesEntryEntriesConditionsEntriesDayOfWeekEntry> dayOfWeek(size_t i) {
+        if (!_obj.containsKey("dayOfWeek"))
+                return {};
+
+        return Option<EntriesPricesEntryEntriesConditionsEntriesDayOfWeekEntry>{(EntriesPricesEntryEntriesConditionsEntriesDayOfWeekEntry)_obj["dayOfWeek"][i].as<size_t>()};
+    }
+
+    Option<const char *> validFromDate() {
+        if (!_obj.containsKey("validFromDate"))
+                return {};
+
+        return _obj["validFromDate"].as<const char *>();
+    }
+
+    Option<const char *> validToDate() {
+        if (!_obj.containsKey("validToDate"))
+                return {};
+
+        return _obj["validToDate"].as<const char *>();
+    }
+
+    Option<EntriesPricesEntryEntriesConditionsEntriesEvseKind> evseKind() {
+        if (!_obj.containsKey("evseKind"))
+                return {};
+
+        return Option<EntriesPricesEntryEntriesConditionsEntriesEvseKind>{(EntriesPricesEntryEntriesConditionsEntriesEvseKind)_obj["evseKind"].as<size_t>()};
+    }
+
+    Option<float> minEnergy() {
+        if (!_obj.containsKey("minEnergy"))
+                return {};
+
+        return _obj["minEnergy"].as<float>();
+    }
+
+    Option<float> maxEnergy() {
+        if (!_obj.containsKey("maxEnergy"))
+                return {};
+
+        return _obj["maxEnergy"].as<float>();
+    }
+
+    Option<float> minCurrent() {
+        if (!_obj.containsKey("minCurrent"))
+                return {};
+
+        return _obj["minCurrent"].as<float>();
+    }
+
+    Option<float> maxCurrent() {
+        if (!_obj.containsKey("maxCurrent"))
+                return {};
+
+        return _obj["maxCurrent"].as<float>();
+    }
+
+    Option<float> minPower() {
+        if (!_obj.containsKey("minPower"))
+                return {};
+
+        return _obj["minPower"].as<float>();
+    }
+
+    Option<float> maxPower() {
+        if (!_obj.containsKey("maxPower"))
+                return {};
+
+        return _obj["maxPower"].as<float>();
+    }
+
+    Option<int32_t> minTime() {
+        if (!_obj.containsKey("minTime"))
+                return {};
+
+        return _obj["minTime"].as<int32_t>();
+    }
+
+    Option<int32_t> maxTime() {
+        if (!_obj.containsKey("maxTime"))
+                return {};
+
+        return _obj["maxTime"].as<int32_t>();
+    }
+
+    Option<int32_t> minChargingTime() {
+        if (!_obj.containsKey("minChargingTime"))
+                return {};
+
+        return _obj["minChargingTime"].as<int32_t>();
+    }
+
+    Option<int32_t> maxChargingTime() {
+        if (!_obj.containsKey("maxChargingTime"))
+                return {};
+
+        return _obj["maxChargingTime"].as<int32_t>();
+    }
+
+    Option<int32_t> minIdleTime() {
+        if (!_obj.containsKey("minIdleTime"))
+                return {};
+
+        return _obj["minIdleTime"].as<int32_t>();
+    }
+
+    Option<int32_t> maxIdleTime() {
+        if (!_obj.containsKey("maxIdleTime"))
+                return {};
+
+        return _obj["maxIdleTime"].as<int32_t>();
+    }
+
+};
+
+struct AuthorizeResponseTariffEntriesIdleTimeEntriesPricesEntryEntriesView {
+    JsonObject _obj;
+
+    float priceMinute() {
+
+        return _obj["priceMinute"].as<float>();
+    }
+
+    Option<AuthorizeResponseTariffEntriesIdleTimeEntriesPricesEntryEntriesConditionsEntriesView> conditions() {
+        if (!_obj.containsKey("conditions"))
+                return {};
+
+        return Option<AuthorizeResponseTariffEntriesIdleTimeEntriesPricesEntryEntriesConditionsEntriesView>{AuthorizeResponseTariffEntriesIdleTimeEntriesPricesEntryEntriesConditionsEntriesView{_obj["conditions"].as<JsonObject>()}};
+    }
+
+};
+
+struct AuthorizeResponseTariffEntriesIdleTimeEntriesView {
+    JsonObject _obj;
+
+    size_t prices_count() {
+
+        return _obj["prices"].size();
+    }
+
+    AuthorizeResponseTariffEntriesIdleTimeEntriesPricesEntryEntriesView prices(size_t i) {
+
+        return AuthorizeResponseTariffEntriesIdleTimeEntriesPricesEntryEntriesView{_obj["prices"][i]};
+    }
+
+    size_t taxRates_count() {
+
+        return _obj["taxRates"].size();
+    }
+
+    Option<AuthorizeResponseTariffEntriesIdleTimeEntriesTaxRatesEntryEntriesView> taxRates(size_t i) {
+        if (!_obj.containsKey("taxRates"))
+                return {};
+
+        return Option<AuthorizeResponseTariffEntriesIdleTimeEntriesTaxRatesEntryEntriesView>{AuthorizeResponseTariffEntriesIdleTimeEntriesTaxRatesEntryEntriesView{_obj["taxRates"][i]}};
+    }
+
+};
+
+struct AuthorizeResponseTariffEntriesChargingTimeEntriesTaxRatesEntryEntriesView {
+    JsonObject _obj;
+
+    const char * type() {
+
+        return _obj["type"].as<const char *>();
+    }
+
+    float tax() {
+
+        return _obj["tax"].as<float>();
+    }
+
+    Option<int32_t> stack() {
+        if (!_obj.containsKey("stack"))
+                return {};
+
+        return _obj["stack"].as<int32_t>();
+    }
+
+};
+
+struct AuthorizeResponseTariffEntriesChargingTimeEntriesPricesEntryEntriesConditionsEntriesView {
+    JsonObject _obj;
+
+    Option<const char *> startTimeOfDay() {
+        if (!_obj.containsKey("startTimeOfDay"))
+                return {};
+
+        return _obj["startTimeOfDay"].as<const char *>();
+    }
+
+    Option<const char *> endTimeOfDay() {
+        if (!_obj.containsKey("endTimeOfDay"))
+                return {};
+
+        return _obj["endTimeOfDay"].as<const char *>();
+    }
+
+    size_t dayOfWeek_count() {
+
+        return _obj["dayOfWeek"].size();
+    }
+
+    Option<EntriesPricesEntryEntriesConditionsEntriesDayOfWeekEntry> dayOfWeek(size_t i) {
+        if (!_obj.containsKey("dayOfWeek"))
+                return {};
+
+        return Option<EntriesPricesEntryEntriesConditionsEntriesDayOfWeekEntry>{(EntriesPricesEntryEntriesConditionsEntriesDayOfWeekEntry)_obj["dayOfWeek"][i].as<size_t>()};
+    }
+
+    Option<const char *> validFromDate() {
+        if (!_obj.containsKey("validFromDate"))
+                return {};
+
+        return _obj["validFromDate"].as<const char *>();
+    }
+
+    Option<const char *> validToDate() {
+        if (!_obj.containsKey("validToDate"))
+                return {};
+
+        return _obj["validToDate"].as<const char *>();
+    }
+
+    Option<EntriesPricesEntryEntriesConditionsEntriesEvseKind> evseKind() {
+        if (!_obj.containsKey("evseKind"))
+                return {};
+
+        return Option<EntriesPricesEntryEntriesConditionsEntriesEvseKind>{(EntriesPricesEntryEntriesConditionsEntriesEvseKind)_obj["evseKind"].as<size_t>()};
+    }
+
+    Option<float> minEnergy() {
+        if (!_obj.containsKey("minEnergy"))
+                return {};
+
+        return _obj["minEnergy"].as<float>();
+    }
+
+    Option<float> maxEnergy() {
+        if (!_obj.containsKey("maxEnergy"))
+                return {};
+
+        return _obj["maxEnergy"].as<float>();
+    }
+
+    Option<float> minCurrent() {
+        if (!_obj.containsKey("minCurrent"))
+                return {};
+
+        return _obj["minCurrent"].as<float>();
+    }
+
+    Option<float> maxCurrent() {
+        if (!_obj.containsKey("maxCurrent"))
+                return {};
+
+        return _obj["maxCurrent"].as<float>();
+    }
+
+    Option<float> minPower() {
+        if (!_obj.containsKey("minPower"))
+                return {};
+
+        return _obj["minPower"].as<float>();
+    }
+
+    Option<float> maxPower() {
+        if (!_obj.containsKey("maxPower"))
+                return {};
+
+        return _obj["maxPower"].as<float>();
+    }
+
+    Option<int32_t> minTime() {
+        if (!_obj.containsKey("minTime"))
+                return {};
+
+        return _obj["minTime"].as<int32_t>();
+    }
+
+    Option<int32_t> maxTime() {
+        if (!_obj.containsKey("maxTime"))
+                return {};
+
+        return _obj["maxTime"].as<int32_t>();
+    }
+
+    Option<int32_t> minChargingTime() {
+        if (!_obj.containsKey("minChargingTime"))
+                return {};
+
+        return _obj["minChargingTime"].as<int32_t>();
+    }
+
+    Option<int32_t> maxChargingTime() {
+        if (!_obj.containsKey("maxChargingTime"))
+                return {};
+
+        return _obj["maxChargingTime"].as<int32_t>();
+    }
+
+    Option<int32_t> minIdleTime() {
+        if (!_obj.containsKey("minIdleTime"))
+                return {};
+
+        return _obj["minIdleTime"].as<int32_t>();
+    }
+
+    Option<int32_t> maxIdleTime() {
+        if (!_obj.containsKey("maxIdleTime"))
+                return {};
+
+        return _obj["maxIdleTime"].as<int32_t>();
+    }
+
+};
+
+struct AuthorizeResponseTariffEntriesChargingTimeEntriesPricesEntryEntriesView {
+    JsonObject _obj;
+
+    float priceMinute() {
+
+        return _obj["priceMinute"].as<float>();
+    }
+
+    Option<AuthorizeResponseTariffEntriesChargingTimeEntriesPricesEntryEntriesConditionsEntriesView> conditions() {
+        if (!_obj.containsKey("conditions"))
+                return {};
+
+        return Option<AuthorizeResponseTariffEntriesChargingTimeEntriesPricesEntryEntriesConditionsEntriesView>{AuthorizeResponseTariffEntriesChargingTimeEntriesPricesEntryEntriesConditionsEntriesView{_obj["conditions"].as<JsonObject>()}};
+    }
+
+};
+
+struct AuthorizeResponseTariffEntriesChargingTimeEntriesView {
+    JsonObject _obj;
+
+    size_t prices_count() {
+
+        return _obj["prices"].size();
+    }
+
+    AuthorizeResponseTariffEntriesChargingTimeEntriesPricesEntryEntriesView prices(size_t i) {
+
+        return AuthorizeResponseTariffEntriesChargingTimeEntriesPricesEntryEntriesView{_obj["prices"][i]};
+    }
+
+    size_t taxRates_count() {
+
+        return _obj["taxRates"].size();
+    }
+
+    Option<AuthorizeResponseTariffEntriesChargingTimeEntriesTaxRatesEntryEntriesView> taxRates(size_t i) {
+        if (!_obj.containsKey("taxRates"))
+                return {};
+
+        return Option<AuthorizeResponseTariffEntriesChargingTimeEntriesTaxRatesEntryEntriesView>{AuthorizeResponseTariffEntriesChargingTimeEntriesTaxRatesEntryEntriesView{_obj["taxRates"][i]}};
+    }
+
+};
+
+struct AuthorizeResponseTariffEntriesEnergyEntriesTaxRatesEntryEntriesView {
+    JsonObject _obj;
+
+    const char * type() {
+
+        return _obj["type"].as<const char *>();
+    }
+
+    float tax() {
+
+        return _obj["tax"].as<float>();
+    }
+
+    Option<int32_t> stack() {
+        if (!_obj.containsKey("stack"))
+                return {};
+
+        return _obj["stack"].as<int32_t>();
+    }
+
+};
+
+struct AuthorizeResponseTariffEntriesEnergyEntriesPricesEntryEntriesConditionsEntriesView {
+    JsonObject _obj;
+
+    Option<const char *> startTimeOfDay() {
+        if (!_obj.containsKey("startTimeOfDay"))
+                return {};
+
+        return _obj["startTimeOfDay"].as<const char *>();
+    }
+
+    Option<const char *> endTimeOfDay() {
+        if (!_obj.containsKey("endTimeOfDay"))
+                return {};
+
+        return _obj["endTimeOfDay"].as<const char *>();
+    }
+
+    size_t dayOfWeek_count() {
+
+        return _obj["dayOfWeek"].size();
+    }
+
+    Option<EntriesPricesEntryEntriesConditionsEntriesDayOfWeekEntry> dayOfWeek(size_t i) {
+        if (!_obj.containsKey("dayOfWeek"))
+                return {};
+
+        return Option<EntriesPricesEntryEntriesConditionsEntriesDayOfWeekEntry>{(EntriesPricesEntryEntriesConditionsEntriesDayOfWeekEntry)_obj["dayOfWeek"][i].as<size_t>()};
+    }
+
+    Option<const char *> validFromDate() {
+        if (!_obj.containsKey("validFromDate"))
+                return {};
+
+        return _obj["validFromDate"].as<const char *>();
+    }
+
+    Option<const char *> validToDate() {
+        if (!_obj.containsKey("validToDate"))
+                return {};
+
+        return _obj["validToDate"].as<const char *>();
+    }
+
+    Option<EntriesPricesEntryEntriesConditionsEntriesEvseKind> evseKind() {
+        if (!_obj.containsKey("evseKind"))
+                return {};
+
+        return Option<EntriesPricesEntryEntriesConditionsEntriesEvseKind>{(EntriesPricesEntryEntriesConditionsEntriesEvseKind)_obj["evseKind"].as<size_t>()};
+    }
+
+    Option<float> minEnergy() {
+        if (!_obj.containsKey("minEnergy"))
+                return {};
+
+        return _obj["minEnergy"].as<float>();
+    }
+
+    Option<float> maxEnergy() {
+        if (!_obj.containsKey("maxEnergy"))
+                return {};
+
+        return _obj["maxEnergy"].as<float>();
+    }
+
+    Option<float> minCurrent() {
+        if (!_obj.containsKey("minCurrent"))
+                return {};
+
+        return _obj["minCurrent"].as<float>();
+    }
+
+    Option<float> maxCurrent() {
+        if (!_obj.containsKey("maxCurrent"))
+                return {};
+
+        return _obj["maxCurrent"].as<float>();
+    }
+
+    Option<float> minPower() {
+        if (!_obj.containsKey("minPower"))
+                return {};
+
+        return _obj["minPower"].as<float>();
+    }
+
+    Option<float> maxPower() {
+        if (!_obj.containsKey("maxPower"))
+                return {};
+
+        return _obj["maxPower"].as<float>();
+    }
+
+    Option<int32_t> minTime() {
+        if (!_obj.containsKey("minTime"))
+                return {};
+
+        return _obj["minTime"].as<int32_t>();
+    }
+
+    Option<int32_t> maxTime() {
+        if (!_obj.containsKey("maxTime"))
+                return {};
+
+        return _obj["maxTime"].as<int32_t>();
+    }
+
+    Option<int32_t> minChargingTime() {
+        if (!_obj.containsKey("minChargingTime"))
+                return {};
+
+        return _obj["minChargingTime"].as<int32_t>();
+    }
+
+    Option<int32_t> maxChargingTime() {
+        if (!_obj.containsKey("maxChargingTime"))
+                return {};
+
+        return _obj["maxChargingTime"].as<int32_t>();
+    }
+
+    Option<int32_t> minIdleTime() {
+        if (!_obj.containsKey("minIdleTime"))
+                return {};
+
+        return _obj["minIdleTime"].as<int32_t>();
+    }
+
+    Option<int32_t> maxIdleTime() {
+        if (!_obj.containsKey("maxIdleTime"))
+                return {};
+
+        return _obj["maxIdleTime"].as<int32_t>();
+    }
+
+};
+
+struct AuthorizeResponseTariffEntriesEnergyEntriesPricesEntryEntriesView {
+    JsonObject _obj;
+
+    float priceKwh() {
+
+        return _obj["priceKwh"].as<float>();
+    }
+
+    Option<AuthorizeResponseTariffEntriesEnergyEntriesPricesEntryEntriesConditionsEntriesView> conditions() {
+        if (!_obj.containsKey("conditions"))
+                return {};
+
+        return Option<AuthorizeResponseTariffEntriesEnergyEntriesPricesEntryEntriesConditionsEntriesView>{AuthorizeResponseTariffEntriesEnergyEntriesPricesEntryEntriesConditionsEntriesView{_obj["conditions"].as<JsonObject>()}};
+    }
+
+};
+
+struct AuthorizeResponseTariffEntriesEnergyEntriesView {
+    JsonObject _obj;
+
+    size_t prices_count() {
+
+        return _obj["prices"].size();
+    }
+
+    AuthorizeResponseTariffEntriesEnergyEntriesPricesEntryEntriesView prices(size_t i) {
+
+        return AuthorizeResponseTariffEntriesEnergyEntriesPricesEntryEntriesView{_obj["prices"][i]};
+    }
+
+    size_t taxRates_count() {
+
+        return _obj["taxRates"].size();
+    }
+
+    Option<AuthorizeResponseTariffEntriesEnergyEntriesTaxRatesEntryEntriesView> taxRates(size_t i) {
+        if (!_obj.containsKey("taxRates"))
+                return {};
+
+        return Option<AuthorizeResponseTariffEntriesEnergyEntriesTaxRatesEntryEntriesView>{AuthorizeResponseTariffEntriesEnergyEntriesTaxRatesEntryEntriesView{_obj["taxRates"][i]}};
+    }
+
+};
+
+struct AuthorizeResponseTariffEntriesDescriptionEntryEntriesView {
+    JsonObject _obj;
+
+    EntriesFormat format() {
+
+        return (EntriesFormat)_obj["format"].as<size_t>();
+    }
+
+    Option<const char *> language() {
+        if (!_obj.containsKey("language"))
+                return {};
+
+        return _obj["language"].as<const char *>();
+    }
+
+    const char * content() {
+
+        return _obj["content"].as<const char *>();
+    }
+
+};
+
+struct AuthorizeResponseTariffEntriesView {
+    JsonObject _obj;
+
+    const char * tariffId() {
+
+        return _obj["tariffId"].as<const char *>();
+    }
+
+    size_t description_count() {
+
+        return _obj["description"].size();
+    }
+
+    Option<AuthorizeResponseTariffEntriesDescriptionEntryEntriesView> description(size_t i) {
+        if (!_obj.containsKey("description"))
+                return {};
+
+        return Option<AuthorizeResponseTariffEntriesDescriptionEntryEntriesView>{AuthorizeResponseTariffEntriesDescriptionEntryEntriesView{_obj["description"][i]}};
+    }
+
+    const char * currency() {
+
+        return _obj["currency"].as<const char *>();
+    }
+
+    Option<AuthorizeResponseTariffEntriesEnergyEntriesView> energy() {
+        if (!_obj.containsKey("energy"))
+                return {};
+
+        return Option<AuthorizeResponseTariffEntriesEnergyEntriesView>{AuthorizeResponseTariffEntriesEnergyEntriesView{_obj["energy"].as<JsonObject>()}};
+    }
+
+    Option<time_t> validFrom() {
+        if (!_obj.containsKey("validFrom"))
+                return {};
+
+        return _obj["validFrom"].as<time_t>();
+    }
+
+    Option<AuthorizeResponseTariffEntriesChargingTimeEntriesView> chargingTime() {
+        if (!_obj.containsKey("chargingTime"))
+                return {};
+
+        return Option<AuthorizeResponseTariffEntriesChargingTimeEntriesView>{AuthorizeResponseTariffEntriesChargingTimeEntriesView{_obj["chargingTime"].as<JsonObject>()}};
+    }
+
+    Option<AuthorizeResponseTariffEntriesIdleTimeEntriesView> idleTime() {
+        if (!_obj.containsKey("idleTime"))
+                return {};
+
+        return Option<AuthorizeResponseTariffEntriesIdleTimeEntriesView>{AuthorizeResponseTariffEntriesIdleTimeEntriesView{_obj["idleTime"].as<JsonObject>()}};
+    }
+
+    Option<AuthorizeResponseTariffEntriesFixedFeeEntriesView> fixedFee() {
+        if (!_obj.containsKey("fixedFee"))
+                return {};
+
+        return Option<AuthorizeResponseTariffEntriesFixedFeeEntriesView>{AuthorizeResponseTariffEntriesFixedFeeEntriesView{_obj["fixedFee"].as<JsonObject>()}};
+    }
+
+    Option<AuthorizeResponseTariffEntriesReservationTimeEntriesView> reservationTime() {
+        if (!_obj.containsKey("reservationTime"))
+                return {};
+
+        return Option<AuthorizeResponseTariffEntriesReservationTimeEntriesView>{AuthorizeResponseTariffEntriesReservationTimeEntriesView{_obj["reservationTime"].as<JsonObject>()}};
+    }
+
+    Option<AuthorizeResponseTariffEntriesReservationFixedEntriesView> reservationFixed() {
+        if (!_obj.containsKey("reservationFixed"))
+                return {};
+
+        return Option<AuthorizeResponseTariffEntriesReservationFixedEntriesView>{AuthorizeResponseTariffEntriesReservationFixedEntriesView{_obj["reservationFixed"].as<JsonObject>()}};
+    }
+
+    Option<AuthorizeResponseTariffEntriesMinCostEntriesView> minCost() {
+        if (!_obj.containsKey("minCost"))
+                return {};
+
+        return Option<AuthorizeResponseTariffEntriesMinCostEntriesView>{AuthorizeResponseTariffEntriesMinCostEntriesView{_obj["minCost"].as<JsonObject>()}};
+    }
+
+    Option<AuthorizeResponseTariffEntriesMaxCostEntriesView> maxCost() {
+        if (!_obj.containsKey("maxCost"))
+                return {};
+
+        return Option<AuthorizeResponseTariffEntriesMaxCostEntriesView>{AuthorizeResponseTariffEntriesMaxCostEntriesView{_obj["maxCost"].as<JsonObject>()}};
+    }
+
+};
+
+struct AuthorizeResponseIdTokenInfoEntriesPersonalMessageEntriesView {
+    JsonObject _obj;
+
+    EntriesFormat format() {
+
+        return (EntriesFormat)_obj["format"].as<size_t>();
+    }
+
+    Option<const char *> language() {
+        if (!_obj.containsKey("language"))
+                return {};
+
+        return _obj["language"].as<const char *>();
+    }
+
+    const char * content() {
+
+        return _obj["content"].as<const char *>();
+    }
+
+};
+
+struct AuthorizeResponseIdTokenInfoEntriesGroupIdTokenEntriesAdditionalInfoEntryEntriesView {
+    JsonObject _obj;
+
+    const char * additionalIdToken() {
+
+        return _obj["additionalIdToken"].as<const char *>();
+    }
+
+    const char * type() {
+
+        return _obj["type"].as<const char *>();
+    }
+
+};
+
+struct AuthorizeResponseIdTokenInfoEntriesGroupIdTokenEntriesView {
+    JsonObject _obj;
+
+    size_t additionalInfo_count() {
+
+        return _obj["additionalInfo"].size();
+    }
+
+    Option<AuthorizeResponseIdTokenInfoEntriesGroupIdTokenEntriesAdditionalInfoEntryEntriesView> additionalInfo(size_t i) {
+        if (!_obj.containsKey("additionalInfo"))
+                return {};
+
+        return Option<AuthorizeResponseIdTokenInfoEntriesGroupIdTokenEntriesAdditionalInfoEntryEntriesView>{AuthorizeResponseIdTokenInfoEntriesGroupIdTokenEntriesAdditionalInfoEntryEntriesView{_obj["additionalInfo"][i]}};
+    }
+
+    const char * idToken() {
+
+        return _obj["idToken"].as<const char *>();
+    }
+
+    const char * type() {
+
+        return _obj["type"].as<const char *>();
+    }
+
+};
+
+struct AuthorizeResponseIdTokenInfoEntriesView {
+    JsonObject _obj;
+
+    ResponseIdTokenInfoEntriesStatus status() {
+
+        return (ResponseIdTokenInfoEntriesStatus)_obj["status"].as<size_t>();
+    }
+
+    Option<time_t> cacheExpiryDateTime() {
+        if (!_obj.containsKey("cacheExpiryDateTime"))
+                return {};
+
+        return _obj["cacheExpiryDateTime"].as<time_t>();
+    }
+
+    Option<int32_t> chargingPriority() {
+        if (!_obj.containsKey("chargingPriority"))
+                return {};
+
+        return _obj["chargingPriority"].as<int32_t>();
+    }
+
+    Option<AuthorizeResponseIdTokenInfoEntriesGroupIdTokenEntriesView> groupIdToken() {
+        if (!_obj.containsKey("groupIdToken"))
+                return {};
+
+        return Option<AuthorizeResponseIdTokenInfoEntriesGroupIdTokenEntriesView>{AuthorizeResponseIdTokenInfoEntriesGroupIdTokenEntriesView{_obj["groupIdToken"].as<JsonObject>()}};
+    }
+
+    Option<const char *> language1() {
+        if (!_obj.containsKey("language1"))
+                return {};
+
+        return _obj["language1"].as<const char *>();
+    }
+
+    Option<const char *> language2() {
+        if (!_obj.containsKey("language2"))
+                return {};
+
+        return _obj["language2"].as<const char *>();
+    }
+
+    size_t evseId_count() {
+
+        return _obj["evseId"].size();
+    }
+
+    Option<int32_t> evseId(size_t i) {
+        if (!_obj.containsKey("evseId"))
+                return {};
+
+        return _obj["evseId"][i].as<int32_t>();
+    }
+
+    Option<AuthorizeResponseIdTokenInfoEntriesPersonalMessageEntriesView> personalMessage() {
+        if (!_obj.containsKey("personalMessage"))
+                return {};
+
+        return Option<AuthorizeResponseIdTokenInfoEntriesPersonalMessageEntriesView>{AuthorizeResponseIdTokenInfoEntriesPersonalMessageEntriesView{_obj["personalMessage"].as<JsonObject>()}};
+    }
+
+};
+
+struct AuthorizeResponseView {
+    JsonObject _obj;
+
+    AuthorizeResponseIdTokenInfoEntriesView idTokenInfo() {
+
+        return AuthorizeResponseIdTokenInfoEntriesView{_obj["idTokenInfo"].as<JsonObject>()};
+    }
+
+    Option<AuthorizeResponseCertificateStatus> certificateStatus() {
+        if (!_obj.containsKey("certificateStatus"))
+                return {};
+
+        return Option<AuthorizeResponseCertificateStatus>{(AuthorizeResponseCertificateStatus)_obj["certificateStatus"].as<size_t>()};
+    }
+
+    size_t allowedEnergyTransfer_count() {
+
+        return _obj["allowedEnergyTransfer"].size();
+    }
+
+    Option<AuthorizeResponseAllowedEnergyTransferEntry> allowedEnergyTransfer(size_t i) {
+        if (!_obj.containsKey("allowedEnergyTransfer"))
+                return {};
+
+        return Option<AuthorizeResponseAllowedEnergyTransferEntry>{(AuthorizeResponseAllowedEnergyTransferEntry)_obj["allowedEnergyTransfer"][i].as<size_t>()};
+    }
+
+    Option<AuthorizeResponseTariffEntriesView> tariff() {
+        if (!_obj.containsKey("tariff"))
+                return {};
+
+        return Option<AuthorizeResponseTariffEntriesView>{AuthorizeResponseTariffEntriesView{_obj["tariff"].as<JsonObject>()}};
+    }
+
 };
 
 struct ResetView {
@@ -692,6 +3912,148 @@ struct BootNotificationResponseView {
 
 };
 
+struct TransactionEventCostDetailsTotalCostReservationFixedTaxRates {
+    const char *type;
+    float tax;
+    int32_t stack = OCPP_INTEGER_NOT_PASSED;
+
+    void serializeInto(TFJsonSerializer &json);
+};
+
+struct TransactionEventCostDetailsTotalCostReservationTimeTaxRates {
+    const char *type;
+    float tax;
+    int32_t stack = OCPP_INTEGER_NOT_PASSED;
+
+    void serializeInto(TFJsonSerializer &json);
+};
+
+struct TransactionEventCostDetailsTotalCostIdleTimeTaxRates {
+    const char *type;
+    float tax;
+    int32_t stack = OCPP_INTEGER_NOT_PASSED;
+
+    void serializeInto(TFJsonSerializer &json);
+};
+
+struct TransactionEventCostDetailsTotalCostChargingTimeTaxRates {
+    const char *type;
+    float tax;
+    int32_t stack = OCPP_INTEGER_NOT_PASSED;
+
+    void serializeInto(TFJsonSerializer &json);
+};
+
+struct TransactionEventCostDetailsTotalCostEnergyTaxRates {
+    const char *type;
+    float tax;
+    int32_t stack = OCPP_INTEGER_NOT_PASSED;
+
+    void serializeInto(TFJsonSerializer &json);
+};
+
+struct TransactionEventCostDetailsTotalCostFixedTaxRates {
+    const char *type;
+    float tax;
+    int32_t stack = OCPP_INTEGER_NOT_PASSED;
+
+    void serializeInto(TFJsonSerializer &json);
+};
+
+struct MeterValuesMeterValueSampledValueUnitOfMeasure {
+    const char *unit = nullptr;
+    int32_t multiplier = OCPP_INTEGER_NOT_PASSED;
+
+    void serializeInto(TFJsonSerializer &json);
+};
+
+struct MeterValuesMeterValueSampledValueSignedMeterValue {
+    const char *signedMeterData;
+    const char *signingMethod = nullptr;
+    const char *encodingMethod;
+    const char *publicKey = nullptr;
+
+    void serializeInto(TFJsonSerializer &json);
+};
+
+struct TransactionEventMeterValueSampledValueUnitOfMeasure {
+    const char *unit = nullptr;
+    int32_t multiplier = OCPP_INTEGER_NOT_PASSED;
+
+    void serializeInto(TFJsonSerializer &json);
+};
+
+struct TransactionEventMeterValueSampledValueSignedMeterValue {
+    const char *signedMeterData;
+    const char *signingMethod = nullptr;
+    const char *encodingMethod;
+    const char *publicKey = nullptr;
+
+    void serializeInto(TFJsonSerializer &json);
+};
+
+struct TransactionEventCostDetailsTotalCostTotal {
+    float exclTax = OCPP_DECIMAL_NOT_PASSED;
+    float inclTax = OCPP_DECIMAL_NOT_PASSED;
+
+    void serializeInto(TFJsonSerializer &json);
+};
+
+struct TransactionEventCostDetailsTotalCostReservationFixed {
+    float exclTax = OCPP_DECIMAL_NOT_PASSED;
+    float inclTax = OCPP_DECIMAL_NOT_PASSED;
+    TransactionEventCostDetailsTotalCostReservationFixedTaxRates *taxRates = nullptr; size_t taxRates_length = 0;
+
+    void serializeInto(TFJsonSerializer &json);
+};
+
+struct TransactionEventCostDetailsTotalCostReservationTime {
+    float exclTax = OCPP_DECIMAL_NOT_PASSED;
+    float inclTax = OCPP_DECIMAL_NOT_PASSED;
+    TransactionEventCostDetailsTotalCostReservationTimeTaxRates *taxRates = nullptr; size_t taxRates_length = 0;
+
+    void serializeInto(TFJsonSerializer &json);
+};
+
+struct TransactionEventCostDetailsTotalCostIdleTime {
+    float exclTax = OCPP_DECIMAL_NOT_PASSED;
+    float inclTax = OCPP_DECIMAL_NOT_PASSED;
+    TransactionEventCostDetailsTotalCostIdleTimeTaxRates *taxRates = nullptr; size_t taxRates_length = 0;
+
+    void serializeInto(TFJsonSerializer &json);
+};
+
+struct TransactionEventCostDetailsTotalCostChargingTime {
+    float exclTax = OCPP_DECIMAL_NOT_PASSED;
+    float inclTax = OCPP_DECIMAL_NOT_PASSED;
+    TransactionEventCostDetailsTotalCostChargingTimeTaxRates *taxRates = nullptr; size_t taxRates_length = 0;
+
+    void serializeInto(TFJsonSerializer &json);
+};
+
+struct TransactionEventCostDetailsTotalCostEnergy {
+    float exclTax = OCPP_DECIMAL_NOT_PASSED;
+    float inclTax = OCPP_DECIMAL_NOT_PASSED;
+    TransactionEventCostDetailsTotalCostEnergyTaxRates *taxRates = nullptr; size_t taxRates_length = 0;
+
+    void serializeInto(TFJsonSerializer &json);
+};
+
+struct TransactionEventCostDetailsTotalCostFixed {
+    float exclTax = OCPP_DECIMAL_NOT_PASSED;
+    float inclTax = OCPP_DECIMAL_NOT_PASSED;
+    TransactionEventCostDetailsTotalCostFixedTaxRates *taxRates = nullptr; size_t taxRates_length = 0;
+
+    void serializeInto(TFJsonSerializer &json);
+};
+
+struct TransactionEventCostDetailsChargingPeriodsDimensions {
+    TransactionEventCostDetailsChargingPeriodsDimensionsType type;
+    float volume;
+
+    void serializeInto(TFJsonSerializer &json);
+};
+
 struct SetVariablesResponseSetVariableResultComponentEvse {
     int32_t id;
     int32_t connectorId = OCPP_INTEGER_NOT_PASSED;
@@ -702,6 +4064,84 @@ struct SetVariablesResponseSetVariableResultComponentEvse {
 struct GetVariablesResponseGetVariableResultComponentEvse {
     int32_t id;
     int32_t connectorId = OCPP_INTEGER_NOT_PASSED;
+
+    void serializeInto(TFJsonSerializer &json);
+};
+
+struct MeterValuesMeterValueSampledValue {
+    float value;
+    MeterValueSampledValueMeasurand measurand = MeterValueSampledValueMeasurand::NONE;
+    MeterValueSampledValueContext context = MeterValueSampledValueContext::NONE;
+    MeterValueSampledValuePhase phase = MeterValueSampledValuePhase::NONE;
+    MeterValueSampledValueLocation location = MeterValueSampledValueLocation::NONE;
+    MeterValuesMeterValueSampledValueSignedMeterValue *signedMeterValue = nullptr;
+    MeterValuesMeterValueSampledValueUnitOfMeasure *unitOfMeasure = nullptr;
+
+    void serializeInto(TFJsonSerializer &json);
+};
+
+struct TransactionEventIdTokenAdditionalInfo {
+    const char *additionalIdToken;
+    const char *type;
+
+    void serializeInto(TFJsonSerializer &json);
+};
+
+struct TransactionEventTransactionInfoTransactionLimit {
+    float maxCost = OCPP_DECIMAL_NOT_PASSED;
+    float maxEnergy = OCPP_DECIMAL_NOT_PASSED;
+    int32_t maxTime = OCPP_INTEGER_NOT_PASSED;
+    int32_t maxSoC = OCPP_INTEGER_NOT_PASSED;
+
+    void serializeInto(TFJsonSerializer &json);
+};
+
+struct TransactionEventMeterValueSampledValue {
+    float value;
+    MeterValueSampledValueMeasurand measurand = MeterValueSampledValueMeasurand::NONE;
+    MeterValueSampledValueContext context = MeterValueSampledValueContext::NONE;
+    MeterValueSampledValuePhase phase = MeterValueSampledValuePhase::NONE;
+    MeterValueSampledValueLocation location = MeterValueSampledValueLocation::NONE;
+    TransactionEventMeterValueSampledValueSignedMeterValue *signedMeterValue = nullptr;
+    TransactionEventMeterValueSampledValueUnitOfMeasure *unitOfMeasure = nullptr;
+
+    void serializeInto(TFJsonSerializer &json);
+};
+
+struct TransactionEventCostDetailsTotalUsage {
+    float energy;
+    int32_t chargingTime;
+    int32_t idleTime;
+    int32_t reservationTime = OCPP_INTEGER_NOT_PASSED;
+
+    void serializeInto(TFJsonSerializer &json);
+};
+
+struct TransactionEventCostDetailsTotalCost {
+    const char *currency;
+    TransactionEventCostDetailsTotalCostTypeOfCost typeOfCost;
+    TransactionEventCostDetailsTotalCostFixed *fixed = nullptr;
+    TransactionEventCostDetailsTotalCostEnergy *energy = nullptr;
+    TransactionEventCostDetailsTotalCostChargingTime *chargingTime = nullptr;
+    TransactionEventCostDetailsTotalCostIdleTime *idleTime = nullptr;
+    TransactionEventCostDetailsTotalCostReservationTime *reservationTime = nullptr;
+    TransactionEventCostDetailsTotalCostReservationFixed *reservationFixed = nullptr;
+    TransactionEventCostDetailsTotalCostTotal *total;
+
+    void serializeInto(TFJsonSerializer &json);
+};
+
+struct TransactionEventCostDetailsChargingPeriods {
+    TransactionEventCostDetailsChargingPeriodsDimensions *dimensions = nullptr; size_t dimensions_length = 0;
+    const char *tariffId = nullptr;
+    time_t startPeriod;
+
+    void serializeInto(TFJsonSerializer &json);
+};
+
+struct AuthorizeIdTokenAdditionalInfo {
+    const char *additionalIdToken;
+    const char *type;
 
     void serializeInto(TFJsonSerializer &json);
 };
@@ -753,6 +4193,90 @@ struct GetVariablesResponseGetVariableResultAttributeStatusInfo {
 struct BootNotificationChargingStationModem {
     const char *iccid = nullptr;
     const char *imsi = nullptr;
+
+    void serializeInto(TFJsonSerializer &json);
+};
+
+struct RequestStopTransactionResponseStatusInfo {
+    const char *reasonCode;
+    const char *additionalInfo = nullptr;
+
+    void serializeInto(TFJsonSerializer &json);
+};
+
+struct RequestStartTransactionResponseStatusInfo {
+    const char *reasonCode;
+    const char *additionalInfo = nullptr;
+
+    void serializeInto(TFJsonSerializer &json);
+};
+
+struct MeterValuesMeterValue {
+    MeterValuesMeterValueSampledValue *sampledValue; size_t sampledValue_length;
+    time_t timestamp;
+
+    void serializeInto(TFJsonSerializer &json);
+};
+
+struct TransactionEventIdToken {
+    TransactionEventIdTokenAdditionalInfo *additionalInfo = nullptr; size_t additionalInfo_length = 0;
+    const char *idToken;
+    const char *type;
+
+    void serializeInto(TFJsonSerializer &json);
+};
+
+struct TransactionEventEvse {
+    int32_t id;
+    int32_t connectorId = OCPP_INTEGER_NOT_PASSED;
+
+    void serializeInto(TFJsonSerializer &json);
+};
+
+struct TransactionEventTransactionInfo {
+    const char *transactionId;
+    TransactionEventTransactionInfoChargingState chargingState = TransactionEventTransactionInfoChargingState::NONE;
+    int32_t timeSpentCharging = OCPP_INTEGER_NOT_PASSED;
+    TransactionEventTransactionInfoStoppedReason stoppedReason = TransactionEventTransactionInfoStoppedReason::NONE;
+    int32_t remoteStartId = OCPP_INTEGER_NOT_PASSED;
+    TransactionEventTransactionInfoOperationMode operationMode = TransactionEventTransactionInfoOperationMode::NONE;
+    const char *tariffId = nullptr;
+    TransactionEventTransactionInfoTransactionLimit *transactionLimit = nullptr;
+
+    void serializeInto(TFJsonSerializer &json);
+};
+
+struct TransactionEventMeterValue {
+    TransactionEventMeterValueSampledValue *sampledValue; size_t sampledValue_length;
+    time_t timestamp;
+
+    void serializeInto(TFJsonSerializer &json);
+};
+
+struct TransactionEventCostDetails {
+    TransactionEventCostDetailsChargingPeriods *chargingPeriods = nullptr; size_t chargingPeriods_length = 0;
+    TransactionEventCostDetailsTotalCost *totalCost;
+    TransactionEventCostDetailsTotalUsage *totalUsage;
+    int8_t failureToCalculate = OCPP_BOOL_NOT_PASSED;
+    const char *failureReason = nullptr;
+
+    void serializeInto(TFJsonSerializer &json);
+};
+
+struct AuthorizeIso15118CertificateHashData {
+    AuthorizeIso15118CertificateHashDataHashAlgorithm hashAlgorithm;
+    const char *issuerNameHash;
+    const char *issuerKeyHash;
+    const char *serialNumber;
+    const char *responderURL;
+
+    void serializeInto(TFJsonSerializer &json);
+};
+
+struct AuthorizeIdToken {
+    AuthorizeIdTokenAdditionalInfo *additionalInfo = nullptr; size_t additionalInfo_length = 0;
+    const char *idToken;
+    const char *type;
 
     void serializeInto(TFJsonSerializer &json);
 };
@@ -910,6 +4434,98 @@ struct ResetResponse final : public ICall {
     size_t serializeJson(char *buf, size_t buf_len) const override;
 };
 
+struct Authorize final : public ICall {
+    AuthorizeIdToken *idToken;
+    const char *certificate;
+    AuthorizeIso15118CertificateHashData *iso15118CertificateHashData; size_t iso15118CertificateHashData_length;
+
+    Authorize(AuthorizeIdToken *idToken,
+        const char certificate[10001] = nullptr,
+        AuthorizeIso15118CertificateHashData *iso15118CertificateHashData = nullptr, size_t iso15118CertificateHashData_length = 0);
+    Authorize(const Authorize&) = delete;
+    Authorize &operator=(const Authorize&) = delete;
+
+    size_t serializeJson(char *buf, size_t buf_len) const override;
+};
+
+struct TransactionEvent final : public ICall {
+    TransactionEventCostDetails *costDetails;
+    TransactionEventEventType eventType;
+    TransactionEventMeterValue *meterValue; size_t meterValue_length;
+    time_t timestamp;
+    TransactionEventTriggerReason triggerReason;
+    int32_t seqNo;
+    int8_t offline;
+    int32_t numberOfPhasesUsed;
+    int32_t cableMaxCurrent;
+    int32_t reservationId;
+    TransactionEventPreconditioningStatus preconditioningStatus;
+    int8_t evseSleep;
+    TransactionEventTransactionInfo *transactionInfo;
+    TransactionEventEvse *evse;
+    TransactionEventIdToken *idToken;
+
+    TransactionEvent(TransactionEventEventType eventType,
+        time_t timestamp,
+        TransactionEventTriggerReason triggerReason,
+        int32_t seqNo,
+        TransactionEventTransactionInfo *transactionInfo,
+        TransactionEventCostDetails *costDetails = nullptr,
+        TransactionEventMeterValue *meterValue = nullptr, size_t meterValue_length = 0,
+        int8_t offline = OCPP_BOOL_NOT_PASSED,
+        int32_t numberOfPhasesUsed = OCPP_INTEGER_NOT_PASSED,
+        int32_t cableMaxCurrent = OCPP_INTEGER_NOT_PASSED,
+        int32_t reservationId = OCPP_INTEGER_NOT_PASSED,
+        TransactionEventPreconditioningStatus preconditioningStatus = TransactionEventPreconditioningStatus::NONE,
+        int8_t evseSleep = OCPP_BOOL_NOT_PASSED,
+        TransactionEventEvse *evse = nullptr,
+        TransactionEventIdToken *idToken = nullptr);
+    TransactionEvent(const TransactionEvent&) = delete;
+    TransactionEvent &operator=(const TransactionEvent&) = delete;
+
+    size_t serializeJson(char *buf, size_t buf_len) const override;
+};
+
+struct MeterValues final : public ICall {
+    int32_t evseId;
+    MeterValuesMeterValue *meterValue; size_t meterValue_length;
+
+    MeterValues(int32_t evseId,
+        MeterValuesMeterValue *meterValue, size_t meterValue_length);
+    MeterValues(const MeterValues&) = delete;
+    MeterValues &operator=(const MeterValues&) = delete;
+
+    size_t serializeJson(char *buf, size_t buf_len) const override;
+};
+
+struct RequestStartTransactionResponse final : public ICall {
+    TransactionResponseStatus status;
+    RequestStartTransactionResponseStatusInfo *statusInfo;
+    const char *transactionId;
+
+    RequestStartTransactionResponse(const char *call_id,
+        TransactionResponseStatus status,
+        RequestStartTransactionResponseStatusInfo *statusInfo = nullptr,
+        const char transactionId[37] = nullptr);
+    RequestStartTransactionResponse(const RequestStartTransactionResponse&) = delete;
+    RequestStartTransactionResponse &operator=(const RequestStartTransactionResponse&) = delete;
+
+    size_t serializeJson(char *buf, size_t buf_len) const override;
+};
+
+struct RequestStopTransactionResponse final : public ICall {
+    TransactionResponseStatus status;
+    RequestStopTransactionResponseStatusInfo *statusInfo;
+
+    RequestStopTransactionResponse(const char *call_id,
+        TransactionResponseStatus status,
+        RequestStopTransactionResponseStatusInfo *statusInfo = nullptr);
+    RequestStopTransactionResponse(const RequestStopTransactionResponse&) = delete;
+    RequestStopTransactionResponse &operator=(const RequestStopTransactionResponse&) = delete;
+
+    size_t serializeJson(char *buf, size_t buf_len) const override;
+};
+
 CallResponse parseBootNotificationResponse(JsonObject obj);
 
 CallResponse parseHeartbeatResponse(JsonObject obj);
@@ -925,6 +4541,16 @@ CallResponse parseGetBaseReport(JsonObject obj);
 CallResponse parseTriggerMessage(JsonObject obj);
 
 CallResponse parseReset(JsonObject obj);
+
+CallResponse parseAuthorizeResponse(JsonObject obj);
+
+CallResponse parseTransactionEventResponse(JsonObject obj);
+
+CallResponse parseMeterValuesResponse(JsonObject obj);
+
+CallResponse parseRequestStartTransaction(JsonObject obj);
+
+CallResponse parseRequestStopTransaction(JsonObject obj);
 
 CallResponse callResultHandler(int32_t connectorId, CallAction resultTo, JsonObject obj, ChargePoint21 *cp);
 
