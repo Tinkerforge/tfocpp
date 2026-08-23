@@ -40,6 +40,7 @@ public:
     // persisted the value and applied side effects.
     bool basic_auth_password_changed = false;
     bool organization_name_changed = false;
+    bool heartbeat_interval_changed = false;
 
     // On success writes the value as string into buf.
     VariableResult getVariable(const char *component, const char *variable, char *buf, size_t buf_len);

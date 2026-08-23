@@ -87,6 +87,7 @@ VariableResult DeviceModel21::setVariable(const char *component, const char *var
             if (parsed.is_none() || parsed.unwrap() <= 0)
                 return VariableResult::Rejected;
             heartbeat_interval_s = parsed.unwrap();
+            heartbeat_interval_changed = true;
             return VariableResult::Accepted;
         }
         return VariableResult::UnknownVariable;

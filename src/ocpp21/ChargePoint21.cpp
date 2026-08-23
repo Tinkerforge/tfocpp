@@ -651,6 +651,12 @@ CallResponse ChargePoint21::handleSetVariables(const char *uid, SetVariablesView
 
     connection.sendCallResponse(SetVariablesResponse{uid, results.get(), count});
 
+    if (device_model.heartbeat_interval_changed) {
+        device_model.heartbeat_interval_changed = false;
+        // Apply the new interval to the running heartbeat schedule.
+        next_heartbeat_deadline = set_deadline((uint32_t)device_model.heartbeat_interval_s * 1000);
+    }
+
     if (device_model.basic_auth_password_changed || device_model.organization_name_changed) {
         bool password_changed = device_model.basic_auth_password_changed;
         device_model.basic_auth_password_changed = false;
