@@ -298,6 +298,11 @@ void OcppConnection::tick() {
         // Connection establishment counts as successful ping/pong
         last_ping_sent = platform_now_ms();
         this->setPongDeadline();
+        // Arm the ping deadline. Leaving it at its initial value 0 breaks
+        // deadline_elapsed(0) while platform_now_ms() is in [2^31, 2^32),
+        // i.e. between 24.8 and 49.7 days of uptime: no pings are sent,
+        // the pong deadline elapses and the connection is cut repeatedly.
+        next_ping_deadline = set_deadline(getIntConfigUnsigned(ConfigKey::WebSocketPingInterval) * 1000);
 
         // Stop reconnects
         next_reconnect_deadline = 0;
@@ -345,7 +350,12 @@ void OcppConnection::tick() {
         && deadline_elapsed(next_ping_deadline)) {
         if (platform_ws_send_ping(platform_ctx)) {
             last_ping_sent = platform_now_ms();
-            next_ping_deadline = last_ping_sent + getIntConfigUnsigned(ConfigKey::WebSocketPingInterval) * 1000;
+            next_ping_deadline = set_deadline(getIntConfigUnsigned(ConfigKey::WebSocketPingInterval) * 1000);
+            // If WebSocketPingInterval was 0 while connecting, the pong
+            // deadline is still the disabled marker 0. Arm it with the
+            // first ping sent after the interval was changed at runtime.
+            if (pong_deadline == 0)
+                this->setPongDeadline();
         } else {
             log_info("Failed to send ping");
         }
