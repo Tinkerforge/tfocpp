@@ -298,6 +298,32 @@ static bool append_subject_part(char *subject, size_t subject_len, size_t *pos, 
     return true;
 }
 
+static size_t der_to_pem(const char *label, const uint8_t *der, size_t der_len, char *pem, size_t pem_len)
+{
+    uint8_t b64[3072];
+    size_t b64_len = 0;
+    if (mbedtls_base64_encode(b64, sizeof(b64), &b64_len, der, der_len) != 0) {
+        return 0;
+    }
+
+    size_t need = strlen("-----BEGIN -----\n-----END -----\n") + 2 * strlen(label) + b64_len + (b64_len + 63) / 64 + 1;
+    if (need > pem_len) {
+        mbedtls_platform_zeroize(b64, sizeof(b64));
+        return 0;
+    }
+
+    size_t pos = (size_t)snprintf(pem, pem_len, "-----BEGIN %s-----\n", label);
+    for (size_t i = 0; i < b64_len; i += 64) {
+        size_t chunk = b64_len - i < 64 ? b64_len - i : 64;
+        memcpy(pem + pos, b64 + i, chunk);
+        pos += chunk;
+        pem[pos++] = '\n';
+    }
+    pos += (size_t)snprintf(pem + pos, pem_len - pos, "-----END %s-----\n", label);
+    mbedtls_platform_zeroize(b64, sizeof(b64));
+    return pos;
+}
+
 size_t platform_generate_csr21(const OcppCsrParams21 *params, char *csr_pem, size_t csr_pem_len)
 {
     mbedtls_ecp_group_id group;
@@ -343,11 +369,27 @@ size_t platform_generate_csr21(const OcppCsrParams21 *params, char *csr_pem, siz
         (mbedtls_ecp_gen_key(group, mbedtls_pk_ec(key), mbedtls_ctr_drbg_random, &rng.drbg) == 0)) {
         mbedtls_x509write_csr_set_md_alg(&req, md);
         mbedtls_x509write_csr_set_key(&req, &key);
-        if ((mbedtls_x509write_csr_set_subject_name(&req, subject) == 0) &&
-            (mbedtls_x509write_csr_pem(&req, (uint8_t *)csr_pem, csr_pem_len, mbedtls_ctr_drbg_random, &rng.drbg) == 0) &&
-            (mbedtls_pk_write_key_pem(&key, key_pem, sizeof(key_pem)) == 0) &&
-            platform_write_file(params->key_name, (char *)key_pem, strlen((char *)key_pem))) {
-            result = strlen(csr_pem);
+        if (mbedtls_x509write_csr_set_subject_name(&req, subject) == 0) {
+            // The DER writers place the data at the end of the buffer.
+            uint8_t der[2048];
+            size_t csr_len = 0;
+            int csr_der_len = mbedtls_x509write_csr_der(&req, der, sizeof(der), mbedtls_ctr_drbg_random, &rng.drbg);
+            if (csr_der_len > 0) {
+                csr_len = der_to_pem("CERTIFICATE REQUEST", der + sizeof(der) - (size_t)csr_der_len, (size_t)csr_der_len, csr_pem, csr_pem_len);
+            }
+
+            size_t key_len = 0;
+            if (csr_len > 0) {
+                int key_der_len = mbedtls_pk_write_key_der(&key, der, sizeof(der));
+                if (key_der_len > 0) {
+                    key_len = der_to_pem("EC PRIVATE KEY", der + sizeof(der) - (size_t)key_der_len, (size_t)key_der_len, (char *)key_pem, sizeof(key_pem));
+                }
+            }
+            mbedtls_platform_zeroize(der, sizeof(der));
+
+            if ((key_len > 0) && platform_write_file(params->key_name, (char *)key_pem, key_len)) {
+                result = csr_len;
+            }
         }
     }
 
