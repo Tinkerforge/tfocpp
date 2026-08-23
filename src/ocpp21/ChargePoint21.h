@@ -129,6 +129,7 @@ public:
     CallResponse handleInstallCertificate(const char *uid, InstallCertificateView req);
     CallResponse handleDeleteCertificate(const char *uid, DeleteCertificateView req);
     CallResponse handleGetInstalledCertificateIds(const char *uid, GetInstalledCertificateIdsView req);
+    CallResponse handleSetNetworkProfile(const char *uid, SetNetworkProfileView req);
 
     State state = State::PowerOn;
 
@@ -145,6 +146,9 @@ private:
     void sendTransactionUpdated(int32_t evse_id, TransactionEventTriggerReason trigger, bool with_meter_value);
     void loadSecurityPersistence();
     void saveSecurityPersistence();
+    void loadNetworkPersistence();
+    void saveNetworkPersistence();
+    void applyNetworkProfile();
 
     void startCsr(SignCertificateCertificateType type, bool renewal, const OcppCertHashData21 *root_hash);
     void abortCsr();
@@ -182,9 +186,11 @@ private:
     // Also used as the persistence file name prefix.
     std::string charge_point_name;
 
-    // A01: reconnect with the new BasicAuthPassword after the
-    // SetVariablesResponse left. 0 = not armed.
+    // A01: reconnect with the new BasicAuthPassword after the SetVariablesResponse left. 0 = not armed.
     uint32_t password_reconnect_deadline = 0;
+
+    // A05: switch to the active network profile after the SetVariablesResponse left. 0 = not armed.
+    uint32_t network_reconnect_deadline = 0;
 
     // Report a TLS failure security event once per failure streak
     // (A00.FR.316). Unknown doubles as the none sentinel, reset on connect.

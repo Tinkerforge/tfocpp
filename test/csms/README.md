@@ -44,6 +44,11 @@ scripted CSMS (`minicsms.py`) instead of evtivity, which forwards a JSON
 body instead of a DER encoded OCSP request to responders. The OCSP
 responses are generated locally with `openssl ocsp`.
 
+The network profile tests (`test_network_profile.py`) also run against the
+mini CSMS, plain and via TLS with a server certificate issued by the test
+CA, and cover SetNetworkProfile validation, security profile downgrade
+rejection and switching via NetworkConfigurationPriority.
+
 ## Notes
 
 * The full suite takes a few minutes, dominated by reconnect intervals and

@@ -38,6 +38,9 @@ public:
     // A01: switch to a new basic auth password and reconnect.
     void updateBasicAuthPassword(const char *basic_auth_pass);
 
+    // A05: switch to a new network connection profile and reconnect.
+    void updateEndpoint(const char *websocket_endpoint_url, const char *basic_auth_pass, const PlatformTlsConfig *tls);
+
     void tick();
 
     void handleMessage(char *message, size_t message_len);

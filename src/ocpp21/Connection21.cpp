@@ -425,6 +425,27 @@ void Connection::updateBasicAuthPassword(const char *basic_auth_pass) {
     platform_reconnect(platform_ctx);
 }
 
+void Connection::updateEndpoint(const char *websocket_endpoint_url, const char *basic_auth_pass, const PlatformTlsConfig *tls) {
+    std::string ws_url;
+    ws_url.reserve(strlen(websocket_endpoint_url) + 1 + charge_point_name.size());
+    ws_url += websocket_endpoint_url;
+    ws_url += '/';
+    ws_url += charge_point_name;
+
+    size_t cred_used_count = 0;
+    if (basic_auth_pass != nullptr && basic_auth_pass[0] != '\0') {
+        this->basic_auth_credentials = build_credentials(charge_point_name.c_str(), basic_auth_pass);
+        cred_used_count = 1;
+    } else {
+        this->basic_auth_credentials = nullptr;
+    }
+
+    platform_update_tls(platform_ctx, tls);
+    platform_update_credentials(platform_ctx, this->basic_auth_credentials.get(), cred_used_count);
+    platform_update_url(platform_ctx, ws_url.c_str());
+    platform_reconnect(platform_ctx);
+}
+
 void Connection::stop() {
     platform_ws_register_pong_callback(platform_ctx, nullptr, nullptr);
     platform_ws_register_receive_callback(platform_ctx, nullptr, nullptr);

@@ -330,9 +330,9 @@ enum class SignCertificateCertificateType : uint8_t {
     NONE
 };
 
-extern const char * const InstallCertificateResponseStatusStrings[];
+extern const char * const eResponseStatusStrings[];
 
-enum class InstallCertificateResponseStatus : uint8_t {
+enum class eResponseStatus : uint8_t {
     ACCEPTED,
     REJECTED,
     FAILED,
@@ -421,6 +421,56 @@ enum class GetInstalledCertificateIdsCertificateTypeEntry : uint8_t {
     V2_G_CERTIFICATE_CHAIN,
     MANUFACTURER_ROOT_CERTIFICATE,
     OEM_ROOT_CERTIFICATE
+};
+
+extern const char * const SetNetworkProfileConnectionDataEntriesApnEntriesApnAuthenticationStrings[];
+
+enum class SetNetworkProfileConnectionDataEntriesApnEntriesApnAuthentication : uint8_t {
+    PAP,
+    CHAP,
+    NONE,
+    AUTO
+};
+
+extern const char * const SetNetworkProfileConnectionDataEntriesOcppVersionStrings[];
+
+enum class SetNetworkProfileConnectionDataEntriesOcppVersion : uint8_t {
+    OCPP12,
+    OCPP15,
+    OCPP16,
+    OCPP20,
+    OCPP201,
+    OCPP21
+};
+
+extern const char * const SetNetworkProfileConnectionDataEntriesOcppInterfaceStrings[];
+
+enum class SetNetworkProfileConnectionDataEntriesOcppInterface : uint8_t {
+    WIRED0,
+    WIRED1,
+    WIRED2,
+    WIRED3,
+    WIRELESS0,
+    WIRELESS1,
+    WIRELESS2,
+    WIRELESS3,
+    ANY
+};
+
+extern const char * const SetNetworkProfileConnectionDataEntriesOcppTransportStrings[];
+
+enum class SetNetworkProfileConnectionDataEntriesOcppTransport : uint8_t {
+    SOAP,
+    JSON
+};
+
+extern const char * const SetNetworkProfileConnectionDataEntriesVpnEntriesTypeStrings[];
+
+enum class SetNetworkProfileConnectionDataEntriesVpnEntriesType : uint8_t {
+    IK_EV2,
+    IP_SEC,
+    L2_TP,
+    PPTP
 };
 
 extern const char * const GetVariablesResponseGetVariableResultAttributeStatusStrings[];
@@ -863,6 +913,173 @@ struct ICall {
     CallAction action;
     uint64_t ocppJmessageId;
     const char *ocppJcallId;
+};
+
+struct SetNetworkProfileConnectionDataEntriesVpnEntriesView {
+    JsonObject _obj;
+
+    const char * server() {
+
+        return _obj["server"].as<const char *>();
+    }
+
+    const char * user() {
+
+        return _obj["user"].as<const char *>();
+    }
+
+    Option<const char *> group() {
+        if (!_obj.containsKey("group"))
+                return {};
+
+        return _obj["group"].as<const char *>();
+    }
+
+    const char * password() {
+
+        return _obj["password"].as<const char *>();
+    }
+
+    const char * key() {
+
+        return _obj["key"].as<const char *>();
+    }
+
+    SetNetworkProfileConnectionDataEntriesVpnEntriesType type() {
+
+        return (SetNetworkProfileConnectionDataEntriesVpnEntriesType)_obj["type"].as<size_t>();
+    }
+
+};
+
+struct SetNetworkProfileConnectionDataEntriesApnEntriesView {
+    JsonObject _obj;
+
+    const char * apn() {
+
+        return _obj["apn"].as<const char *>();
+    }
+
+    Option<const char *> apnUserName() {
+        if (!_obj.containsKey("apnUserName"))
+                return {};
+
+        return _obj["apnUserName"].as<const char *>();
+    }
+
+    Option<const char *> apnPassword() {
+        if (!_obj.containsKey("apnPassword"))
+                return {};
+
+        return _obj["apnPassword"].as<const char *>();
+    }
+
+    Option<int32_t> simPin() {
+        if (!_obj.containsKey("simPin"))
+                return {};
+
+        return _obj["simPin"].as<int32_t>();
+    }
+
+    Option<const char *> preferredNetwork() {
+        if (!_obj.containsKey("preferredNetwork"))
+                return {};
+
+        return _obj["preferredNetwork"].as<const char *>();
+    }
+
+    Option<bool> useOnlyPreferredNetwork() {
+        if (!_obj.containsKey("useOnlyPreferredNetwork"))
+                return {};
+
+        return _obj["useOnlyPreferredNetwork"].as<bool>();
+    }
+
+    SetNetworkProfileConnectionDataEntriesApnEntriesApnAuthentication apnAuthentication() {
+
+        return (SetNetworkProfileConnectionDataEntriesApnEntriesApnAuthentication)_obj["apnAuthentication"].as<size_t>();
+    }
+
+};
+
+struct SetNetworkProfileConnectionDataEntriesView {
+    JsonObject _obj;
+
+    Option<SetNetworkProfileConnectionDataEntriesApnEntriesView> apn() {
+        if (!_obj.containsKey("apn"))
+                return {};
+
+        return Option<SetNetworkProfileConnectionDataEntriesApnEntriesView>{SetNetworkProfileConnectionDataEntriesApnEntriesView{_obj["apn"].as<JsonObject>()}};
+    }
+
+    Option<SetNetworkProfileConnectionDataEntriesOcppVersion> ocppVersion() {
+        if (!_obj.containsKey("ocppVersion"))
+                return {};
+
+        return Option<SetNetworkProfileConnectionDataEntriesOcppVersion>{(SetNetworkProfileConnectionDataEntriesOcppVersion)_obj["ocppVersion"].as<size_t>()};
+    }
+
+    SetNetworkProfileConnectionDataEntriesOcppInterface ocppInterface() {
+
+        return (SetNetworkProfileConnectionDataEntriesOcppInterface)_obj["ocppInterface"].as<size_t>();
+    }
+
+    SetNetworkProfileConnectionDataEntriesOcppTransport ocppTransport() {
+
+        return (SetNetworkProfileConnectionDataEntriesOcppTransport)_obj["ocppTransport"].as<size_t>();
+    }
+
+    int32_t messageTimeout() {
+
+        return _obj["messageTimeout"].as<int32_t>();
+    }
+
+    const char * ocppCsmsUrl() {
+
+        return _obj["ocppCsmsUrl"].as<const char *>();
+    }
+
+    int32_t securityProfile() {
+
+        return _obj["securityProfile"].as<int32_t>();
+    }
+
+    Option<const char *> identity() {
+        if (!_obj.containsKey("identity"))
+                return {};
+
+        return _obj["identity"].as<const char *>();
+    }
+
+    Option<const char *> basicAuthPassword() {
+        if (!_obj.containsKey("basicAuthPassword"))
+                return {};
+
+        return _obj["basicAuthPassword"].as<const char *>();
+    }
+
+    Option<SetNetworkProfileConnectionDataEntriesVpnEntriesView> vpn() {
+        if (!_obj.containsKey("vpn"))
+                return {};
+
+        return Option<SetNetworkProfileConnectionDataEntriesVpnEntriesView>{SetNetworkProfileConnectionDataEntriesVpnEntriesView{_obj["vpn"].as<JsonObject>()}};
+    }
+
+};
+
+struct SetNetworkProfileView {
+    JsonObject _obj;
+
+    int32_t configurationSlot() {
+
+        return _obj["configurationSlot"].as<int32_t>();
+    }
+
+    SetNetworkProfileConnectionDataEntriesView connectionData() {
+
+        return SetNetworkProfileConnectionDataEntriesView{_obj["connectionData"].as<JsonObject>()};
+    }
+
 };
 
 struct GetInstalledCertificateIdsView {
@@ -4582,6 +4799,13 @@ struct BootNotificationChargingStationModem {
     void serializeInto(TFJsonSerializer &json);
 };
 
+struct SetNetworkProfileResponseStatusInfo {
+    const char *reasonCode;
+    const char *additionalInfo = nullptr;
+
+    void serializeInto(TFJsonSerializer &json);
+};
+
 struct GetInstalledCertificateIdsResponseCertificateHashDataChain {
     GetInstalledCertificateIdsResponseCertificateHashDataChainCertificateHashData *certificateHashData;
     GetInstalledCertificateIdsResponseCertificateHashDataChainCertificateType certificateType;
@@ -5038,11 +5262,11 @@ struct CertificateSignedResponse final : public ICall {
 };
 
 struct InstallCertificateResponse final : public ICall {
-    InstallCertificateResponseStatus status;
+    eResponseStatus status;
     InstallCertificateResponseStatusInfo *statusInfo;
 
     InstallCertificateResponse(const char *call_id,
-        InstallCertificateResponseStatus status,
+        eResponseStatus status,
         InstallCertificateResponseStatusInfo *statusInfo = nullptr);
     InstallCertificateResponse(const InstallCertificateResponse&) = delete;
     InstallCertificateResponse &operator=(const InstallCertificateResponse&) = delete;
@@ -5074,6 +5298,19 @@ struct GetInstalledCertificateIdsResponse final : public ICall {
         GetInstalledCertificateIdsResponseCertificateHashDataChain *certificateHashDataChain = nullptr, size_t certificateHashDataChain_length = 0);
     GetInstalledCertificateIdsResponse(const GetInstalledCertificateIdsResponse&) = delete;
     GetInstalledCertificateIdsResponse &operator=(const GetInstalledCertificateIdsResponse&) = delete;
+
+    size_t serializeJson(char *buf, size_t buf_len) const override;
+};
+
+struct SetNetworkProfileResponse final : public ICall {
+    eResponseStatus status;
+    SetNetworkProfileResponseStatusInfo *statusInfo;
+
+    SetNetworkProfileResponse(const char *call_id,
+        eResponseStatus status,
+        SetNetworkProfileResponseStatusInfo *statusInfo = nullptr);
+    SetNetworkProfileResponse(const SetNetworkProfileResponse&) = delete;
+    SetNetworkProfileResponse &operator=(const SetNetworkProfileResponse&) = delete;
 
     size_t serializeJson(char *buf, size_t buf_len) const override;
 };
@@ -5119,6 +5356,8 @@ CallResponse parseInstallCertificate(JsonObject obj);
 CallResponse parseDeleteCertificate(JsonObject obj);
 
 CallResponse parseGetInstalledCertificateIds(JsonObject obj);
+
+CallResponse parseSetNetworkProfile(JsonObject obj);
 
 CallResponse callResultHandler(int32_t connectorId, CallAction resultTo, JsonObject obj, ChargePoint *cp);
 

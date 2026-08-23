@@ -280,7 +280,7 @@ const char * const SignCertificateCertificateTypeStrings[] = {
     "V2G20Certificate"
 };
 
-const char * const InstallCertificateResponseStatusStrings[] = {
+const char * const eResponseStatusStrings[] = {
     "Accepted",
     "Rejected",
     "Failed"
@@ -346,6 +346,46 @@ const char * const GetInstalledCertificateIdsCertificateTypeEntryStrings[] = {
     "V2GCertificateChain",
     "ManufacturerRootCertificate",
     "OEMRootCertificate"
+};
+
+const char * const SetNetworkProfileConnectionDataEntriesApnEntriesApnAuthenticationStrings[] = {
+    "PAP",
+    "CHAP",
+    "NONE",
+    "AUTO"
+};
+
+const char * const SetNetworkProfileConnectionDataEntriesOcppVersionStrings[] = {
+    "OCPP12",
+    "OCPP15",
+    "OCPP16",
+    "OCPP20",
+    "OCPP201",
+    "OCPP21"
+};
+
+const char * const SetNetworkProfileConnectionDataEntriesOcppInterfaceStrings[] = {
+    "Wired0",
+    "Wired1",
+    "Wired2",
+    "Wired3",
+    "Wireless0",
+    "Wireless1",
+    "Wireless2",
+    "Wireless3",
+    "Any"
+};
+
+const char * const SetNetworkProfileConnectionDataEntriesOcppTransportStrings[] = {
+    "SOAP",
+    "JSON"
+};
+
+const char * const SetNetworkProfileConnectionDataEntriesVpnEntriesTypeStrings[] = {
+    "IKEv2",
+    "IPSec",
+    "L2TP",
+    "PPTP"
 };
 
 const char * const GetVariablesResponseGetVariableResultAttributeStatusStrings[] = {
@@ -876,6 +916,11 @@ void GetInstalledCertificateIdsResponseCertificateHashDataChain::serializeInto(T
         if (certificateHashData != nullptr) { json.addMemberObject("certificateHashData"); certificateHashData->serializeInto(json); json.endObject(); }
         if (certificateType != GetInstalledCertificateIdsResponseCertificateHashDataChainCertificateType::NONE) json.addMemberString("certificateType", GetInstalledCertificateIdsResponseCertificateHashDataChainCertificateTypeStrings[(size_t)certificateType]);
         if (childCertificateHashData != nullptr) { json.addMemberArray("childCertificateHashData"); for(size_t i = 0; i < childCertificateHashData_length; ++i) { json.addObject(); childCertificateHashData[i].serializeInto(json); json.endObject(); } json.endArray(); }
+    }
+
+void SetNetworkProfileResponseStatusInfo::serializeInto(TFJsonSerializer &json) {
+        if (reasonCode != nullptr) json.addMemberString("reasonCode", reasonCode);
+        if (additionalInfo != nullptr) json.addMemberString("additionalInfo", additionalInfo);
     }
 
 void BootNotificationChargingStationModem::serializeInto(TFJsonSerializer &json) {
@@ -1571,7 +1616,7 @@ size_t CertificateSignedResponse::serializeJson(char *buf, size_t buf_len) const
 }
 
 InstallCertificateResponse::InstallCertificateResponse(const char *call_id,
-        InstallCertificateResponseStatus status,
+        eResponseStatus status,
         InstallCertificateResponseStatusInfo *statusInfo) :
     ICall(CallAction::INSTALL_CERTIFICATE_RESPONSE, call_id),
     status(status),
@@ -1585,7 +1630,7 @@ size_t InstallCertificateResponse::serializeJson(char *buf, size_t buf_len) cons
         json.addString(this->ocppJcallId);
 
         json.addObject();
-            if (status != InstallCertificateResponseStatus::NONE) json.addMemberString("status", InstallCertificateResponseStatusStrings[(size_t)status]);
+            if (status != eResponseStatus::NONE) json.addMemberString("status", eResponseStatusStrings[(size_t)status]);
             if (statusInfo != nullptr) { json.addMemberObject("statusInfo"); statusInfo->serializeInto(json); json.endObject(); }
         json.endObject();
     json.endArray();
@@ -1637,6 +1682,29 @@ size_t GetInstalledCertificateIdsResponse::serializeJson(char *buf, size_t buf_l
             if (status != GetInstalledCertificateIdsResponseStatus::NONE) json.addMemberString("status", GetInstalledCertificateIdsResponseStatusStrings[(size_t)status]);
             if (statusInfo != nullptr) { json.addMemberObject("statusInfo"); statusInfo->serializeInto(json); json.endObject(); }
             if (certificateHashDataChain != nullptr) { json.addMemberArray("certificateHashDataChain"); for(size_t i = 0; i < certificateHashDataChain_length; ++i) { json.addObject(); certificateHashDataChain[i].serializeInto(json); json.endObject(); } json.endArray(); }
+        json.endObject();
+    json.endArray();
+
+    return json.end();
+}
+
+SetNetworkProfileResponse::SetNetworkProfileResponse(const char *call_id,
+        eResponseStatus status,
+        SetNetworkProfileResponseStatusInfo *statusInfo) :
+    ICall(CallAction::SET_NETWORK_PROFILE_RESPONSE, call_id),
+    status(status),
+    statusInfo(statusInfo)
+{}
+
+size_t SetNetworkProfileResponse::serializeJson(char *buf, size_t buf_len) const {
+    TFJsonSerializer json{buf, buf_len};
+    json.addArray();
+        json.addNumber((int32_t)OcppRpcMessageType::CALLRESULT);
+        json.addString(this->ocppJcallId);
+
+        json.addObject();
+            if (status != eResponseStatus::NONE) json.addMemberString("status", eResponseStatusStrings[(size_t)status]);
+            if (statusInfo != nullptr) { json.addMemberObject("statusInfo"); statusInfo->serializeInto(json); json.endObject(); }
         json.endObject();
     json.endArray();
 
@@ -12031,6 +12099,601 @@ CallResponse parseGetInstalledCertificateIds(JsonObject obj) {
     return CallResponse{CallErrorCode::OK, nullptr};
 }
 
+static CallResponse parseSetNetworkProfileConfigurationSlot(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "configurationSlot: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseSetNetworkProfileConnectionDataEntriesApnEntriesApn(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "apn: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 2000)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "apn: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseSetNetworkProfileConnectionDataEntriesApnEntriesApnUserName(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "apnUserName: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 50)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "apnUserName: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseSetNetworkProfileConnectionDataEntriesApnEntriesApnPassword(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "apnPassword: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 64)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "apnPassword: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseSetNetworkProfileConnectionDataEntriesApnEntriesSimPin(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "simPin: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseSetNetworkProfileConnectionDataEntriesApnEntriesPreferredNetwork(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "preferredNetwork: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 6)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "preferredNetwork: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseSetNetworkProfileConnectionDataEntriesApnEntriesUseOnlyPreferredNetwork(JsonVariant var) {
+
+    if (!var.is<bool>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "useOnlyPreferredNetwork: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseSetNetworkProfileConnectionDataEntriesApnEntriesApnAuthentication(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "apnAuthentication: wrong type"};
+
+    {
+        bool found = false;
+        for(size_t i = 0; i < ARRAY_SIZE(SetNetworkProfileConnectionDataEntriesApnEntriesApnAuthenticationStrings); ++i) {
+            if (strcmp(var.as<const char *>(), SetNetworkProfileConnectionDataEntriesApnEntriesApnAuthenticationStrings[i]) != 0)
+                continue;
+
+            var.set(i);
+            found = true;
+            break;
+        }
+
+        if (!found)
+            return CallResponse{CallErrorCode::PropertyConstraintViolation, "apnAuthentication: unknown enum value received"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseSetNetworkProfileConnectionDataEntriesApnEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (!obj.containsKey("apn"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "apn: required, but missing"};
+
+    {
+        CallResponse inner_result = parseSetNetworkProfileConnectionDataEntriesApnEntriesApn(obj["apn"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("apnUserName")) {
+    {
+        CallResponse inner_result = parseSetNetworkProfileConnectionDataEntriesApnEntriesApnUserName(obj["apnUserName"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("apnPassword")) {
+    {
+        CallResponse inner_result = parseSetNetworkProfileConnectionDataEntriesApnEntriesApnPassword(obj["apnPassword"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("simPin")) {
+    {
+        CallResponse inner_result = parseSetNetworkProfileConnectionDataEntriesApnEntriesSimPin(obj["simPin"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("preferredNetwork")) {
+    {
+        CallResponse inner_result = parseSetNetworkProfileConnectionDataEntriesApnEntriesPreferredNetwork(obj["preferredNetwork"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("useOnlyPreferredNetwork")) {
+    {
+        CallResponse inner_result = parseSetNetworkProfileConnectionDataEntriesApnEntriesUseOnlyPreferredNetwork(obj["useOnlyPreferredNetwork"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+
+    if (!obj.containsKey("apnAuthentication"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "apnAuthentication: required, but missing"};
+
+    {
+        CallResponse inner_result = parseSetNetworkProfileConnectionDataEntriesApnEntriesApnAuthentication(obj["apnAuthentication"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "SetNetworkProfileConnectionDataEntriesApnEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseSetNetworkProfileConnectionDataEntriesApn(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "apn: wrong type"};
+
+    {
+        CallResponse inner_result = parseSetNetworkProfileConnectionDataEntriesApnEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseSetNetworkProfileConnectionDataEntriesOcppVersion(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "ocppVersion: wrong type"};
+
+    {
+        bool found = false;
+        for(size_t i = 0; i < ARRAY_SIZE(SetNetworkProfileConnectionDataEntriesOcppVersionStrings); ++i) {
+            if (strcmp(var.as<const char *>(), SetNetworkProfileConnectionDataEntriesOcppVersionStrings[i]) != 0)
+                continue;
+
+            var.set(i);
+            found = true;
+            break;
+        }
+
+        if (!found)
+            return CallResponse{CallErrorCode::PropertyConstraintViolation, "ocppVersion: unknown enum value received"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseSetNetworkProfileConnectionDataEntriesOcppInterface(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "ocppInterface: wrong type"};
+
+    {
+        bool found = false;
+        for(size_t i = 0; i < ARRAY_SIZE(SetNetworkProfileConnectionDataEntriesOcppInterfaceStrings); ++i) {
+            if (strcmp(var.as<const char *>(), SetNetworkProfileConnectionDataEntriesOcppInterfaceStrings[i]) != 0)
+                continue;
+
+            var.set(i);
+            found = true;
+            break;
+        }
+
+        if (!found)
+            return CallResponse{CallErrorCode::PropertyConstraintViolation, "ocppInterface: unknown enum value received"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseSetNetworkProfileConnectionDataEntriesOcppTransport(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "ocppTransport: wrong type"};
+
+    {
+        bool found = false;
+        for(size_t i = 0; i < ARRAY_SIZE(SetNetworkProfileConnectionDataEntriesOcppTransportStrings); ++i) {
+            if (strcmp(var.as<const char *>(), SetNetworkProfileConnectionDataEntriesOcppTransportStrings[i]) != 0)
+                continue;
+
+            var.set(i);
+            found = true;
+            break;
+        }
+
+        if (!found)
+            return CallResponse{CallErrorCode::PropertyConstraintViolation, "ocppTransport: unknown enum value received"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseSetNetworkProfileConnectionDataEntriesMessageTimeout(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "messageTimeout: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseSetNetworkProfileConnectionDataEntriesOcppCsmsUrl(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "ocppCsmsUrl: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 2000)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "ocppCsmsUrl: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseSetNetworkProfileConnectionDataEntriesSecurityProfile(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "securityProfile: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseSetNetworkProfileConnectionDataEntriesIdentity(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "identity: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 48)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "identity: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseSetNetworkProfileConnectionDataEntriesBasicAuthPassword(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "basicAuthPassword: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 64)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "basicAuthPassword: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseSetNetworkProfileConnectionDataEntriesVpnEntriesServer(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "server: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 2000)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "server: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseSetNetworkProfileConnectionDataEntriesVpnEntriesUser(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "user: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 50)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "user: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseSetNetworkProfileConnectionDataEntriesVpnEntriesGroup(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "group: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 50)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "group: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseSetNetworkProfileConnectionDataEntriesVpnEntriesPassword(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "password: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 64)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "password: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseSetNetworkProfileConnectionDataEntriesVpnEntriesKey(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "key: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 255)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "key: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseSetNetworkProfileConnectionDataEntriesVpnEntriesType(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "type: wrong type"};
+
+    {
+        bool found = false;
+        for(size_t i = 0; i < ARRAY_SIZE(SetNetworkProfileConnectionDataEntriesVpnEntriesTypeStrings); ++i) {
+            if (strcmp(var.as<const char *>(), SetNetworkProfileConnectionDataEntriesVpnEntriesTypeStrings[i]) != 0)
+                continue;
+
+            var.set(i);
+            found = true;
+            break;
+        }
+
+        if (!found)
+            return CallResponse{CallErrorCode::PropertyConstraintViolation, "type: unknown enum value received"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseSetNetworkProfileConnectionDataEntriesVpnEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (!obj.containsKey("server"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "server: required, but missing"};
+
+    {
+        CallResponse inner_result = parseSetNetworkProfileConnectionDataEntriesVpnEntriesServer(obj["server"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+
+    if (!obj.containsKey("user"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "user: required, but missing"};
+
+    {
+        CallResponse inner_result = parseSetNetworkProfileConnectionDataEntriesVpnEntriesUser(obj["user"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("group")) {
+    {
+        CallResponse inner_result = parseSetNetworkProfileConnectionDataEntriesVpnEntriesGroup(obj["group"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+
+    if (!obj.containsKey("password"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "password: required, but missing"};
+
+    {
+        CallResponse inner_result = parseSetNetworkProfileConnectionDataEntriesVpnEntriesPassword(obj["password"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+
+    if (!obj.containsKey("key"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "key: required, but missing"};
+
+    {
+        CallResponse inner_result = parseSetNetworkProfileConnectionDataEntriesVpnEntriesKey(obj["key"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+
+    if (!obj.containsKey("type"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "type: required, but missing"};
+
+    {
+        CallResponse inner_result = parseSetNetworkProfileConnectionDataEntriesVpnEntriesType(obj["type"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "SetNetworkProfileConnectionDataEntriesVpnEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseSetNetworkProfileConnectionDataEntriesVpn(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "vpn: wrong type"};
+
+    {
+        CallResponse inner_result = parseSetNetworkProfileConnectionDataEntriesVpnEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseSetNetworkProfileConnectionDataEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (obj.containsKey("apn")) {
+    {
+        CallResponse inner_result = parseSetNetworkProfileConnectionDataEntriesApn(obj["apn"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("ocppVersion")) {
+    {
+        CallResponse inner_result = parseSetNetworkProfileConnectionDataEntriesOcppVersion(obj["ocppVersion"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+
+    if (!obj.containsKey("ocppInterface"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "ocppInterface: required, but missing"};
+
+    {
+        CallResponse inner_result = parseSetNetworkProfileConnectionDataEntriesOcppInterface(obj["ocppInterface"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+
+    if (!obj.containsKey("ocppTransport"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "ocppTransport: required, but missing"};
+
+    {
+        CallResponse inner_result = parseSetNetworkProfileConnectionDataEntriesOcppTransport(obj["ocppTransport"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+
+    if (!obj.containsKey("messageTimeout"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "messageTimeout: required, but missing"};
+
+    {
+        CallResponse inner_result = parseSetNetworkProfileConnectionDataEntriesMessageTimeout(obj["messageTimeout"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+
+    if (!obj.containsKey("ocppCsmsUrl"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "ocppCsmsUrl: required, but missing"};
+
+    {
+        CallResponse inner_result = parseSetNetworkProfileConnectionDataEntriesOcppCsmsUrl(obj["ocppCsmsUrl"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+
+    if (!obj.containsKey("securityProfile"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "securityProfile: required, but missing"};
+
+    {
+        CallResponse inner_result = parseSetNetworkProfileConnectionDataEntriesSecurityProfile(obj["securityProfile"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("identity")) {
+    {
+        CallResponse inner_result = parseSetNetworkProfileConnectionDataEntriesIdentity(obj["identity"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("basicAuthPassword")) {
+    {
+        CallResponse inner_result = parseSetNetworkProfileConnectionDataEntriesBasicAuthPassword(obj["basicAuthPassword"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("vpn")) {
+    {
+        CallResponse inner_result = parseSetNetworkProfileConnectionDataEntriesVpn(obj["vpn"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "SetNetworkProfileConnectionDataEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseSetNetworkProfileConnectionData(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "connectionData: wrong type"};
+
+    {
+        CallResponse inner_result = parseSetNetworkProfileConnectionDataEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+CallResponse parseSetNetworkProfile(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (!obj.containsKey("configurationSlot"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "configurationSlot: required, but missing"};
+
+    {
+        CallResponse inner_result = parseSetNetworkProfileConfigurationSlot(obj["configurationSlot"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+
+    if (!obj.containsKey("connectionData"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "connectionData: required, but missing"};
+
+    {
+        CallResponse inner_result = parseSetNetworkProfileConnectionData(obj["connectionData"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "SetNetworkProfile: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
 CallResponse callHandler(const char *uid, const char *action_string, JsonObject obj, ChargePoint *cp) {
     size_t action_idx = 0;
     if (!lookup_key(&action_idx, action_string, CallActionStrings, ARRAY_SIZE(CallActionStrings)))
@@ -12125,6 +12788,14 @@ CallResponse callHandler(const char *uid, const char *action_string, JsonObject 
                 return res;
 
             return cp->handleGetInstalledCertificateIds(uid, GetInstalledCertificateIdsView{obj});
+        }
+
+        case CallAction::SET_NETWORK_PROFILE: {
+            CallResponse res = parseSetNetworkProfile(obj);
+            if (res.result != CallErrorCode::OK)
+                return res;
+
+            return cp->handleSetNetworkProfile(uid, SetNetworkProfileView{obj});
         }
 
         case CallAction::AFRR_SIGNAL:
@@ -12273,7 +12944,6 @@ CallResponse callHandler(const char *uid, const char *action_string, JsonObject 
         case CallAction::SET_MONITORING_BASE_RESPONSE:
         case CallAction::SET_MONITORING_LEVEL:
         case CallAction::SET_MONITORING_LEVEL_RESPONSE:
-        case CallAction::SET_NETWORK_PROFILE:
         case CallAction::SET_NETWORK_PROFILE_RESPONSE:
         case CallAction::SET_VARIABLE_MONITORING:
         case CallAction::SET_VARIABLE_MONITORING_RESPONSE:

@@ -11,6 +11,12 @@ from conftest import WS, WSS
 from testca import SigningCa
 
 
+def _mkdir(tmp_path, name):
+    d = tmp_path / name
+    d.mkdir()
+    return d
+
+
 @pytest.fixture
 def ca(tmp_path):
     d = tmp_path / "ca"
@@ -72,23 +78,46 @@ def test_install_list_delete_roots(station, ca, tmp_path):
     assert s.install("V2GRootCertificate", ca2.cert_pem)["status"] == "Accepted"
     assert s.certificate_entries() == 2
 
+    # TC_M_02/M_16/M_101 semantics: manufacturer, MO and OEM roots
+    # install and list. Distinct CAs, delete removes all entries sharing
+    # hash data.
+    ca3 = SigningCa(_mkdir(tmp_path, "ca3"), name="tfocpp-test-ca3")
+    ca4 = SigningCa(_mkdir(tmp_path, "ca4"), name="tfocpp-test-ca4")
+    ca5 = SigningCa(_mkdir(tmp_path, "ca5"), name="tfocpp-test-ca5")
+    assert s.install("ManufacturerRootCertificate", ca3.cert_pem)["status"] == "Accepted"
+    assert s.install("OEMRootCertificate", ca4.cert_pem)["status"] == "Accepted"
+    assert s.install("MORootCertificate", ca5.cert_pem)["status"] == "Accepted"
+    assert s.certificate_entries() == 5
+
     listed = s.get_installed()
     assert listed["status"] == "Accepted"
     chains = listed["certificateHashDataChain"]
-    assert sorted(c["certificateType"] for c in chains) == ["CSMSRootCertificate", "V2GRootCertificate"]
+    assert sorted(c["certificateType"] for c in chains) == [
+        "CSMSRootCertificate", "MORootCertificate", "ManufacturerRootCertificate",
+        "OEMRootCertificate", "V2GRootCertificate"]
     hash_data = chains[0]["certificateHashData"]
     assert hash_data["hashAlgorithm"] == "SHA256"
     assert len(hash_data["issuerNameHash"]) == 64
 
     filtered = s.get_installed(["V2GRootCertificate"])
     assert len(filtered["certificateHashDataChain"]) == 1
+    # TC_M_17 semantics: a multi type filter.
+    two = s.get_installed(["CSMSRootCertificate", "ManufacturerRootCertificate"])
+    assert len(two["certificateHashDataChain"]) == 2
+
+    for cert_type in ("ManufacturerRootCertificate", "OEMRootCertificate", "MORootCertificate"):
+        type_hash = s.get_installed([cert_type])["certificateHashDataChain"][0]["certificateHashData"]
+        assert s.delete(type_hash)["status"] == "Accepted"
 
     # HUB20-413-001: hash fields are matched case-insensitively.
     v2g_hash = filtered["certificateHashDataChain"][0]["certificateHashData"]
     upper = {k: v.upper() if k != "hashAlgorithm" else v for k, v in v2g_hash.items()}
     assert s.delete(upper)["status"] == "Accepted"
     assert s.delete(upper)["status"] == "NotFound"
-    assert s.get_installed(["V2GRootCertificate"])["status"] == "NotFound"
+    # TC_M_19 semantics: NotFound omits certificateHashDataChain.
+    not_found = s.get_installed(["V2GRootCertificate"])
+    assert not_found["status"] == "NotFound"
+    assert "certificateHashDataChain" not in not_found
     assert s.certificate_entries() == 1
 
 
@@ -100,6 +129,9 @@ def test_install_invalid_certificate_rejected(station, ca):
 
     # M05.FR.07: an end entity certificate is not a CA certificate.
     assert s.install("V2GRootCertificate", ca.issue_leaf("not-a-ca"))["status"] == "Rejected"
+
+    # TC_M_07 semantics: an expired certificate is rejected.
+    assert s.install("CSMSRootCertificate", ca.expired_root())["status"] == "Rejected"
     assert s.certificate_entries() == 0
 
 

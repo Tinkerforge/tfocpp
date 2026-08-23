@@ -43,12 +43,38 @@ bool ChargePoint::start(const char *websocket_endpoint_url, const char *charge_p
     }
 
     cert_store.init(charge_point_name);
+    loadNetworkPersistence();
+
+    // A05: an active network profile overrides the configured endpoint at
+    // boot. Falls back to the configured endpoint if the profile needs a
+    // CSMS root certificate that is no longer installed.
+    const char *endpoint = websocket_endpoint_url;
+    const char *effective_pass = device_model.basic_auth_password;
+    bool use_tls = tls != nullptr;
+    bool profile_boot = device_model.network_priority != 0;
+    if (profile_boot) {
+        auto &slot = device_model.network_profiles[device_model.network_priority - 1];
+        bool have_ca = (tls != nullptr && tls->ca_cert_file != nullptr) || cert_store.find(CertGroup::CsmsRoot) != nullptr;
+        if (slot.security_profile >= 2 && !have_ca) {
+            log_error("Network profile slot %d needs a CSMS root certificate, using the configured endpoint", device_model.network_priority);
+            profile_boot = false;
+        }
+    }
+    if (profile_boot) {
+        auto &slot = device_model.network_profiles[device_model.network_priority - 1];
+        log_info("Using network profile slot %d (security profile %d)", device_model.network_priority, slot.security_profile);
+        endpoint = slot.url;
+        device_model.security_profile = slot.security_profile;
+        if (slot.password[0] != '\0') {
+            effective_pass = slot.password;
+        }
+        use_tls = slot.security_profile >= 2;
+    }
 
     // A certificate installed via A02 overrides a configured client
     // certificate at boot, mirroring the password behavior.
     PlatformTlsConfig effective_tls;
     if (tls != nullptr) {
-        tls_in_use = true;
         if (tls->ca_cert_file != nullptr) {
             tls_ca_file = tls->ca_cert_file;
         }
@@ -57,6 +83,13 @@ bool ChargePoint::start(const char *websocket_endpoint_url, const char *charge_p
         }
         if (tls->client_key_file != nullptr) {
             tls_client_key_file = tls->client_key_file;
+        }
+    }
+    if (use_tls) {
+        tls_in_use = true;
+        if (tls_ca_file.empty()) {
+            const CertEntry *root = cert_store.find(CertGroup::CsmsRoot);
+            tls_ca_file = cert_store.pemPath(CertGroup::CsmsRoot, root->id);
         }
 
         const CertEntry *client_chain = cert_store.find(CertGroup::CsmsClientChain);
@@ -71,7 +104,7 @@ bool ChargePoint::start(const char *websocket_endpoint_url, const char *charge_p
         effective_tls.client_key_file = tls_client_key_file.empty() ? nullptr : tls_client_key_file.c_str();
     }
 
-    if (connection.start(websocket_endpoint_url, charge_point_name, device_model.basic_auth_password, tls != nullptr ? &effective_tls : nullptr, this) == nullptr) {
+    if (connection.start(endpoint, charge_point_name, effective_pass, use_tls ? &effective_tls : nullptr, this) == nullptr) {
         return false;
     }
 
@@ -116,6 +149,13 @@ void ChargePoint::tick()
     if (cert_reconnect_deadline != 0 && deadline_elapsed(cert_reconnect_deadline)) {
         cert_reconnect_deadline = 0;
         applyClientCertificate(pending_client_chain_id);
+    }
+
+    // A05: the SetVariablesResponse had time to leave, switch to the
+    // active network profile now.
+    if (network_reconnect_deadline != 0 && deadline_elapsed(network_reconnect_deadline)) {
+        network_reconnect_deadline = 0;
+        applyNetworkProfile();
     }
 
     // Transactions continue while offline, their events are queued and
@@ -751,6 +791,13 @@ CallResponse ChargePoint::handleSetVariables(const char *uid, SetVariablesView r
         }
     }
 
+    if (device_model.network_priority_changed) {
+        device_model.network_priority_changed = false;
+        saveNetworkPersistence();
+        log_info("NetworkConfigurationPriority set to %d, switching after the response left", device_model.network_priority);
+        network_reconnect_deadline = set_deadline(3000);
+    }
+
     return CallResponse{CallErrorCode::OK, nullptr};
 }
 
@@ -1278,18 +1325,18 @@ CallResponse ChargePoint::handleInstallCertificate(const char *uid, InstallCerti
             return CallResponse{CallErrorCode::PropertyConstraintViolation, "unknown certificateType"};
     }
 
-    auto status = InstallCertificateResponseStatus::REJECTED;
-    switch (cert_store.installRoot(group, req.certificate())) {
+    auto status = eResponseStatus::REJECTED;
+    switch (cert_store.installRoot(group, req.certificate(), platform_get_system_time(connection.platform_ctx))) {
         case CertInstallResult::Accepted:
-            status = InstallCertificateResponseStatus::ACCEPTED;
+            status = eResponseStatus::ACCEPTED;
             log_info("Installed a %s", InstallCertificateCertificateTypeStrings[(size_t)req.certificateType()]);
             break;
         case CertInstallResult::Rejected:
-            status = InstallCertificateResponseStatus::REJECTED;
+            status = eResponseStatus::REJECTED;
             log_warn("Rejected a %s", InstallCertificateCertificateTypeStrings[(size_t)req.certificateType()]);
             break;
         case CertInstallResult::Failed:
-            status = InstallCertificateResponseStatus::FAILED;
+            status = eResponseStatus::FAILED;
             log_error("Failed to store a %s", InstallCertificateCertificateTypeStrings[(size_t)req.certificateType()]);
             break;
     }
@@ -1403,6 +1450,183 @@ CallResponse ChargePoint::handleGetInstalledCertificateIds(const char *uid, GetI
 
     connection.sendCallResponse(GetInstalledCertificateIdsResponse{uid, GetInstalledCertificateIdsResponseStatus::ACCEPTED, nullptr, chains.get(), count});
     return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+CallResponse ChargePoint::handleSetNetworkProfile(const char *uid, SetNetworkProfileView req)
+{
+    auto reject = [this, uid]() {
+        connection.sendCallResponse(SetNetworkProfileResponse{uid, eResponseStatus::REJECTED});
+        return CallResponse{CallErrorCode::OK, nullptr};
+    };
+
+    int32_t slot_num = req.configurationSlot();
+    if (slot_num < 1 || slot_num > OCPP21_NETWORK_PROFILE_SLOTS) {
+        return reject();
+    }
+
+    auto cd = req.connectionData();
+    if (cd.ocppTransport() != SetNetworkProfileConnectionDataEntriesOcppTransport::JSON) {
+        return reject();
+    }
+    if (cd.ocppVersion().is_some() && cd.ocppVersion().unwrap() != SetNetworkProfileConnectionDataEntriesOcppVersion::OCPP21) {
+        return reject();
+    }
+    // No VPN or APN backed network interfaces.
+    if (cd.vpn().is_some() || cd.apn().is_some()) {
+        return reject();
+    }
+    if (cd.identity().is_some() && strcmp(cd.identity().unwrap(), charge_point_name.c_str()) != 0) {
+        return reject();
+    }
+
+    // AllowSecurityProfileDowngrade is not supported (reported absent),
+    // a lower security profile is always rejected (A05.FR.03).
+    int32_t sp = cd.securityProfile();
+    if (sp < 1 || sp > 3 || sp < device_model.security_profile) {
+        return reject();
+    }
+
+    const char *url = cd.ocppCsmsUrl();
+    if (strlen(url) > OCPP21_NETWORK_PROFILE_URL_MAX_LEN) {
+        return reject();
+    }
+    bool is_wss = strncmp(url, "wss://", 6) == 0;
+    if (sp == 1 ? !((strncmp(url, "ws://", 5) == 0) || is_wss) : !is_wss) {
+        return reject();
+    }
+
+    const char *pass = "";
+    if (cd.basicAuthPassword().is_some()) {
+        pass = cd.basicAuthPassword().unwrap();
+        size_t pass_len = strlen(pass);
+        if (pass_len < OCPP21_BASIC_AUTH_PASSWORD_MIN_LEN || pass_len > OCPP21_BASIC_AUTH_PASSWORD_MAX_LEN) {
+            return reject();
+        }
+    }
+
+    // The profile must be usable: TLS needs a CSMS root to verify against,
+    // profile 3 needs a charging station certificate.
+    if (sp >= 2 && tls_ca_file.empty() && cert_store.find(CertGroup::CsmsRoot) == nullptr) {
+        return reject();
+    }
+    if (sp == 3 && tls_client_cert_file.empty() && cert_store.find(CertGroup::CsmsClientChain) == nullptr) {
+        return reject();
+    }
+
+    auto &slot = device_model.network_profiles[slot_num - 1];
+    slot.used = true;
+    slot.security_profile = sp;
+    snprintf(slot.url, sizeof(slot.url), "%s", url);
+    snprintf(slot.password, sizeof(slot.password), "%s", pass);
+    saveNetworkPersistence();
+
+    log_info("Stored network profile in slot %d (security profile %d)", slot_num, sp);
+    connection.sendCallResponse(SetNetworkProfileResponse{uid, eResponseStatus::ACCEPTED});
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+void ChargePoint::applyNetworkProfile()
+{
+    auto &slot = device_model.network_profiles[device_model.network_priority - 1];
+
+    PlatformTlsConfig tls;
+    bool use_tls = slot.security_profile >= 2;
+    if (use_tls) {
+        if (tls_ca_file.empty()) {
+            const CertEntry *root = cert_store.find(CertGroup::CsmsRoot);
+            if (root == nullptr) {
+                log_error("Network profile %d needs a CSMS root certificate", device_model.network_priority);
+                return;
+            }
+            tls_ca_file = cert_store.pemPath(CertGroup::CsmsRoot, root->id);
+        }
+        if (slot.security_profile == 3 && tls_client_cert_file.empty()) {
+            const CertEntry *chain = cert_store.find(CertGroup::CsmsClientChain);
+            if (chain == nullptr) {
+                log_error("Network profile %d needs a charging station certificate", device_model.network_priority);
+                return;
+            }
+            tls_client_cert_file = cert_store.pemPath(CertGroup::CsmsClientChain, chain->id);
+            tls_client_key_file = cert_store.keyPath(chain->id);
+        }
+
+        tls.ca_cert_file = tls_ca_file.c_str();
+        if (slot.security_profile == 3) {
+            tls.client_cert_file = tls_client_cert_file.empty() ? nullptr : tls_client_cert_file.c_str();
+            tls.client_key_file = tls_client_key_file.empty() ? nullptr : tls_client_key_file.c_str();
+        }
+    }
+    tls_in_use = use_tls;
+    device_model.security_profile = slot.security_profile;
+
+    const char *pass = slot.password[0] != '\0' ? slot.password : device_model.basic_auth_password;
+    log_info("Connecting with network profile slot %d (security profile %d)", device_model.network_priority, slot.security_profile);
+    connection.updateEndpoint(slot.url, pass, use_tls ? &tls : nullptr);
+}
+
+#define OCPP21_NETWORK_PERSISTENCE_BUF_LEN 1280
+
+void ChargePoint::loadNetworkPersistence()
+{
+    std::string name = charge_point_name + ".netprof21";
+    char buf[OCPP21_NETWORK_PERSISTENCE_BUF_LEN];
+    size_t len = platform_read_file(name.c_str(), buf, sizeof(buf) - 1);
+    if (len == 0) {
+        return;
+    }
+    buf[len] = '\0';
+
+    StaticJsonDocument<OCPP21_NETWORK_PERSISTENCE_BUF_LEN * 2> doc;
+    if (deserializeJson(doc, buf, len)) {
+        log_error("Failed to parse %s", name.c_str());
+        return;
+    }
+
+    for (JsonObject s : doc["slots"].as<JsonArray>()) {
+        int32_t slot_num = s["slot"].as<int32_t>();
+        if (slot_num < 1 || slot_num > OCPP21_NETWORK_PROFILE_SLOTS) {
+            continue;
+        }
+        auto &slot = device_model.network_profiles[slot_num - 1];
+        slot.used = true;
+        slot.security_profile = s["security_profile"].as<int32_t>();
+        snprintf(slot.url, sizeof(slot.url), "%s", s["url"].as<const char *>());
+        snprintf(slot.password, sizeof(slot.password), "%s", s["password"].as<const char *>());
+    }
+
+    int32_t priority = doc["priority"].as<int32_t>();
+    if (priority >= 1 && priority <= OCPP21_NETWORK_PROFILE_SLOTS && device_model.network_profiles[priority - 1].used) {
+        device_model.network_priority = priority;
+    }
+}
+
+void ChargePoint::saveNetworkPersistence()
+{
+    std::string name = charge_point_name + ".netprof21";
+    char buf[OCPP21_NETWORK_PERSISTENCE_BUF_LEN];
+    TFJsonSerializer json{buf, sizeof(buf)};
+    json.addObject();
+    json.addMemberNumber("priority", device_model.network_priority);
+    json.addMemberArray("slots");
+    for (int32_t i = 0; i < OCPP21_NETWORK_PROFILE_SLOTS; ++i) {
+        auto &slot = device_model.network_profiles[i];
+        if (!slot.used) {
+            continue;
+        }
+        json.addObject();
+        json.addMemberNumber("slot", i + 1);
+        json.addMemberNumber("security_profile", slot.security_profile);
+        json.addMemberString("url", slot.url);
+        json.addMemberString("password", slot.password);
+        json.endObject();
+    }
+    json.endArray();
+    json.endObject();
+    size_t len = json.end();
+
+    if (!platform_write_file(name.c_str(), buf, len)) {
+        log_error("Failed to write %s", name.c_str());
+    }
 }
 
 void ChargePoint::scheduleChainOcsp(uint32_t chain_id)

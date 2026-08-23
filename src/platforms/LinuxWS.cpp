@@ -218,6 +218,16 @@ void platform_update_tls(void *_ctx, const PlatformTlsConfig *tls)
     ctx->tls_client_key_file = tls != nullptr && tls->client_key_file != nullptr ? tls->client_key_file : "";
 }
 
+void platform_update_url(void *_ctx, const char *websocket_url)
+{
+    LinuxWsContext *ctx = (LinuxWsContext *)_ctx;
+
+    auto url_len = strlen(websocket_url);
+    ctx->url = heap_alloc_array<char>(url_len + 1);
+    memcpy(ctx->url.get(), websocket_url, url_len + 1);
+    ctx->is_ssl = mg_url_is_ssl(websocket_url);
+}
+
 void platform_disconnect(void *_ctx) {
     LinuxWsContext *ctx = (LinuxWsContext *)_ctx;
 

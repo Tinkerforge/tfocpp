@@ -72,7 +72,7 @@ public:
     // chain entries can recover their anchor root.
     void init(const char *charge_point_name);
 
-    CertInstallResult installRoot(CertGroup group, const char *pem);
+    CertInstallResult installRoot(CertGroup group, const char *pem, time_t now);
     // The chain file and key file ids are reserved by the caller via
     // nextId (the key is written at CSR time). Replaces chains of the
     // same group anchored at the same root (HUB20-42-002, A02.FR.13).

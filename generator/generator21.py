@@ -96,7 +96,14 @@ certificates_profile = [[ #send
         schema21.GetInstalledCertificateIdsRequest.GetInstalledCertificateIdsRequest,
 ]]
 
-supported_profiles = [provisioning_profile, transactions_profile, security_profile, certificates_profile]# All OCPP 2.1 actions, derived from the schema file names.
+# Messages for network connection profiles (A05).
+network_profile = [[ #send
+        schema21.SetNetworkProfileResponse.SetNetworkProfileResponse,
+    ], [ #recv
+        schema21.SetNetworkProfileRequest.SetNetworkProfileRequest,
+]]
+
+supported_profiles = [provisioning_profile, transactions_profile, security_profile, certificates_profile, network_profile]# All OCPP 2.1 actions, derived from the schema file names.
 # Used to generate the full CallAction enum so that known but
 # unsupported actions are answered with NotSupported instead of
 # NotImplemented.

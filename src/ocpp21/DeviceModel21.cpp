@@ -16,6 +16,14 @@ VariableResult DeviceModel::getVariable(const char *component, const char *varia
             snprintf(buf, buf_len, "%d", heartbeat_interval_s);
             return VariableResult::Accepted;
         }
+        if (strcmp(variable, "NetworkConfigurationPriority") == 0) {
+            if (network_priority == 0) {
+                buf[0] = '\0';
+            } else {
+                snprintf(buf, buf_len, "%d", network_priority);
+            }
+            return VariableResult::Accepted;
+        }
         return VariableResult::UnknownVariable;
     }
 
@@ -121,6 +129,20 @@ VariableResult DeviceModel::setVariable(const char *component, const char *varia
                 return VariableResult::Rejected;
             heartbeat_interval_s = parsed.unwrap();
             heartbeat_interval_changed = true;
+            return VariableResult::Accepted;
+        }
+        if (strcmp(variable, "NetworkConfigurationPriority") == 0) {
+            // A05: a single slot, no B10 fallback list yet. The slot must
+            // hold a profile stored via SetNetworkProfile.
+            auto parsed = parse_int(value);
+            if (parsed.is_none() || parsed.unwrap() < 1 || parsed.unwrap() > OCPP21_NETWORK_PROFILE_SLOTS) {
+                return VariableResult::Rejected;
+            }
+            if (!network_profiles[parsed.unwrap() - 1].used) {
+                return VariableResult::Rejected;
+            }
+            network_priority = parsed.unwrap();
+            network_priority_changed = true;
             return VariableResult::Accepted;
         }
         return VariableResult::UnknownVariable;

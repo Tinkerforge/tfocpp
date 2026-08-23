@@ -146,3 +146,59 @@ def test_m07_vehicle_chain_status(csms, host):
         "nextUpdate": "2027-01-01T00:00:00Z",
     }]})
     host.wait_for("Vehicle chain certificate 1234: OCSP status Good", timeout=10)
+
+
+def sign_charging_station_certificate(csms, host, ca):
+    assert csms.call("InstallCertificate", {
+        "certificateType": "CSMSRootCertificate",
+        "certificate": ca.cert_pem,
+    })["status"] == "Accepted"
+    assert csms.call("TriggerMessage", {
+        "requestedMessage": "SignChargingStationCertificate",
+    })["status"] == "Accepted"
+    sign_req, msg_id = csms.expect("SignCertificate")
+    csms.respond(msg_id, {"status": "Accepted"})
+    return sign_req
+
+
+def test_certificate_signed_invalid_chain_rejected(csms, host, ca, tmp_path):
+    # TC_A_14 semantics: a chain that does not validate against the
+    # installed roots is rejected and reported as a security event
+    # (A02.FR.07).
+    import time
+
+    sign_req = sign_charging_station_certificate(csms, host, ca)
+
+    d = tmp_path / "foreign-ca"
+    d.mkdir()
+    foreign = SigningCa(d, name="tfocpp-foreign-ca")
+    assert csms.call("CertificateSigned", {
+        "certificateChain": foreign.sign_csr(sign_req["csr"]),
+        "certificateType": "ChargingStationCertificate",
+        "requestId": sign_req["requestId"],
+    })["status"] == "Rejected"
+    host.wait_for("CertificateSigned rejected: UntrustedChain", timeout=10)
+
+    deadline = time.monotonic() + 10
+    while time.monotonic() < deadline:
+        if any(e["type"] == "InvalidChargingStationCertificate" for e in csms.security_events):
+            return
+        time.sleep(0.2)
+    raise TimeoutError("InvalidChargingStationCertificate security event not received")
+
+
+def test_charging_station_certificate_not_deletable(csms, host, ca):
+    # TC_M_23 semantics: the CSMS client chain can not be deleted.
+    sign_req = sign_charging_station_certificate(csms, host, ca)
+
+    leaf = ca.sign_csr(sign_req["csr"])
+    assert csms.call("CertificateSigned", {
+        "certificateChain": leaf,
+        "certificateType": "ChargingStationCertificate",
+        "requestId": sign_req["requestId"],
+    })["status"] == "Accepted"
+    host.wait_for("Installed the signed ChargingStationCertificate", timeout=10)
+
+    assert csms.call("DeleteCertificate", {
+        "certificateHashData": ca.hash_data(leaf, ca.cert_pem),
+    })["status"] == "Failed"

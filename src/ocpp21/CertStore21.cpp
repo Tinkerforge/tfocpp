@@ -217,7 +217,7 @@ bool CertStore::addEntry(CertGroup group, uint32_t id, const char *pem)
     return true;
 }
 
-CertInstallResult CertStore::installRoot(CertGroup group, const char *pem)
+CertInstallResult CertStore::installRoot(CertGroup group, const char *pem, time_t now)
 {
     if (is_chain_group(group)) {
         return CertInstallResult::Rejected;
@@ -225,6 +225,11 @@ CertInstallResult CertStore::installRoot(CertGroup group, const char *pem)
 
     OcppCertInfo21 info;
     if (platform_cert_count21(pem) != 1 || !platform_cert_info21(pem, 0, &info) || !info.is_ca) {
+        return CertInstallResult::Rejected;
+    }
+
+    // Not valid at time now, tolerating 300 s of clock skew for a notBefore in the near future (HUB20-42-001).
+    if ((info.not_after < now) || (info.not_before > (now + 300))) {
         return CertInstallResult::Rejected;
     }
 

@@ -1,9 +1,11 @@
-# Minimal OCPP 2.1 CSMS for testing the M06 OCSP flows.
-# Automatic responses only for boot/heartbeat/status, all
-# other charge point requests are handed to the test via expect().
+# Minimal OCPP 2.1 CSMS for the flows evtivity can not drive (M06 OCSP,
+# A05 network profiles). Automatic responses only for boot/heartbeat/
+# status/security events, all other charge point requests are handed to
+# the test via expect().
 
 import json
 import queue
+import ssl
 import threading
 import time
 import uuid
@@ -12,19 +14,31 @@ from websockets.sync.server import serve
 
 
 class MiniCsms:
-    def __init__(self):
+    def __init__(self, certfile=None, keyfile=None):
         self.requests = queue.Queue()
         self.responses = queue.Queue()
+        self.security_events = []
+        self.last_auth = None
         self.ws = None
         self.connected = threading.Event()
-        self.server = serve(self._handler, "127.0.0.1", 0, select_subprotocol=lambda conn, protos: "ocpp2.1")
+
+        ssl_context = None
+        host = "127.0.0.1"
+        if certfile is not None:
+            ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+            ssl_context.load_cert_chain(certfile, keyfile)
+            host = "localhost"
+        self.server = serve(self._handler, host, 0, ssl=ssl_context,
+                            select_subprotocol=lambda conn, protos: "ocpp2.1")
         self.port = self.server.socket.getsockname()[1]
-        self.url = f"ws://127.0.0.1:{self.port}"
+        scheme = "ws" if ssl_context is None else "wss"
+        self.url = f"{scheme}://{host}:{self.port}"
         self.thread = threading.Thread(target=self.server.serve_forever, daemon=True)
         self.thread.start()
 
     def _handler(self, ws):
         self.ws = ws
+        self.last_auth = ws.request.headers.get("Authorization")
         self.connected.set()
         try:
             for raw in ws:
@@ -39,7 +53,10 @@ class MiniCsms:
                         })
                     elif action == "Heartbeat":
                         self.respond(msg_id, {"currentTime": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())})
-                    elif action in ("StatusNotification", "SecurityEventNotification"):
+                    elif action == "SecurityEventNotification":
+                        self.security_events.append(payload)
+                        self.respond(msg_id, {})
+                    elif action == "StatusNotification":
                         self.respond(msg_id, {})
                     else:
                         self.requests.put((action, payload, msg_id))
