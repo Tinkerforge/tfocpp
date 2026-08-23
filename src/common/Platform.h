@@ -34,6 +34,7 @@ enum class PlatformConnectionError : uint8_t {
 
 void *platform_init(const char *websocket_url, const char *subprotocol, BasicAuthCredentials *credentials = nullptr, size_t credentials_length = 0, const PlatformTlsConfig *tls = nullptr);
 void platform_update_credentials(void *ctx, BasicAuthCredentials *credentials, size_t credentials_length);
+void platform_update_tls(void *ctx, const PlatformTlsConfig *tls);
 void platform_disconnect(void *ctx);
 void platform_reconnect(void *ctx);
 void platform_destroy(void *ctx);

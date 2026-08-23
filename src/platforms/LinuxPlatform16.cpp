@@ -340,6 +340,9 @@ int main(int argc, char **argv) {
     argc_ = argc;
     argv_ = argv;
 
+    // No buffering, otherwise tests can get stuck
+    setvbuf(stdout, nullptr, _IOLBF, 0);
+
     if (argc != 2 && argc != 4) {
         printf("Usage %s ws[s]://central-host-or-ip:port/central/path [basic_auth_pass] [basic_auth_pass_type (0 - hex, 1 - text, 2 - try both)]\n", argv[0]);
         return -1;

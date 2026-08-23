@@ -97,6 +97,27 @@ class Evtivity:
     def security_events(self, db_id):
         return self.get(f"/v1/stations/{db_id}/security-events")
 
+    def enable_pnc(self):
+        # V2G CSR signing is gated on the PnC feature flag. Idempotent,
+        # the OCPP container caches the flag for up to 60 s.
+        r = self.session.put(f"{self.api}/v1/pnc/settings",
+                             json={"enabled": True, "provider": "manual"}, timeout=10)
+        r.raise_for_status()
+
+    def wait_for_request(self, db_id, action, since_id=0, timeout=15):
+        # Waits for an OCPP request (message type 2) sent by the charging
+        # station for the given action and returns its payload.
+        deadline = time.monotonic() + timeout
+        while time.monotonic() < deadline:
+            for entry in self.ocpp_logs(db_id):
+                if entry["id"] <= since_id:
+                    continue
+                if entry["action"] == action and entry["direction"] == "inbound" and entry["messageType"] == 2:
+                    return entry["payload"]
+            time.sleep(0.5)
+        raise TimeoutError(f"no {action} request from the station within {timeout} s")
+
+
     def ocpp_logs(self, db_id, limit=100):
         return self.get(f"/v1/stations/{db_id}/ocpp-logs", limit=limit)
 

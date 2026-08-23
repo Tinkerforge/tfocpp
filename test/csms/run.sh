@@ -3,4 +3,4 @@
 # Configuration via .env, see .env.example. Pass through pytest arguments,
 # e.g. ./run.sh -k security -v
 cd "$(dirname "$0")" || exit 1
-exec uv run --quiet --with pytest --with requests python -m pytest "$@"
+exec uv run --quiet --with pytest --with requests --with websockets python -m pytest "$@"

@@ -209,6 +209,15 @@ void platform_update_credentials(void *_ctx, BasicAuthCredentials *credentials, 
     build_auth_headers(ctx, credentials, credentials_length);
 }
 
+void platform_update_tls(void *_ctx, const PlatformTlsConfig *tls)
+{
+    LinuxWsContext *ctx = (LinuxWsContext *)_ctx;
+
+    ctx->tls_ca_file = tls != nullptr && tls->ca_cert_file != nullptr ? tls->ca_cert_file : "";
+    ctx->tls_client_cert_file = tls != nullptr && tls->client_cert_file != nullptr ? tls->client_cert_file : "";
+    ctx->tls_client_key_file = tls != nullptr && tls->client_key_file != nullptr ? tls->client_key_file : "";
+}
+
 void platform_disconnect(void *_ctx) {
     LinuxWsContext *ctx = (LinuxWsContext *)_ctx;
 

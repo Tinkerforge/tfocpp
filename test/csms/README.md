@@ -34,6 +34,16 @@ extracted from the running ocpp container unless provided via the env, the
 copies in the evtivity checkout can be older than the ones baked into the
 image.
 
+The certificate management tests act as the PKI: a local test CA
+(`testca.py`) signs the CSRs from SignCertificate requests and the signed
+chain is delivered via the CertificateSigned command. The V2G flows need
+evtivity's Plug and Charge feature flag, the suite enables it via the
+settings API (the OCPP container caches the flag for up to a minute, the
+test retries). The OCSP tests (`test_ocsp.py`) run against a minimal
+scripted CSMS (`minicsms.py`) instead of evtivity, which forwards a JSON
+body instead of a DER encoded OCSP request to responders. The OCSP
+responses are generated locally with `openssl ocsp`.
+
 ## Notes
 
 * The full suite takes a few minutes, dominated by reconnect intervals and

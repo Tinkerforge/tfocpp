@@ -4,6 +4,7 @@
 
 #include <string>
 
+#include "CertStore21.h"
 #include "Connection21.h"
 #include "DeviceModel21.h"
 #include "Messages21.h"
@@ -49,6 +50,31 @@ struct EvseTracker21 {
     uint32_t next_sampled_value_deadline = 0;
 };
 
+// M06/M07: cached OCSP status of a SECC chain certificate.
+struct OcspCacheEntry21 {
+    bool used = false;
+    bool in_flight = false;
+    uint32_t chain_id = 0;
+    uint8_t cert_idx = 0;
+    OcppCertHashData21 hash{};
+    char url[256] = "";
+    OcppOcspStatus21 status = OcppOcspStatus21::Unknown;
+    uint32_t refresh_deadline = 0;
+};
+
+#define OCPP21_OCSP_CACHE_SIZE (OCPP21_CERTSTORE_MAX_CHAINS * (OCPP21_CHAIN_MAX_CHILDREN + 1))
+
+// M07: vehicle chain status cache, filled from
+// GetCertificateChainStatusResponse. Read by the ISO 15118 stack.
+struct VehicleOcspStatus21 {
+    bool used = false;
+    OcppCertHashData21 hash{};
+    GetCertificateChainStatusResponseCertificateStatusEntryEntriesStatus status = GetCertificateChainStatusResponseCertificateStatusEntryEntriesStatus::UNKNOWN;
+    time_t next_update = 0;
+};
+
+#define OCPP21_VEHICLE_OCSP_CACHE_SIZE 4
+
 class ChargePoint21 {
 public:
     ChargePoint21() {}
@@ -73,6 +99,12 @@ public:
     // Queues a critical security event for guaranteed delivery (A04).
     void sendSecurityEventNotification(const char *type, const char *tech_info = nullptr);
 
+    // M07: requests the OCSP status of a vehicle certificate chain
+    // (hashes with per certificate responder URL). The result lands in
+    // the vehicle status cache, see vehicleChainStatus.
+    bool requestVehicleChainStatus(const OcppCertHashData21 *hashes, const char * const *responder_urls, size_t count);
+    const VehicleOcspStatus21 *vehicleChainStatus(const OcppCertHashData21 &hash) const;
+
     // Received call results
     CallResponse handleBootNotificationResponse(int32_t connectorId, BootNotificationResponseView conf);
     CallResponse handleHeartbeatResponse(int32_t connectorId, HeartbeatResponseView conf);
@@ -81,6 +113,9 @@ public:
     CallResponse handleTransactionEventResponse(int32_t connectorId, TransactionEventResponseView conf);
     CallResponse handleMeterValuesResponse(int32_t connectorId, MeterValuesResponseView conf);
     CallResponse handleSecurityEventNotificationResponse(int32_t connectorId, SecurityEventNotificationResponseView conf);
+    CallResponse handleSignCertificateResponse(int32_t connectorId, SignCertificateResponseView conf);
+    CallResponse handleGetCertificateStatusResponse(int32_t connectorId, GetCertificateStatusResponseView conf);
+    CallResponse handleGetCertificateChainStatusResponse(int32_t connectorId, GetCertificateChainStatusResponseView conf);
 
     // Received calls
     CallResponse handleGetVariables(const char *uid, GetVariablesView req);
@@ -90,11 +125,16 @@ public:
     CallResponse handleReset(const char *uid, ResetView req);
     CallResponse handleRequestStartTransaction(const char *uid, RequestStartTransactionView req);
     CallResponse handleRequestStopTransaction(const char *uid, RequestStopTransactionView req);
+    CallResponse handleCertificateSigned(const char *uid, CertificateSignedView req);
+    CallResponse handleInstallCertificate(const char *uid, InstallCertificateView req);
+    CallResponse handleDeleteCertificate(const char *uid, DeleteCertificateView req);
+    CallResponse handleGetInstalledCertificateIds(const char *uid, GetInstalledCertificateIdsView req);
 
     OcppState21 state = OcppState21::PowerOn;
 
     Connection21 connection;
     DeviceModel21 device_model;
+    CertStore21 cert_store;
 
 private:
     void sendBootNotification();
@@ -105,6 +145,14 @@ private:
     void sendTransactionUpdated(int32_t evse_id, TransactionEventTriggerReason trigger, bool with_meter_value);
     void loadSecurityPersistence();
     void saveSecurityPersistence();
+
+    void startCsr(SignCertificateCertificateType type, bool renewal, const OcppCertHashData21 *root_hash);
+    void abortCsr();
+    void sendSignCertificate();
+    void tickCertificates();
+    void applyClientCertificate(uint32_t chain_id);
+    // M06: (re)creates the OCSP cache entries for a SECC chain.
+    void scheduleChainOcsp(uint32_t chain_id);
 
     uint32_t boot_retry_deadline = 0;
     // Interval requested by the CSMS in a Pending or Rejected boot response. 0 = use default.
@@ -141,6 +189,48 @@ private:
     // Report a TLS failure security event once per failure streak
     // (A00.FR.316). Unknown doubles as the none sentinel, reset on connect.
     PlatformConnectionError last_reported_conn_error = PlatformConnectionError::Unknown;
+
+    // A02/A03: one CSR flow at a time. The CSR is kept for resends
+    // (A02.FR.18), the retry backoff starts at CertSigningWaitMinimum
+    // and doubles (A02.FR.17/18), stopping after CertSigningRepeatTimes
+    // resends (A02.FR.19).
+    bool csr_active = false;
+    SignCertificateCertificateType csr_type = SignCertificateCertificateType::NONE;
+    uint32_t csr_pending_id = 0; // reserved store id, names the key file
+    int32_t csr_request_id = 0;  // A02.FR.24/26
+    int32_t last_sign_request_id = 0;
+    char csr_buf[5501] = "";
+    uint32_t csr_retry_deadline = 0;
+    int32_t csr_attempts_left = 0;
+    uint32_t csr_backoff_s = 0;
+    bool csr_has_root_hash = false; // A03.FR.23, omitted for A02 (HUB20-421-002)
+    OcppCertHashData21 csr_root_hash{};
+
+    // TriggerMessage requested CSR, started from the next tick so the
+    // TriggerMessageResponse leaves first.
+    bool trigger_sign = false;
+    SignCertificateCertificateType trigger_sign_type = SignCertificateCertificateType::NONE;
+
+    // A03.FR.02: periodic check for certificates within one month of expiry.
+    uint32_t cert_expiry_check_deadline = 0;
+
+    // A02.FR.08: reconnect with the new charging station certificate
+    // after the CertificateSignedResponse left. 0 = not armed.
+    uint32_t cert_reconnect_deadline = 0;
+    uint32_t pending_client_chain_id = 0;
+
+    // TLS configuration in use, needed to swap the client certificate.
+    bool tls_in_use = false;
+    std::string tls_ca_file;
+    std::string tls_client_cert_file;
+    std::string tls_client_key_file;
+
+    // M06: SECC chain OCSP status cache. One request in flight at a time.
+    OcspCacheEntry21 ocsp_cache[OCPP21_OCSP_CACHE_SIZE];
+    int32_t ocsp_in_flight_idx = -1;
+
+    // M07 plumbing.
+    VehicleOcspStatus21 vehicle_ocsp[OCPP21_VEHICLE_OCSP_CACHE_SIZE];
 };
 
 } // namespace Ocpp21

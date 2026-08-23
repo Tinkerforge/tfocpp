@@ -77,7 +77,26 @@ security_profile = [[ #send
         schema21.SecurityEventNotificationResponse.SecurityEventNotificationResponse,
 ]]
 
-supported_profiles = [provisioning_profile, transactions_profile, security_profile]# All OCPP 2.1 actions, derived from the schema file names.
+# Messages for certificate management (A02/A03, M03/M04/M05, M06/M07).
+certificates_profile = [[ #send
+        schema21.SignCertificateRequest.SignCertificateRequest,
+        schema21.GetCertificateStatusRequest.GetCertificateStatusRequest,
+        schema21.GetCertificateChainStatusRequest.GetCertificateChainStatusRequest,
+        schema21.CertificateSignedResponse.CertificateSignedResponse,
+        schema21.InstallCertificateResponse.InstallCertificateResponse,
+        schema21.DeleteCertificateResponse.DeleteCertificateResponse,
+        schema21.GetInstalledCertificateIdsResponse.GetInstalledCertificateIdsResponse,
+    ], [ #recv
+        schema21.SignCertificateResponse.SignCertificateResponse,
+        schema21.GetCertificateStatusResponse.GetCertificateStatusResponse,
+        schema21.GetCertificateChainStatusResponse.GetCertificateChainStatusResponse,
+        schema21.CertificateSignedRequest.CertificateSignedRequest,
+        schema21.InstallCertificateRequest.InstallCertificateRequest,
+        schema21.DeleteCertificateRequest.DeleteCertificateRequest,
+        schema21.GetInstalledCertificateIdsRequest.GetInstalledCertificateIdsRequest,
+]]
+
+supported_profiles = [provisioning_profile, transactions_profile, security_profile, certificates_profile]# All OCPP 2.1 actions, derived from the schema file names.
 # Used to generate the full CallAction enum so that known but
 # unsupported actions are answered with NotSupported instead of
 # NotImplemented.

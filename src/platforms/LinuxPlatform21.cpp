@@ -5,11 +5,14 @@
 
 #ifdef OCPP_PLATFORM_LINUX21
 
+#include <dirent.h>
+#include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 #include <time.h>
 #include <unistd.h>
 
@@ -78,11 +81,55 @@ size_t platform_read_file(const char *name, char *buf, size_t len)
 bool platform_write_file(const char *name, char *buf, size_t len)
 {
     auto fd = open(name, O_WRONLY | O_TRUNC | O_CREAT, 0644);
+    if (fd < 0 && errno == ENOENT) {
+        const char *slash = strrchr(name, '/');
+        if (slash != nullptr) {
+            char dir[256];
+            size_t dir_len = (size_t)(slash - name);
+            if (dir_len < sizeof(dir)) {
+                memcpy(dir, name, dir_len);
+                dir[dir_len] = '\0';
+                mkdir(dir, 0755);
+                fd = open(name, O_WRONLY | O_TRUNC | O_CREAT, 0644);
+            }
+        }
+    }
     if (fd < 0)
         return false;
     auto written = write(fd, buf, len);
     close(fd);
     return written >= 0 && (size_t)written == len;
+}
+
+void *platform_open_dir(const char *name)
+{
+    return opendir(name);
+}
+
+OcppDirEnt *platform_read_dir(void *dir_fd)
+{
+    static OcppDirEnt entry;
+    struct dirent *d;
+    while ((d = readdir((DIR *)dir_fd)) != nullptr) {
+        if (strcmp(d->d_name, ".") == 0 || strcmp(d->d_name, "..") == 0) {
+            continue;
+        }
+        entry.is_dir = d->d_type == DT_DIR;
+        strncpy(entry.name, d->d_name, sizeof(entry.name) - 1);
+        entry.name[sizeof(entry.name) - 1] = '\0';
+        return &entry;
+    }
+    return nullptr;
+}
+
+void platform_close_dir(void *dir_fd)
+{
+    closedir((DIR *)dir_fd);
+}
+
+void platform_remove_file(const char *name)
+{
+    unlink(name);
 }
 
 [[gnu::noreturn]] void system_abort(const char *message) {
@@ -212,6 +259,18 @@ static void sim_handle_command(char *line)
     } else if (strncmp(line, "secevent ", 9) == 0) {
         printf("[SIM  ] queueing security event %s\n", line + 9);
         cp.sendSecurityEventNotification(line + 9, "triggered via host simulator");
+    } else if (strcmp(line, "m07") == 0) {
+        // Drives the vehicle chain OCSP plumbing until the ISO 15118 stack exists.
+        printf("[SIM  ] requesting vehicle chain OCSP status\n");
+        OcppCertHashData21 hash;
+        memset(&hash, 0, sizeof(hash));
+        for (size_t i = 0; i < 64; ++i) {
+            hash.issuer_name_hash[i] = 'a';
+            hash.issuer_key_hash[i] = 'b';
+        }
+        strcpy(hash.serial_number, "1234");
+        const char *url = "http://127.0.0.1:1/ocsp";
+        cp.requestVehicleChainStatus(&hash, &url, 1);
     } else if (strcmp(line, "fault") == 0) {
         e.state = EvseState21::Faulted;
         printf("[SIM  ] EVSE faulted\n");
@@ -219,7 +278,7 @@ static void sim_handle_command(char *line)
         e.state = EvseState21::NotConnected;
         printf("[SIM  ] EVSE fault cleared\n");
     } else if (line[0] != '\0') {
-        printf("[SIM  ] unknown command %s (plug, unplug, tag <id>, fault, ok, secevent <type>)\n", line);
+        printf("[SIM  ] unknown command %s (plug, unplug, tag <id>, fault, ok, secevent <type>, m07)\n", line);
     }
 }
 

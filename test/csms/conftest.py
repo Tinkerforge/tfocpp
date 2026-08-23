@@ -147,6 +147,18 @@ def free_pricing_group(api):
     return api.ensure_free_pricing_group()
 
 
+@pytest.fixture(scope="session", autouse=True)
+def purge_blocked_test_stations():
+    # Station DELETE is a soft delete in the CSMS, blocked test stations accumulate, delete them
+    yield
+    if not docker_available():
+        return
+    subprocess.run(["docker", "exec", DOCKER_PG, "psql", "-U", "evtivity", "-c",
+                    "DELETE FROM charging_stations WHERE onboarding_status='blocked'"
+                    " AND station_id LIKE 'tfocpp-test-%'"],
+                   capture_output=True)
+
+
 @pytest.fixture
 def stations(api, free_pricing_group):
     factory = StationFactory(api, free_pricing_group)

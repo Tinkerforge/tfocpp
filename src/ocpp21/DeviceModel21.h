@@ -12,6 +12,8 @@ namespace Ocpp21 {
 #define OCPP21_BASIC_AUTH_PASSWORD_MIN_LEN 16
 #define OCPP21_BASIC_AUTH_PASSWORD_MAX_LEN 64
 #define OCPP21_ORGANIZATION_NAME_MAX_LEN 64
+#define OCPP21_SECC_ID_MAX_LEN 64
+#define OCPP21_COUNTRY_NAME_LEN 2
 
 enum class VariableResult : uint8_t {
     Accepted,
@@ -20,6 +22,8 @@ enum class VariableResult : uint8_t {
     UnknownVariable,
     NotSupportedAttributeType,
 };
+
+class CertStore21;
 
 class DeviceModel21 {
 public:
@@ -36,11 +40,28 @@ public:
     char basic_auth_password[OCPP21_BASIC_AUTH_PASSWORD_MAX_LEN + 1] = "";
     char organization_name[OCPP21_ORGANIZATION_NAME_MAX_LEN + 1] = "";
 
+    // SecurityCtrlr, certificate management. The chain size limit
+    // matches the CertificateSigned certificateChain field size.
+    int32_t max_certificate_chain_size = 10000;
+    int32_t cert_signing_wait_minimum_s = 30;
+    int32_t cert_signing_repeat_times = 2;
+    // CertificateEntries, set by the charge point.
+    const CertStore21 *cert_store = nullptr;
+
+    // ISO15118Ctrlr, subject fields of the SECC leaf CSR. Must match the
+    // SECC registration at the V2G PKI operator.
+    char secc_id[OCPP21_SECC_ID_MAX_LEN + 1] = "DE*TFO*E000001";
+    char country_name[OCPP21_COUNTRY_NAME_LEN + 1] = "DE";
+    char iso_organization_name[OCPP21_ORGANIZATION_NAME_MAX_LEN + 1] = "Tinkerforge GmbH";
+    // V2G20SECCLeafCryptoSuite: ecdsa_secp521r1_sha512 (default) or ed448.
+    bool v2g20_use_ed448 = false;
+
     // Set on accepted writes, cleared by the charge point after it has
     // persisted the value and applied side effects.
     bool basic_auth_password_changed = false;
     bool organization_name_changed = false;
     bool heartbeat_interval_changed = false;
+    bool iso15118_changed = false;
 
     // On success writes the value as string into buf.
     VariableResult getVariable(const char *component, const char *variable, char *buf, size_t buf_len);

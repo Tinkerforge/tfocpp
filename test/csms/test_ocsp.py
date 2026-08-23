@@ -1,0 +1,148 @@
+# M06/M07 OCSP flows against the scripted mini CSMS: evtivity forwards a
+# JSON body instead of a DER OCSP request to responders, so the OCSP
+# round trip is driven here with locally generated RFC 6960 responses.
+# Also covers the A03 renewal trigger, which needs control over the
+# certificate validity.
+
+import pytest
+
+from minicsms import MiniCsms
+from testca import SigningCa
+
+
+@pytest.fixture
+def csms():
+    c = MiniCsms()
+    yield c
+    c.stop()
+
+
+@pytest.fixture
+def ca(tmp_path):
+    d = tmp_path / "ca"
+    d.mkdir()
+    return SigningCa(d)
+
+
+@pytest.fixture
+def host(csms, hosts):
+    h = hosts.start(csms.url, "tfocpp-ocsp-test")
+    csms.wait_connected()
+    h.wait_for("Boot notification accepted", timeout=20)
+    return h
+
+
+def install_v2g20_chain(csms, host, ca, days=365, ocsp_url=None):
+    # Trigger the V2G20 CSR flow and deliver a chain signed by the test CA.
+    assert csms.call("InstallCertificate", {
+        "certificateType": "V2GRootCertificate",
+        "certificate": ca.cert_pem,
+    })["status"] == "Accepted"
+
+    assert csms.call("TriggerMessage", {
+        "requestedMessage": "SignV2G20Certificate",
+    })["status"] == "Accepted"
+
+    sign_req, msg_id = csms.expect("SignCertificate")
+    assert sign_req["certificateType"] == "V2G20Certificate"
+    csms.respond(msg_id, {"status": "Accepted"})
+
+    leaf = ca.sign_csr(sign_req["csr"], days=days, ocsp_url=ocsp_url)
+    assert csms.call("CertificateSigned", {
+        "certificateChain": leaf,
+        "certificateType": "V2G20Certificate",
+        "requestId": sign_req["requestId"],
+    })["status"] == "Accepted"
+
+    host.wait_for("Installed the signed V2G20Certificate", timeout=10)
+    return leaf
+
+
+def test_m06_ocsp_good(csms, host, ca):
+    leaf = install_v2g20_chain(csms, host, ca, ocsp_url="http://ocsp.test.example/")
+
+    # M06.FR.06/07: the station requests the status for the new chain.
+    status_req, msg_id = csms.expect("GetCertificateStatus")
+    data = status_req["ocspRequestData"]
+    assert data["hashAlgorithm"] == "SHA256"
+    assert data["responderURL"] == "http://ocsp.test.example/"
+    assert len(data["issuerNameHash"]) == 64
+
+    csms.respond(msg_id, {"status": "Accepted", "ocspResult": ca.ocsp_response(leaf)})
+    host.wait_for("OCSP status good", timeout=10)
+
+
+def test_m06_ocsp_revoked_deletes_chain(csms, host, ca):
+    leaf = install_v2g20_chain(csms, host, ca, ocsp_url="http://ocsp.test.example/")
+
+    _, msg_id = csms.expect("GetCertificateStatus")
+    csms.respond(msg_id, {"status": "Accepted", "ocspResult": ca.ocsp_response(leaf, revoked=True)})
+
+    # HUB20-431-003: the SECC chain is deleted immediately.
+    host.wait_for("OCSP status revoked, deleting the SECC chain", timeout=10)
+    listed = csms.call("GetInstalledCertificateIds", {"certificateType": ["V2GCertificateChain"]})
+    assert listed["status"] == "NotFound"
+
+
+def test_m06_ocsp_invalid_response_rejected(csms, host, ca, tmp_path):
+    leaf = install_v2g20_chain(csms, host, ca, ocsp_url="http://ocsp.test.example/")
+
+    # A response signed by an unrelated CA fails RFC 6960 validation
+    # (HUB20-431-002). The chain stays installed.
+    d = tmp_path / "other-ca"
+    d.mkdir()
+    other = SigningCa(d, name="tfocpp-unrelated-ca")
+    other_leaf = other.sign_csr(_csr_for(other, d))
+
+    _, msg_id = csms.expect("GetCertificateStatus")
+    csms.respond(msg_id, {"status": "Accepted", "ocspResult": other.ocsp_response(other_leaf)})
+
+    host.wait_for("OCSP response failed validation, rejected", timeout=10)
+    listed = csms.call("GetInstalledCertificateIds", {"certificateType": ["V2GCertificateChain"]})
+    assert listed["status"] == "Accepted"
+
+
+def _csr_for(ca, directory):
+    import subprocess
+    key = directory / "tmp-key.pem"
+    csr = directory / "tmp.csr"
+    subprocess.run(["openssl", "req", "-newkey", "ec", "-pkeyopt", "ec_paramgen_curve:P-256",
+                    "-nodes", "-keyout", str(key), "-out", str(csr), "-subj", "/CN=tmp"],
+                   check=True, capture_output=True)
+    return csr.read_text()
+
+
+def test_a03_renewal_on_expiring_certificate(csms, host, ca):
+    # A03.FR.02: a certificate within one month of expiry triggers an
+    # autonomous CSR with the root hash of the issuing PKI (A03.FR.23).
+    install_v2g20_chain(csms, host, ca, days=20)
+
+    # The expiry check runs shortly after each connect.
+    csms.disconnect()
+    csms.wait_connected(timeout=30)
+    host.wait_for("expires soon, requesting renewal \\(A03\\)", timeout=30)
+
+    sign_req, msg_id = csms.expect("SignCertificate")
+    csms.respond(msg_id, {"status": "Accepted"})
+    assert sign_req["certificateType"] == "V2G20Certificate"
+    assert "hashRootCertificate" in sign_req, "A03 CSR must identify the issuing PKI"
+    assert len(sign_req["hashRootCertificate"]["issuerKeyHash"]) == 64
+
+
+def test_m07_vehicle_chain_status(csms, host):
+    # M07 plumbing: the host requests the vehicle chain status (driven by
+    # the simulator, the ISO 15118 stack arrives later) and caches the
+    # result.
+    host.send("m07")
+    status_req, msg_id = csms.expect("GetCertificateChainStatus")
+    entry = status_req["certificateStatusRequests"][0]
+    assert entry["source"] == "OCSP"
+    assert entry["certificateHashData"]["serialNumber"] == "1234"
+
+    csms.respond(msg_id, {"certificateStatus": [{
+        "certificateHashData": entry["certificateHashData"],
+        "source": "OCSP",
+        "status": "Good",
+        "nextUpdate": "2027-01-01T00:00:00Z",
+    }]})
+    host.wait_for("Vehicle chain certificate 1234: OCSP status Good", timeout=10)

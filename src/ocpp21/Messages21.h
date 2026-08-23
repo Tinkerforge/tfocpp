@@ -186,9 +186,9 @@ enum class TransactionEventPreconditioningStatus : uint8_t {
     NONE
 };
 
-extern const char * const TransactionResponseStatusStrings[];
+extern const char * const ResponseStatusStrings[];
 
-enum class TransactionResponseStatus : uint8_t {
+enum class ResponseStatus : uint8_t {
     ACCEPTED,
     REJECTED,
     NONE
@@ -321,6 +321,108 @@ enum class RequestStartTransactionChargingProfileEntriesChargingScheduleEntryEnt
     RENEWABLE_GENERATION_PERCENTAGE
 };
 
+extern const char * const SignCertificateCertificateTypeStrings[];
+
+enum class SignCertificateCertificateType : uint8_t {
+    CHARGING_STATION_CERTIFICATE,
+    V2_G_CERTIFICATE,
+    V2_G20_CERTIFICATE,
+    NONE
+};
+
+extern const char * const InstallCertificateResponseStatusStrings[];
+
+enum class InstallCertificateResponseStatus : uint8_t {
+    ACCEPTED,
+    REJECTED,
+    FAILED,
+    NONE
+};
+
+extern const char * const DeleteCertificateResponseStatusStrings[];
+
+enum class DeleteCertificateResponseStatus : uint8_t {
+    ACCEPTED,
+    FAILED,
+    NOT_FOUND,
+    NONE
+};
+
+extern const char * const GetInstalledCertificateIdsResponseStatusStrings[];
+
+enum class GetInstalledCertificateIdsResponseStatus : uint8_t {
+    ACCEPTED,
+    NOT_FOUND,
+    NONE
+};
+
+extern const char * const SignCertificateResponseStatusStrings[];
+
+enum class SignCertificateResponseStatus : uint8_t {
+    ACCEPTED,
+    REJECTED
+};
+
+extern const char * const GetCertificateStatusResponseStatusStrings[];
+
+enum class GetCertificateStatusResponseStatus : uint8_t {
+    ACCEPTED,
+    FAILED
+};
+
+extern const char * const CertificateHashDataEntriesHashAlgorithmStrings[];
+
+enum class CertificateHashDataEntriesHashAlgorithm : uint8_t {
+    SHA256,
+    SHA384,
+    SHA512
+};
+
+extern const char * const GetCertificateChainStatusResponseCertificateStatusEntryEntriesSourceStrings[];
+
+enum class GetCertificateChainStatusResponseCertificateStatusEntryEntriesSource : uint8_t {
+    CRL,
+    OCSP
+};
+
+extern const char * const GetCertificateChainStatusResponseCertificateStatusEntryEntriesStatusStrings[];
+
+enum class GetCertificateChainStatusResponseCertificateStatusEntryEntriesStatus : uint8_t {
+    GOOD,
+    REVOKED,
+    UNKNOWN,
+    FAILED
+};
+
+extern const char * const CertificateSignedCertificateTypeStrings[];
+
+enum class CertificateSignedCertificateType : uint8_t {
+    CHARGING_STATION_CERTIFICATE,
+    V2_G_CERTIFICATE,
+    V2_G20_CERTIFICATE
+};
+
+extern const char * const InstallCertificateCertificateTypeStrings[];
+
+enum class InstallCertificateCertificateType : uint8_t {
+    V2_G_ROOT_CERTIFICATE,
+    MO_ROOT_CERTIFICATE,
+    MANUFACTURER_ROOT_CERTIFICATE,
+    CSMS_ROOT_CERTIFICATE,
+    OEM_ROOT_CERTIFICATE
+};
+
+extern const char * const GetInstalledCertificateIdsCertificateTypeEntryStrings[];
+
+enum class GetInstalledCertificateIdsCertificateTypeEntry : uint8_t {
+    V2_G_ROOT_CERTIFICATE,
+    MO_ROOT_CERTIFICATE,
+    CSMS_ROOT_CERTIFICATE,
+    V2_G_CERTIFICATE_CHAIN,
+    MANUFACTURER_ROOT_CERTIFICATE,
+    OEM_ROOT_CERTIFICATE
+};
+
 extern const char * const GetVariablesResponseGetVariableResultAttributeStatusStrings[];
 
 enum class GetVariablesResponseGetVariableResultAttributeStatus : uint8_t {
@@ -354,9 +456,9 @@ enum class SetVariablesResponseSetVariableResultAttributeStatus : uint8_t {
     NONE
 };
 
-extern const char * const AuthorizeIso15118CertificateHashDataHashAlgorithmStrings[];
+extern const char * const HashAlgorithmStrings[];
 
-enum class AuthorizeIso15118CertificateHashDataHashAlgorithm : uint8_t {
+enum class HashAlgorithm : uint8_t {
     SHA256,
     SHA384,
     SHA512,
@@ -411,6 +513,26 @@ enum class TransactionEventTransactionInfoOperationMode : uint8_t {
     CENTRAL_FREQUENCY,
     LOCAL_FREQUENCY,
     LOCAL_LOAD_BALANCING,
+    NONE
+};
+
+extern const char * const GetCertificateChainStatusCertificateStatusRequestsSourceStrings[];
+
+enum class GetCertificateChainStatusCertificateStatusRequestsSource : uint8_t {
+    CRL,
+    OCSP,
+    NONE
+};
+
+extern const char * const GetInstalledCertificateIdsResponseCertificateHashDataChainCertificateTypeStrings[];
+
+enum class GetInstalledCertificateIdsResponseCertificateHashDataChainCertificateType : uint8_t {
+    V2_G_ROOT_CERTIFICATE,
+    MO_ROOT_CERTIFICATE,
+    CSMS_ROOT_CERTIFICATE,
+    V2_G_CERTIFICATE_CHAIN,
+    MANUFACTURER_ROOT_CERTIFICATE,
+    OEM_ROOT_CERTIFICATE,
     NONE
 };
 
@@ -741,6 +863,237 @@ struct ICall {
     CallAction action;
     uint64_t ocppJmessageId;
     const char *ocppJcallId;
+};
+
+struct GetInstalledCertificateIdsView {
+    JsonObject _obj;
+
+    size_t certificateType_count() {
+
+        return _obj["certificateType"].size();
+    }
+
+    Option<GetInstalledCertificateIdsCertificateTypeEntry> certificateType(size_t i) {
+        if (!_obj.containsKey("certificateType"))
+                return {};
+
+        return Option<GetInstalledCertificateIdsCertificateTypeEntry>{(GetInstalledCertificateIdsCertificateTypeEntry)_obj["certificateType"][i].as<size_t>()};
+    }
+
+};
+
+struct DeleteCertificateCertificateHashDataEntriesView {
+    JsonObject _obj;
+
+    CertificateHashDataEntriesHashAlgorithm hashAlgorithm() {
+
+        return (CertificateHashDataEntriesHashAlgorithm)_obj["hashAlgorithm"].as<size_t>();
+    }
+
+    const char * issuerNameHash() {
+
+        return _obj["issuerNameHash"].as<const char *>();
+    }
+
+    const char * issuerKeyHash() {
+
+        return _obj["issuerKeyHash"].as<const char *>();
+    }
+
+    const char * serialNumber() {
+
+        return _obj["serialNumber"].as<const char *>();
+    }
+
+};
+
+struct DeleteCertificateView {
+    JsonObject _obj;
+
+    DeleteCertificateCertificateHashDataEntriesView certificateHashData() {
+
+        return DeleteCertificateCertificateHashDataEntriesView{_obj["certificateHashData"].as<JsonObject>()};
+    }
+
+};
+
+struct InstallCertificateView {
+    JsonObject _obj;
+
+    InstallCertificateCertificateType certificateType() {
+
+        return (InstallCertificateCertificateType)_obj["certificateType"].as<size_t>();
+    }
+
+    const char * certificate() {
+
+        return _obj["certificate"].as<const char *>();
+    }
+
+};
+
+struct CertificateSignedView {
+    JsonObject _obj;
+
+    const char * certificateChain() {
+
+        return _obj["certificateChain"].as<const char *>();
+    }
+
+    Option<CertificateSignedCertificateType> certificateType() {
+        if (!_obj.containsKey("certificateType"))
+                return {};
+
+        return Option<CertificateSignedCertificateType>{(CertificateSignedCertificateType)_obj["certificateType"].as<size_t>()};
+    }
+
+    Option<int32_t> requestId() {
+        if (!_obj.containsKey("requestId"))
+                return {};
+
+        return _obj["requestId"].as<int32_t>();
+    }
+
+};
+
+struct GetCertificateChainStatusResponseCertificateStatusEntryEntriesCertificateHashDataEntriesView {
+    JsonObject _obj;
+
+    CertificateHashDataEntriesHashAlgorithm hashAlgorithm() {
+
+        return (CertificateHashDataEntriesHashAlgorithm)_obj["hashAlgorithm"].as<size_t>();
+    }
+
+    const char * issuerNameHash() {
+
+        return _obj["issuerNameHash"].as<const char *>();
+    }
+
+    const char * issuerKeyHash() {
+
+        return _obj["issuerKeyHash"].as<const char *>();
+    }
+
+    const char * serialNumber() {
+
+        return _obj["serialNumber"].as<const char *>();
+    }
+
+};
+
+struct GetCertificateChainStatusResponseCertificateStatusEntryEntriesView {
+    JsonObject _obj;
+
+    GetCertificateChainStatusResponseCertificateStatusEntryEntriesCertificateHashDataEntriesView certificateHashData() {
+
+        return GetCertificateChainStatusResponseCertificateStatusEntryEntriesCertificateHashDataEntriesView{_obj["certificateHashData"].as<JsonObject>()};
+    }
+
+    GetCertificateChainStatusResponseCertificateStatusEntryEntriesSource source() {
+
+        return (GetCertificateChainStatusResponseCertificateStatusEntryEntriesSource)_obj["source"].as<size_t>();
+    }
+
+    GetCertificateChainStatusResponseCertificateStatusEntryEntriesStatus status() {
+
+        return (GetCertificateChainStatusResponseCertificateStatusEntryEntriesStatus)_obj["status"].as<size_t>();
+    }
+
+    time_t nextUpdate() {
+
+        return _obj["nextUpdate"].as<time_t>();
+    }
+
+};
+
+struct GetCertificateChainStatusResponseView {
+    JsonObject _obj;
+
+    size_t certificateStatus_count() {
+
+        return _obj["certificateStatus"].size();
+    }
+
+    GetCertificateChainStatusResponseCertificateStatusEntryEntriesView certificateStatus(size_t i) {
+
+        return GetCertificateChainStatusResponseCertificateStatusEntryEntriesView{_obj["certificateStatus"][i]};
+    }
+
+};
+
+struct GetCertificateStatusResponseStatusInfoEntriesView {
+    JsonObject _obj;
+
+    const char * reasonCode() {
+
+        return _obj["reasonCode"].as<const char *>();
+    }
+
+    Option<const char *> additionalInfo() {
+        if (!_obj.containsKey("additionalInfo"))
+                return {};
+
+        return _obj["additionalInfo"].as<const char *>();
+    }
+
+};
+
+struct GetCertificateStatusResponseView {
+    JsonObject _obj;
+
+    GetCertificateStatusResponseStatus status() {
+
+        return (GetCertificateStatusResponseStatus)_obj["status"].as<size_t>();
+    }
+
+    Option<GetCertificateStatusResponseStatusInfoEntriesView> statusInfo() {
+        if (!_obj.containsKey("statusInfo"))
+                return {};
+
+        return Option<GetCertificateStatusResponseStatusInfoEntriesView>{GetCertificateStatusResponseStatusInfoEntriesView{_obj["statusInfo"].as<JsonObject>()}};
+    }
+
+    Option<const char *> ocspResult() {
+        if (!_obj.containsKey("ocspResult"))
+                return {};
+
+        return _obj["ocspResult"].as<const char *>();
+    }
+
+};
+
+struct SignCertificateResponseStatusInfoEntriesView {
+    JsonObject _obj;
+
+    const char * reasonCode() {
+
+        return _obj["reasonCode"].as<const char *>();
+    }
+
+    Option<const char *> additionalInfo() {
+        if (!_obj.containsKey("additionalInfo"))
+                return {};
+
+        return _obj["additionalInfo"].as<const char *>();
+    }
+
+};
+
+struct SignCertificateResponseView {
+    JsonObject _obj;
+
+    SignCertificateResponseStatus status() {
+
+        return (SignCertificateResponseStatus)_obj["status"].as<size_t>();
+    }
+
+    Option<SignCertificateResponseStatusInfoEntriesView> statusInfo() {
+        if (!_obj.containsKey("statusInfo"))
+                return {};
+
+        return Option<SignCertificateResponseStatusInfoEntriesView>{SignCertificateResponseStatusInfoEntriesView{_obj["statusInfo"].as<JsonObject>()}};
+    }
+
 };
 
 struct SecurityEventNotificationResponseView {
@@ -4073,6 +4426,33 @@ struct GetVariablesResponseGetVariableResultComponentEvse {
     void serializeInto(TFJsonSerializer &json);
 };
 
+struct GetInstalledCertificateIdsResponseCertificateHashDataChainChildCertificateHashData {
+    HashAlgorithm hashAlgorithm;
+    const char *issuerNameHash;
+    const char *issuerKeyHash;
+    const char *serialNumber;
+
+    void serializeInto(TFJsonSerializer &json);
+};
+
+struct GetInstalledCertificateIdsResponseCertificateHashDataChainCertificateHashData {
+    HashAlgorithm hashAlgorithm;
+    const char *issuerNameHash;
+    const char *issuerKeyHash;
+    const char *serialNumber;
+
+    void serializeInto(TFJsonSerializer &json);
+};
+
+struct GetCertificateChainStatusCertificateStatusRequestsCertificateHashData {
+    HashAlgorithm hashAlgorithm;
+    const char *issuerNameHash;
+    const char *issuerKeyHash;
+    const char *serialNumber;
+
+    void serializeInto(TFJsonSerializer &json);
+};
+
 struct MeterValuesMeterValueSampledValue {
     float value;
     MeterValueSampledValueMeasurand measurand = MeterValueSampledValueMeasurand::NONE;
@@ -4202,6 +4582,69 @@ struct BootNotificationChargingStationModem {
     void serializeInto(TFJsonSerializer &json);
 };
 
+struct GetInstalledCertificateIdsResponseCertificateHashDataChain {
+    GetInstalledCertificateIdsResponseCertificateHashDataChainCertificateHashData *certificateHashData;
+    GetInstalledCertificateIdsResponseCertificateHashDataChainCertificateType certificateType;
+    GetInstalledCertificateIdsResponseCertificateHashDataChainChildCertificateHashData *childCertificateHashData = nullptr; size_t childCertificateHashData_length = 0;
+
+    void serializeInto(TFJsonSerializer &json);
+};
+
+struct GetInstalledCertificateIdsResponseStatusInfo {
+    const char *reasonCode;
+    const char *additionalInfo = nullptr;
+
+    void serializeInto(TFJsonSerializer &json);
+};
+
+struct DeleteCertificateResponseStatusInfo {
+    const char *reasonCode;
+    const char *additionalInfo = nullptr;
+
+    void serializeInto(TFJsonSerializer &json);
+};
+
+struct InstallCertificateResponseStatusInfo {
+    const char *reasonCode;
+    const char *additionalInfo = nullptr;
+
+    void serializeInto(TFJsonSerializer &json);
+};
+
+struct CertificateSignedResponseStatusInfo {
+    const char *reasonCode;
+    const char *additionalInfo = nullptr;
+
+    void serializeInto(TFJsonSerializer &json);
+};
+
+struct GetCertificateChainStatusCertificateStatusRequests {
+    GetCertificateChainStatusCertificateStatusRequestsCertificateHashData *certificateHashData;
+    GetCertificateChainStatusCertificateStatusRequestsSource source;
+    const char **urls; size_t urls_length;
+
+    void serializeInto(TFJsonSerializer &json);
+};
+
+struct GetCertificateStatusOcspRequestData {
+    HashAlgorithm hashAlgorithm;
+    const char *issuerNameHash;
+    const char *issuerKeyHash;
+    const char *serialNumber;
+    const char *responderURL;
+
+    void serializeInto(TFJsonSerializer &json);
+};
+
+struct SignCertificateHashRootCertificate {
+    HashAlgorithm hashAlgorithm;
+    const char *issuerNameHash;
+    const char *issuerKeyHash;
+    const char *serialNumber;
+
+    void serializeInto(TFJsonSerializer &json);
+};
+
 struct RequestStopTransactionResponseStatusInfo {
     const char *reasonCode;
     const char *additionalInfo = nullptr;
@@ -4269,7 +4712,7 @@ struct TransactionEventCostDetails {
 };
 
 struct AuthorizeIso15118CertificateHashData {
-    AuthorizeIso15118CertificateHashDataHashAlgorithm hashAlgorithm;
+    HashAlgorithm hashAlgorithm;
     const char *issuerNameHash;
     const char *issuerKeyHash;
     const char *serialNumber;
@@ -4504,12 +4947,12 @@ struct MeterValues final : public ICall {
 };
 
 struct RequestStartTransactionResponse final : public ICall {
-    TransactionResponseStatus status;
+    ResponseStatus status;
     RequestStartTransactionResponseStatusInfo *statusInfo;
     const char *transactionId;
 
     RequestStartTransactionResponse(const char *call_id,
-        TransactionResponseStatus status,
+        ResponseStatus status,
         RequestStartTransactionResponseStatusInfo *statusInfo = nullptr,
         const char transactionId[37] = nullptr);
     RequestStartTransactionResponse(const RequestStartTransactionResponse&) = delete;
@@ -4519,11 +4962,11 @@ struct RequestStartTransactionResponse final : public ICall {
 };
 
 struct RequestStopTransactionResponse final : public ICall {
-    TransactionResponseStatus status;
+    ResponseStatus status;
     RequestStopTransactionResponseStatusInfo *statusInfo;
 
     RequestStopTransactionResponse(const char *call_id,
-        TransactionResponseStatus status,
+        ResponseStatus status,
         RequestStopTransactionResponseStatusInfo *statusInfo = nullptr);
     RequestStopTransactionResponse(const RequestStopTransactionResponse&) = delete;
     RequestStopTransactionResponse &operator=(const RequestStopTransactionResponse&) = delete;
@@ -4541,6 +4984,96 @@ struct SecurityEventNotification final : public ICall {
         const char techInfo[256] = nullptr);
     SecurityEventNotification(const SecurityEventNotification&) = delete;
     SecurityEventNotification &operator=(const SecurityEventNotification&) = delete;
+
+    size_t serializeJson(char *buf, size_t buf_len) const override;
+};
+
+struct SignCertificate final : public ICall {
+    const char *csr;
+    SignCertificateCertificateType certificateType;
+    SignCertificateHashRootCertificate *hashRootCertificate;
+    int32_t requestId;
+
+    SignCertificate(const char csr[5501],
+        SignCertificateCertificateType certificateType = SignCertificateCertificateType::NONE,
+        SignCertificateHashRootCertificate *hashRootCertificate = nullptr,
+        int32_t requestId = OCPP_INTEGER_NOT_PASSED);
+    SignCertificate(const SignCertificate&) = delete;
+    SignCertificate &operator=(const SignCertificate&) = delete;
+
+    size_t serializeJson(char *buf, size_t buf_len) const override;
+};
+
+struct GetCertificateStatus final : public ICall {
+    GetCertificateStatusOcspRequestData *ocspRequestData;
+
+    GetCertificateStatus(GetCertificateStatusOcspRequestData *ocspRequestData);
+    GetCertificateStatus(const GetCertificateStatus&) = delete;
+    GetCertificateStatus &operator=(const GetCertificateStatus&) = delete;
+
+    size_t serializeJson(char *buf, size_t buf_len) const override;
+};
+
+struct GetCertificateChainStatus final : public ICall {
+    GetCertificateChainStatusCertificateStatusRequests *certificateStatusRequests; size_t certificateStatusRequests_length;
+
+    GetCertificateChainStatus(GetCertificateChainStatusCertificateStatusRequests *certificateStatusRequests, size_t certificateStatusRequests_length);
+    GetCertificateChainStatus(const GetCertificateChainStatus&) = delete;
+    GetCertificateChainStatus &operator=(const GetCertificateChainStatus&) = delete;
+
+    size_t serializeJson(char *buf, size_t buf_len) const override;
+};
+
+struct CertificateSignedResponse final : public ICall {
+    ResponseStatus status;
+    CertificateSignedResponseStatusInfo *statusInfo;
+
+    CertificateSignedResponse(const char *call_id,
+        ResponseStatus status,
+        CertificateSignedResponseStatusInfo *statusInfo = nullptr);
+    CertificateSignedResponse(const CertificateSignedResponse&) = delete;
+    CertificateSignedResponse &operator=(const CertificateSignedResponse&) = delete;
+
+    size_t serializeJson(char *buf, size_t buf_len) const override;
+};
+
+struct InstallCertificateResponse final : public ICall {
+    InstallCertificateResponseStatus status;
+    InstallCertificateResponseStatusInfo *statusInfo;
+
+    InstallCertificateResponse(const char *call_id,
+        InstallCertificateResponseStatus status,
+        InstallCertificateResponseStatusInfo *statusInfo = nullptr);
+    InstallCertificateResponse(const InstallCertificateResponse&) = delete;
+    InstallCertificateResponse &operator=(const InstallCertificateResponse&) = delete;
+
+    size_t serializeJson(char *buf, size_t buf_len) const override;
+};
+
+struct DeleteCertificateResponse final : public ICall {
+    DeleteCertificateResponseStatus status;
+    DeleteCertificateResponseStatusInfo *statusInfo;
+
+    DeleteCertificateResponse(const char *call_id,
+        DeleteCertificateResponseStatus status,
+        DeleteCertificateResponseStatusInfo *statusInfo = nullptr);
+    DeleteCertificateResponse(const DeleteCertificateResponse&) = delete;
+    DeleteCertificateResponse &operator=(const DeleteCertificateResponse&) = delete;
+
+    size_t serializeJson(char *buf, size_t buf_len) const override;
+};
+
+struct GetInstalledCertificateIdsResponse final : public ICall {
+    GetInstalledCertificateIdsResponseStatus status;
+    GetInstalledCertificateIdsResponseStatusInfo *statusInfo;
+    GetInstalledCertificateIdsResponseCertificateHashDataChain *certificateHashDataChain; size_t certificateHashDataChain_length;
+
+    GetInstalledCertificateIdsResponse(const char *call_id,
+        GetInstalledCertificateIdsResponseStatus status,
+        GetInstalledCertificateIdsResponseStatusInfo *statusInfo = nullptr,
+        GetInstalledCertificateIdsResponseCertificateHashDataChain *certificateHashDataChain = nullptr, size_t certificateHashDataChain_length = 0);
+    GetInstalledCertificateIdsResponse(const GetInstalledCertificateIdsResponse&) = delete;
+    GetInstalledCertificateIdsResponse &operator=(const GetInstalledCertificateIdsResponse&) = delete;
 
     size_t serializeJson(char *buf, size_t buf_len) const override;
 };
@@ -4572,6 +5105,20 @@ CallResponse parseRequestStartTransaction(JsonObject obj);
 CallResponse parseRequestStopTransaction(JsonObject obj);
 
 CallResponse parseSecurityEventNotificationResponse(JsonObject obj);
+
+CallResponse parseSignCertificateResponse(JsonObject obj);
+
+CallResponse parseGetCertificateStatusResponse(JsonObject obj);
+
+CallResponse parseGetCertificateChainStatusResponse(JsonObject obj);
+
+CallResponse parseCertificateSigned(JsonObject obj);
+
+CallResponse parseInstallCertificate(JsonObject obj);
+
+CallResponse parseDeleteCertificate(JsonObject obj);
+
+CallResponse parseGetInstalledCertificateIds(JsonObject obj);
 
 CallResponse callResultHandler(int32_t connectorId, CallAction resultTo, JsonObject obj, ChargePoint21 *cp);
 

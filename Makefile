@@ -83,7 +83,7 @@ CFILES := src/lib/musl_libc_timegm.c \
 
 SOURCES_LIB := $(SOURCES_16) src/platforms/TestPlatform.cpp
 SOURCES_EXEC := $(SOURCES_16) src/platforms/LinuxPlatform16.cpp
-SOURCES_EXEC_21 := $(SOURCES_21) src/platforms/LinuxPlatform21.cpp
+SOURCES_EXEC_21 := $(SOURCES_21) src/platforms/LinuxPlatform21.cpp src/platforms/LinuxCrypto21.cpp
 
 # Each build variant compiles with a different platform define,
 # so each variant gets its own object directory below build/.

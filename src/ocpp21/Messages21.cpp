@@ -166,7 +166,7 @@ const char * const TransactionEventPreconditioningStatusStrings[] = {
     "Preconditioning"
 };
 
-const char * const TransactionResponseStatusStrings[] = {
+const char * const ResponseStatusStrings[] = {
     "Accepted",
     "Rejected"
 };
@@ -274,6 +274,80 @@ const char * const RequestStartTransactionChargingProfileEntriesChargingSchedule
     "RenewableGenerationPercentage"
 };
 
+const char * const SignCertificateCertificateTypeStrings[] = {
+    "ChargingStationCertificate",
+    "V2GCertificate",
+    "V2G20Certificate"
+};
+
+const char * const InstallCertificateResponseStatusStrings[] = {
+    "Accepted",
+    "Rejected",
+    "Failed"
+};
+
+const char * const DeleteCertificateResponseStatusStrings[] = {
+    "Accepted",
+    "Failed",
+    "NotFound"
+};
+
+const char * const GetInstalledCertificateIdsResponseStatusStrings[] = {
+    "Accepted",
+    "NotFound"
+};
+
+const char * const SignCertificateResponseStatusStrings[] = {
+    "Accepted",
+    "Rejected"
+};
+
+const char * const GetCertificateStatusResponseStatusStrings[] = {
+    "Accepted",
+    "Failed"
+};
+
+const char * const CertificateHashDataEntriesHashAlgorithmStrings[] = {
+    "SHA256",
+    "SHA384",
+    "SHA512"
+};
+
+const char * const GetCertificateChainStatusResponseCertificateStatusEntryEntriesSourceStrings[] = {
+    "CRL",
+    "OCSP"
+};
+
+const char * const GetCertificateChainStatusResponseCertificateStatusEntryEntriesStatusStrings[] = {
+    "Good",
+    "Revoked",
+    "Unknown",
+    "Failed"
+};
+
+const char * const CertificateSignedCertificateTypeStrings[] = {
+    "ChargingStationCertificate",
+    "V2GCertificate",
+    "V2G20Certificate"
+};
+
+const char * const InstallCertificateCertificateTypeStrings[] = {
+    "V2GRootCertificate",
+    "MORootCertificate",
+    "ManufacturerRootCertificate",
+    "CSMSRootCertificate",
+    "OEMRootCertificate"
+};
+
+const char * const GetInstalledCertificateIdsCertificateTypeEntryStrings[] = {
+    "V2GRootCertificate",
+    "MORootCertificate",
+    "CSMSRootCertificate",
+    "V2GCertificateChain",
+    "ManufacturerRootCertificate",
+    "OEMRootCertificate"
+};
+
 const char * const GetVariablesResponseGetVariableResultAttributeStatusStrings[] = {
     "Accepted",
     "Rejected",
@@ -298,7 +372,7 @@ const char * const SetVariablesResponseSetVariableResultAttributeStatusStrings[]
     "RebootRequired"
 };
 
-const char * const AuthorizeIso15118CertificateHashDataHashAlgorithmStrings[] = {
+const char * const HashAlgorithmStrings[] = {
     "SHA256",
     "SHA384",
     "SHA512"
@@ -344,6 +418,20 @@ const char * const TransactionEventTransactionInfoOperationModeStrings[] = {
     "CentralFrequency",
     "LocalFrequency",
     "LocalLoadBalancing"
+};
+
+const char * const GetCertificateChainStatusCertificateStatusRequestsSourceStrings[] = {
+    "CRL",
+    "OCSP"
+};
+
+const char * const GetInstalledCertificateIdsResponseCertificateHashDataChainCertificateTypeStrings[] = {
+    "V2GRootCertificate",
+    "MORootCertificate",
+    "CSMSRootCertificate",
+    "V2GCertificateChain",
+    "ManufacturerRootCertificate",
+    "OEMRootCertificate"
 };
 
 const char * const TransactionEventCostDetailsTotalCostTypeOfCostStrings[] = {
@@ -686,7 +774,7 @@ void AuthorizeIdToken::serializeInto(TFJsonSerializer &json) {
     }
 
 void AuthorizeIso15118CertificateHashData::serializeInto(TFJsonSerializer &json) {
-        if (hashAlgorithm != AuthorizeIso15118CertificateHashDataHashAlgorithm::NONE) json.addMemberString("hashAlgorithm", AuthorizeIso15118CertificateHashDataHashAlgorithmStrings[(size_t)hashAlgorithm]);
+        if (hashAlgorithm != HashAlgorithm::NONE) json.addMemberString("hashAlgorithm", HashAlgorithmStrings[(size_t)hashAlgorithm]);
         if (issuerNameHash != nullptr) json.addMemberString("issuerNameHash", issuerNameHash);
         if (issuerKeyHash != nullptr) json.addMemberString("issuerKeyHash", issuerKeyHash);
         if (serialNumber != nullptr) json.addMemberString("serialNumber", serialNumber);
@@ -741,6 +829,53 @@ void RequestStartTransactionResponseStatusInfo::serializeInto(TFJsonSerializer &
 void RequestStopTransactionResponseStatusInfo::serializeInto(TFJsonSerializer &json) {
         if (reasonCode != nullptr) json.addMemberString("reasonCode", reasonCode);
         if (additionalInfo != nullptr) json.addMemberString("additionalInfo", additionalInfo);
+    }
+
+void SignCertificateHashRootCertificate::serializeInto(TFJsonSerializer &json) {
+        if (hashAlgorithm != HashAlgorithm::NONE) json.addMemberString("hashAlgorithm", HashAlgorithmStrings[(size_t)hashAlgorithm]);
+        if (issuerNameHash != nullptr) json.addMemberString("issuerNameHash", issuerNameHash);
+        if (issuerKeyHash != nullptr) json.addMemberString("issuerKeyHash", issuerKeyHash);
+        if (serialNumber != nullptr) json.addMemberString("serialNumber", serialNumber);
+    }
+
+void GetCertificateStatusOcspRequestData::serializeInto(TFJsonSerializer &json) {
+        if (hashAlgorithm != HashAlgorithm::NONE) json.addMemberString("hashAlgorithm", HashAlgorithmStrings[(size_t)hashAlgorithm]);
+        if (issuerNameHash != nullptr) json.addMemberString("issuerNameHash", issuerNameHash);
+        if (issuerKeyHash != nullptr) json.addMemberString("issuerKeyHash", issuerKeyHash);
+        if (serialNumber != nullptr) json.addMemberString("serialNumber", serialNumber);
+        if (responderURL != nullptr) json.addMemberString("responderURL", responderURL);
+    }
+
+void GetCertificateChainStatusCertificateStatusRequests::serializeInto(TFJsonSerializer &json) {
+        if (certificateHashData != nullptr) { json.addMemberObject("certificateHashData"); certificateHashData->serializeInto(json); json.endObject(); }
+        if (source != GetCertificateChainStatusCertificateStatusRequestsSource::NONE) json.addMemberString("source", GetCertificateChainStatusCertificateStatusRequestsSourceStrings[(size_t)source]);
+        if (urls != nullptr) { json.addMemberArray("urls"); for(size_t i = 0; i < urls_length; ++i) { json.addString(urls[i]); } json.endArray(); }
+    }
+
+void CertificateSignedResponseStatusInfo::serializeInto(TFJsonSerializer &json) {
+        if (reasonCode != nullptr) json.addMemberString("reasonCode", reasonCode);
+        if (additionalInfo != nullptr) json.addMemberString("additionalInfo", additionalInfo);
+    }
+
+void InstallCertificateResponseStatusInfo::serializeInto(TFJsonSerializer &json) {
+        if (reasonCode != nullptr) json.addMemberString("reasonCode", reasonCode);
+        if (additionalInfo != nullptr) json.addMemberString("additionalInfo", additionalInfo);
+    }
+
+void DeleteCertificateResponseStatusInfo::serializeInto(TFJsonSerializer &json) {
+        if (reasonCode != nullptr) json.addMemberString("reasonCode", reasonCode);
+        if (additionalInfo != nullptr) json.addMemberString("additionalInfo", additionalInfo);
+    }
+
+void GetInstalledCertificateIdsResponseStatusInfo::serializeInto(TFJsonSerializer &json) {
+        if (reasonCode != nullptr) json.addMemberString("reasonCode", reasonCode);
+        if (additionalInfo != nullptr) json.addMemberString("additionalInfo", additionalInfo);
+    }
+
+void GetInstalledCertificateIdsResponseCertificateHashDataChain::serializeInto(TFJsonSerializer &json) {
+        if (certificateHashData != nullptr) { json.addMemberObject("certificateHashData"); certificateHashData->serializeInto(json); json.endObject(); }
+        if (certificateType != GetInstalledCertificateIdsResponseCertificateHashDataChainCertificateType::NONE) json.addMemberString("certificateType", GetInstalledCertificateIdsResponseCertificateHashDataChainCertificateTypeStrings[(size_t)certificateType]);
+        if (childCertificateHashData != nullptr) { json.addMemberArray("childCertificateHashData"); for(size_t i = 0; i < childCertificateHashData_length; ++i) { json.addObject(); childCertificateHashData[i].serializeInto(json); json.endObject(); } json.endArray(); }
     }
 
 void BootNotificationChargingStationModem::serializeInto(TFJsonSerializer &json) {
@@ -840,6 +975,27 @@ void MeterValuesMeterValueSampledValue::serializeInto(TFJsonSerializer &json) {
         if (location != MeterValueSampledValueLocation::NONE) json.addMemberString("location", MeterValueSampledValueLocationStrings[(size_t)location]);
         if (signedMeterValue != nullptr) { json.addMemberObject("signedMeterValue"); signedMeterValue->serializeInto(json); json.endObject(); }
         if (unitOfMeasure != nullptr) { json.addMemberObject("unitOfMeasure"); unitOfMeasure->serializeInto(json); json.endObject(); }
+    }
+
+void GetCertificateChainStatusCertificateStatusRequestsCertificateHashData::serializeInto(TFJsonSerializer &json) {
+        if (hashAlgorithm != HashAlgorithm::NONE) json.addMemberString("hashAlgorithm", HashAlgorithmStrings[(size_t)hashAlgorithm]);
+        if (issuerNameHash != nullptr) json.addMemberString("issuerNameHash", issuerNameHash);
+        if (issuerKeyHash != nullptr) json.addMemberString("issuerKeyHash", issuerKeyHash);
+        if (serialNumber != nullptr) json.addMemberString("serialNumber", serialNumber);
+    }
+
+void GetInstalledCertificateIdsResponseCertificateHashDataChainCertificateHashData::serializeInto(TFJsonSerializer &json) {
+        if (hashAlgorithm != HashAlgorithm::NONE) json.addMemberString("hashAlgorithm", HashAlgorithmStrings[(size_t)hashAlgorithm]);
+        if (issuerNameHash != nullptr) json.addMemberString("issuerNameHash", issuerNameHash);
+        if (issuerKeyHash != nullptr) json.addMemberString("issuerKeyHash", issuerKeyHash);
+        if (serialNumber != nullptr) json.addMemberString("serialNumber", serialNumber);
+    }
+
+void GetInstalledCertificateIdsResponseCertificateHashDataChainChildCertificateHashData::serializeInto(TFJsonSerializer &json) {
+        if (hashAlgorithm != HashAlgorithm::NONE) json.addMemberString("hashAlgorithm", HashAlgorithmStrings[(size_t)hashAlgorithm]);
+        if (issuerNameHash != nullptr) json.addMemberString("issuerNameHash", issuerNameHash);
+        if (issuerKeyHash != nullptr) json.addMemberString("issuerKeyHash", issuerKeyHash);
+        if (serialNumber != nullptr) json.addMemberString("serialNumber", serialNumber);
     }
 
 void GetVariablesResponseGetVariableResultComponentEvse::serializeInto(TFJsonSerializer &json) {
@@ -1251,7 +1407,7 @@ size_t MeterValues::serializeJson(char *buf, size_t buf_len) const {
 }
 
 RequestStartTransactionResponse::RequestStartTransactionResponse(const char *call_id,
-        TransactionResponseStatus status,
+        ResponseStatus status,
         RequestStartTransactionResponseStatusInfo *statusInfo,
         const char transactionId[37]) :
     ICall(CallAction::REQUEST_START_TRANSACTION_RESPONSE, call_id),
@@ -1267,7 +1423,7 @@ size_t RequestStartTransactionResponse::serializeJson(char *buf, size_t buf_len)
         json.addString(this->ocppJcallId);
 
         json.addObject();
-            if (status != TransactionResponseStatus::NONE) json.addMemberString("status", TransactionResponseStatusStrings[(size_t)status]);
+            if (status != ResponseStatus::NONE) json.addMemberString("status", ResponseStatusStrings[(size_t)status]);
             if (statusInfo != nullptr) { json.addMemberObject("statusInfo"); statusInfo->serializeInto(json); json.endObject(); }
             if (transactionId != nullptr) json.addMemberString("transactionId", transactionId);
         json.endObject();
@@ -1277,7 +1433,7 @@ size_t RequestStartTransactionResponse::serializeJson(char *buf, size_t buf_len)
 }
 
 RequestStopTransactionResponse::RequestStopTransactionResponse(const char *call_id,
-        TransactionResponseStatus status,
+        ResponseStatus status,
         RequestStopTransactionResponseStatusInfo *statusInfo) :
     ICall(CallAction::REQUEST_STOP_TRANSACTION_RESPONSE, call_id),
     status(status),
@@ -1291,7 +1447,7 @@ size_t RequestStopTransactionResponse::serializeJson(char *buf, size_t buf_len) 
         json.addString(this->ocppJcallId);
 
         json.addObject();
-            if (status != TransactionResponseStatus::NONE) json.addMemberString("status", TransactionResponseStatusStrings[(size_t)status]);
+            if (status != ResponseStatus::NONE) json.addMemberString("status", ResponseStatusStrings[(size_t)status]);
             if (statusInfo != nullptr) { json.addMemberObject("statusInfo"); statusInfo->serializeInto(json); json.endObject(); }
         json.endObject();
     json.endArray();
@@ -1318,6 +1474,169 @@ size_t SecurityEventNotification::serializeJson(char *buf, size_t buf_len) const
             if (type != nullptr) json.addMemberString("type", type);
             if (timestamp != OCPP_DATETIME_NOT_PASSED) unix_timestamp_to_iso_string(timestamp, json, "timestamp");
             if (techInfo != nullptr) json.addMemberString("techInfo", techInfo);
+        json.endObject();
+    json.endArray();
+
+    return json.end();
+}
+
+SignCertificate::SignCertificate(const char csr[5501],
+        SignCertificateCertificateType certificateType,
+        SignCertificateHashRootCertificate *hashRootCertificate,
+        int32_t requestId) :
+    ICall(CallAction::SIGN_CERTIFICATE, next_call_id++),
+    csr(csr),
+    certificateType(certificateType),
+    hashRootCertificate(hashRootCertificate),
+    requestId(requestId)
+{}
+
+size_t SignCertificate::serializeJson(char *buf, size_t buf_len) const {
+    TFJsonSerializer json{buf, buf_len};
+    json.addArray();
+        json.addNumber((int32_t)OcppRpcMessageType::CALL);
+        json.addNumber(this->ocppJmessageId, true);
+        json.addString(CallActionStrings[(size_t)this->action]);
+        json.addObject();
+            if (csr != nullptr) json.addMemberString("csr", csr);
+            if (certificateType != SignCertificateCertificateType::NONE) json.addMemberString("certificateType", SignCertificateCertificateTypeStrings[(size_t)certificateType]);
+            if (hashRootCertificate != nullptr) { json.addMemberObject("hashRootCertificate"); hashRootCertificate->serializeInto(json); json.endObject(); }
+            if (requestId != OCPP_INTEGER_NOT_PASSED) json.addMemberNumber("requestId", requestId);
+        json.endObject();
+    json.endArray();
+
+    return json.end();
+}
+
+GetCertificateStatus::GetCertificateStatus(GetCertificateStatusOcspRequestData *ocspRequestData) :
+    ICall(CallAction::GET_CERTIFICATE_STATUS, next_call_id++),
+    ocspRequestData(ocspRequestData)
+{}
+
+size_t GetCertificateStatus::serializeJson(char *buf, size_t buf_len) const {
+    TFJsonSerializer json{buf, buf_len};
+    json.addArray();
+        json.addNumber((int32_t)OcppRpcMessageType::CALL);
+        json.addNumber(this->ocppJmessageId, true);
+        json.addString(CallActionStrings[(size_t)this->action]);
+        json.addObject();
+            if (ocspRequestData != nullptr) { json.addMemberObject("ocspRequestData"); ocspRequestData->serializeInto(json); json.endObject(); }
+        json.endObject();
+    json.endArray();
+
+    return json.end();
+}
+
+GetCertificateChainStatus::GetCertificateChainStatus(GetCertificateChainStatusCertificateStatusRequests *certificateStatusRequests, size_t certificateStatusRequests_length) :
+    ICall(CallAction::GET_CERTIFICATE_CHAIN_STATUS, next_call_id++),
+    certificateStatusRequests(certificateStatusRequests),
+    certificateStatusRequests_length(certificateStatusRequests_length)
+{}
+
+size_t GetCertificateChainStatus::serializeJson(char *buf, size_t buf_len) const {
+    TFJsonSerializer json{buf, buf_len};
+    json.addArray();
+        json.addNumber((int32_t)OcppRpcMessageType::CALL);
+        json.addNumber(this->ocppJmessageId, true);
+        json.addString(CallActionStrings[(size_t)this->action]);
+        json.addObject();
+            if (certificateStatusRequests != nullptr) { json.addMemberArray("certificateStatusRequests"); for(size_t i = 0; i < certificateStatusRequests_length; ++i) { json.addObject(); certificateStatusRequests[i].serializeInto(json); json.endObject(); } json.endArray(); }
+        json.endObject();
+    json.endArray();
+
+    return json.end();
+}
+
+CertificateSignedResponse::CertificateSignedResponse(const char *call_id,
+        ResponseStatus status,
+        CertificateSignedResponseStatusInfo *statusInfo) :
+    ICall(CallAction::CERTIFICATE_SIGNED_RESPONSE, call_id),
+    status(status),
+    statusInfo(statusInfo)
+{}
+
+size_t CertificateSignedResponse::serializeJson(char *buf, size_t buf_len) const {
+    TFJsonSerializer json{buf, buf_len};
+    json.addArray();
+        json.addNumber((int32_t)OcppRpcMessageType::CALLRESULT);
+        json.addString(this->ocppJcallId);
+
+        json.addObject();
+            if (status != ResponseStatus::NONE) json.addMemberString("status", ResponseStatusStrings[(size_t)status]);
+            if (statusInfo != nullptr) { json.addMemberObject("statusInfo"); statusInfo->serializeInto(json); json.endObject(); }
+        json.endObject();
+    json.endArray();
+
+    return json.end();
+}
+
+InstallCertificateResponse::InstallCertificateResponse(const char *call_id,
+        InstallCertificateResponseStatus status,
+        InstallCertificateResponseStatusInfo *statusInfo) :
+    ICall(CallAction::INSTALL_CERTIFICATE_RESPONSE, call_id),
+    status(status),
+    statusInfo(statusInfo)
+{}
+
+size_t InstallCertificateResponse::serializeJson(char *buf, size_t buf_len) const {
+    TFJsonSerializer json{buf, buf_len};
+    json.addArray();
+        json.addNumber((int32_t)OcppRpcMessageType::CALLRESULT);
+        json.addString(this->ocppJcallId);
+
+        json.addObject();
+            if (status != InstallCertificateResponseStatus::NONE) json.addMemberString("status", InstallCertificateResponseStatusStrings[(size_t)status]);
+            if (statusInfo != nullptr) { json.addMemberObject("statusInfo"); statusInfo->serializeInto(json); json.endObject(); }
+        json.endObject();
+    json.endArray();
+
+    return json.end();
+}
+
+DeleteCertificateResponse::DeleteCertificateResponse(const char *call_id,
+        DeleteCertificateResponseStatus status,
+        DeleteCertificateResponseStatusInfo *statusInfo) :
+    ICall(CallAction::DELETE_CERTIFICATE_RESPONSE, call_id),
+    status(status),
+    statusInfo(statusInfo)
+{}
+
+size_t DeleteCertificateResponse::serializeJson(char *buf, size_t buf_len) const {
+    TFJsonSerializer json{buf, buf_len};
+    json.addArray();
+        json.addNumber((int32_t)OcppRpcMessageType::CALLRESULT);
+        json.addString(this->ocppJcallId);
+
+        json.addObject();
+            if (status != DeleteCertificateResponseStatus::NONE) json.addMemberString("status", DeleteCertificateResponseStatusStrings[(size_t)status]);
+            if (statusInfo != nullptr) { json.addMemberObject("statusInfo"); statusInfo->serializeInto(json); json.endObject(); }
+        json.endObject();
+    json.endArray();
+
+    return json.end();
+}
+
+GetInstalledCertificateIdsResponse::GetInstalledCertificateIdsResponse(const char *call_id,
+        GetInstalledCertificateIdsResponseStatus status,
+        GetInstalledCertificateIdsResponseStatusInfo *statusInfo,
+        GetInstalledCertificateIdsResponseCertificateHashDataChain *certificateHashDataChain, size_t certificateHashDataChain_length) :
+    ICall(CallAction::GET_INSTALLED_CERTIFICATE_IDS_RESPONSE, call_id),
+    status(status),
+    statusInfo(statusInfo),
+    certificateHashDataChain(certificateHashDataChain),
+    certificateHashDataChain_length(certificateHashDataChain_length)
+{}
+
+size_t GetInstalledCertificateIdsResponse::serializeJson(char *buf, size_t buf_len) const {
+    TFJsonSerializer json{buf, buf_len};
+    json.addArray();
+        json.addNumber((int32_t)OcppRpcMessageType::CALLRESULT);
+        json.addString(this->ocppJcallId);
+
+        json.addObject();
+            if (status != GetInstalledCertificateIdsResponseStatus::NONE) json.addMemberString("status", GetInstalledCertificateIdsResponseStatusStrings[(size_t)status]);
+            if (statusInfo != nullptr) { json.addMemberObject("statusInfo"); statusInfo->serializeInto(json); json.endObject(); }
+            if (certificateHashDataChain != nullptr) { json.addMemberArray("certificateHashDataChain"); for(size_t i = 0; i < certificateHashDataChain_length; ++i) { json.addObject(); certificateHashDataChain[i].serializeInto(json); json.endObject(); } json.endArray(); }
         json.endObject();
     json.endArray();
 
@@ -10848,6 +11167,870 @@ CallResponse parseSecurityEventNotificationResponse(JsonObject obj) {
     return CallResponse{CallErrorCode::OK, nullptr};
 }
 
+static CallResponse parseSignCertificateResponseStatus(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "status: wrong type"};
+
+    {
+        bool found = false;
+        for(size_t i = 0; i < ARRAY_SIZE(SignCertificateResponseStatusStrings); ++i) {
+            if (strcmp(var.as<const char *>(), SignCertificateResponseStatusStrings[i]) != 0)
+                continue;
+
+            var.set(i);
+            found = true;
+            break;
+        }
+
+        if (!found)
+            return CallResponse{CallErrorCode::PropertyConstraintViolation, "status: unknown enum value received"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseSignCertificateResponseStatusInfoEntriesReasonCode(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "reasonCode: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 20)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "reasonCode: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseSignCertificateResponseStatusInfoEntriesAdditionalInfo(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "additionalInfo: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 1024)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "additionalInfo: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseSignCertificateResponseStatusInfoEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (!obj.containsKey("reasonCode"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "reasonCode: required, but missing"};
+
+    {
+        CallResponse inner_result = parseSignCertificateResponseStatusInfoEntriesReasonCode(obj["reasonCode"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("additionalInfo")) {
+    {
+        CallResponse inner_result = parseSignCertificateResponseStatusInfoEntriesAdditionalInfo(obj["additionalInfo"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "SignCertificateResponseStatusInfoEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseSignCertificateResponseStatusInfo(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "statusInfo: wrong type"};
+
+    {
+        CallResponse inner_result = parseSignCertificateResponseStatusInfoEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+CallResponse parseSignCertificateResponse(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (!obj.containsKey("status"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "status: required, but missing"};
+
+    {
+        CallResponse inner_result = parseSignCertificateResponseStatus(obj["status"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("statusInfo")) {
+    {
+        CallResponse inner_result = parseSignCertificateResponseStatusInfo(obj["statusInfo"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "SignCertificateResponse: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseGetCertificateStatusResponseStatus(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "status: wrong type"};
+
+    {
+        bool found = false;
+        for(size_t i = 0; i < ARRAY_SIZE(GetCertificateStatusResponseStatusStrings); ++i) {
+            if (strcmp(var.as<const char *>(), GetCertificateStatusResponseStatusStrings[i]) != 0)
+                continue;
+
+            var.set(i);
+            found = true;
+            break;
+        }
+
+        if (!found)
+            return CallResponse{CallErrorCode::PropertyConstraintViolation, "status: unknown enum value received"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseGetCertificateStatusResponseStatusInfoEntriesReasonCode(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "reasonCode: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 20)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "reasonCode: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseGetCertificateStatusResponseStatusInfoEntriesAdditionalInfo(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "additionalInfo: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 1024)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "additionalInfo: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseGetCertificateStatusResponseStatusInfoEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (!obj.containsKey("reasonCode"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "reasonCode: required, but missing"};
+
+    {
+        CallResponse inner_result = parseGetCertificateStatusResponseStatusInfoEntriesReasonCode(obj["reasonCode"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("additionalInfo")) {
+    {
+        CallResponse inner_result = parseGetCertificateStatusResponseStatusInfoEntriesAdditionalInfo(obj["additionalInfo"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "GetCertificateStatusResponseStatusInfoEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseGetCertificateStatusResponseStatusInfo(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "statusInfo: wrong type"};
+
+    {
+        CallResponse inner_result = parseGetCertificateStatusResponseStatusInfoEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseGetCertificateStatusResponseOcspResult(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "ocspResult: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 18000)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "ocspResult: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+CallResponse parseGetCertificateStatusResponse(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (!obj.containsKey("status"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "status: required, but missing"};
+
+    {
+        CallResponse inner_result = parseGetCertificateStatusResponseStatus(obj["status"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("statusInfo")) {
+    {
+        CallResponse inner_result = parseGetCertificateStatusResponseStatusInfo(obj["statusInfo"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("ocspResult")) {
+    {
+        CallResponse inner_result = parseGetCertificateStatusResponseOcspResult(obj["ocspResult"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "GetCertificateStatusResponse: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseGetCertificateChainStatusResponseCertificateStatusEntryEntriesCertificateHashDataEntriesHashAlgorithm(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "hashAlgorithm: wrong type"};
+
+    {
+        bool found = false;
+        for(size_t i = 0; i < ARRAY_SIZE(CertificateHashDataEntriesHashAlgorithmStrings); ++i) {
+            if (strcmp(var.as<const char *>(), CertificateHashDataEntriesHashAlgorithmStrings[i]) != 0)
+                continue;
+
+            var.set(i);
+            found = true;
+            break;
+        }
+
+        if (!found)
+            return CallResponse{CallErrorCode::PropertyConstraintViolation, "hashAlgorithm: unknown enum value received"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseGetCertificateChainStatusResponseCertificateStatusEntryEntriesCertificateHashDataEntriesIssuerNameHash(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "issuerNameHash: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 128)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "issuerNameHash: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseGetCertificateChainStatusResponseCertificateStatusEntryEntriesCertificateHashDataEntriesIssuerKeyHash(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "issuerKeyHash: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 128)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "issuerKeyHash: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseGetCertificateChainStatusResponseCertificateStatusEntryEntriesCertificateHashDataEntriesSerialNumber(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "serialNumber: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 40)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "serialNumber: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseGetCertificateChainStatusResponseCertificateStatusEntryEntriesCertificateHashDataEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (!obj.containsKey("hashAlgorithm"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "hashAlgorithm: required, but missing"};
+
+    {
+        CallResponse inner_result = parseGetCertificateChainStatusResponseCertificateStatusEntryEntriesCertificateHashDataEntriesHashAlgorithm(obj["hashAlgorithm"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+
+    if (!obj.containsKey("issuerNameHash"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "issuerNameHash: required, but missing"};
+
+    {
+        CallResponse inner_result = parseGetCertificateChainStatusResponseCertificateStatusEntryEntriesCertificateHashDataEntriesIssuerNameHash(obj["issuerNameHash"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+
+    if (!obj.containsKey("issuerKeyHash"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "issuerKeyHash: required, but missing"};
+
+    {
+        CallResponse inner_result = parseGetCertificateChainStatusResponseCertificateStatusEntryEntriesCertificateHashDataEntriesIssuerKeyHash(obj["issuerKeyHash"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+
+    if (!obj.containsKey("serialNumber"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "serialNumber: required, but missing"};
+
+    {
+        CallResponse inner_result = parseGetCertificateChainStatusResponseCertificateStatusEntryEntriesCertificateHashDataEntriesSerialNumber(obj["serialNumber"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "GetCertificateChainStatusResponseCertificateStatusEntryEntriesCertificateHashDataEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseGetCertificateChainStatusResponseCertificateStatusEntryEntriesCertificateHashData(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "certificateHashData: wrong type"};
+
+    {
+        CallResponse inner_result = parseGetCertificateChainStatusResponseCertificateStatusEntryEntriesCertificateHashDataEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseGetCertificateChainStatusResponseCertificateStatusEntryEntriesSource(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "source: wrong type"};
+
+    {
+        bool found = false;
+        for(size_t i = 0; i < ARRAY_SIZE(GetCertificateChainStatusResponseCertificateStatusEntryEntriesSourceStrings); ++i) {
+            if (strcmp(var.as<const char *>(), GetCertificateChainStatusResponseCertificateStatusEntryEntriesSourceStrings[i]) != 0)
+                continue;
+
+            var.set(i);
+            found = true;
+            break;
+        }
+
+        if (!found)
+            return CallResponse{CallErrorCode::PropertyConstraintViolation, "source: unknown enum value received"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseGetCertificateChainStatusResponseCertificateStatusEntryEntriesStatus(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "status: wrong type"};
+
+    {
+        bool found = false;
+        for(size_t i = 0; i < ARRAY_SIZE(GetCertificateChainStatusResponseCertificateStatusEntryEntriesStatusStrings); ++i) {
+            if (strcmp(var.as<const char *>(), GetCertificateChainStatusResponseCertificateStatusEntryEntriesStatusStrings[i]) != 0)
+                continue;
+
+            var.set(i);
+            found = true;
+            break;
+        }
+
+        if (!found)
+            return CallResponse{CallErrorCode::PropertyConstraintViolation, "status: unknown enum value received"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseGetCertificateChainStatusResponseCertificateStatusEntryEntriesNextUpdate(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "nextUpdate: wrong type"};
+
+    {
+        time_t result;
+        if (!iso_string_to_unix_timestamp(var.as<const char *>(), &result))
+            return CallResponse{CallErrorCode::TypeConstraintViolation, "nextUpdate: failed to parse as ISO 8601 date-time string"};
+
+        var.set(result);
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseGetCertificateChainStatusResponseCertificateStatusEntryEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (!obj.containsKey("certificateHashData"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "certificateHashData: required, but missing"};
+
+    {
+        CallResponse inner_result = parseGetCertificateChainStatusResponseCertificateStatusEntryEntriesCertificateHashData(obj["certificateHashData"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+
+    if (!obj.containsKey("source"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "source: required, but missing"};
+
+    {
+        CallResponse inner_result = parseGetCertificateChainStatusResponseCertificateStatusEntryEntriesSource(obj["source"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+
+    if (!obj.containsKey("status"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "status: required, but missing"};
+
+    {
+        CallResponse inner_result = parseGetCertificateChainStatusResponseCertificateStatusEntryEntriesStatus(obj["status"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+
+    if (!obj.containsKey("nextUpdate"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "nextUpdate: required, but missing"};
+
+    {
+        CallResponse inner_result = parseGetCertificateChainStatusResponseCertificateStatusEntryEntriesNextUpdate(obj["nextUpdate"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "GetCertificateChainStatusResponseCertificateStatusEntryEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseGetCertificateChainStatusResponseCertificateStatusEntry(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "certificateStatusEntry: wrong type"};
+
+    {
+        CallResponse inner_result = parseGetCertificateChainStatusResponseCertificateStatusEntryEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseGetCertificateChainStatusResponseCertificateStatus(JsonVariant var) {
+
+    if (!var.is<JsonArray>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "certificateStatus: wrong type"};
+
+    {
+        for(size_t i = 0; i < var.as<JsonArray>().size(); ++i) {
+            CallResponse inner_result = parseGetCertificateChainStatusResponseCertificateStatusEntry(var[i]);
+            if (inner_result.result != CallErrorCode::OK)
+                return inner_result;
+        }
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+CallResponse parseGetCertificateChainStatusResponse(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (!obj.containsKey("certificateStatus"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "certificateStatus: required, but missing"};
+
+    {
+        CallResponse inner_result = parseGetCertificateChainStatusResponseCertificateStatus(obj["certificateStatus"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "GetCertificateChainStatusResponse: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseCertificateSignedCertificateChain(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "certificateChain: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 10000)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "certificateChain: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseCertificateSignedCertificateType(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "certificateType: wrong type"};
+
+    {
+        bool found = false;
+        for(size_t i = 0; i < ARRAY_SIZE(CertificateSignedCertificateTypeStrings); ++i) {
+            if (strcmp(var.as<const char *>(), CertificateSignedCertificateTypeStrings[i]) != 0)
+                continue;
+
+            var.set(i);
+            found = true;
+            break;
+        }
+
+        if (!found)
+            return CallResponse{CallErrorCode::PropertyConstraintViolation, "certificateType: unknown enum value received"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseCertificateSignedRequestId(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "requestId: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+CallResponse parseCertificateSigned(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (!obj.containsKey("certificateChain"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "certificateChain: required, but missing"};
+
+    {
+        CallResponse inner_result = parseCertificateSignedCertificateChain(obj["certificateChain"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("certificateType")) {
+    {
+        CallResponse inner_result = parseCertificateSignedCertificateType(obj["certificateType"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("requestId")) {
+    {
+        CallResponse inner_result = parseCertificateSignedRequestId(obj["requestId"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "CertificateSigned: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseInstallCertificateCertificateType(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "certificateType: wrong type"};
+
+    {
+        bool found = false;
+        for(size_t i = 0; i < ARRAY_SIZE(InstallCertificateCertificateTypeStrings); ++i) {
+            if (strcmp(var.as<const char *>(), InstallCertificateCertificateTypeStrings[i]) != 0)
+                continue;
+
+            var.set(i);
+            found = true;
+            break;
+        }
+
+        if (!found)
+            return CallResponse{CallErrorCode::PropertyConstraintViolation, "certificateType: unknown enum value received"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseInstallCertificateCertificate(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "certificate: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 10000)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "certificate: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+CallResponse parseInstallCertificate(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (!obj.containsKey("certificateType"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "certificateType: required, but missing"};
+
+    {
+        CallResponse inner_result = parseInstallCertificateCertificateType(obj["certificateType"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+
+    if (!obj.containsKey("certificate"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "certificate: required, but missing"};
+
+    {
+        CallResponse inner_result = parseInstallCertificateCertificate(obj["certificate"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "InstallCertificate: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseDeleteCertificateCertificateHashDataEntriesHashAlgorithm(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "hashAlgorithm: wrong type"};
+
+    {
+        bool found = false;
+        for(size_t i = 0; i < ARRAY_SIZE(CertificateHashDataEntriesHashAlgorithmStrings); ++i) {
+            if (strcmp(var.as<const char *>(), CertificateHashDataEntriesHashAlgorithmStrings[i]) != 0)
+                continue;
+
+            var.set(i);
+            found = true;
+            break;
+        }
+
+        if (!found)
+            return CallResponse{CallErrorCode::PropertyConstraintViolation, "hashAlgorithm: unknown enum value received"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseDeleteCertificateCertificateHashDataEntriesIssuerNameHash(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "issuerNameHash: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 128)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "issuerNameHash: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseDeleteCertificateCertificateHashDataEntriesIssuerKeyHash(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "issuerKeyHash: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 128)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "issuerKeyHash: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseDeleteCertificateCertificateHashDataEntriesSerialNumber(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "serialNumber: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 40)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "serialNumber: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseDeleteCertificateCertificateHashDataEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (!obj.containsKey("hashAlgorithm"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "hashAlgorithm: required, but missing"};
+
+    {
+        CallResponse inner_result = parseDeleteCertificateCertificateHashDataEntriesHashAlgorithm(obj["hashAlgorithm"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+
+    if (!obj.containsKey("issuerNameHash"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "issuerNameHash: required, but missing"};
+
+    {
+        CallResponse inner_result = parseDeleteCertificateCertificateHashDataEntriesIssuerNameHash(obj["issuerNameHash"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+
+    if (!obj.containsKey("issuerKeyHash"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "issuerKeyHash: required, but missing"};
+
+    {
+        CallResponse inner_result = parseDeleteCertificateCertificateHashDataEntriesIssuerKeyHash(obj["issuerKeyHash"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+
+    if (!obj.containsKey("serialNumber"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "serialNumber: required, but missing"};
+
+    {
+        CallResponse inner_result = parseDeleteCertificateCertificateHashDataEntriesSerialNumber(obj["serialNumber"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "DeleteCertificateCertificateHashDataEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseDeleteCertificateCertificateHashData(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "certificateHashData: wrong type"};
+
+    {
+        CallResponse inner_result = parseDeleteCertificateCertificateHashDataEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+CallResponse parseDeleteCertificate(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (!obj.containsKey("certificateHashData"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "certificateHashData: required, but missing"};
+
+    {
+        CallResponse inner_result = parseDeleteCertificateCertificateHashData(obj["certificateHashData"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "DeleteCertificate: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseGetInstalledCertificateIdsCertificateTypeEntry(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "certificateTypeEntry: wrong type"};
+
+    {
+        bool found = false;
+        for(size_t i = 0; i < ARRAY_SIZE(GetInstalledCertificateIdsCertificateTypeEntryStrings); ++i) {
+            if (strcmp(var.as<const char *>(), GetInstalledCertificateIdsCertificateTypeEntryStrings[i]) != 0)
+                continue;
+
+            var.set(i);
+            found = true;
+            break;
+        }
+
+        if (!found)
+            return CallResponse{CallErrorCode::PropertyConstraintViolation, "certificateTypeEntry: unknown enum value received"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseGetInstalledCertificateIdsCertificateType(JsonVariant var) {
+
+    if (!var.is<JsonArray>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "certificateType: wrong type"};
+
+    {
+        for(size_t i = 0; i < var.as<JsonArray>().size(); ++i) {
+            CallResponse inner_result = parseGetInstalledCertificateIdsCertificateTypeEntry(var[i]);
+            if (inner_result.result != CallErrorCode::OK)
+                return inner_result;
+        }
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+CallResponse parseGetInstalledCertificateIds(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (obj.containsKey("certificateType")) {
+    {
+        CallResponse inner_result = parseGetInstalledCertificateIdsCertificateType(obj["certificateType"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "GetInstalledCertificateIds: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
 CallResponse callHandler(const char *uid, const char *action_string, JsonObject obj, ChargePoint21 *cp) {
     size_t action_idx = 0;
     if (!lookup_key(&action_idx, action_string, CallActionStrings, ARRAY_SIZE(CallActionStrings)))
@@ -10912,6 +12095,38 @@ CallResponse callHandler(const char *uid, const char *action_string, JsonObject 
             return cp->handleRequestStopTransaction(uid, RequestStopTransactionView{obj});
         }
 
+        case CallAction::CERTIFICATE_SIGNED: {
+            CallResponse res = parseCertificateSigned(obj);
+            if (res.result != CallErrorCode::OK)
+                return res;
+
+            return cp->handleCertificateSigned(uid, CertificateSignedView{obj});
+        }
+
+        case CallAction::INSTALL_CERTIFICATE: {
+            CallResponse res = parseInstallCertificate(obj);
+            if (res.result != CallErrorCode::OK)
+                return res;
+
+            return cp->handleInstallCertificate(uid, InstallCertificateView{obj});
+        }
+
+        case CallAction::DELETE_CERTIFICATE: {
+            CallResponse res = parseDeleteCertificate(obj);
+            if (res.result != CallErrorCode::OK)
+                return res;
+
+            return cp->handleDeleteCertificate(uid, DeleteCertificateView{obj});
+        }
+
+        case CallAction::GET_INSTALLED_CERTIFICATE_IDS: {
+            CallResponse res = parseGetInstalledCertificateIds(obj);
+            if (res.result != CallErrorCode::OK)
+                return res;
+
+            return cp->handleGetInstalledCertificateIds(uid, GetInstalledCertificateIdsView{obj});
+        }
+
         case CallAction::AFRR_SIGNAL:
         case CallAction::AFRR_SIGNAL_RESPONSE:
         case CallAction::ADJUST_PERIODIC_EVENT_STREAM:
@@ -10924,7 +12139,6 @@ CallResponse callHandler(const char *uid, const char *action_string, JsonObject 
         case CallAction::BOOT_NOTIFICATION_RESPONSE:
         case CallAction::CANCEL_RESERVATION:
         case CallAction::CANCEL_RESERVATION_RESPONSE:
-        case CallAction::CERTIFICATE_SIGNED:
         case CallAction::CERTIFICATE_SIGNED_RESPONSE:
         case CallAction::CHANGE_AVAILABILITY:
         case CallAction::CHANGE_AVAILABILITY_RESPONSE:
@@ -10952,7 +12166,6 @@ CallResponse callHandler(const char *uid, const char *action_string, JsonObject 
         case CallAction::CUSTOMER_INFORMATION_RESPONSE:
         case CallAction::DATA_TRANSFER:
         case CallAction::DATA_TRANSFER_RESPONSE:
-        case CallAction::DELETE_CERTIFICATE:
         case CallAction::DELETE_CERTIFICATE_RESPONSE:
         case CallAction::FIRMWARE_STATUS_NOTIFICATION:
         case CallAction::FIRMWARE_STATUS_NOTIFICATION_RESPONSE:
@@ -10971,7 +12184,6 @@ CallResponse callHandler(const char *uid, const char *action_string, JsonObject 
         case CallAction::GET_DER_CONTROL_RESPONSE:
         case CallAction::GET_DISPLAY_MESSAGES:
         case CallAction::GET_DISPLAY_MESSAGES_RESPONSE:
-        case CallAction::GET_INSTALLED_CERTIFICATE_IDS:
         case CallAction::GET_INSTALLED_CERTIFICATE_IDS_RESPONSE:
         case CallAction::GET_LOCAL_LIST_VERSION:
         case CallAction::GET_LOCAL_LIST_VERSION_RESPONSE:
@@ -10990,7 +12202,6 @@ CallResponse callHandler(const char *uid, const char *action_string, JsonObject 
         case CallAction::GET_VARIABLES_RESPONSE:
         case CallAction::HEARTBEAT:
         case CallAction::HEARTBEAT_RESPONSE:
-        case CallAction::INSTALL_CERTIFICATE:
         case CallAction::INSTALL_CERTIFICATE_RESPONSE:
         case CallAction::LOG_STATUS_NOTIFICATION:
         case CallAction::LOG_STATUS_NOTIFICATION_RESPONSE:
@@ -11151,6 +12362,30 @@ CallResponse callResultHandler(int32_t connectorId, CallAction resultTo, JsonObj
             return cp->handleSecurityEventNotificationResponse(connectorId, SecurityEventNotificationResponseView{obj});
         }
 
+        case CallAction::SIGN_CERTIFICATE: {
+            CallResponse res = parseSignCertificateResponse(obj);
+            if (res.result != CallErrorCode::OK)
+                return res;
+
+            return cp->handleSignCertificateResponse(connectorId, SignCertificateResponseView{obj});
+        }
+
+        case CallAction::GET_CERTIFICATE_STATUS: {
+            CallResponse res = parseGetCertificateStatusResponse(obj);
+            if (res.result != CallErrorCode::OK)
+                return res;
+
+            return cp->handleGetCertificateStatusResponse(connectorId, GetCertificateStatusResponseView{obj});
+        }
+
+        case CallAction::GET_CERTIFICATE_CHAIN_STATUS: {
+            CallResponse res = parseGetCertificateChainStatusResponse(obj);
+            if (res.result != CallErrorCode::OK)
+                return res;
+
+            return cp->handleGetCertificateChainStatusResponse(connectorId, GetCertificateChainStatusResponseView{obj});
+        }
+
         case CallAction::AFRR_SIGNAL:
         case CallAction::AFRR_SIGNAL_RESPONSE:
         case CallAction::ADJUST_PERIODIC_EVENT_STREAM:
@@ -11197,9 +12432,7 @@ CallResponse callResultHandler(int32_t connectorId, CallAction resultTo, JsonObj
         case CallAction::GET15118_EV_CERTIFICATE_RESPONSE:
         case CallAction::GET_BASE_REPORT:
         case CallAction::GET_BASE_REPORT_RESPONSE:
-        case CallAction::GET_CERTIFICATE_CHAIN_STATUS:
         case CallAction::GET_CERTIFICATE_CHAIN_STATUS_RESPONSE:
-        case CallAction::GET_CERTIFICATE_STATUS:
         case CallAction::GET_CERTIFICATE_STATUS_RESPONSE:
         case CallAction::GET_CHARGING_PROFILES:
         case CallAction::GET_CHARGING_PROFILES_RESPONSE:
@@ -11307,7 +12540,6 @@ CallResponse callResultHandler(int32_t connectorId, CallAction resultTo, JsonObj
         case CallAction::SET_VARIABLE_MONITORING_RESPONSE:
         case CallAction::SET_VARIABLES:
         case CallAction::SET_VARIABLES_RESPONSE:
-        case CallAction::SIGN_CERTIFICATE:
         case CallAction::SIGN_CERTIFICATE_RESPONSE:
         case CallAction::STATUS_NOTIFICATION_RESPONSE:
         case CallAction::TRANSACTION_EVENT_RESPONSE:
