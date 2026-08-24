@@ -128,6 +128,8 @@ public:
     CallResponse handleGetVariables(const char *uid, GetVariablesView req);
     CallResponse handleSetVariables(const char *uid, SetVariablesView req);
     CallResponse handleGetBaseReport(const char *uid, GetBaseReportView req);
+    CallResponse handleGetReport(const char *uid, GetReportView req);
+    CallResponse handleNotifyReportResponse(int32_t connectorId, NotifyReportResponseView conf);
     CallResponse handleTriggerMessage(const char *uid, TriggerMessageView req);
     CallResponse handleReset(const char *uid, ResetView req);
     CallResponse handleRequestStartTransaction(const char *uid, RequestStartTransactionView req);
@@ -165,6 +167,13 @@ private:
     void applyClientCertificate(uint32_t chain_id);
     // M06: (re)creates the OCSP cache entries for a SECC chain.
     void scheduleChainOcsp(uint32_t chain_id);
+
+    // B07/B08: one report at a time, streamed as one NotifyReport per
+    // response round trip. The mask holds one bit per device model
+    // variable index.
+    void startReport(int32_t request_id, uint64_t mask);
+    void abortReport();
+    void sendReportChunk();
 
     uint32_t boot_retry_deadline = 0;
     // Interval requested by the CSMS in a Pending or Rejected boot response. 0 = use default.
@@ -260,6 +269,14 @@ private:
 
     // M07 plumbing.
     VehicleOcspStatus vehicle_ocsp[OCPP21_VEHICLE_OCSP_CACHE_SIZE];
+
+    // B07/B08 report streaming state.
+    bool report_active = false;
+    bool report_in_flight = false;
+    int32_t report_request_id = 0;
+    int32_t report_seq_no = 0;
+    size_t report_next_idx = 0;
+    uint64_t report_mask = 0;
 };
 
 } // namespace Ocpp21

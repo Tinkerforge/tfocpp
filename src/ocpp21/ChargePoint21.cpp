@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 
 #include <common/Platform.h>
 #include <common/Tools.h>
@@ -181,6 +182,9 @@ void ChargePoint::tick()
     if (!platform_ws_connected(connection.platform_ctx))
         return;
 
+    if (report_active && !report_in_flight)
+        sendReportChunk();
+
     switch (state) {
         case State::PowerOn:
         case State::Pending:
@@ -226,6 +230,7 @@ void ChargePoint::onDisconnect()
 {
     log_info("Disconnected");
     boot_notification_in_flight = false;
+    abortReport();
 }
 
 void ChargePoint::onConnectionError(PlatformConnectionError error)
@@ -331,6 +336,8 @@ void ChargePoint::onTimeout(CallAction action, uint64_t messageId)
         slot.refresh_deadline = set_deadline(10 * 60 * 1000);
         ocsp_in_flight_idx = -1;
     }
+    if (action == CallAction::NOTIFY_REPORT)
+        abortReport();
 }
 
 void ChargePoint::onCallError(CallAction action, uint64_t messageId)
@@ -804,11 +811,13 @@ CallResponse ChargePoint::handleGetVariables(const char *uid, GetVariablesView r
     size_t count = req.getVariableData_count();
     if (count == 0)
         return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "getVariableData must not be empty"};
+    if (count > OCPP21_ITEMS_PER_MESSAGE)
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "getVariableData exceeds ItemsPerMessage"};
 
     auto results = heap_alloc_array<GetVariablesResponseGetVariableResult>(count);
     auto components = heap_alloc_array<GetVariablesResponseGetVariableResultComponent>(count);
     auto variables = heap_alloc_array<GetVariablesResponseGetVariableResultVariable>(count);
-    auto value_bufs = heap_alloc_array<char[64]>(count);
+    auto value_bufs = heap_alloc_array<char[96]>(count);
 
     for (size_t i = 0; i < count; ++i) {
         auto data = req.getVariableData(i);
@@ -827,7 +836,7 @@ CallResponse ChargePoint::handleGetVariables(const char *uid, GetVariablesView r
         results[i].variable = &variables[i];
 
         if (data.attributeType().is_some())
-            results[i].attributeType = (GetVariableResultAttributeEnumType)(size_t)data.attributeType().unwrap();
+            results[i].attributeType = (AttributeType)(size_t)data.attributeType().unwrap();
 
         // Only the Actual attribute is supported.
         if (data.attributeType().is_some() && data.attributeType().unwrap() != AttributeEnumType::ACTUAL) {
@@ -835,7 +844,15 @@ CallResponse ChargePoint::handleGetVariables(const char *uid, GetVariablesView r
             continue;
         }
 
-        auto res = device_model.getVariable(component.name(), variable.name(), value_bufs[i], sizeof(value_bufs[i]));
+        // No EVSE bound components and no component instances exist.
+        if (component.evse().is_some() || component.instance().is_some()) {
+            results[i].attributeStatus = GetVariablesResponseGetVariableResultAttributeStatus::UNKNOWN_COMPONENT;
+            continue;
+        }
+
+        auto res = device_model.getVariable(component.name(), variable.name(),
+                                            variable.instance().is_some() ? variable.instance().unwrap() : nullptr,
+                                            value_bufs[i], sizeof(value_bufs[i]));
         switch (res) {
             case VariableResult::Accepted:
                 results[i].attributeStatus = GetVariablesResponseGetVariableResultAttributeStatus::ACCEPTED;
@@ -863,6 +880,8 @@ CallResponse ChargePoint::handleSetVariables(const char *uid, SetVariablesView r
     size_t count = req.setVariableData_count();
     if (count == 0)
         return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "setVariableData must not be empty"};
+    if (count > OCPP21_ITEMS_PER_MESSAGE)
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "setVariableData exceeds ItemsPerMessage"};
 
     auto results = heap_alloc_array<SetVariablesResponseSetVariableResult>(count);
     auto components = heap_alloc_array<SetVariablesResponseSetVariableResultComponent>(count);
@@ -885,14 +904,22 @@ CallResponse ChargePoint::handleSetVariables(const char *uid, SetVariablesView r
         results[i].variable = &variables[i];
 
         if (data.attributeType().is_some())
-            results[i].attributeType = (GetVariableResultAttributeEnumType)(size_t)data.attributeType().unwrap();
+            results[i].attributeType = (AttributeType)(size_t)data.attributeType().unwrap();
 
         if (data.attributeType().is_some() && data.attributeType().unwrap() != AttributeEnumType::ACTUAL) {
             results[i].attributeStatus = SetVariablesResponseSetVariableResultAttributeStatus::NOT_SUPPORTED_ATTRIBUTE_TYPE;
             continue;
         }
 
-        auto res = device_model.setVariable(component.name(), variable.name(), data.attributeValue());
+        // No EVSE bound components and no component instances exist.
+        if (component.evse().is_some() || component.instance().is_some()) {
+            results[i].attributeStatus = SetVariablesResponseSetVariableResultAttributeStatus::UNKNOWN_COMPONENT;
+            continue;
+        }
+
+        auto res = device_model.setVariable(component.name(), variable.name(),
+                                            variable.instance().is_some() ? variable.instance().unwrap() : nullptr,
+                                            data.attributeValue());
         switch (res) {
             case VariableResult::Accepted:
                 results[i].attributeStatus = SetVariablesResponseSetVariableResultAttributeStatus::ACCEPTED;
@@ -947,10 +974,204 @@ CallResponse ChargePoint::handleSetVariables(const char *uid, SetVariablesView r
 
 CallResponse ChargePoint::handleGetBaseReport(const char *uid, GetBaseReportView req)
 {
-    (void)req;
-    // TODO: implement NotifyReport streaming for the base report.
-    connection.sendCallResponse(GetBaseReportResponse{uid, GetBaseReportResponseStatus::NOT_SUPPORTED});
+    // B07.FR.12: ConfigurationInventory and FullInventory are required,
+    // SummaryInventory is optional and not supported (B07.FR.02).
+    if (req.reportBase() == GetBaseReportReportBase::SUMMARY_INVENTORY) {
+        connection.sendCallResponse(GetBaseReportResponse{uid, ReportResponseStatus::NOT_SUPPORTED});
+        return CallResponse{CallErrorCode::OK, nullptr};
+    }
+
+    if (report_active) {
+        // B07.FR.13: temporarily unable while another report is streaming.
+        connection.sendCallResponse(GetBaseReportResponse{uid, ReportResponseStatus::REJECTED});
+        return CallResponse{CallErrorCode::OK, nullptr};
+    }
+
+    // B07.FR.07: ConfigurationInventory reports the variables that can be
+    // set by the operator. B07.FR.08: FullInventory reports everything.
+    bool full = req.reportBase() == GetBaseReportReportBase::FULL_INVENTORY;
+    uint64_t mask = 0;
+    for (size_t i = 0; i < DeviceModel::variableCount(); ++i) {
+        if (full || DeviceModel::variableDesc(i).mutability != VariableMutability::ReadOnly)
+            mask |= (uint64_t)1 << i;
+    }
+
+    connection.sendCallResponse(GetBaseReportResponse{uid, ReportResponseStatus::ACCEPTED});
+    startReport(req.requestId(), mask);
     return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+// B08.FR.07/08/09/10/13: criteria are ORed. No component has the Active,
+// Available, Enabled or Problem variable, so the first three match every
+// component and Problem matches none.
+static bool criteria_match(GetReportView &req)
+{
+    size_t count = req.componentCriteria_count();
+    if (count == 0)
+        return true;
+    for (size_t i = 0; i < count; ++i) {
+        auto c = req.componentCriteria(i);
+        if (c.is_some() && c.unwrap() != GetReportComponentCriteriaEntry::PROBLEM)
+            return true;
+    }
+    return false;
+}
+
+static bool component_variable_match(GetReportView &req, const VariableDesc &desc)
+{
+    size_t count = req.componentVariable_count();
+    if (count == 0)
+        return true;
+
+    for (size_t i = 0; i < count; ++i) {
+        auto entry_opt = req.componentVariable(i);
+        if (entry_opt.is_none())
+            continue;
+        auto entry = entry_opt.unwrap();
+        auto component = entry.component();
+
+        // No EVSE bound components and no component instances exist.
+        if (component.evse().is_some() || component.instance().is_some())
+            continue;
+        if (strcasecmp(component.name(), desc.component) != 0)
+            continue;
+
+        // B08.FR.20: a missing variable matches every variable of the component.
+        if (entry.variable().is_none())
+            return true;
+        auto variable = entry.variable().unwrap();
+        if (strcasecmp(variable.name(), desc.variable) != 0)
+            continue;
+        // B08.FR.21: a missing instance matches every instance.
+        if (variable.instance().is_none())
+            return true;
+        if (desc.instance != nullptr && strcasecmp(variable.instance().unwrap(), desc.instance) == 0)
+            return true;
+    }
+    return false;
+}
+
+CallResponse ChargePoint::handleGetReport(const char *uid, GetReportView req)
+{
+    if (report_active) {
+        // B08.FR.16: temporarily unable while another report is streaming.
+        connection.sendCallResponse(GetReportResponse{uid, ReportResponseStatus::REJECTED});
+        return CallResponse{CallErrorCode::OK, nullptr};
+    }
+
+    // B08.FR.17: more componentVariable entries than ItemsPerMessage.
+    if (req.componentVariable_count() > OCPP21_ITEMS_PER_MESSAGE)
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "componentVariable exceeds ItemsPerMessage"};
+
+    uint64_t mask = 0;
+    if (criteria_match(req)) {
+        for (size_t i = 0; i < DeviceModel::variableCount(); ++i) {
+            if (component_variable_match(req, DeviceModel::variableDesc(i)))
+                mask |= (uint64_t)1 << i;
+        }
+    }
+
+    if (mask == 0) {
+        // B08.FR.15, no NotifyReport follows (B08.FR.05).
+        connection.sendCallResponse(GetReportResponse{uid, ReportResponseStatus::EMPTY_RESULT_SET});
+        return CallResponse{CallErrorCode::OK, nullptr};
+    }
+
+    connection.sendCallResponse(GetReportResponse{uid, ReportResponseStatus::ACCEPTED});
+    startReport(req.requestId(), mask);
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+CallResponse ChargePoint::handleNotifyReportResponse(int32_t connectorId, NotifyReportResponseView conf)
+{
+    (void)connectorId;
+    (void)conf;
+    // The next chunk is sent from the next tick.
+    report_in_flight = false;
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+void ChargePoint::startReport(int32_t request_id, uint64_t mask)
+{
+    report_active = true;
+    report_in_flight = false;
+    report_request_id = request_id;
+    report_seq_no = 0;
+    report_next_idx = 0;
+    report_mask = mask;
+}
+
+void ChargePoint::abortReport()
+{
+    report_active = false;
+    report_in_flight = false;
+}
+
+#define OCPP21_REPORT_CHUNK_SIZE 8
+
+void ChargePoint::sendReportChunk()
+{
+    NotifyReportReportData report_data[OCPP21_REPORT_CHUNK_SIZE];
+    NotifyReportReportDataComponent components[OCPP21_REPORT_CHUNK_SIZE];
+    NotifyReportReportDataVariable variables[OCPP21_REPORT_CHUNK_SIZE];
+    NotifyReportReportDataVariableAttribute attributes[OCPP21_REPORT_CHUNK_SIZE];
+    NotifyReportReportDataVariableCharacteristics characteristics[OCPP21_REPORT_CHUNK_SIZE];
+    char value_bufs[OCPP21_REPORT_CHUNK_SIZE][96];
+
+    size_t n = 0;
+    size_t idx = report_next_idx;
+    for (; idx < DeviceModel::variableCount() && n < OCPP21_REPORT_CHUNK_SIZE; ++idx) {
+        if ((report_mask & ((uint64_t)1 << idx)) == 0)
+            continue;
+
+        const auto &desc = DeviceModel::variableDesc(idx);
+
+        components[n].name = desc.component;
+        variables[n].name = desc.variable;
+        variables[n].instance = desc.instance;
+
+        // B07.FR.11: all supported attribute types, only Actual exists.
+        attributes[n].type = AttributeType::ACTUAL;
+        attributes[n].mutability = (NotifyReportReportDataVariableAttributeMutability)(size_t)desc.mutability;
+        attributes[n].persistent = desc.persistent ? 1 : 0;
+        attributes[n].constant = desc.constant ? 1 : 0;
+        // B07.FR.03: the value of WriteOnly variables is omitted.
+        if (desc.mutability != VariableMutability::WriteOnly
+         && device_model.getVariableByIndex(idx, value_bufs[n], sizeof(value_bufs[n])) == VariableResult::Accepted)
+            attributes[n].value = value_bufs[n];
+
+        characteristics[n].dataType = (NotifyReportReportDataVariableCharacteristicsDataType)(size_t)desc.data_type;
+        characteristics[n].supportsMonitoring = false;
+        if (desc.max_limit >= 0)
+            characteristics[n].maxLimit = desc.max_limit;
+        characteristics[n].valuesList = desc.values_list;
+        characteristics[n].unit = desc.unit;
+
+        report_data[n].component = &components[n];
+        report_data[n].variable = &variables[n];
+        report_data[n].variableAttribute = &attributes[n];
+        report_data[n].variableAttribute_length = 1;
+        report_data[n].variableCharacteristics = &characteristics[n];
+        ++n;
+    }
+
+    bool more = (report_mask >> idx) != 0 && idx < DeviceModel::variableCount();
+
+    if (!connection.sendCallAction(NotifyReport{report_request_id,
+                                                platform_get_system_time(connection.platform_ctx),
+                                                report_seq_no,
+                                                report_data, n,
+                                                (int8_t)(more ? 1 : 0)})) {
+        abortReport();
+        return;
+    }
+
+    report_in_flight = true;
+    report_next_idx = idx;
+    ++report_seq_no;
+
+    if (!more)
+        report_active = false;
 }
 
 CallResponse ChargePoint::handleTriggerMessage(const char *uid, TriggerMessageView req)

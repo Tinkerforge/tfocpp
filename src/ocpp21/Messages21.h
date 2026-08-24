@@ -53,9 +53,9 @@ enum class StatusNotificationConnectorStatus : uint8_t {
     NONE
 };
 
-extern const char * const GetBaseReportResponseStatusStrings[];
+extern const char * const ReportResponseStatusStrings[];
 
-enum class GetBaseReportResponseStatus : uint8_t {
+enum class ReportResponseStatus : uint8_t {
     ACCEPTED,
     REJECTED,
     NOT_SUPPORTED,
@@ -473,6 +473,15 @@ enum class SetNetworkProfileConnectionDataEntriesVpnEntriesType : uint8_t {
     PPTP
 };
 
+extern const char * const GetReportComponentCriteriaEntryStrings[];
+
+enum class GetReportComponentCriteriaEntry : uint8_t {
+    ACTIVE,
+    AVAILABLE,
+    ENABLED,
+    PROBLEM
+};
+
 extern const char * const GetVariablesResponseGetVariableResultAttributeStatusStrings[];
 
 enum class GetVariablesResponseGetVariableResultAttributeStatus : uint8_t {
@@ -484,9 +493,9 @@ enum class GetVariablesResponseGetVariableResultAttributeStatus : uint8_t {
     NONE
 };
 
-extern const char * const GetVariableResultAttributeEnumTypeStrings[];
+extern const char * const AttributeTypeStrings[];
 
-enum class GetVariableResultAttributeEnumType : uint8_t {
+enum class AttributeType : uint8_t {
     ACTUAL,
     TARGET,
     MIN_SET,
@@ -696,6 +705,29 @@ enum class MeterValueSampledValueLocation : uint8_t {
     INLET,
     OUTLET,
     UPSTREAM,
+    NONE
+};
+
+extern const char * const NotifyReportReportDataVariableAttributeMutabilityStrings[];
+
+enum class NotifyReportReportDataVariableAttributeMutability : uint8_t {
+    READ_ONLY,
+    WRITE_ONLY,
+    READ_WRITE,
+    NONE
+};
+
+extern const char * const NotifyReportReportDataVariableCharacteristicsDataTypeStrings[];
+
+enum class NotifyReportReportDataVariableCharacteristicsDataType : uint8_t {
+    STRING,
+    DECIMAL,
+    INTEGER,
+    DATE_TIME,
+    BOOLEAN,
+    OPTION_LIST,
+    SEQUENCE_LIST,
+    MEMBER_LIST,
     NONE
 };
 
@@ -913,6 +945,120 @@ struct ICall {
     CallAction action;
     uint64_t ocppJmessageId;
     const char *ocppJcallId;
+};
+
+struct GetReportComponentVariableEntryEntriesVariableEntriesView {
+    JsonObject _obj;
+
+    const char * name() {
+
+        return _obj["name"].as<const char *>();
+    }
+
+    Option<const char *> instance() {
+        if (!_obj.containsKey("instance"))
+                return {};
+
+        return _obj["instance"].as<const char *>();
+    }
+
+};
+
+struct GetReportComponentVariableEntryEntriesComponentEntriesEvseEntriesView {
+    JsonObject _obj;
+
+    int32_t id() {
+
+        return _obj["id"].as<int32_t>();
+    }
+
+    Option<int32_t> connectorId() {
+        if (!_obj.containsKey("connectorId"))
+                return {};
+
+        return _obj["connectorId"].as<int32_t>();
+    }
+
+};
+
+struct GetReportComponentVariableEntryEntriesComponentEntriesView {
+    JsonObject _obj;
+
+    Option<GetReportComponentVariableEntryEntriesComponentEntriesEvseEntriesView> evse() {
+        if (!_obj.containsKey("evse"))
+                return {};
+
+        return Option<GetReportComponentVariableEntryEntriesComponentEntriesEvseEntriesView>{GetReportComponentVariableEntryEntriesComponentEntriesEvseEntriesView{_obj["evse"].as<JsonObject>()}};
+    }
+
+    const char * name() {
+
+        return _obj["name"].as<const char *>();
+    }
+
+    Option<const char *> instance() {
+        if (!_obj.containsKey("instance"))
+                return {};
+
+        return _obj["instance"].as<const char *>();
+    }
+
+};
+
+struct GetReportComponentVariableEntryEntriesView {
+    JsonObject _obj;
+
+    GetReportComponentVariableEntryEntriesComponentEntriesView component() {
+
+        return GetReportComponentVariableEntryEntriesComponentEntriesView{_obj["component"].as<JsonObject>()};
+    }
+
+    Option<GetReportComponentVariableEntryEntriesVariableEntriesView> variable() {
+        if (!_obj.containsKey("variable"))
+                return {};
+
+        return Option<GetReportComponentVariableEntryEntriesVariableEntriesView>{GetReportComponentVariableEntryEntriesVariableEntriesView{_obj["variable"].as<JsonObject>()}};
+    }
+
+};
+
+struct GetReportView {
+    JsonObject _obj;
+
+    size_t componentVariable_count() {
+
+        return _obj["componentVariable"].size();
+    }
+
+    Option<GetReportComponentVariableEntryEntriesView> componentVariable(size_t i) {
+        if (!_obj.containsKey("componentVariable"))
+                return {};
+
+        return Option<GetReportComponentVariableEntryEntriesView>{GetReportComponentVariableEntryEntriesView{_obj["componentVariable"][i]}};
+    }
+
+    int32_t requestId() {
+
+        return _obj["requestId"].as<int32_t>();
+    }
+
+    size_t componentCriteria_count() {
+
+        return _obj["componentCriteria"].size();
+    }
+
+    Option<GetReportComponentCriteriaEntry> componentCriteria(size_t i) {
+        if (!_obj.containsKey("componentCriteria"))
+                return {};
+
+        return Option<GetReportComponentCriteriaEntry>{(GetReportComponentCriteriaEntry)_obj["componentCriteria"][i].as<size_t>()};
+    }
+
+};
+
+struct NotifyReportResponseView {
+    JsonObject _obj;
+
 };
 
 struct SetNetworkProfileConnectionDataEntriesVpnEntriesView {
@@ -4535,6 +4681,13 @@ struct TransactionEventCostDetailsTotalCostFixedTaxRates {
     void serializeInto(TFJsonSerializer &json);
 };
 
+struct NotifyReportReportDataComponentEvse {
+    int32_t id;
+    int32_t connectorId = OCPP_INTEGER_NOT_PASSED;
+
+    void serializeInto(TFJsonSerializer &json);
+};
+
 struct MeterValuesMeterValueSampledValueUnitOfMeasure {
     const char *unit = nullptr;
     int32_t multiplier = OCPP_INTEGER_NOT_PASSED;
@@ -4639,6 +4792,43 @@ struct SetVariablesResponseSetVariableResultComponentEvse {
 struct GetVariablesResponseGetVariableResultComponentEvse {
     int32_t id;
     int32_t connectorId = OCPP_INTEGER_NOT_PASSED;
+
+    void serializeInto(TFJsonSerializer &json);
+};
+
+struct NotifyReportReportDataVariableCharacteristics {
+    const char *unit = nullptr;
+    NotifyReportReportDataVariableCharacteristicsDataType dataType;
+    float minLimit = OCPP_DECIMAL_NOT_PASSED;
+    float maxLimit = OCPP_DECIMAL_NOT_PASSED;
+    int32_t maxElements = OCPP_INTEGER_NOT_PASSED;
+    const char *valuesList = nullptr;
+    bool supportsMonitoring;
+
+    void serializeInto(TFJsonSerializer &json);
+};
+
+struct NotifyReportReportDataVariableAttribute {
+    AttributeType type = AttributeType::NONE;
+    const char *value = nullptr;
+    NotifyReportReportDataVariableAttributeMutability mutability = NotifyReportReportDataVariableAttributeMutability::NONE;
+    int8_t persistent = OCPP_BOOL_NOT_PASSED;
+    int8_t constant = OCPP_BOOL_NOT_PASSED;
+
+    void serializeInto(TFJsonSerializer &json);
+};
+
+struct NotifyReportReportDataVariable {
+    const char *name;
+    const char *instance = nullptr;
+
+    void serializeInto(TFJsonSerializer &json);
+};
+
+struct NotifyReportReportDataComponent {
+    NotifyReportReportDataComponentEvse *evse = nullptr;
+    const char *name;
+    const char *instance = nullptr;
 
     void serializeInto(TFJsonSerializer &json);
 };
@@ -4795,6 +4985,22 @@ struct GetVariablesResponseGetVariableResultAttributeStatusInfo {
 struct BootNotificationChargingStationModem {
     const char *iccid = nullptr;
     const char *imsi = nullptr;
+
+    void serializeInto(TFJsonSerializer &json);
+};
+
+struct GetReportResponseStatusInfo {
+    const char *reasonCode;
+    const char *additionalInfo = nullptr;
+
+    void serializeInto(TFJsonSerializer &json);
+};
+
+struct NotifyReportReportData {
+    NotifyReportReportDataComponent *component;
+    NotifyReportReportDataVariable *variable;
+    NotifyReportReportDataVariableAttribute *variableAttribute; size_t variableAttribute_length;
+    NotifyReportReportDataVariableCharacteristics *variableCharacteristics = nullptr;
 
     void serializeInto(TFJsonSerializer &json);
 };
@@ -4975,7 +5181,7 @@ struct GetBaseReportResponseStatusInfo {
 };
 
 struct SetVariablesResponseSetVariableResult {
-    GetVariableResultAttributeEnumType attributeType = GetVariableResultAttributeEnumType::NONE;
+    AttributeType attributeType = AttributeType::NONE;
     SetVariablesResponseSetVariableResultAttributeStatus attributeStatus;
     SetVariablesResponseSetVariableResultAttributeStatusInfo *attributeStatusInfo = nullptr;
     SetVariablesResponseSetVariableResultComponent *component;
@@ -4987,7 +5193,7 @@ struct SetVariablesResponseSetVariableResult {
 struct GetVariablesResponseGetVariableResult {
     GetVariablesResponseGetVariableResultAttributeStatus attributeStatus;
     GetVariablesResponseGetVariableResultAttributeStatusInfo *attributeStatusInfo = nullptr;
-    GetVariableResultAttributeEnumType attributeType = GetVariableResultAttributeEnumType::NONE;
+    AttributeType attributeType = AttributeType::NONE;
     const char *attributeValue = nullptr;
     GetVariablesResponseGetVariableResultComponent *component;
     GetVariablesResponseGetVariableResultVariable *variable;
@@ -5068,11 +5274,11 @@ struct SetVariablesResponse final : public ICall {
 };
 
 struct GetBaseReportResponse final : public ICall {
-    GetBaseReportResponseStatus status;
+    ReportResponseStatus status;
     GetBaseReportResponseStatusInfo *statusInfo;
 
     GetBaseReportResponse(const char *call_id,
-        GetBaseReportResponseStatus status,
+        ReportResponseStatus status,
         GetBaseReportResponseStatusInfo *statusInfo = nullptr);
     GetBaseReportResponse(const GetBaseReportResponse&) = delete;
     GetBaseReportResponse &operator=(const GetBaseReportResponse&) = delete;
@@ -5315,6 +5521,37 @@ struct SetNetworkProfileResponse final : public ICall {
     size_t serializeJson(char *buf, size_t buf_len) const override;
 };
 
+struct NotifyReport final : public ICall {
+    int32_t requestId;
+    time_t generatedAt;
+    NotifyReportReportData *reportData; size_t reportData_length;
+    int8_t tbc;
+    int32_t seqNo;
+
+    NotifyReport(int32_t requestId,
+        time_t generatedAt,
+        int32_t seqNo,
+        NotifyReportReportData *reportData = nullptr, size_t reportData_length = 0,
+        int8_t tbc = OCPP_BOOL_NOT_PASSED);
+    NotifyReport(const NotifyReport&) = delete;
+    NotifyReport &operator=(const NotifyReport&) = delete;
+
+    size_t serializeJson(char *buf, size_t buf_len) const override;
+};
+
+struct GetReportResponse final : public ICall {
+    ReportResponseStatus status;
+    GetReportResponseStatusInfo *statusInfo;
+
+    GetReportResponse(const char *call_id,
+        ReportResponseStatus status,
+        GetReportResponseStatusInfo *statusInfo = nullptr);
+    GetReportResponse(const GetReportResponse&) = delete;
+    GetReportResponse &operator=(const GetReportResponse&) = delete;
+
+    size_t serializeJson(char *buf, size_t buf_len) const override;
+};
+
 CallResponse parseBootNotificationResponse(JsonObject obj);
 
 CallResponse parseHeartbeatResponse(JsonObject obj);
@@ -5358,6 +5595,10 @@ CallResponse parseDeleteCertificate(JsonObject obj);
 CallResponse parseGetInstalledCertificateIds(JsonObject obj);
 
 CallResponse parseSetNetworkProfile(JsonObject obj);
+
+CallResponse parseNotifyReportResponse(JsonObject obj);
+
+CallResponse parseGetReport(JsonObject obj);
 
 CallResponse callResultHandler(int32_t connectorId, CallAction resultTo, JsonObject obj, ChargePoint *cp);
 

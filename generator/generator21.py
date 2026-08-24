@@ -103,7 +103,16 @@ network_profile = [[ #send
         schema21.SetNetworkProfileRequest.SetNetworkProfileRequest,
 ]]
 
-supported_profiles = [provisioning_profile, transactions_profile, security_profile, certificates_profile, network_profile]# All OCPP 2.1 actions, derived from the schema file names.
+# Messages for device model reporting (B07/B08).
+reports_profile = [[ #send
+        schema21.NotifyReportRequest.NotifyReportRequest,
+        schema21.GetReportResponse.GetReportResponse,
+    ], [ #recv
+        schema21.NotifyReportResponse.NotifyReportResponse,
+        schema21.GetReportRequest.GetReportRequest,
+]]
+
+supported_profiles = [provisioning_profile, transactions_profile, security_profile, certificates_profile, network_profile, reports_profile]# All OCPP 2.1 actions, derived from the schema file names.
 # Used to generate the full CallAction enum so that known but
 # unsupported actions are answered with NotSupported instead of
 # NotImplemented.

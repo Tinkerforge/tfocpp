@@ -61,7 +61,7 @@ const char * const StatusNotificationConnectorStatusStrings[] = {
     "Faulted"
 };
 
-const char * const GetBaseReportResponseStatusStrings[] = {
+const char * const ReportResponseStatusStrings[] = {
     "Accepted",
     "Rejected",
     "NotSupported",
@@ -388,6 +388,13 @@ const char * const SetNetworkProfileConnectionDataEntriesVpnEntriesTypeStrings[]
     "PPTP"
 };
 
+const char * const GetReportComponentCriteriaEntryStrings[] = {
+    "Active",
+    "Available",
+    "Enabled",
+    "Problem"
+};
+
 const char * const GetVariablesResponseGetVariableResultAttributeStatusStrings[] = {
     "Accepted",
     "Rejected",
@@ -396,7 +403,7 @@ const char * const GetVariablesResponseGetVariableResultAttributeStatusStrings[]
     "NotSupportedAttributeType"
 };
 
-const char * const GetVariableResultAttributeEnumTypeStrings[] = {
+const char * const AttributeTypeStrings[] = {
     "Actual",
     "Target",
     "MinSet",
@@ -570,6 +577,23 @@ const char * const MeterValueSampledValueLocationStrings[] = {
     "Inlet",
     "Outlet",
     "Upstream"
+};
+
+const char * const NotifyReportReportDataVariableAttributeMutabilityStrings[] = {
+    "ReadOnly",
+    "WriteOnly",
+    "ReadWrite"
+};
+
+const char * const NotifyReportReportDataVariableCharacteristicsDataTypeStrings[] = {
+    "string",
+    "decimal",
+    "integer",
+    "dateTime",
+    "boolean",
+    "OptionList",
+    "SequenceList",
+    "MemberList"
 };
 
 const char * const TransactionEventCostDetailsChargingPeriodsDimensionsTypeStrings[] = {
@@ -778,14 +802,14 @@ void BootNotificationChargingStation::serializeInto(TFJsonSerializer &json) {
 void GetVariablesResponseGetVariableResult::serializeInto(TFJsonSerializer &json) {
         if (attributeStatus != GetVariablesResponseGetVariableResultAttributeStatus::NONE) json.addMemberString("attributeStatus", GetVariablesResponseGetVariableResultAttributeStatusStrings[(size_t)attributeStatus]);
         if (attributeStatusInfo != nullptr) { json.addMemberObject("attributeStatusInfo"); attributeStatusInfo->serializeInto(json); json.endObject(); }
-        if (attributeType != GetVariableResultAttributeEnumType::NONE) json.addMemberString("attributeType", GetVariableResultAttributeEnumTypeStrings[(size_t)attributeType]);
+        if (attributeType != AttributeType::NONE) json.addMemberString("attributeType", AttributeTypeStrings[(size_t)attributeType]);
         if (attributeValue != nullptr) json.addMemberString("attributeValue", attributeValue);
         if (component != nullptr) { json.addMemberObject("component"); component->serializeInto(json); json.endObject(); }
         if (variable != nullptr) { json.addMemberObject("variable"); variable->serializeInto(json); json.endObject(); }
     }
 
 void SetVariablesResponseSetVariableResult::serializeInto(TFJsonSerializer &json) {
-        if (attributeType != GetVariableResultAttributeEnumType::NONE) json.addMemberString("attributeType", GetVariableResultAttributeEnumTypeStrings[(size_t)attributeType]);
+        if (attributeType != AttributeType::NONE) json.addMemberString("attributeType", AttributeTypeStrings[(size_t)attributeType]);
         if (attributeStatus != SetVariablesResponseSetVariableResultAttributeStatus::NONE) json.addMemberString("attributeStatus", SetVariablesResponseSetVariableResultAttributeStatusStrings[(size_t)attributeStatus]);
         if (attributeStatusInfo != nullptr) { json.addMemberObject("attributeStatusInfo"); attributeStatusInfo->serializeInto(json); json.endObject(); }
         if (component != nullptr) { json.addMemberObject("component"); component->serializeInto(json); json.endObject(); }
@@ -923,6 +947,18 @@ void SetNetworkProfileResponseStatusInfo::serializeInto(TFJsonSerializer &json) 
         if (additionalInfo != nullptr) json.addMemberString("additionalInfo", additionalInfo);
     }
 
+void NotifyReportReportData::serializeInto(TFJsonSerializer &json) {
+        if (component != nullptr) { json.addMemberObject("component"); component->serializeInto(json); json.endObject(); }
+        if (variable != nullptr) { json.addMemberObject("variable"); variable->serializeInto(json); json.endObject(); }
+        if (variableAttribute != nullptr) { json.addMemberArray("variableAttribute"); for(size_t i = 0; i < variableAttribute_length; ++i) { json.addObject(); variableAttribute[i].serializeInto(json); json.endObject(); } json.endArray(); }
+        if (variableCharacteristics != nullptr) { json.addMemberObject("variableCharacteristics"); variableCharacteristics->serializeInto(json); json.endObject(); }
+    }
+
+void GetReportResponseStatusInfo::serializeInto(TFJsonSerializer &json) {
+        if (reasonCode != nullptr) json.addMemberString("reasonCode", reasonCode);
+        if (additionalInfo != nullptr) json.addMemberString("additionalInfo", additionalInfo);
+    }
+
 void BootNotificationChargingStationModem::serializeInto(TFJsonSerializer &json) {
         if (iccid != nullptr) json.addMemberString("iccid", iccid);
         if (imsi != nullptr) json.addMemberString("imsi", imsi);
@@ -1043,6 +1079,35 @@ void GetInstalledCertificateIdsResponseCertificateHashDataChainChildCertificateH
         if (serialNumber != nullptr) json.addMemberString("serialNumber", serialNumber);
     }
 
+void NotifyReportReportDataComponent::serializeInto(TFJsonSerializer &json) {
+        if (evse != nullptr) { json.addMemberObject("evse"); evse->serializeInto(json); json.endObject(); }
+        if (name != nullptr) json.addMemberString("name", name);
+        if (instance != nullptr) json.addMemberString("instance", instance);
+    }
+
+void NotifyReportReportDataVariable::serializeInto(TFJsonSerializer &json) {
+        if (name != nullptr) json.addMemberString("name", name);
+        if (instance != nullptr) json.addMemberString("instance", instance);
+    }
+
+void NotifyReportReportDataVariableAttribute::serializeInto(TFJsonSerializer &json) {
+        if (type != AttributeType::NONE) json.addMemberString("type", AttributeTypeStrings[(size_t)type]);
+        if (value != nullptr) json.addMemberString("value", value);
+        if (mutability != NotifyReportReportDataVariableAttributeMutability::NONE) json.addMemberString("mutability", NotifyReportReportDataVariableAttributeMutabilityStrings[(size_t)mutability]);
+        if (persistent != OCPP_BOOL_NOT_PASSED) json.addMemberBoolean("persistent", persistent == 1);
+        if (constant != OCPP_BOOL_NOT_PASSED) json.addMemberBoolean("constant", constant == 1);
+    }
+
+void NotifyReportReportDataVariableCharacteristics::serializeInto(TFJsonSerializer &json) {
+        if (unit != nullptr) json.addMemberString("unit", unit);
+        if (dataType != NotifyReportReportDataVariableCharacteristicsDataType::NONE) json.addMemberString("dataType", NotifyReportReportDataVariableCharacteristicsDataTypeStrings[(size_t)dataType]);
+        if (!isnan(minLimit)) json.addMemberNumber("minLimit", minLimit, "%.1f");
+        if (!isnan(maxLimit)) json.addMemberNumber("maxLimit", maxLimit, "%.1f");
+        if (maxElements != OCPP_INTEGER_NOT_PASSED) json.addMemberNumber("maxElements", maxElements);
+        if (valuesList != nullptr) json.addMemberString("valuesList", valuesList);
+        json.addMemberBoolean("supportsMonitoring", supportsMonitoring);
+    }
+
 void GetVariablesResponseGetVariableResultComponentEvse::serializeInto(TFJsonSerializer &json) {
         if (id != OCPP_INTEGER_NOT_PASSED) json.addMemberNumber("id", id);
         if (connectorId != OCPP_INTEGER_NOT_PASSED) json.addMemberNumber("connectorId", connectorId);
@@ -1121,6 +1186,11 @@ void MeterValuesMeterValueSampledValueSignedMeterValue::serializeInto(TFJsonSeri
 void MeterValuesMeterValueSampledValueUnitOfMeasure::serializeInto(TFJsonSerializer &json) {
         if (unit != nullptr) json.addMemberString("unit", unit);
         if (multiplier != OCPP_INTEGER_NOT_PASSED) json.addMemberNumber("multiplier", multiplier);
+    }
+
+void NotifyReportReportDataComponentEvse::serializeInto(TFJsonSerializer &json) {
+        if (id != OCPP_INTEGER_NOT_PASSED) json.addMemberNumber("id", id);
+        if (connectorId != OCPP_INTEGER_NOT_PASSED) json.addMemberNumber("connectorId", connectorId);
     }
 
 void TransactionEventCostDetailsTotalCostFixedTaxRates::serializeInto(TFJsonSerializer &json) {
@@ -1272,7 +1342,7 @@ size_t SetVariablesResponse::serializeJson(char *buf, size_t buf_len) const {
 }
 
 GetBaseReportResponse::GetBaseReportResponse(const char *call_id,
-        GetBaseReportResponseStatus status,
+        ReportResponseStatus status,
         GetBaseReportResponseStatusInfo *statusInfo) :
     ICall(CallAction::GET_BASE_REPORT_RESPONSE, call_id),
     status(status),
@@ -1286,7 +1356,7 @@ size_t GetBaseReportResponse::serializeJson(char *buf, size_t buf_len) const {
         json.addString(this->ocppJcallId);
 
         json.addObject();
-            if (status != GetBaseReportResponseStatus::NONE) json.addMemberString("status", GetBaseReportResponseStatusStrings[(size_t)status]);
+            if (status != ReportResponseStatus::NONE) json.addMemberString("status", ReportResponseStatusStrings[(size_t)status]);
             if (statusInfo != nullptr) { json.addMemberObject("statusInfo"); statusInfo->serializeInto(json); json.endObject(); }
         json.endObject();
     json.endArray();
@@ -1704,6 +1774,61 @@ size_t SetNetworkProfileResponse::serializeJson(char *buf, size_t buf_len) const
 
         json.addObject();
             if (status != eResponseStatus::NONE) json.addMemberString("status", eResponseStatusStrings[(size_t)status]);
+            if (statusInfo != nullptr) { json.addMemberObject("statusInfo"); statusInfo->serializeInto(json); json.endObject(); }
+        json.endObject();
+    json.endArray();
+
+    return json.end();
+}
+
+NotifyReport::NotifyReport(int32_t requestId,
+        time_t generatedAt,
+        int32_t seqNo,
+        NotifyReportReportData *reportData, size_t reportData_length,
+        int8_t tbc) :
+    ICall(CallAction::NOTIFY_REPORT, next_call_id++),
+    requestId(requestId),
+    generatedAt(generatedAt),
+    reportData(reportData),
+    reportData_length(reportData_length),
+    tbc(tbc),
+    seqNo(seqNo)
+{}
+
+size_t NotifyReport::serializeJson(char *buf, size_t buf_len) const {
+    TFJsonSerializer json{buf, buf_len};
+    json.addArray();
+        json.addNumber((int32_t)OcppRpcMessageType::CALL);
+        json.addNumber(this->ocppJmessageId, true);
+        json.addString(CallActionStrings[(size_t)this->action]);
+        json.addObject();
+            if (requestId != OCPP_INTEGER_NOT_PASSED) json.addMemberNumber("requestId", requestId);
+            if (generatedAt != OCPP_DATETIME_NOT_PASSED) unix_timestamp_to_iso_string(generatedAt, json, "generatedAt");
+            if (reportData != nullptr) { json.addMemberArray("reportData"); for(size_t i = 0; i < reportData_length; ++i) { json.addObject(); reportData[i].serializeInto(json); json.endObject(); } json.endArray(); }
+            if (tbc != OCPP_BOOL_NOT_PASSED) json.addMemberBoolean("tbc", tbc == 1);
+            if (seqNo != OCPP_INTEGER_NOT_PASSED) json.addMemberNumber("seqNo", seqNo);
+        json.endObject();
+    json.endArray();
+
+    return json.end();
+}
+
+GetReportResponse::GetReportResponse(const char *call_id,
+        ReportResponseStatus status,
+        GetReportResponseStatusInfo *statusInfo) :
+    ICall(CallAction::GET_REPORT_RESPONSE, call_id),
+    status(status),
+    statusInfo(statusInfo)
+{}
+
+size_t GetReportResponse::serializeJson(char *buf, size_t buf_len) const {
+    TFJsonSerializer json{buf, buf_len};
+    json.addArray();
+        json.addNumber((int32_t)OcppRpcMessageType::CALLRESULT);
+        json.addString(this->ocppJcallId);
+
+        json.addObject();
+            if (status != ReportResponseStatus::NONE) json.addMemberString("status", ReportResponseStatusStrings[(size_t)status]);
             if (statusInfo != nullptr) { json.addMemberObject("statusInfo"); statusInfo->serializeInto(json); json.endObject(); }
         json.endObject();
     json.endArray();
@@ -12694,6 +12819,349 @@ CallResponse parseSetNetworkProfile(JsonObject obj) {
     return CallResponse{CallErrorCode::OK, nullptr};
 }
 
+CallResponse parseNotifyReportResponse(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "NotifyReportResponse: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseGetReportComponentVariableEntryEntriesComponentEntriesEvseEntriesId(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "id: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseGetReportComponentVariableEntryEntriesComponentEntriesEvseEntriesConnectorId(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "connectorId: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseGetReportComponentVariableEntryEntriesComponentEntriesEvseEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (!obj.containsKey("id"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "id: required, but missing"};
+
+    {
+        CallResponse inner_result = parseGetReportComponentVariableEntryEntriesComponentEntriesEvseEntriesId(obj["id"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("connectorId")) {
+    {
+        CallResponse inner_result = parseGetReportComponentVariableEntryEntriesComponentEntriesEvseEntriesConnectorId(obj["connectorId"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "GetReportComponentVariableEntryEntriesComponentEntriesEvseEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseGetReportComponentVariableEntryEntriesComponentEntriesEvse(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "evse: wrong type"};
+
+    {
+        CallResponse inner_result = parseGetReportComponentVariableEntryEntriesComponentEntriesEvseEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseGetReportComponentVariableEntryEntriesComponentEntriesName(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "name: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 50)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "name: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseGetReportComponentVariableEntryEntriesComponentEntriesInstance(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "instance: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 50)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "instance: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseGetReportComponentVariableEntryEntriesComponentEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (obj.containsKey("evse")) {
+    {
+        CallResponse inner_result = parseGetReportComponentVariableEntryEntriesComponentEntriesEvse(obj["evse"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+
+    if (!obj.containsKey("name"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "name: required, but missing"};
+
+    {
+        CallResponse inner_result = parseGetReportComponentVariableEntryEntriesComponentEntriesName(obj["name"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("instance")) {
+    {
+        CallResponse inner_result = parseGetReportComponentVariableEntryEntriesComponentEntriesInstance(obj["instance"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "GetReportComponentVariableEntryEntriesComponentEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseGetReportComponentVariableEntryEntriesComponent(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "component: wrong type"};
+
+    {
+        CallResponse inner_result = parseGetReportComponentVariableEntryEntriesComponentEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseGetReportComponentVariableEntryEntriesVariableEntriesName(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "name: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 50)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "name: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseGetReportComponentVariableEntryEntriesVariableEntriesInstance(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "instance: wrong type"};
+
+    if (strlen(var.as<const char *>()) > 50)
+        return CallResponse{CallErrorCode::PropertyConstraintViolation, "instance: string too long"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseGetReportComponentVariableEntryEntriesVariableEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (!obj.containsKey("name"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "name: required, but missing"};
+
+    {
+        CallResponse inner_result = parseGetReportComponentVariableEntryEntriesVariableEntriesName(obj["name"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("instance")) {
+    {
+        CallResponse inner_result = parseGetReportComponentVariableEntryEntriesVariableEntriesInstance(obj["instance"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "GetReportComponentVariableEntryEntriesVariableEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseGetReportComponentVariableEntryEntriesVariable(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "variable: wrong type"};
+
+    {
+        CallResponse inner_result = parseGetReportComponentVariableEntryEntriesVariableEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseGetReportComponentVariableEntryEntries(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (!obj.containsKey("component"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "component: required, but missing"};
+
+    {
+        CallResponse inner_result = parseGetReportComponentVariableEntryEntriesComponent(obj["component"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("variable")) {
+    {
+        CallResponse inner_result = parseGetReportComponentVariableEntryEntriesVariable(obj["variable"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "GetReportComponentVariableEntryEntries: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseGetReportComponentVariableEntry(JsonVariant var) {
+
+    if (!var.is<JsonObject>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "componentVariableEntry: wrong type"};
+
+    {
+        CallResponse inner_result = parseGetReportComponentVariableEntryEntries(var);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseGetReportComponentVariable(JsonVariant var) {
+
+    if (!var.is<JsonArray>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "componentVariable: wrong type"};
+
+    {
+        for(size_t i = 0; i < var.as<JsonArray>().size(); ++i) {
+            CallResponse inner_result = parseGetReportComponentVariableEntry(var[i]);
+            if (inner_result.result != CallErrorCode::OK)
+                return inner_result;
+        }
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseGetReportRequestId(JsonVariant var) {
+
+    if (!var.is<int32_t>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "requestId: wrong type"};
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+static CallResponse parseGetReportComponentCriteriaEntry(JsonVariant var) {
+
+    if (!var.is<const char *>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "componentCriteriaEntry: wrong type"};
+
+    {
+        bool found = false;
+        for(size_t i = 0; i < ARRAY_SIZE(GetReportComponentCriteriaEntryStrings); ++i) {
+            if (strcmp(var.as<const char *>(), GetReportComponentCriteriaEntryStrings[i]) != 0)
+                continue;
+
+            var.set(i);
+            found = true;
+            break;
+        }
+
+        if (!found)
+            return CallResponse{CallErrorCode::PropertyConstraintViolation, "componentCriteriaEntry: unknown enum value received"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+static CallResponse parseGetReportComponentCriteria(JsonVariant var) {
+
+    if (!var.is<JsonArray>())
+        return CallResponse{CallErrorCode::TypeConstraintViolation, "componentCriteria: wrong type"};
+
+    {
+        for(size_t i = 0; i < var.as<JsonArray>().size(); ++i) {
+            CallResponse inner_result = parseGetReportComponentCriteriaEntry(var[i]);
+            if (inner_result.result != CallErrorCode::OK)
+                return inner_result;
+        }
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+CallResponse parseGetReport(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (obj.containsKey("componentVariable")) {
+    {
+        CallResponse inner_result = parseGetReportComponentVariable(obj["componentVariable"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+
+    if (!obj.containsKey("requestId"))
+        return CallResponse{CallErrorCode::OccurrenceConstraintViolation, "requestId: required, but missing"};
+
+    {
+        CallResponse inner_result = parseGetReportRequestId(obj["requestId"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    if (obj.containsKey("componentCriteria")) {
+    {
+        CallResponse inner_result = parseGetReportComponentCriteria(obj["componentCriteria"]);
+        if (inner_result.result != CallErrorCode::OK)
+            return inner_result;
+    }
+    ++keys_handled;
+    }
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "GetReport: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
 CallResponse callHandler(const char *uid, const char *action_string, JsonObject obj, ChargePoint *cp) {
     size_t action_idx = 0;
     if (!lookup_key(&action_idx, action_string, CallActionStrings, ARRAY_SIZE(CallActionStrings)))
@@ -12798,6 +13266,14 @@ CallResponse callHandler(const char *uid, const char *action_string, JsonObject 
             return cp->handleSetNetworkProfile(uid, SetNetworkProfileView{obj});
         }
 
+        case CallAction::GET_REPORT: {
+            CallResponse res = parseGetReport(obj);
+            if (res.result != CallErrorCode::OK)
+                return res;
+
+            return cp->handleGetReport(uid, GetReportView{obj});
+        }
+
         case CallAction::AFRR_SIGNAL:
         case CallAction::AFRR_SIGNAL_RESPONSE:
         case CallAction::ADJUST_PERIODIC_EVENT_STREAM:
@@ -12864,7 +13340,6 @@ CallResponse callHandler(const char *uid, const char *action_string, JsonObject 
         case CallAction::GET_MONITORING_REPORT_RESPONSE:
         case CallAction::GET_PERIODIC_EVENT_STREAM:
         case CallAction::GET_PERIODIC_EVENT_STREAM_RESPONSE:
-        case CallAction::GET_REPORT:
         case CallAction::GET_REPORT_RESPONSE:
         case CallAction::GET_TARIFFS:
         case CallAction::GET_TARIFFS_RESPONSE:
@@ -13056,6 +13531,14 @@ CallResponse callResultHandler(int32_t connectorId, CallAction resultTo, JsonObj
             return cp->handleGetCertificateChainStatusResponse(connectorId, GetCertificateChainStatusResponseView{obj});
         }
 
+        case CallAction::NOTIFY_REPORT: {
+            CallResponse res = parseNotifyReportResponse(obj);
+            if (res.result != CallErrorCode::OK)
+                return res;
+
+            return cp->handleNotifyReportResponse(connectorId, NotifyReportResponseView{obj});
+        }
+
         case CallAction::AFRR_SIGNAL:
         case CallAction::AFRR_SIGNAL_RESPONSE:
         case CallAction::ADJUST_PERIODIC_EVENT_STREAM:
@@ -13159,7 +13642,6 @@ CallResponse callResultHandler(int32_t connectorId, CallAction resultTo, JsonObj
         case CallAction::NOTIFY_PERIODIC_EVENT_STREAM:
         case CallAction::NOTIFY_PRIORITY_CHARGING:
         case CallAction::NOTIFY_PRIORITY_CHARGING_RESPONSE:
-        case CallAction::NOTIFY_REPORT:
         case CallAction::NOTIFY_REPORT_RESPONSE:
         case CallAction::NOTIFY_SETTLEMENT:
         case CallAction::NOTIFY_SETTLEMENT_RESPONSE:

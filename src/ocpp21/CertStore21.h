@@ -20,6 +20,9 @@ namespace Ocpp21 {
 // SECC chains from different V2G roots in parallel, plus the CSMS client chain.
 #define OCPP21_CERTSTORE_MAX_CHAINS 4
 
+// CertificateEntries.maxLimit (HUB20-411-005).
+#define OCPP21_CERTSTORE_MAX_ENTRIES (OCPP21_CERTSTORE_MAX_V2G_ROOT + OCPP21_CERTSTORE_MAX_MO_ROOT + OCPP21_CERTSTORE_MAX_OEM_ROOT + OCPP21_CERTSTORE_MAX_CSMS_ROOT + OCPP21_CERTSTORE_MAX_MFR_ROOT + OCPP21_CERTSTORE_MAX_CHAINS)
+
 // CertificateSigned certificateChain is at most 10000 characters.
 #define OCPP21_CERT_PEM_MAX 10000
 // A root certificate is a single PEM certificate.

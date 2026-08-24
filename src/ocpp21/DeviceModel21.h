@@ -18,6 +18,10 @@ namespace Ocpp21 {
 #define OCPP21_NETWORK_PROFILE_SLOTS 4
 #define OCPP21_NETWORK_PROFILE_URL_MAX_LEN 128
 
+// DeviceDataCtrlr, applied to GetVariables, SetVariables and GetReport.
+#define OCPP21_ITEMS_PER_MESSAGE 16
+#define OCPP21_BYTES_PER_MESSAGE 4096
+
 // A05: one stored NetworkConnectionProfile. password is empty if the profile uses the SecurityCtrlr BasicAuthPassword.
 struct NetworkProfileSlot {
     bool used = false;
@@ -32,6 +36,37 @@ enum class VariableResult : uint8_t {
     UnknownComponent,
     UnknownVariable,
     NotSupportedAttributeType,
+};
+
+enum class VariableMutability : uint8_t {
+    ReadOnly,
+    WriteOnly,
+    ReadWrite,
+};
+
+enum class VariableDataType : uint8_t {
+    String,
+    Decimal,
+    Integer,
+    DateTime,
+    Boolean,
+    OptionList,
+    SequenceList,
+    MemberList,
+};
+
+// Static per variable metadata for B07/B08 reporting.
+struct VariableDesc {
+    const char *component;
+    const char *variable;
+    const char *instance; // nullptr if the variable has no instance
+    VariableDataType data_type;
+    VariableMutability mutability;
+    bool persistent;
+    bool constant;
+    float max_limit; // < 0 if not reported
+    const char *values_list; // required for OptionList/SequenceList/MemberList
+    const char *unit;
 };
 
 class CertStore;
@@ -79,9 +114,15 @@ public:
     bool iso15118_changed = false;
     bool network_priority_changed = false;
 
-    // On success writes the value as string into buf.
-    VariableResult getVariable(const char *component, const char *variable, char *buf, size_t buf_len);
-    VariableResult setVariable(const char *component, const char *variable, const char *value);
+    static size_t variableCount();
+    static const VariableDesc &variableDesc(size_t idx);
+
+    // On success writes the value as string into buf. WriteOnly variables
+    // are Rejected (B06.FR.09), use variableDesc for reporting.
+    VariableResult getVariable(const char *component, const char *variable, const char *instance, char *buf, size_t buf_len);
+    VariableResult setVariable(const char *component, const char *variable, const char *instance, const char *value);
+
+    VariableResult getVariableByIndex(size_t idx, char *buf, size_t buf_len);
 };
 
 } // namespace Ocpp21
