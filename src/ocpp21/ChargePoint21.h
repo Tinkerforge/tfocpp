@@ -148,6 +148,7 @@ private:
     void sendBootNotification();
     void sendStatusNotifications();
     void tickEvses();
+    void tickReset();
     void startTransaction(int32_t evse_id, TransactionEventTriggerReason trigger);
     void stopTransaction(int32_t evse_id, TransactionEventTriggerReason trigger, TransactionEventTransactionInfoStoppedReason reason, bool include_token);
     void sendTransactionUpdated(int32_t evse_id, TransactionEventTriggerReason trigger, bool with_meter_value);
@@ -189,6 +190,13 @@ private:
     bool stop_pending = false;
     int32_t stop_evse_id = 0;
     StopReason21 stop_reason = StopReason21::Other;
+
+    // B12: a Reset request is executed once no transaction runs (OnIdle)
+    // and the queued transaction events had time to leave. No new
+    // transactions start while a reset is pending.
+    bool reset_pending = false;
+    bool reset_on_idle = false;
+    uint32_t reset_drain_deadline = 0;
 
     // Only one Authorize is in flight at a time. authorize_for_stop marks
     // an Authorize sent to stop a running transaction with a different

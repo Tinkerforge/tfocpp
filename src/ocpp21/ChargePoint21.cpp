@@ -175,6 +175,9 @@ void ChargePoint::tick()
     if (state == State::Idle)
         tickEvses();
 
+    if (reset_pending)
+        tickReset();
+
     if (!platform_ws_connected(connection.platform_ctx))
         return;
 
@@ -437,7 +440,10 @@ void ChargePoint::tickEvses()
 
         if (tag_pending && (tag_evse_id == 0 || tag_evse_id == evse_id)) {
             tag_pending = false;
-            if (t.transaction_active) {
+            if (reset_pending && !t.transaction_active) {
+                log_info("Tag %s seen while a reset is pending. Ignored", pending_tag);
+                platform_tag_timed_out21(connection.platform_ctx, evse_id);
+            } else if (t.transaction_active) {
                 if (strcmp(pending_tag, t.id_token) == 0) {
                     platform_tag_accepted21(connection.platform_ctx, evse_id, pending_tag);
                     stopTransaction(evse_id, TransactionEventTriggerReason::STOP_AUTHORIZED, TransactionEventTransactionInfoStoppedReason::LOCAL, true);
@@ -545,7 +551,7 @@ void ChargePoint::tickEvses()
         }
 
         // TxStartPoint PowerPathClosed, simplified: authorized and cable plugged.
-        if (t.authorized && !t.transaction_active && plugged)
+        if (t.authorized && !t.transaction_active && plugged && !reset_pending)
             startTransaction(evse_id, t.start_trigger);
 
         if (t.transaction_active) {
@@ -1003,9 +1009,33 @@ CallResponse ChargePoint::handleTriggerMessage(const char *uid, TriggerMessageVi
 
 CallResponse ChargePoint::handleReset(const char *uid, ResetView req)
 {
-    // TODO: OnIdle handling once the transaction queue is persistent. Every
-    // reset is treated as Immediate for now.
-    (void)req;
+    // Resuming a transaction after the reboot needs a persistent
+    // transaction queue, not implemented yet.
+    if (req.type() == ResetType::IMMEDIATE_AND_RESUME) {
+        connection.sendCallResponse(ResetResponse{uid, ResetResponseStatus::REJECTED});
+        return CallResponse{CallErrorCode::OK, nullptr};
+    }
+
+    if (req.evseId().is_some() && (req.evseId().unwrap() < 1 || req.evseId().unwrap() > OCPP21_NUM_EVSES)) {
+        connection.sendCallResponse(ResetResponse{uid, ResetResponseStatus::REJECTED});
+        return CallResponse{CallErrorCode::OK, nullptr};
+    }
+
+    bool transaction_running = false;
+    for (int32_t evse_id = 1; evse_id <= OCPP21_NUM_EVSES; ++evse_id)
+        transaction_running |= evses[evse_id - 1].transaction_active;
+
+    if (req.type() == ResetType::ON_IDLE) {
+        // B12.FR.02: finish the running transaction first. No new
+        // transactions start while the reset is pending.
+        log_info("Reset accepted, waiting until %s", transaction_running ? "the transaction ended" : "the event queue is empty");
+        connection.sendCallResponse(ResetResponse{uid, transaction_running ? ResetResponseStatus::SCHEDULED : ResetResponseStatus::ACCEPTED});
+        reset_pending = true;
+        reset_on_idle = true;
+        reset_drain_deadline = 0;
+        return CallResponse{CallErrorCode::OK, nullptr};
+    }
+
     connection.sendCallResponse(ResetResponse{uid, ResetResponseStatus::ACCEPTED});
 
     for (int32_t evse_id = 1; evse_id <= OCPP21_NUM_EVSES; ++evse_id) {
@@ -1013,11 +1043,38 @@ CallResponse ChargePoint::handleReset(const char *uid, ResetView req)
             stopTransaction(evse_id, TransactionEventTriggerReason::RESET_COMMAND, TransactionEventTransactionInfoStoppedReason::IMMEDIATE_RESET, false);
     }
 
-    // The response is sent from the connection tick before the platform
-    // reset is allowed to tear down the process, see tick ordering. On the
-    // Linux host platform_reset only logs.
-    platform_reset(false);
+    // The reset happens from tickReset once the response and the queued
+    // transaction events had time to leave.
+    reset_pending = true;
+    reset_on_idle = false;
+    reset_drain_deadline = 0;
     return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+// Drain timeout for the queued transaction events before a reset. Without
+// a persistent queue a reset while offline would otherwise never happen.
+#define OCPP21_RESET_DRAIN_TIMEOUT_MS (10 * 1000)
+
+void ChargePoint::tickReset()
+{
+    bool transaction_running = false;
+    for (int32_t evse_id = 1; evse_id <= OCPP21_NUM_EVSES; ++evse_id)
+        transaction_running |= evses[evse_id - 1].transaction_active;
+
+    if (reset_on_idle && transaction_running)
+        return;
+
+    if (reset_drain_deadline == 0)
+        reset_drain_deadline = set_deadline(OCPP21_RESET_DRAIN_TIMEOUT_MS);
+
+    bool queue_empty = connection.transaction_messages.empty() && !connection.in_flight_is_transaction;
+    if (!queue_empty && !deadline_elapsed(reset_drain_deadline))
+        return;
+
+    log_info("Resetting");
+    reset_pending = false;
+    reset_drain_deadline = 0;
+    platform_reset(false);
 }
 
 CallResponse ChargePoint::handleAuthorizeResponse(int32_t connectorId, AuthorizeResponseView conf)
@@ -1124,7 +1181,7 @@ CallResponse ChargePoint::handleRequestStartTransaction(const char *uid, Request
     }
 
     auto &t = evses[evse_id - 1];
-    if (t.transaction_active || t.authorized || authorize_in_flight) {
+    if (t.transaction_active || t.authorized || authorize_in_flight || reset_pending) {
         connection.sendCallResponse(RequestStartTransactionResponse{uid, ResponseStatus::REJECTED});
         return CallResponse{CallErrorCode::OK, nullptr};
     }

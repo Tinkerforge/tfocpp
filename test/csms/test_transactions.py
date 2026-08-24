@@ -315,3 +315,63 @@ def test_transaction_event_call_error_retries(csms, hosts, rfid):
     payload, msg_id = csms.expect("TransactionEvent")
     assert payload["eventType"] == "Ended", payload
     csms.respond(msg_id, {})
+
+
+def test_reset_on_idle_waits_for_transaction(csms, hosts, rfid):
+    h = hosts.start(csms.url, "tfocpp-reset-onidle")
+    csms.wait_connected()
+    h.wait_for("Boot notification accepted", timeout=20)
+
+    h.send(f"tag {rfid}")
+    payload, msg_id = csms.expect("Authorize")
+    csms.respond(msg_id, {"idTokenInfo": {"status": "Accepted"}})
+    h.send("plug")
+    h.wait_for(STARTING)
+    payload, msg_id = csms.expect("TransactionEvent")
+    csms.respond(msg_id, {})
+
+    res = csms.call("Reset", {"type": "OnIdle"})
+    assert res["status"] == "Scheduled", res
+
+    # No new transactions while the reset is pending, but the running one
+    # continues until it is stopped locally.
+    time.sleep(1)
+    assert h.count("Resetting") == 0
+
+    h.send(f"tag {rfid}")
+    h.wait_for("Stopping transaction")
+    while True:
+        payload, msg_id = csms.expect("TransactionEvent")
+        csms.respond(msg_id, {})
+        if payload["eventType"] == "Ended":
+            break
+
+    h.wait_for("Resetting")
+    h.wait_for("Reset requested")
+
+
+def test_reset_immediate_drains_the_event_queue(csms, hosts, rfid):
+    h = hosts.start(csms.url, "tfocpp-reset-imm")
+    csms.wait_connected()
+    h.wait_for("Boot notification accepted", timeout=20)
+
+    h.send(f"tag {rfid}")
+    payload, msg_id = csms.expect("Authorize")
+    csms.respond(msg_id, {"idTokenInfo": {"status": "Accepted"}})
+    h.send("plug")
+    h.wait_for(STARTING)
+    payload, msg_id = csms.expect("TransactionEvent")
+    csms.respond(msg_id, {})
+
+    res = csms.call("Reset", {"type": "Immediate"})
+    assert res["status"] == "Accepted", res
+    h.wait_for("Stopping transaction")
+
+    # The reset happens after the Ended event was delivered.
+    while True:
+        payload, msg_id = csms.expect("TransactionEvent")
+        csms.respond(msg_id, {})
+        if payload["eventType"] == "Ended":
+            assert payload["transactionInfo"].get("stoppedReason") == "ImmediateReset", payload
+            break
+    h.wait_for("Resetting")
