@@ -24,6 +24,14 @@ VariableResult DeviceModel::getVariable(const char *component, const char *varia
             }
             return VariableResult::Accepted;
         }
+        if (strcmp(variable, "MessageAttempts") == 0) {
+            snprintf(buf, buf_len, "%d", message_attempts);
+            return VariableResult::Accepted;
+        }
+        if (strcmp(variable, "MessageAttemptInterval") == 0) {
+            snprintf(buf, buf_len, "%d", message_attempt_interval_s);
+            return VariableResult::Accepted;
+        }
         return VariableResult::UnknownVariable;
     }
 
@@ -143,6 +151,20 @@ VariableResult DeviceModel::setVariable(const char *component, const char *varia
             }
             network_priority = parsed.unwrap();
             network_priority_changed = true;
+            return VariableResult::Accepted;
+        }
+        if (strcmp(variable, "MessageAttempts") == 0) {
+            auto parsed = parse_int(value);
+            if (parsed.is_none() || parsed.unwrap() < 1)
+                return VariableResult::Rejected;
+            message_attempts = parsed.unwrap();
+            return VariableResult::Accepted;
+        }
+        if (strcmp(variable, "MessageAttemptInterval") == 0) {
+            auto parsed = parse_int(value);
+            if (parsed.is_none() || parsed.unwrap() < 0)
+                return VariableResult::Rejected;
+            message_attempt_interval_s = parsed.unwrap();
             return VariableResult::Accepted;
         }
         return VariableResult::UnknownVariable;

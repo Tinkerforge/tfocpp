@@ -6,8 +6,16 @@ import time
 import pytest
 
 from conftest import WS, DOCKER_OCPP, RFID_TOKENS
+from minicsms import MiniCsms
 
 STARTING = "Starting transaction ([0-9a-f-]+)"
+
+
+@pytest.fixture
+def csms():
+    c = MiniCsms()
+    yield c
+    c.stop()
 
 
 def start_station(api, stations, hosts):
@@ -268,3 +276,42 @@ def test_offline_transaction_continuation(api, stations, hosts, rfid):
               if entry["action"] == "TransactionEvent" and entry["direction"] == "inbound"
               and entry["messageType"] == 2 and entry["payload"].get("eventType") == "Ended"]
     assert frames and frames[0].get("offline") is True, f"expected offline Ended frame, got {frames}"
+
+
+def test_transaction_event_call_error_retries(csms, hosts, rfid):
+    h = hosts.start(csms.url, "tfocpp-txn-retry")
+    csms.wait_connected()
+    h.wait_for("Boot notification accepted", timeout=20)
+
+    res = csms.call("SetVariables", {"setVariableData": [{
+        "component": {"name": "OCPPCommCtrlr"},
+        "variable": {"name": "MessageAttemptInterval"},
+        "attributeValue": "1",
+    }]})
+    assert res["setVariableResult"][0]["attributeStatus"] == "Accepted"
+
+    h.send(f"tag {rfid}")
+    payload, msg_id = csms.expect("Authorize")
+    csms.respond(msg_id, {"idTokenInfo": {"status": "Accepted"}})
+    h.wait_for(f"Authorization of {rfid} accepted")
+    h.send("plug")
+    h.wait_for(STARTING)
+
+    # The Started event fails with a CallError MessageAttempts (3) times,
+    # retried with a growing backoff, then it is dropped.
+    for i in range(3):
+        payload, msg_id = csms.expect("TransactionEvent")
+        assert payload["eventType"] == "Started", payload
+        csms.respond_error(msg_id, "InternalError", "test induced failure")
+    h.wait_for("failed 3 of 3 times. Dropping")
+
+    # The queue continues with the next event.
+    payload, msg_id = csms.expect("TransactionEvent")
+    assert payload["eventType"] == "Updated", payload
+    csms.respond(msg_id, {})
+
+    h.send(f"tag {rfid}")
+    h.wait_for("Stopping transaction")
+    payload, msg_id = csms.expect("TransactionEvent")
+    assert payload["eventType"] == "Ended", payload
+    csms.respond(msg_id, {})

@@ -62,6 +62,7 @@ public:
     bool in_flight_is_transaction = false;
     uint32_t message_timeout_deadline = 0;
     uint32_t transaction_retry_deadline = 0;
+    uint32_t transaction_message_attempts = 0;
 
     time_t connection_state_change_time = 0;
     uint32_t next_ping_deadline = 0;

@@ -13,7 +13,6 @@
 #define OCPP21_MESSAGE_TIMEOUT_S 30
 #define OCPP21_WS_PING_INTERVAL_S 10
 #define OCPP21_RECONNECT_INTERVAL_S 10
-#define OCPP21_TRANSACTION_RETRY_INTERVAL_S 10
 // TODO: make the depth configurable and persist the queue across reboots.
 #define OCPP21_TRANSACTION_QUEUE_DEPTH 32
 
@@ -136,6 +135,7 @@ void Connection::handleMessage(char *message, size_t message_len)
         message_in_flight = QueueItem{};
         in_flight_is_transaction = false;
         message_timeout_deadline = 0;
+        transaction_message_attempts = 0;
 
         CallResponse res = callResultHandler(0, result_to, doc[2].as<JsonObject>(), cp);
         (void)res;
@@ -153,6 +153,28 @@ void Connection::handleMessage(char *message, size_t message_len)
              uid,
              doc[2].is<const char *>() ? doc[2].as<const char *>() : "?",
              doc[3].is<const char *>() ? doc[3].as<const char *>() : "?");
+
+    if (in_flight_is_transaction) {
+        ++transaction_message_attempts;
+        if (transaction_message_attempts >= (uint32_t)cp->device_model.message_attempts) {
+            log_warn("%s (id %" PRIu64 ") failed %u of %d times. Dropping",
+                     CallActionStrings[(size_t)message_in_flight.action], message_in_flight.message_id,
+                     transaction_message_attempts, cp->device_model.message_attempts);
+            transaction_message_attempts = 0;
+            cp->onCallError(message_in_flight.action, message_in_flight.message_id);
+        } else {
+            uint32_t backoff_s = transaction_message_attempts * (uint32_t)cp->device_model.message_attempt_interval_s;
+            log_warn("%s (id %" PRIu64 ") failed %u of %d times. Retrying in %u s",
+                     CallActionStrings[(size_t)message_in_flight.action], message_in_flight.message_id,
+                     transaction_message_attempts, cp->device_model.message_attempts, backoff_s);
+            transaction_retry_deadline = set_deadline(backoff_s * 1000);
+            transaction_messages.push_front(std::move(message_in_flight));
+        }
+        message_in_flight = QueueItem{};
+        in_flight_is_transaction = false;
+        message_timeout_deadline = 0;
+        return;
+    }
 
     cp->onCallError(message_in_flight.action, message_in_flight.message_id);
     message_in_flight = QueueItem{};
@@ -305,9 +327,9 @@ void Connection::tick() {
             return;
 
         if (in_flight_is_transaction) {
-            log_info("%s (id %" PRIu64 ") timed out. Retrying in %d s", CallActionStrings[(size_t)message_in_flight.action], message_in_flight.message_id, OCPP21_TRANSACTION_RETRY_INTERVAL_S);
+            log_info("%s (id %" PRIu64 ") timed out. Retrying in %d s", CallActionStrings[(size_t)message_in_flight.action], message_in_flight.message_id, cp->device_model.message_attempt_interval_s);
             transaction_messages.push_front(std::move(message_in_flight));
-            transaction_retry_deadline = set_deadline(OCPP21_TRANSACTION_RETRY_INTERVAL_S * 1000);
+            transaction_retry_deadline = set_deadline((uint32_t)cp->device_model.message_attempt_interval_s * 1000);
             in_flight_is_transaction = false;
         } else {
             log_info("%s (id %" PRIu64 ") timed out. Dropping", CallActionStrings[(size_t)message_in_flight.action], message_in_flight.message_id);

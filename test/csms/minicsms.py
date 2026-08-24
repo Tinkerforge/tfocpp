@@ -70,6 +70,9 @@ class MiniCsms:
     def respond(self, msg_id, payload):
         self.ws.send(json.dumps([3, msg_id, payload]))
 
+    def respond_error(self, msg_id, code, description=""):
+        self.ws.send(json.dumps([4, msg_id, code, description, {}]))
+
     def call(self, action, payload, timeout=10):
         msg_id = str(uuid.uuid4())
         self.ws.send(json.dumps([2, msg_id, action, payload]))

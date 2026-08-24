@@ -43,6 +43,9 @@ public:
     int32_t ev_connection_timeout_s = 60;
     int32_t tx_updated_interval_s = 60;
 
+    int32_t message_attempts = 3;
+    int32_t message_attempt_interval_s = 10;
+
     // SecurityCtrlr. The password is write only on the wire and validated
     // to 16 to 64 characters. identity is not owned, set by the charge
     // point to its name.
