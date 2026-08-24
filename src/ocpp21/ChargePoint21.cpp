@@ -112,6 +112,10 @@ bool ChargePoint::start(const char *websocket_endpoint_url, const char *charge_p
         return false;
     }
 
+    for (int32_t evse_id = 1; evse_id <= OCPP21_NUM_EVSES; ++evse_id) {
+        platform_set_charging_allowed21(connection.platform_ctx, evse_id, false);
+    }
+
     // M06: refresh the OCSP status of stored SECC chains after boot.
     for (auto &e : cert_store.all()) {
         if (e.group == CertGroup::V2GChain || e.group == CertGroup::V2G20Chain) {
