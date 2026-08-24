@@ -161,6 +161,7 @@ static Ocpp21::ChargePoint cp2;
 struct SimEvse {
     EvseState21 state = EvseState21::NotConnected;
     bool charging_allowed = false;
+    bool ev_suspended = false;
     double energy_wh = 0;
     uint32_t last_energy_update = 0;
 };
@@ -197,10 +198,18 @@ static void sim_update(SimEvse &e)
         e.energy_wh += SIM_CHARGE_POWER_W * (double)(now - e.last_energy_update) / 3600000.0;
     e.last_energy_update = now;
 
-    if (e.state == EvseState21::Connected && e.charging_allowed)
-        e.state = EvseState21::Charging;
-    if (e.state == EvseState21::Charging && !e.charging_allowed)
+    bool ev_connected = e.state == EvseState21::Connected
+                     || e.state == EvseState21::ReadyToCharge
+                     || e.state == EvseState21::Charging;
+    if (!ev_connected)
+        return;
+
+    if (!e.charging_allowed)
         e.state = EvseState21::Connected;
+    else if (e.ev_suspended)
+        e.state = EvseState21::ReadyToCharge;
+    else
+        e.state = EvseState21::Charging;
 }
 
 EvseState21 platform_get_evse_state21(void *ctx, int32_t evse_id)
@@ -235,19 +244,35 @@ float platform_get_energy_wh21(void *ctx, int32_t evse_id)
     return (float)e.energy_wh;
 }
 
-// Commands: plug, unplug, tag <id>, fault, ok, secevent <type>
+// Commands: plug, unplug, detect, suspend, resume, tag <id>, fault, ok, secevent <type>
 static void sim_handle_command(char *line)
 {
     auto &e = sim_evses[0];
     sim_update(e);
 
     if (strcmp(line, "plug") == 0) {
-        if (e.state == EvseState21::NotConnected)
-            e.state = e.charging_allowed ? EvseState21::Charging : EvseState21::Connected;
-        printf("[SIM  ] cable plugged\n");
+        if (e.state == EvseState21::NotConnected || e.state == EvseState21::PlugDetected) {
+            e.state = EvseState21::Connected;
+            e.ev_suspended = false;
+            sim_update(e);
+        }
+        printf("[SIM  ] EV connected\n");
+    } else if (strcmp(line, "detect") == 0) {
+        // Cable plugged into the EVSE without an EV, or the EV side was
+        // pulled while the plug stays in the socket.
+        e.state = EvseState21::PlugDetected;
+        printf("[SIM  ] plug detected, no EV\n");
     } else if (strcmp(line, "unplug") == 0) {
         e.state = EvseState21::NotConnected;
         printf("[SIM  ] cable unplugged\n");
+    } else if (strcmp(line, "suspend") == 0) {
+        e.ev_suspended = true;
+        sim_update(e);
+        printf("[SIM  ] EV suspended charging\n");
+    } else if (strcmp(line, "resume") == 0) {
+        e.ev_suspended = false;
+        sim_update(e);
+        printf("[SIM  ] EV resumed charging\n");
     } else if (strncmp(line, "tag ", 4) == 0) {
         printf("[SIM  ] tag %s seen\n", line + 4);
         for (auto &entry : tag_seen_cbs) {
@@ -278,7 +303,7 @@ static void sim_handle_command(char *line)
         e.state = EvseState21::NotConnected;
         printf("[SIM  ] EVSE fault cleared\n");
     } else if (line[0] != '\0') {
-        printf("[SIM  ] unknown command %s (plug, unplug, tag <id>, fault, ok, secevent <type>, m07)\n", line);
+        printf("[SIM  ] unknown command %s (plug, unplug, detect, suspend, resume, tag <id>, fault, ok, secevent <type>, m07)\n", line);
     }
 }
 
@@ -306,7 +331,7 @@ int main(int argc, char **argv)
         fprintf(stderr, "Usage: %s <websocket-endpoint-url> <charge-point-name> [basic-auth-pass] [--ca file] [--cert file] [--key file] [--name2 name] [--pass2 pass]\n", argv[0]);
         fprintf(stderr, "wss:// URLs require --ca (security profile 2), --cert and --key add mTLS (security profile 3).\n");
         fprintf(stderr, "--name2 starts a second, parallel client on the same endpoint.\n");
-        fprintf(stderr, "EVSE simulation via stdin: plug, unplug, tag <id>, fault, ok, secevent <type>\n");
+        fprintf(stderr, "EVSE simulation via stdin: plug, unplug, detect, suspend, resume, tag <id>, fault, ok, secevent <type>\n");
         return 1;
     }
 

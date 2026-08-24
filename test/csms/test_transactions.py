@@ -88,6 +88,42 @@ def test_ev_connection_timeout(api, stations, hosts, rfid):
     h.wait_for("EV connection timeout", timeout=15)
 
 
+def test_suspended_charging_states(api, stations, hosts, rfid):
+    name, db_id, h = start_station(api, stations, hosts)
+
+    h.send(f"tag {rfid}")
+    h.wait_for(f"Authorization of {rfid} accepted")
+    h.send("plug")
+    transaction_id = h.wait_for(STARTING).group(1)
+
+    time.sleep(1)
+    h.send("suspend")
+    time.sleep(1)
+    h.send("resume")
+    time.sleep(1)
+
+    h.send(f"tag {rfid}")
+    h.wait_for("Stopping transaction")
+    h.send("unplug")
+
+    api.wait_for_ended_session(db_id, transaction_id)
+
+    frames = [entry["payload"] for entry in api.ocpp_logs(db_id, limit=100)
+              if entry["action"] == "TransactionEvent" and entry["direction"] == "inbound"
+              and entry["messageType"] == 2
+              and entry["payload"].get("transactionInfo", {}).get("transactionId") == transaction_id]
+    frames.sort(key=lambda f: f["seqNo"])
+    states = [f["transactionInfo"].get("chargingState") for f in frames]
+
+    # Started leaves before the power path is closed, then the EV charges,
+    # suspends on its own and resumes.
+    assert states[0] == "SuspendedEVSE", states
+    assert "SuspendedEV" in states, states
+    i = states.index("SuspendedEV")
+    assert "Charging" in states[:i], states
+    assert "Charging" in states[i + 1:], states
+
+
 @pytest.mark.docker
 def test_offline_transaction_continuation(api, stations, hosts, rfid):
     name, db_id, h = start_station(api, stations, hosts)

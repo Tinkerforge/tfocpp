@@ -10,9 +10,11 @@
 #include <time.h>
 
 enum class EvseState21 : uint8_t {
-    NotConnected, // no cable plugged
-    Connected,    // cable plugged, no energy flow
-    Charging,     // energy flows
+    NotConnected,  // no cable plugged
+    PlugDetected,  // cable plugged into the EVSE, no EV connected
+    Connected,     // EV connected, energy flow not released by the EVSE
+    ReadyToCharge, // energy flow released, EV does not draw energy
+    Charging,      // energy flows
     Faulted,
 };
 

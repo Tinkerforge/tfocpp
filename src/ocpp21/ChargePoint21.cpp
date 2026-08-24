@@ -360,6 +360,20 @@ static StatusNotificationConnectorStatus connector_status(EvseState21 s, const E
     return StatusNotificationConnectorStatus::AVAILABLE;
 }
 
+static bool evse_plugged(EvseState21 s)
+{
+    return s == EvseState21::Connected || s == EvseState21::ReadyToCharge || s == EvseState21::Charging;
+}
+
+static TransactionEventTransactionInfoChargingState charging_state_for(EvseState21 s)
+{
+    switch (s) {
+        case EvseState21::Charging:      return TransactionEventTransactionInfoChargingState::CHARGING;
+        case EvseState21::ReadyToCharge: return TransactionEventTransactionInfoChargingState::SUSPENDED_EV;
+        default:                         return TransactionEventTransactionInfoChargingState::SUSPENDED_EVSE;
+    }
+}
+
 void ChargePoint::sendStatusNotifications()
 {
     for (int32_t evse_id = 1; evse_id <= OCPP21_NUM_EVSES; ++evse_id) {
@@ -379,7 +393,7 @@ void ChargePoint::tickEvses()
     for (int32_t evse_id = 1; evse_id <= OCPP21_NUM_EVSES; ++evse_id) {
         auto &t = evses[evse_id - 1];
         EvseState21 s = platform_get_evse_state21(connection.platform_ctx, evse_id);
-        bool plugged = s == EvseState21::Connected || s == EvseState21::Charging;
+        bool plugged = evse_plugged(s);
 
         if (tag_pending && (tag_evse_id == 0 || tag_evse_id == evse_id)) {
             tag_pending = false;
@@ -427,12 +441,13 @@ void ChargePoint::tickEvses()
             startTransaction(evse_id, t.start_trigger);
 
         if (t.transaction_active) {
-            if (s == EvseState21::NotConnected) {
-                // TxCtrlr.StopTxOnEVSideDisconnect is fixed to true.
+            if (s == EvseState21::NotConnected || s == EvseState21::PlugDetected) {
+                // TxCtrlr.StopTxOnEVSideDisconnect is fixed to true. A
+                // remaining plug (PlugDetected) is an EV side disconnect
+                // like in 1.6.
                 stopTransaction(evse_id, TransactionEventTriggerReason::EV_COMMUNICATION_LOST, TransactionEventTransactionInfoStoppedReason::EV_DISCONNECTED, false);
-            } else {
-                auto cs = s == EvseState21::Charging ? TransactionEventTransactionInfoChargingState::CHARGING
-                                                     : TransactionEventTransactionInfoChargingState::EV_CONNECTED;
+            } else if (s != EvseState21::Faulted) {
+                auto cs = charging_state_for(s);
                 if (cs != t.charging_state) {
                     t.charging_state = cs;
                     sendTransactionUpdated(evse_id, TransactionEventTriggerReason::CHARGING_STATE_CHANGED, false);
@@ -469,7 +484,7 @@ void ChargePoint::startTransaction(int32_t evse_id, TransactionEventTriggerReaso
     generate_transaction_id(t.transaction_id);
     t.transaction_active = true;
     t.seq_no = 0;
-    t.charging_state = TransactionEventTransactionInfoChargingState::EV_CONNECTED;
+    t.charging_state = charging_state_for(platform_get_evse_state21(connection.platform_ctx, evse_id));
 
     log_info("Starting transaction %s on EVSE %d", t.transaction_id, evse_id);
 
@@ -920,7 +935,7 @@ CallResponse ChargePoint::handleAuthorizeResponse(int32_t connectorId, Authorize
     t.remote_start = false;
 
     auto s = platform_get_evse_state21(connection.platform_ctx, authorize_evse_id);
-    bool plugged = s == EvseState21::Connected || s == EvseState21::Charging;
+    bool plugged = evse_plugged(s);
     // If the cable is already plugged the authorization completes the start
     // condition. Otherwise the plug event will.
     t.start_trigger = plugged ? TransactionEventTriggerReason::AUTHORIZED
