@@ -23,6 +23,19 @@ void platform_register_tag_seen_callback21(void *ctx, void (*cb)(int32_t evse_id
 
 EvseState21 platform_get_evse_state21(void *ctx, int32_t evse_id);
 
+enum class TagRejectionType21 : uint8_t {
+    Blocked,
+    Expired,
+    Invalid,
+    ConcurrentTx,
+};
+
+void platform_tag_expected21(void *ctx, int32_t evse_id);
+void platform_clear_tag_expected21(void *ctx, int32_t evse_id);
+void platform_tag_accepted21(void *ctx, int32_t evse_id, const char *tag);
+void platform_tag_rejected21(void *ctx, int32_t evse_id, const char *tag, TagRejectionType21 trt);
+void platform_tag_timed_out21(void *ctx, int32_t evse_id);
+
 // Close (true) or open (false) the power path of the EVSE.
 void platform_set_charging_allowed21(void *ctx, int32_t evse_id, bool allowed);
 

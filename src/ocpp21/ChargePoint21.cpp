@@ -314,6 +314,8 @@ void ChargePoint::onTimeout(CallAction action, uint64_t messageId)
     if (action == CallAction::AUTHORIZE) {
         log_info("Authorize timed out");
         authorize_in_flight = false;
+        if (authorize_evse_id >= 1 && authorize_evse_id <= OCPP21_NUM_EVSES)
+            platform_tag_rejected21(connection.platform_ctx, authorize_evse_id, authorize_token, TagRejectionType21::Invalid);
     }
     if (action == CallAction::GET_CERTIFICATE_STATUS && ocsp_in_flight_idx >= 0) {
         auto &slot = ocsp_cache[ocsp_in_flight_idx];
@@ -374,6 +376,16 @@ static TransactionEventTransactionInfoChargingState charging_state_for(EvseState
     }
 }
 
+static TagRejectionType21 rejection_type(ResponseIdTokenInfoEntriesStatus status)
+{
+    switch (status) {
+        case ResponseIdTokenInfoEntriesStatus::BLOCKED:       return TagRejectionType21::Blocked;
+        case ResponseIdTokenInfoEntriesStatus::EXPIRED:       return TagRejectionType21::Expired;
+        case ResponseIdTokenInfoEntriesStatus::CONCURRENT_TX: return TagRejectionType21::ConcurrentTx;
+        default:                                              return TagRejectionType21::Invalid;
+    }
+}
+
 void ChargePoint::sendStatusNotifications()
 {
     for (int32_t evse_id = 1; evse_id <= OCPP21_NUM_EVSES; ++evse_id) {
@@ -398,13 +410,16 @@ void ChargePoint::tickEvses()
         if (tag_pending && (tag_evse_id == 0 || tag_evse_id == evse_id)) {
             tag_pending = false;
             if (t.transaction_active) {
-                if (strcmp(pending_tag, t.id_token) == 0)
+                if (strcmp(pending_tag, t.id_token) == 0) {
+                    platform_tag_accepted21(connection.platform_ctx, evse_id, pending_tag);
                     stopTransaction(evse_id, TransactionEventTriggerReason::STOP_AUTHORIZED, TransactionEventTransactionInfoStoppedReason::LOCAL, true);
-                else
+                } else {
                     log_info("Tag %s does not match the token of the running transaction. Ignored", pending_tag);
+                }
             } else if (t.authorized) {
                 if (strcmp(pending_tag, t.id_token) == 0) {
                     log_info("Tag %s seen again before the EV was connected. Canceling the authorization", pending_tag);
+                    platform_tag_accepted21(connection.platform_ctx, evse_id, pending_tag);
                     t.authorized = false;
                     t.remote_start = false;
                 } else {
@@ -413,8 +428,8 @@ void ChargePoint::tickEvses()
             } else if (!authorize_in_flight) {
                 if (!platform_ws_connected(connection.platform_ctx)) {
                     // TODO: offline authorization (local auth list or cache)
-                    // is a later work package.
                     log_info("Tag %s seen while offline. Ignored", pending_tag);
+                    platform_tag_timed_out21(connection.platform_ctx, evse_id);
                 } else {
                     authorize_in_flight = true;
                     authorize_evse_id = evse_id;
@@ -918,15 +933,18 @@ CallResponse ChargePoint::handleAuthorizeResponse(int32_t connectorId, Authorize
 
     if (status != ResponseIdTokenInfoEntriesStatus::ACCEPTED) {
         log_info("Authorization of %s rejected (%s)", authorize_token, ResponseIdTokenInfoEntriesStatusStrings[(size_t)status]);
+        platform_tag_rejected21(connection.platform_ctx, authorize_evse_id, authorize_token, rejection_type(status));
         return CallResponse{CallErrorCode::OK, nullptr};
     }
 
     if (t.transaction_active || t.authorized) {
         log_info("Authorization of %s accepted, but the EVSE is no longer free. Ignored", authorize_token);
+        platform_tag_rejected21(connection.platform_ctx, authorize_evse_id, authorize_token, TagRejectionType21::ConcurrentTx);
         return CallResponse{CallErrorCode::OK, nullptr};
     }
 
     log_info("Authorization of %s accepted", authorize_token);
+    platform_tag_accepted21(connection.platform_ctx, authorize_evse_id, authorize_token);
 
     memcpy(t.id_token, authorize_token, sizeof(t.id_token));
     strncpy(t.id_token_type, "ISO14443", OCPP21_ID_TOKEN_TYPE_LEN);

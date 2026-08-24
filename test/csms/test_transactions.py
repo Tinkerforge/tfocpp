@@ -124,6 +124,27 @@ def test_suspended_charging_states(api, stations, hosts, rfid):
     assert "Charging" in states[i + 1:], states
 
 
+def test_tag_feedback(api, stations, hosts, rfid):
+    name, db_id, h = start_station(api, stations, hosts)
+
+    # Unknown token: the CSMS rejects, the platform gets the feedback.
+    h.send("tag NOT-A-KNOWN-TOKEN")
+    h.wait_for("EVSE 1 tag NOT-A-KNOWN-TOKEN rejected")
+
+    h.send(f"tag {rfid}")
+    h.wait_for(f"EVSE 1 tag {rfid} accepted")
+    h.send("plug")
+    transaction_id = h.wait_for(STARTING).group(1)
+
+    # The same tag stops the transaction and is acknowledged again.
+    h.send(f"tag {rfid}")
+    h.wait_for(f"EVSE 1 tag {rfid} accepted", min_count=2)
+    h.wait_for("Stopping transaction")
+    h.send("unplug")
+
+    api.wait_for_ended_session(db_id, transaction_id)
+
+
 @pytest.mark.docker
 def test_offline_transaction_continuation(api, stations, hosts, rfid):
     name, db_id, h = start_station(api, stations, hosts)

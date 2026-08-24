@@ -244,6 +244,38 @@ float platform_get_energy_wh21(void *ctx, int32_t evse_id)
     return (float)e.energy_wh;
 }
 
+static const char * const tag_rejection_strings[] = {"Blocked", "Expired", "Invalid", "ConcurrentTx"};
+
+void platform_tag_expected21(void *ctx, int32_t evse_id)
+{
+    (void)ctx;
+    printf("[SIM  ] EVSE %d expects a tag\n", evse_id);
+}
+
+void platform_clear_tag_expected21(void *ctx, int32_t evse_id)
+{
+    (void)ctx;
+    printf("[SIM  ] EVSE %d no longer expects a tag\n", evse_id);
+}
+
+void platform_tag_accepted21(void *ctx, int32_t evse_id, const char *tag)
+{
+    (void)ctx;
+    printf("[SIM  ] EVSE %d tag %s accepted\n", evse_id, tag);
+}
+
+void platform_tag_rejected21(void *ctx, int32_t evse_id, const char *tag, TagRejectionType21 trt)
+{
+    (void)ctx;
+    printf("[SIM  ] EVSE %d tag %s rejected (%s)\n", evse_id, tag, tag_rejection_strings[(size_t)trt]);
+}
+
+void platform_tag_timed_out21(void *ctx, int32_t evse_id)
+{
+    (void)ctx;
+    printf("[SIM  ] EVSE %d tag timed out\n", evse_id);
+}
+
 // Commands: plug, unplug, detect, suspend, resume, tag <id>, fault, ok, secevent <type>
 static void sim_handle_command(char *line)
 {
