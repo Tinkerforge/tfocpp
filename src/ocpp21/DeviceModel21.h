@@ -14,6 +14,12 @@ namespace Ocpp21 {
 #define OCPP21_ORGANIZATION_NAME_MAX_LEN 64
 #define OCPP21_SECC_ID_MAX_LEN 64
 #define OCPP21_COUNTRY_NAME_LEN 2
+#define OCPP21_ISO15118_EVSE_ID_MIN_LEN 7
+#define OCPP21_ISO15118_EVSE_ID_MAX_LEN 37
+
+// ProtocolSupported instances ("<uri>,<major>,<minor>" per protocol).
+#define OCPP21_SUPPORTED_PROTOCOLS 4
+#define OCPP21_SUPPORTED_PROTOCOL_MAX_LEN 80
 
 #define OCPP21_NETWORK_PROFILE_SLOTS 4
 #define OCPP21_NETWORK_PROFILE_URL_MAX_LEN 128
@@ -103,6 +109,17 @@ public:
     // V2G20SECCLeafCryptoSuite: ecdsa_secp521r1_sha512 (default) or ed448.
     bool v2g20_use_ed448 = false;
 
+    // ISO15118Ctrlr, read by the ISO 15118 stack.
+    bool iso15118_enabled = true;
+    bool v2g_cert_install_enabled = true;
+    bool contract_cert_install_enabled = true;
+    char iso15118_evse_id[OCPP21_ISO15118_EVSE_ID_MAX_LEN + 1] = "ZZ00000";
+    bool enforce_tls_enabled = false;
+    bool private_environment_enabled = false;
+    int32_t pwm_charging_fallback_timeout_s = 7;
+
+    char protocol_supported[OCPP21_SUPPORTED_PROTOCOLS][OCPP21_SUPPORTED_PROTOCOL_MAX_LEN + 1] = {};
+
     // OCPPCommCtrlr, A05. network_priority selects the active slot, 0 means the configured default endpoint.
     NetworkProfileSlot network_profiles[OCPP21_NETWORK_PROFILE_SLOTS];
     int32_t network_priority = 0;
@@ -116,6 +133,11 @@ public:
 
     static size_t variableCount();
     static const VariableDesc &variableDesc(size_t idx);
+
+    // False for variables that are currently absent, e.g. unset
+    // ProtocolSupported instances. Absent variables are skipped in
+    // B07/B08 reports and answered UnknownVariable.
+    bool variablePresent(size_t idx) const;
 
     // On success writes the value as string into buf. WriteOnly variables
     // are Rejected (B06.FR.09), use variableDesc for reporting.

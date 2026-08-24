@@ -121,6 +121,16 @@ const CertEntry *CertStore::findById(uint32_t id) const
     return nullptr;
 }
 
+const CertEntry *CertStore::findSeccChainById(uint32_t id) const
+{
+    for (auto &e : entries) {
+        if (e.id == id && (e.group == CertGroup::V2GChain || e.group == CertGroup::V2G20Chain)) {
+            return &e;
+        }
+    }
+    return nullptr;
+}
+
 std::string CertStore::pemPath(CertGroup group, uint32_t id) const
 {
     char name[48];
@@ -292,7 +302,7 @@ bool CertStore::installChain(CertGroup group, uint32_t id, const char *pem, cons
          && (!e.has_anchor || strcmp(e.anchor_root.issuer_key_hash, anchor_root.issuer_key_hash) != 0)) {
             continue;
         }
-        removeChain(e.id);
+        removeChain(e.group, e.id);
     }
 
     std::string path = pemPath(group, id);
@@ -307,17 +317,25 @@ bool CertStore::installChain(CertGroup group, uint32_t id, const char *pem, cons
     return true;
 }
 
-void CertStore::removeChain(uint32_t id)
+void CertStore::removeChain(CertGroup group, uint32_t id)
 {
     for (size_t i = 0; i < entries.size(); ++i) {
-        if (entries[i].id != id || !is_chain_group(entries[i].group)) {
+        if (entries[i].id != id || entries[i].group != group || !is_chain_group(entries[i].group)) {
             continue;
         }
-        platform_remove_file(pemPath(entries[i].group, id).c_str());
-        platform_remove_file(keyPath(id).c_str());
+        platform_remove_file(pemPath(group, id).c_str());
         entries.erase(entries.begin() + i);
-        return;
+        break;
     }
+
+    // A combined certificate chain is installed under two groups sharing
+    // one key file.
+    for (auto &e : entries) {
+        if (e.id == id && is_chain_group(e.group)) {
+            return;
+        }
+    }
+    platform_remove_file(keyPath(id).c_str());
 }
 
 CertDeleteResult CertStore::deleteByHash(const char *issuer_name_hash, const char *issuer_key_hash, const char *serial_number)
@@ -342,7 +360,7 @@ CertDeleteResult CertStore::deleteByHash(const char *issuer_name_hash, const cha
         }
 
         if (is_chain_group(e.group)) {
-            removeChain(e.id);
+            removeChain(e.group, e.id);
         } else {
             platform_remove_file(pemPath(e.group, e.id).c_str());
             entries.erase(entries.begin() + (i - 1));

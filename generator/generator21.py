@@ -112,7 +112,14 @@ reports_profile = [[ #send
         schema21.GetReportRequest.GetReportRequest,
 ]]
 
-supported_profiles = [provisioning_profile, transactions_profile, security_profile, certificates_profile, network_profile, reports_profile]# All OCPP 2.1 actions, derived from the schema file names.
+# Messages for the ISO 15118 integration (M01/M02 EV contract certificates).
+iso15118_profile = [[ #send
+        schema21.Get15118EVCertificateRequest.Get15118EVCertificateRequest,
+    ], [ #recv
+        schema21.Get15118EVCertificateResponse.Get15118EVCertificateResponse,
+]]
+
+supported_profiles = [provisioning_profile, transactions_profile, security_profile, certificates_profile, network_profile, reports_profile, iso15118_profile]# All OCPP 2.1 actions, derived from the schema file names.
 # Used to generate the full CallAction enum so that known but
 # unsupported actions are answered with NotSupported instead of
 # NotImplemented.
@@ -867,7 +874,8 @@ size_t {action}::serializeJson(char *buf, size_t buf_len) const {{
         result="RESULT" if is_response else "",
         call_id="call_id" if is_response else "next_call_id++",
         add_id = "json.addString(this->ocppJcallId);" if is_response else "json.addNumber(this->ocppJmessageId, true);",
-        add_action ="" if is_response else "json.addString(CallActionStrings[(size_t)this->action]);",
+        # ICall:: because a message field named action (Get15118EVCertificate) shadows the base member.
+        add_action ="" if is_response else "json.addString(CallActionStrings[(size_t)ICall::action]);",
         param_count=len(props(obj)),
         param_sizes="\n".join(param_sizes),
         param_insertions="\n            ".join(param_insertions))
@@ -1047,6 +1055,19 @@ if __name__ == "__main__":
             break
         else:
             enums_required.append([l_name, l_entries, l_add_none, [l_name]])
+
+    # Different entry sets can merge to the same common suffix. The
+    # largest group keeps it, the others fall back to their first
+    # member's name.
+    by_name = {}
+    for tup in enums_required:
+        by_name.setdefault(tup[0], []).append(tup)
+    for name, group in by_name.items():
+        if len(group) < 2:
+            continue
+        group.sort(key=lambda t: len(t[3]), reverse=True)
+        for tup in group[1:]:
+            tup[0] = tup[3][0]
 
 
     for name, entries, add_none, replacements in enums_required:

@@ -148,6 +148,27 @@ def test_m07_vehicle_chain_status(csms, host):
     host.wait_for("Vehicle chain certificate 1234: OCSP status Good", timeout=10)
 
 
+def test_m07_vehicle_chain_order(csms, host):
+    # HUB20-432-006: the hash data is sent leaf first (Leaf, Sub2, Sub1)
+    # and the cache matches response entries by hash, not position.
+    host.send("m07 3")
+    status_req, msg_id = csms.expect("GetCertificateChainStatus")
+    requests = status_req["certificateStatusRequests"]
+    assert [r["certificateHashData"]["serialNumber"] for r in requests] == ["1234", "5678", "9abc"]
+
+    statuses = ["Good", "Good", "Revoked"]
+    csms.respond(msg_id, {"certificateStatus": [{
+        "certificateHashData": r["certificateHashData"],
+        "source": "OCSP",
+        "status": s,
+        "nextUpdate": "2027-01-01T00:00:00Z",
+    } for r, s in zip(reversed(requests), reversed(statuses))]})
+
+    host.wait_for("Vehicle chain certificate 1234: OCSP status Good", timeout=10)
+    host.wait_for("Vehicle chain certificate 5678: OCSP status Good", timeout=10)
+    host.wait_for("Vehicle chain certificate 9abc: OCSP status Revoked", timeout=10)
+
+
 def sign_charging_station_certificate(csms, host, ca):
     assert csms.call("InstallCertificate", {
         "certificateType": "CSMSRootCertificate",

@@ -125,8 +125,13 @@ def test_get_report_component_filter(csms, host):
     assert resp["status"] == "Accepted"
 
     entries = collect_report(csms, 20)
-    assert len(entries) == 4
     assert all(e["component"]["name"] == "ISO15118Ctrlr" for e in entries)
+    names = {e["variable"]["name"] for e in entries}
+    assert {"SeccId", "CountryName", "OrganizationName", "V2G20SECCLeafCryptoSuite",
+            "Enabled", "V2GCertificateInstallationEnabled",
+            "ContractCertificateInstallationEnabled", "ISO15118EvseId",
+            "EnforceTlsEnabled", "PrivateEnviromentEnabled",
+            "PWMChargingFallbackTimeout", "ProtocolSupported"} == names
 
 
 def test_get_report_variable_filter(csms, host):

@@ -39,6 +39,15 @@ enum VarId : size_t {
     VAR_COUNTRY_NAME,
     VAR_ISO_ORGANIZATION_NAME,
     VAR_V2G20_SECC_LEAF_CRYPTO_SUITE,
+    VAR_ISO15118_ENABLED,
+    VAR_V2G_CERT_INSTALL_ENABLED,
+    VAR_CONTRACT_CERT_INSTALL_ENABLED,
+    VAR_ISO15118_EVSE_ID,
+    VAR_ENFORCE_TLS_ENABLED,
+    VAR_PRIVATE_ENVIRONMENT_ENABLED,
+    VAR_PWM_CHARGING_FALLBACK_TIMEOUT,
+    VAR_PROTOCOL_SUPPORTED_FIRST,
+    VAR_PROTOCOL_SUPPORTED_LAST = VAR_PROTOCOL_SUPPORTED_FIRST + OCPP21_SUPPORTED_PROTOCOLS - 1,
     VAR_COUNT
 };
 
@@ -77,7 +86,20 @@ static const VariableDesc variable_descs[VAR_COUNT] = {
     {"ISO15118Ctrlr", "CountryName",                  nullptr,            VariableDataType::String,       VariableMutability::ReadWrite, true,  false, OCPP21_COUNTRY_NAME_LEN, nullptr, nullptr},
     {"ISO15118Ctrlr", "OrganizationName",             nullptr,            VariableDataType::String,       VariableMutability::ReadWrite, true,  false, OCPP21_ORGANIZATION_NAME_MAX_LEN, nullptr, nullptr},
     {"ISO15118Ctrlr", "V2G20SECCLeafCryptoSuite",     nullptr,            VariableDataType::OptionList,   VariableMutability::ReadWrite, true,  false, -1,    "ecdsa_secp521r1_sha512,ed448", nullptr},
+    {"ISO15118Ctrlr", "Enabled",                      nullptr,            VariableDataType::Boolean,      VariableMutability::ReadWrite, true,  false, -1,    nullptr, nullptr},
+    {"ISO15118Ctrlr", "V2GCertificateInstallationEnabled", nullptr,       VariableDataType::Boolean,      VariableMutability::ReadWrite, true,  false, -1,    nullptr, nullptr},
+    {"ISO15118Ctrlr", "ContractCertificateInstallationEnabled", nullptr,  VariableDataType::Boolean,      VariableMutability::ReadWrite, true,  false, -1,    nullptr, nullptr},
+    {"ISO15118Ctrlr", "ISO15118EvseId",               nullptr,            VariableDataType::String,       VariableMutability::ReadWrite, true,  false, OCPP21_ISO15118_EVSE_ID_MAX_LEN, nullptr, nullptr},
+    {"ISO15118Ctrlr", "EnforceTlsEnabled",            nullptr,            VariableDataType::Boolean,      VariableMutability::ReadWrite, true,  false, -1,    nullptr, nullptr},
+    {"ISO15118Ctrlr", "PrivateEnviromentEnabled",     nullptr,            VariableDataType::Boolean,      VariableMutability::ReadWrite, true,  false, -1,    nullptr, nullptr},
+    {"ISO15118Ctrlr", "PWMChargingFallbackTimeout",   nullptr,            VariableDataType::Integer,      VariableMutability::ReadWrite, true,  false, -1,    nullptr, "s"},
+    {"ISO15118Ctrlr", "ProtocolSupported",            "1",                VariableDataType::String,       VariableMutability::ReadOnly,  false, false, -1,    nullptr, nullptr},
+    {"ISO15118Ctrlr", "ProtocolSupported",            "2",                VariableDataType::String,       VariableMutability::ReadOnly,  false, false, -1,    nullptr, nullptr},
+    {"ISO15118Ctrlr", "ProtocolSupported",            "3",                VariableDataType::String,       VariableMutability::ReadOnly,  false, false, -1,    nullptr, nullptr},
+    {"ISO15118Ctrlr", "ProtocolSupported",            "4",                VariableDataType::String,       VariableMutability::ReadOnly,  false, false, -1,    nullptr, nullptr},
 };
+
+static_assert(VAR_PROTOCOL_SUPPORTED_LAST - VAR_PROTOCOL_SUPPORTED_FIRST + 1 == OCPP21_SUPPORTED_PROTOCOLS, "descriptor table out of sync");
 
 size_t DeviceModel::variableCount()
 {
@@ -87,6 +109,13 @@ size_t DeviceModel::variableCount()
 const VariableDesc &DeviceModel::variableDesc(size_t idx)
 {
     return variable_descs[idx];
+}
+
+bool DeviceModel::variablePresent(size_t idx) const
+{
+    if (idx >= VAR_PROTOCOL_SUPPORTED_FIRST && idx <= VAR_PROTOCOL_SUPPORTED_LAST)
+        return protocol_supported[idx - VAR_PROTOCOL_SUPPORTED_FIRST][0] != '\0';
+    return true;
 }
 
 // Component and variable names are case insensitive on the wire. A
@@ -200,6 +229,34 @@ VariableResult DeviceModel::getVariableByIndex(size_t idx, char *buf, size_t buf
         case VAR_V2G20_SECC_LEAF_CRYPTO_SUITE:
             snprintf(buf, buf_len, "%s", v2g20_use_ed448 ? "ed448" : "ecdsa_secp521r1_sha512");
             return VariableResult::Accepted;
+        case VAR_ISO15118_ENABLED:
+            snprintf(buf, buf_len, "%s", iso15118_enabled ? "true" : "false");
+            return VariableResult::Accepted;
+        case VAR_V2G_CERT_INSTALL_ENABLED:
+            snprintf(buf, buf_len, "%s", v2g_cert_install_enabled ? "true" : "false");
+            return VariableResult::Accepted;
+        case VAR_CONTRACT_CERT_INSTALL_ENABLED:
+            snprintf(buf, buf_len, "%s", contract_cert_install_enabled ? "true" : "false");
+            return VariableResult::Accepted;
+        case VAR_ISO15118_EVSE_ID:
+            snprintf(buf, buf_len, "%s", iso15118_evse_id);
+            return VariableResult::Accepted;
+        case VAR_ENFORCE_TLS_ENABLED:
+            snprintf(buf, buf_len, "%s", enforce_tls_enabled ? "true" : "false");
+            return VariableResult::Accepted;
+        case VAR_PRIVATE_ENVIRONMENT_ENABLED:
+            snprintf(buf, buf_len, "%s", private_environment_enabled ? "true" : "false");
+            return VariableResult::Accepted;
+        case VAR_PWM_CHARGING_FALLBACK_TIMEOUT:
+            snprintf(buf, buf_len, "%d", pwm_charging_fallback_timeout_s);
+            return VariableResult::Accepted;
+    }
+    if (idx >= VAR_PROTOCOL_SUPPORTED_FIRST && idx <= VAR_PROTOCOL_SUPPORTED_LAST) {
+        const char *value = protocol_supported[idx - VAR_PROTOCOL_SUPPORTED_FIRST];
+        if (value[0] == '\0')
+            return VariableResult::UnknownVariable;
+        snprintf(buf, buf_len, "%s", value);
+        return VariableResult::Accepted;
     }
     return VariableResult::UnknownVariable;
 }
@@ -211,6 +268,19 @@ VariableResult DeviceModel::getVariable(const char *component, const char *varia
     if (found != VariableResult::Accepted)
         return found;
     return getVariableByIndex(idx, buf, buf_len);
+}
+
+static bool parse_bool(const char *value, bool *out)
+{
+    if (strcasecmp(value, "true") == 0) {
+        *out = true;
+        return true;
+    }
+    if (strcasecmp(value, "false") == 0) {
+        *out = false;
+        return true;
+    }
+    return false;
 }
 
 VariableResult DeviceModel::setVariable(const char *component, const char *variable, const char *instance, const char *value)
@@ -330,6 +400,52 @@ VariableResult DeviceModel::setVariable(const char *component, const char *varia
             } else {
                 return VariableResult::Rejected;
             }
+            iso15118_changed = true;
+            return VariableResult::Accepted;
+        }
+        case VAR_ISO15118_ENABLED: {
+            if (!parse_bool(value, &iso15118_enabled))
+                return VariableResult::Rejected;
+            iso15118_changed = true;
+            return VariableResult::Accepted;
+        }
+        case VAR_V2G_CERT_INSTALL_ENABLED: {
+            if (!parse_bool(value, &v2g_cert_install_enabled))
+                return VariableResult::Rejected;
+            iso15118_changed = true;
+            return VariableResult::Accepted;
+        }
+        case VAR_CONTRACT_CERT_INSTALL_ENABLED: {
+            if (!parse_bool(value, &contract_cert_install_enabled))
+                return VariableResult::Rejected;
+            iso15118_changed = true;
+            return VariableResult::Accepted;
+        }
+        case VAR_ISO15118_EVSE_ID: {
+            size_t len = strlen(value);
+            if (len < OCPP21_ISO15118_EVSE_ID_MIN_LEN || len > OCPP21_ISO15118_EVSE_ID_MAX_LEN)
+                return VariableResult::Rejected;
+            memcpy(iso15118_evse_id, value, len + 1);
+            iso15118_changed = true;
+            return VariableResult::Accepted;
+        }
+        case VAR_ENFORCE_TLS_ENABLED: {
+            if (!parse_bool(value, &enforce_tls_enabled))
+                return VariableResult::Rejected;
+            iso15118_changed = true;
+            return VariableResult::Accepted;
+        }
+        case VAR_PRIVATE_ENVIRONMENT_ENABLED: {
+            if (!parse_bool(value, &private_environment_enabled))
+                return VariableResult::Rejected;
+            iso15118_changed = true;
+            return VariableResult::Accepted;
+        }
+        case VAR_PWM_CHARGING_FALLBACK_TIMEOUT: {
+            auto parsed = parse_int(value);
+            if (parsed.is_none() || parsed.unwrap() <= 0)
+                return VariableResult::Rejected;
+            pwm_charging_fallback_timeout_s = parsed.unwrap();
             iso15118_changed = true;
             return VariableResult::Accepted;
         }

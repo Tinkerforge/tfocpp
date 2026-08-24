@@ -81,12 +81,13 @@ public:
     // same group anchored at the same root (HUB20-42-002, A02.FR.13).
     bool installChain(CertGroup group, uint32_t id, const char *pem, const OcppCertHashData21 &anchor_root);
     CertDeleteResult deleteByHash(const char *issuer_name_hash, const char *issuer_key_hash, const char *serial_number);
-    void removeChain(uint32_t id);
+    void removeChain(CertGroup group, uint32_t id);
 
     size_t count() const { return entries.size(); }
     const std::vector<CertEntry> &all() const { return entries; }
     const CertEntry *find(CertGroup group) const;
     const CertEntry *findById(uint32_t id) const;
+    const CertEntry *findSeccChainById(uint32_t id) const;
 
     uint32_t nextId() { return next_id++; }
 

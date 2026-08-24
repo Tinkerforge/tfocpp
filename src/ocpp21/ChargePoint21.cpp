@@ -231,6 +231,11 @@ void ChargePoint::onDisconnect()
     log_info("Disconnected");
     boot_notification_in_flight = false;
     abortReport();
+    if (ev_cert_in_flight) {
+        ev_cert_in_flight = false;
+        if (ev_cert_result_cb != nullptr)
+            ev_cert_result_cb(false, nullptr, 0, ev_cert_result_user_data);
+    }
 }
 
 void ChargePoint::onConnectionError(PlatformConnectionError error)
@@ -259,19 +264,19 @@ void ChargePoint::sendSecurityEventNotification(const char *type, const char *te
     connection.sendTransactionCallAction(SecurityEventNotification{type, platform_get_system_time(connection.platform_ctx), tech_info});
 }
 
-#define OCPP21_SECURITY_PERSISTENCE_BUF_LEN 512
+#define OCPP21_SECURITY_PERSISTENCE_BUF_LEN 1024
 
 void ChargePoint::loadSecurityPersistence()
 {
     std::string name = charge_point_name + ".sec21";
-    char buf[OCPP21_SECURITY_PERSISTENCE_BUF_LEN];
-    size_t len = platform_read_file(name.c_str(), buf, sizeof(buf) - 1);
+    auto buf = heap_alloc_array<char>(OCPP21_SECURITY_PERSISTENCE_BUF_LEN);
+    size_t len = platform_read_file(name.c_str(), buf.get(), OCPP21_SECURITY_PERSISTENCE_BUF_LEN - 1);
     if (len == 0)
         return;
     buf[len] = '\0';
 
     StaticJsonDocument<OCPP21_SECURITY_PERSISTENCE_BUF_LEN * 2> doc;
-    if (deserializeJson(doc, buf, len)) {
+    if (deserializeJson(doc, buf.get(), len)) {
         log_error("Failed to parse %s", name.c_str());
         return;
     }
@@ -294,13 +299,34 @@ void ChargePoint::loadSecurityPersistence()
     if (doc["v2g20_use_ed448"].is<bool>()) {
         device_model.v2g20_use_ed448 = doc["v2g20_use_ed448"].as<bool>();
     }
+    if (doc["iso15118_enabled"].is<bool>()) {
+        device_model.iso15118_enabled = doc["iso15118_enabled"].as<bool>();
+    }
+    if (doc["v2g_cert_install_enabled"].is<bool>()) {
+        device_model.v2g_cert_install_enabled = doc["v2g_cert_install_enabled"].as<bool>();
+    }
+    if (doc["contract_cert_install_enabled"].is<bool>()) {
+        device_model.contract_cert_install_enabled = doc["contract_cert_install_enabled"].as<bool>();
+    }
+    if (doc["iso15118_evse_id"].is<const char *>()) {
+        snprintf(device_model.iso15118_evse_id, sizeof(device_model.iso15118_evse_id), "%s", doc["iso15118_evse_id"].as<const char *>());
+    }
+    if (doc["enforce_tls_enabled"].is<bool>()) {
+        device_model.enforce_tls_enabled = doc["enforce_tls_enabled"].as<bool>();
+    }
+    if (doc["private_environment_enabled"].is<bool>()) {
+        device_model.private_environment_enabled = doc["private_environment_enabled"].as<bool>();
+    }
+    if (doc["pwm_charging_fallback_timeout_s"].is<int32_t>()) {
+        device_model.pwm_charging_fallback_timeout_s = doc["pwm_charging_fallback_timeout_s"].as<int32_t>();
+    }
 }
 
 void ChargePoint::saveSecurityPersistence()
 {
     std::string name = charge_point_name + ".sec21";
-    char buf[OCPP21_SECURITY_PERSISTENCE_BUF_LEN];
-    TFJsonSerializer json{buf, sizeof(buf)};
+    auto buf = heap_alloc_array<char>(OCPP21_SECURITY_PERSISTENCE_BUF_LEN);
+    TFJsonSerializer json{buf.get(), OCPP21_SECURITY_PERSISTENCE_BUF_LEN};
     json.addObject();
     json.addMemberString("basic_auth_password", device_model.basic_auth_password);
     json.addMemberString("organization_name", device_model.organization_name);
@@ -308,10 +334,17 @@ void ChargePoint::saveSecurityPersistence()
     json.addMemberString("country_name", device_model.country_name);
     json.addMemberString("iso_organization_name", device_model.iso_organization_name);
     json.addMemberBoolean("v2g20_use_ed448", device_model.v2g20_use_ed448);
+    json.addMemberBoolean("iso15118_enabled", device_model.iso15118_enabled);
+    json.addMemberBoolean("v2g_cert_install_enabled", device_model.v2g_cert_install_enabled);
+    json.addMemberBoolean("contract_cert_install_enabled", device_model.contract_cert_install_enabled);
+    json.addMemberString("iso15118_evse_id", device_model.iso15118_evse_id);
+    json.addMemberBoolean("enforce_tls_enabled", device_model.enforce_tls_enabled);
+    json.addMemberBoolean("private_environment_enabled", device_model.private_environment_enabled);
+    json.addMemberNumber("pwm_charging_fallback_timeout_s", device_model.pwm_charging_fallback_timeout_s);
     json.endObject();
     size_t len = json.end();
 
-    if (!platform_write_file(name.c_str(), buf, len)) {
+    if (!platform_write_file(name.c_str(), buf.get(), len)) {
         log_error("Failed to write %s", name.c_str());
     }
 }
@@ -338,6 +371,12 @@ void ChargePoint::onTimeout(CallAction action, uint64_t messageId)
     }
     if (action == CallAction::NOTIFY_REPORT)
         abortReport();
+    if (action == CallAction::GET15118_EV_CERTIFICATE && ev_cert_in_flight) {
+        ev_cert_in_flight = false;
+        log_warn("Get15118EVCertificate failed");
+        if (ev_cert_result_cb != nullptr)
+            ev_cert_result_cb(false, nullptr, 0, ev_cert_result_user_data);
+    }
 }
 
 void ChargePoint::onCallError(CallAction action, uint64_t messageId)
@@ -992,6 +1031,8 @@ CallResponse ChargePoint::handleGetBaseReport(const char *uid, GetBaseReportView
     bool full = req.reportBase() == GetBaseReportReportBase::FULL_INVENTORY;
     uint64_t mask = 0;
     for (size_t i = 0; i < DeviceModel::variableCount(); ++i) {
+        if (!device_model.variablePresent(i))
+            continue;
         if (full || DeviceModel::variableDesc(i).mutability != VariableMutability::ReadOnly)
             mask |= (uint64_t)1 << i;
     }
@@ -1066,7 +1107,7 @@ CallResponse ChargePoint::handleGetReport(const char *uid, GetReportView req)
     uint64_t mask = 0;
     if (criteria_match(req)) {
         for (size_t i = 0; i < DeviceModel::variableCount(); ++i) {
-            if (component_variable_match(req, DeviceModel::variableDesc(i)))
+            if (device_model.variablePresent(i) && component_variable_match(req, DeviceModel::variableDesc(i)))
                 mask |= (uint64_t)1 << i;
         }
     }
@@ -1208,14 +1249,34 @@ CallResponse ChargePoint::handleTriggerMessage(const char *uid, TriggerMessageVi
             break;
 
         case TriggerMessageRequestedMessage::SIGN_V2_G_CERTIFICATE:
+            if (!device_model.v2g_cert_install_enabled) {
+                status = TriggerMessageResponseStatus::REJECTED;
+                break;
+            }
             trigger_sign = true;
             trigger_sign_type = SignCertificateCertificateType::V2_G_CERTIFICATE;
             status = TriggerMessageResponseStatus::ACCEPTED;
             break;
 
         case TriggerMessageRequestedMessage::SIGN_V2_G20_CERTIFICATE:
+            if (!device_model.v2g_cert_install_enabled) {
+                status = TriggerMessageResponseStatus::REJECTED;
+                break;
+            }
             trigger_sign = true;
             trigger_sign_type = SignCertificateCertificateType::V2_G20_CERTIFICATE;
+            status = TriggerMessageResponseStatus::ACCEPTED;
+            break;
+
+        // One certificate for both the CSMS connection and ISO 15118,
+        // certificateType omitted on the wire (NONE).
+        case TriggerMessageRequestedMessage::SIGN_COMBINED_CERTIFICATE:
+            if (!device_model.v2g_cert_install_enabled) {
+                status = TriggerMessageResponseStatus::REJECTED;
+                break;
+            }
+            trigger_sign = true;
+            trigger_sign_type = SignCertificateCertificateType::NONE;
             status = TriggerMessageResponseStatus::ACCEPTED;
             break;
 
@@ -1453,7 +1514,8 @@ CallResponse ChargePoint::handleRequestStopTransaction(const char *uid, RequestS
 #define OCPP21_OCSP_MAX_CACHE_S (7 * 24 * 3600)
 #define OCPP21_OCSP_RETRY_MS (3600 * 1000)
 
-static const char * const sign_type_names[] = {"ChargingStationCertificate", "V2GCertificate", "V2G20Certificate"};
+// Indexed by SignCertificateCertificateType, NONE is the combined certificate.
+static const char * const sign_type_names[] = {"ChargingStationCertificate", "V2GCertificate", "V2G20Certificate", "CombinedCertificate"};
 
 static CertGroup chain_group_for_sign_type(SignCertificateCertificateType type)
 {
@@ -1499,8 +1561,20 @@ void ChargePoint::tickCertificates()
                     case CertGroup::V2G20Chain:      type = SignCertificateCertificateType::V2_G20_CERTIFICATE; break;
                     default: continue;
                 }
+                if (type != SignCertificateCertificateType::CHARGING_STATION_CERTIFICATE
+                 && !device_model.v2g_cert_install_enabled) {
+                    // A03 for the V2G types is turned off (V2GCertificateInstallationEnabled).
+                    continue;
+                }
                 if (e.not_after == 0 || e.not_after - now > OCPP21_A03_RENEWAL_WINDOW_S) {
                     continue;
+                }
+                // A chain installed under both groups is a combined
+                // certificate and renews as one (certificateType omitted).
+                if ((e.group == CertGroup::CsmsClientChain && cert_store.findSeccChainById(e.id) != nullptr)
+                 || (e.group == CertGroup::V2GChain && cert_store.find(CertGroup::CsmsClientChain) != nullptr
+                     && cert_store.find(CertGroup::CsmsClientChain)->id == e.id)) {
+                    type = SignCertificateCertificateType::NONE;
                 }
                 log_info("The %s expires soon, requesting renewal (A03)", sign_type_names[(size_t)type]);
                 startCsr(type, true, e.has_anchor ? &e.anchor_root : nullptr);
@@ -1558,6 +1632,14 @@ void ChargePoint::startCsr(SignCertificateCertificateType type, bool renewal, co
         case SignCertificateCertificateType::V2_G20_CERTIFICATE:
             // ISO 15118-20 SECC leaf, crypto from V2G20SECCLeafCryptoSuite (A02.FR.23).
             params.curve = device_model.v2g20_use_ed448 ? OcppCurve21::Ed448 : OcppCurve21::Secp521r1;
+            params.common_name = device_model.secc_id;
+            params.organization = device_model.iso_organization_name;
+            params.country = device_model.country_name;
+            break;
+        case SignCertificateCertificateType::NONE:
+            // Combined certificate, used for the CSMS connection and as the
+            // ISO 15118-2 SECC leaf. The V2G PKI dictates the subject.
+            params.curve = OcppCurve21::Secp256r1;
             params.common_name = device_model.secc_id;
             params.organization = device_model.iso_organization_name;
             params.country = device_model.country_name;
@@ -1633,11 +1715,14 @@ CallResponse ChargePoint::handleCertificateSigned(const char *uid, CertificateSi
     const char *chain = req.certificateChain();
     const char *reject_reason = nullptr;
     size_t cert_count = 0;
+    bool combined = csr_type == SignCertificateCertificateType::NONE;
     CertGroup chain_group = chain_group_for_sign_type(csr_type);
-    CertGroup root_group = chain_group == CertGroup::CsmsClientChain ? CertGroup::CsmsRoot : CertGroup::V2GRoot;
+    bool needs_csms_roots = chain_group == CertGroup::CsmsClientChain || combined;
+    bool needs_v2g_roots = chain_group != CertGroup::CsmsClientChain || combined;
 
-    std::unique_ptr<char[]> root_bufs[OCPP21_CERTSTORE_MAX_V2G_ROOT];
-    const char *root_ptrs[OCPP21_CERTSTORE_MAX_V2G_ROOT];
+    // The combined certificate verifies against the CSMS and V2G roots.
+    std::unique_ptr<char[]> root_bufs[OCPP21_CERTSTORE_MAX_V2G_ROOT + OCPP21_CERTSTORE_MAX_CSMS_ROOT];
+    const char *root_ptrs[OCPP21_CERTSTORE_MAX_V2G_ROOT + OCPP21_CERTSTORE_MAX_CSMS_ROOT];
     size_t roots = 0;
     size_t anchor_idx = 0;
 
@@ -1669,7 +1754,12 @@ CallResponse ChargePoint::handleCertificateSigned(const char *uid, CertificateSi
 
     if (reject_reason == nullptr) {
         // HUB20-42-006: validate against the installed roots.
-        roots = cert_store.loadRoots(root_group, root_bufs, root_ptrs, OCPP21_CERTSTORE_MAX_V2G_ROOT);
+        if (needs_csms_roots) {
+            roots += cert_store.loadRoots(CertGroup::CsmsRoot, root_bufs, root_ptrs, OCPP21_CERTSTORE_MAX_CSMS_ROOT);
+        }
+        if (needs_v2g_roots) {
+            roots += cert_store.loadRoots(CertGroup::V2GRoot, root_bufs + roots, root_ptrs + roots, OCPP21_CERTSTORE_MAX_V2G_ROOT);
+        }
         if (roots == 0) {
             reject_reason = "NoTrustedRoot";
         } else {
@@ -1695,15 +1785,23 @@ CallResponse ChargePoint::handleCertificateSigned(const char *uid, CertificateSi
         connection.sendCallResponse(CertificateSignedResponse{uid, ResponseStatus::REJECTED, &info});
         // A02.FR.07: security event only for the charging station
         // certificate, not for the V2G types.
-        if (csr_active && csr_type == SignCertificateCertificateType::CHARGING_STATION_CERTIFICATE) {
+        if (csr_active && (combined || csr_type == SignCertificateCertificateType::CHARGING_STATION_CERTIFICATE)) {
             sendSecurityEventNotification("InvalidChargingStationCertificate", reject_reason);
         }
         return CallResponse{CallErrorCode::OK, nullptr};
     }
 
+    // The combined certificate serves both connections, the V2G copy is
+    // installed first so that findSeccChainById and the boot scan see it.
     OcppCertHashData21 anchor_hash;
-    if (!platform_cert_hash_data21(root_ptrs[anchor_idx], 0, nullptr, 0, &anchor_hash)
-     || !cert_store.installChain(chain_group, csr_pending_id, chain, anchor_hash)) {
+    bool installed = platform_cert_hash_data21(root_ptrs[anchor_idx], 0, nullptr, 0, &anchor_hash);
+    if (installed && combined) {
+        installed = cert_store.installChain(CertGroup::V2GChain, csr_pending_id, chain, anchor_hash)
+                 && cert_store.installChain(CertGroup::CsmsClientChain, csr_pending_id, chain, anchor_hash);
+    } else if (installed) {
+        installed = cert_store.installChain(chain_group, csr_pending_id, chain, anchor_hash);
+    }
+    if (!installed) {
         log_error("Failed to store the signed certificate chain");
         CertificateSignedResponseStatusInfo info;
         info.reasonCode = "StorageFailure";
@@ -1718,14 +1816,15 @@ CallResponse ChargePoint::handleCertificateSigned(const char *uid, CertificateSi
     csr_pending_id = 0; // the key now belongs to the installed chain
     csr_active = false;
 
-    if (chain_group == CertGroup::CsmsClientChain) {
+    if (combined || chain_group == CertGroup::CsmsClientChain) {
         // A02.FR.08: reconnect with the new certificate after the
         // response left. No reconnect for the V2G types.
         if (tls_in_use) {
             pending_client_chain_id = chain_id;
             cert_reconnect_deadline = set_deadline(3000);
         }
-    } else {
+    }
+    if (combined || chain_group != CertGroup::CsmsClientChain) {
         // M06.FR.07: refresh the OCSP status of the new chain.
         scheduleChainOcsp(chain_id);
     }
@@ -2067,8 +2166,8 @@ void ChargePoint::saveNetworkPersistence()
 
 void ChargePoint::scheduleChainOcsp(uint32_t chain_id)
 {
-    const CertEntry *e = cert_store.findById(chain_id);
-    if (e == nullptr || (e->group != CertGroup::V2GChain && e->group != CertGroup::V2G20Chain)) {
+    const CertEntry *e = cert_store.findSeccChainById(chain_id);
+    if (e == nullptr) {
         return;
     }
 
@@ -2127,7 +2226,7 @@ CallResponse ChargePoint::handleGetCertificateStatusResponse(int32_t connectorId
         return CallResponse{CallErrorCode::OK, nullptr};
     }
 
-    const CertEntry *e = cert_store.findById(slot.chain_id);
+    const CertEntry *e = cert_store.findSeccChainById(slot.chain_id);
     if (e == nullptr) {
         slot.used = false;
         return CallResponse{CallErrorCode::OK, nullptr};
@@ -2176,7 +2275,7 @@ CallResponse ChargePoint::handleGetCertificateStatusResponse(int32_t connectorId
             // HUB20-431-003: delete the SECC chain immediately.
             log_warn("OCSP status revoked, deleting the SECC chain");
             uint32_t chain_id = slot.chain_id;
-            cert_store.removeChain(chain_id);
+            cert_store.removeChain(e->group, chain_id);
             for (auto &s : ocsp_cache) {
                 if (s.used && s.chain_id == chain_id) {
                     s.used = false;
@@ -2198,7 +2297,10 @@ CallResponse ChargePoint::handleGetCertificateStatusResponse(int32_t connectorId
 
 bool ChargePoint::requestVehicleChainStatus(const OcppCertHashData21 *hashes, const char * const *responder_urls, size_t count)
 {
-    // M07 plumbing for the ISO 15118 stack (HUB20-432-001).
+    // M07 plumbing for the ISO 15118 stack (HUB20-432-001). The caller
+    // passes the full chain leaf first, i.e. Leaf, Sub2, Sub1, which is
+    // the wire order required by HUB20-432-006 (and HUB20-432-005/007,
+    // hashes for all chain certificates in every request).
     if (count == 0 || count > OCPP21_VEHICLE_OCSP_CACHE_SIZE) {
         return false;
     }
@@ -2238,25 +2340,94 @@ CallResponse ChargePoint::handleGetCertificateChainStatusResponse(int32_t connec
 {
     (void)connectorId;
     size_t count = conf.certificateStatus_count();
-    size_t slot_idx = 0;
+    time_t now = platform_get_system_time(connection.platform_ctx);
 
-    for (size_t i = 0; i < count && slot_idx < OCPP21_VEHICLE_OCSP_CACHE_SIZE; ++i, ++slot_idx) {
+    for (size_t i = 0; i < count; ++i) {
         auto status = conf.certificateStatus(i);
         auto hash = status.certificateHashData();
-        auto &v = vehicle_ocsp[slot_idx];
-        v.used = true;
-        snprintf(v.hash.issuer_name_hash, sizeof(v.hash.issuer_name_hash), "%s", hash.issuerNameHash());
-        snprintf(v.hash.issuer_key_hash, sizeof(v.hash.issuer_key_hash), "%s", hash.issuerKeyHash());
-        snprintf(v.hash.serial_number, sizeof(v.hash.serial_number), "%s", hash.serialNumber());
-        v.status = status.status();
-        // M07.FR.09: cache at most one week.
-        time_t now = platform_get_system_time(connection.platform_ctx);
-        v.next_update = status.nextUpdate();
-        if (v.next_update > now + OCPP21_OCSP_MAX_CACHE_S) {
-            v.next_update = now + OCPP21_OCSP_MAX_CACHE_S;
+
+        // Cache entries are matched by hash data, the response order is
+        // not guaranteed to mirror the request.
+        VehicleOcspStatus *slot = nullptr;
+        for (auto &v : vehicle_ocsp) {
+            if (v.used && strcasecmp(v.hash.serial_number, hash.serialNumber()) == 0
+             && strcasecmp(v.hash.issuer_key_hash, hash.issuerKeyHash()) == 0
+             && strcasecmp(v.hash.issuer_name_hash, hash.issuerNameHash()) == 0) {
+                slot = &v;
+                break;
+            }
         }
-        log_info("Vehicle chain certificate %s: OCSP status %s", v.hash.serial_number,
-                 GetCertificateChainStatusResponseCertificateStatusEntryEntriesStatusStrings[(size_t)v.status]);
+        if (slot == nullptr) {
+            for (auto &v : vehicle_ocsp) {
+                if (!v.used || v.next_update <= now) {
+                    slot = &v;
+                    break;
+                }
+            }
+        }
+        if (slot == nullptr) {
+            slot = &vehicle_ocsp[i % OCPP21_VEHICLE_OCSP_CACHE_SIZE];
+        }
+
+        slot->used = true;
+        snprintf(slot->hash.issuer_name_hash, sizeof(slot->hash.issuer_name_hash), "%s", hash.issuerNameHash());
+        snprintf(slot->hash.issuer_key_hash, sizeof(slot->hash.issuer_key_hash), "%s", hash.issuerKeyHash());
+        snprintf(slot->hash.serial_number, sizeof(slot->hash.serial_number), "%s", hash.serialNumber());
+        slot->status = status.status();
+        // M07.FR.09: cache at most one week.
+        slot->next_update = status.nextUpdate();
+        if (slot->next_update > now + OCPP21_OCSP_MAX_CACHE_S) {
+            slot->next_update = now + OCPP21_OCSP_MAX_CACHE_S;
+        }
+        log_info("Vehicle chain certificate %s: OCSP status %s", slot->hash.serial_number,
+                 GetCertificateChainStatusResponseCertificateStatusEntryEntriesStatusStrings[(size_t)slot->status]);
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+bool ChargePoint::request15118EVCertificate(const char *iso15118_schema_version, bool update, const char *exi_request,
+                                            int32_t maximum_contract_certificate_chains,
+                                            const char **prioritized_emaids, size_t prioritized_emaids_count)
+{
+    // M01/M02, gated by ISO15118Ctrlr Enabled and
+    // ContractCertificateInstallationEnabled.
+    if (!device_model.iso15118_enabled || !device_model.contract_cert_install_enabled || ev_cert_in_flight) {
+        return false;
+    }
+
+    if (!connection.sendCallAction(Get15118EVCertificate{iso15118_schema_version,
+                                                         update ? Get15118EVCertificateAction::UPDATE : Get15118EVCertificateAction::INSTALL,
+                                                         exi_request,
+                                                         maximum_contract_certificate_chains >= 0 ? maximum_contract_certificate_chains : OCPP_INTEGER_NOT_PASSED,
+                                                         prioritized_emaids, prioritized_emaids_count})) {
+        return false;
+    }
+
+    ev_cert_in_flight = true;
+    return true;
+}
+
+void ChargePoint::register15118EVCertificateResult(void (*cb)(bool accepted, const char *exi_response, int32_t remaining_contracts, void *user_data), void *user_data)
+{
+    ev_cert_result_cb = cb;
+    ev_cert_result_user_data = user_data;
+}
+
+CallResponse ChargePoint::handleGet15118EVCertificateResponse(int32_t connectorId, Get15118EVCertificateResponseView conf)
+{
+    (void)connectorId;
+    if (!ev_cert_in_flight) {
+        return CallResponse{CallErrorCode::OK, nullptr};
+    }
+    ev_cert_in_flight = false;
+
+    bool accepted = conf.status() == GetCertificateStatusResponseStatus::ACCEPTED;
+    int32_t remaining = conf.remainingContracts().is_some() ? conf.remainingContracts().unwrap() : 0;
+    log_info("Get15118EVCertificate %s, %d contracts remaining", accepted ? "accepted" : "failed", remaining);
+
+    if (ev_cert_result_cb != nullptr) {
+        ev_cert_result_cb(accepted, accepted ? conf.exiResponse() : nullptr, remaining, ev_cert_result_user_data);
     }
 
     return CallResponse{CallErrorCode::OK, nullptr};

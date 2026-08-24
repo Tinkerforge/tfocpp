@@ -107,10 +107,15 @@ public:
     void sendSecurityEventNotification(const char *type, const char *tech_info = nullptr);
 
     // M07: requests the OCSP status of a vehicle certificate chain
-    // (hashes with per certificate responder URL). The result lands in
-    // the vehicle status cache, see vehicleChainStatus.
+    // (hashes with per certificate responder URL, leaf first). The
+    // result lands in the vehicle status cache, see vehicleChainStatus.
     bool requestVehicleChainStatus(const OcppCertHashData21 *hashes, const char * const *responder_urls, size_t count);
     const VehicleOcspStatus *vehicleChainStatus(const OcppCertHashData21 &hash) const;
+
+    bool request15118EVCertificate(const char *iso15118_schema_version, bool update, const char *exi_request,
+                                   int32_t maximum_contract_certificate_chains = -1,
+                                   const char **prioritized_emaids = nullptr, size_t prioritized_emaids_count = 0);
+    void register15118EVCertificateResult(void (*cb)(bool accepted, const char *exi_response, int32_t remaining_contracts, void *user_data), void *user_data);
 
     // Received call results
     CallResponse handleBootNotificationResponse(int32_t connectorId, BootNotificationResponseView conf);
@@ -123,6 +128,7 @@ public:
     CallResponse handleSignCertificateResponse(int32_t connectorId, SignCertificateResponseView conf);
     CallResponse handleGetCertificateStatusResponse(int32_t connectorId, GetCertificateStatusResponseView conf);
     CallResponse handleGetCertificateChainStatusResponse(int32_t connectorId, GetCertificateChainStatusResponseView conf);
+    CallResponse handleGet15118EVCertificateResponse(int32_t connectorId, Get15118EVCertificateResponseView conf);
 
     // Received calls
     CallResponse handleGetVariables(const char *uid, GetVariablesView req);
@@ -269,6 +275,11 @@ private:
 
     // M07 plumbing.
     VehicleOcspStatus vehicle_ocsp[OCPP21_VEHICLE_OCSP_CACHE_SIZE];
+
+    // M01/M02: one Get15118EVCertificate in flight at a time.
+    bool ev_cert_in_flight = false;
+    void (*ev_cert_result_cb)(bool accepted, const char *exi_response, int32_t remaining_contracts, void *user_data) = nullptr;
+    void *ev_cert_result_user_data = nullptr;
 
     // B07/B08 report streaming state.
     bool report_active = false;

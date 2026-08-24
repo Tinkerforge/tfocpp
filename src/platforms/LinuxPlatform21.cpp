@@ -369,18 +369,37 @@ static void sim_handle_command(char *line)
     } else if (strncmp(line, "secevent ", 9) == 0) {
         printf("[SIM  ] queueing security event %s\n", line + 9);
         cp.sendSecurityEventNotification(line + 9, "triggered via host simulator");
-    } else if (strcmp(line, "m07") == 0) {
+    } else if (strcmp(line, "m07") == 0 || strncmp(line, "m07 ", 4) == 0) {
         // Drives the vehicle chain OCSP plumbing until the ISO 15118 stack exists.
-        printf("[SIM  ] requesting vehicle chain OCSP status\n");
-        OcppCertHashData21 hash;
-        memset(&hash, 0, sizeof(hash));
-        for (size_t i = 0; i < 64; ++i) {
-            hash.issuer_name_hash[i] = 'a';
-            hash.issuer_key_hash[i] = 'b';
+        // m07 [count]: chain of count certificates, leaf first (HUB20-432-006).
+        size_t count = 1;
+        if (line[3] == ' ') {
+            long parsed = strtol(line + 4, nullptr, 10);
+            if (parsed >= 1 && parsed <= 4)
+                count = (size_t)parsed;
         }
-        strcpy(hash.serial_number, "1234");
-        const char *url = "http://127.0.0.1:1/ocsp";
-        cp.requestVehicleChainStatus(&hash, &url, 1);
+        printf("[SIM  ] requesting vehicle chain OCSP status for %zu certificates\n", count);
+        static const char * const serials[] = {"1234", "5678", "9abc", "def0"};
+        OcppCertHashData21 hashes[4];
+        const char *urls[4];
+        memset(hashes, 0, sizeof(hashes));
+        for (size_t c = 0; c < count; ++c) {
+            for (size_t i = 0; i < 64; ++i) {
+                hashes[c].issuer_name_hash[i] = 'a';
+                hashes[c].issuer_key_hash[i] = 'b';
+            }
+            strcpy(hashes[c].serial_number, serials[c]);
+            urls[c] = "http://127.0.0.1:1/ocsp";
+        }
+        cp.requestVehicleChainStatus(hashes, urls, count);
+    } else if (strcmp(line, "evcert") == 0 || strcmp(line, "evcert update") == 0) {
+        // Drives the M01/M02 contract certificate plumbing until the ISO
+        // 15118 stack exists. Dummy base64 EXI payload.
+        bool update = line[6] != '\0';
+        printf("[SIM  ] forwarding an EV certificate %s request\n", update ? "update" : "install");
+        if (!cp.request15118EVCertificate("urn:iso:15118:2:2013:MsgDef", update, "3q2+7w==")) {
+            printf("[SIM  ] EV certificate request refused\n");
+        }
     } else if (strcmp(line, "fault") == 0) {
         e.state = EvseState21::Faulted;
         printf("[SIM  ] EVSE faulted\n");
@@ -388,7 +407,7 @@ static void sim_handle_command(char *line)
         e.state = EvseState21::NotConnected;
         printf("[SIM  ] EVSE fault cleared\n");
     } else if (line[0] != '\0') {
-        printf("[SIM  ] unknown command %s (plug, unplug, detect, suspend, resume, tag <id>, stop <reason>, fault, ok, secevent <type>, m07)\n", line);
+        printf("[SIM  ] unknown command %s (plug, unplug, detect, suspend, resume, tag <id>, stop <reason>, fault, ok, secevent <type>, m07 [count], evcert [update])\n", line);
     }
 }
 
@@ -459,6 +478,15 @@ int main(int argc, char **argv)
         fprintf(stderr, "Failed to start charge point\n");
         return 1;
     }
+
+    // Stands in for the ISO 15118 stack of the simulated station.
+    snprintf(cp.device_model.protocol_supported[0], sizeof(cp.device_model.protocol_supported[0]), "urn:iso:15118:2:2013:MsgDef,2,0");
+    snprintf(cp.device_model.protocol_supported[1], sizeof(cp.device_model.protocol_supported[1]), "urn:iso:std:iso:15118:-20:AC,1,0");
+    cp.register15118EVCertificateResult([](bool accepted, const char *exi_response, int32_t remaining_contracts, void *user_data){
+        (void)user_data;
+        printf("[SIM  ] EV certificate result: %s, %d remaining, exi %s\n",
+               accepted ? "Accepted" : "Failed", remaining_contracts, exi_response != nullptr ? exi_response : "-");
+    }, nullptr);
 
     if (name2 != nullptr && !cp2.start(argv[1], name2, pass2, security_profile, is_tls ? &tls : nullptr)) {
         fprintf(stderr, "Failed to start second charge point\n");

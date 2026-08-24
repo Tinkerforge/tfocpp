@@ -482,6 +482,14 @@ enum class GetReportComponentCriteriaEntry : uint8_t {
     PROBLEM
 };
 
+extern const char * const Get15118EVCertificateActionStrings[];
+
+enum class Get15118EVCertificateAction : uint8_t {
+    INSTALL,
+    UPDATE,
+    NONE
+};
+
 extern const char * const GetVariablesResponseGetVariableResultAttributeStatusStrings[];
 
 enum class GetVariablesResponseGetVariableResultAttributeStatus : uint8_t {
@@ -945,6 +953,52 @@ struct ICall {
     CallAction action;
     uint64_t ocppJmessageId;
     const char *ocppJcallId;
+};
+
+struct Get15118EVCertificateResponseStatusInfoEntriesView {
+    JsonObject _obj;
+
+    const char * reasonCode() {
+
+        return _obj["reasonCode"].as<const char *>();
+    }
+
+    Option<const char *> additionalInfo() {
+        if (!_obj.containsKey("additionalInfo"))
+                return {};
+
+        return _obj["additionalInfo"].as<const char *>();
+    }
+
+};
+
+struct Get15118EVCertificateResponseView {
+    JsonObject _obj;
+
+    GetCertificateStatusResponseStatus status() {
+
+        return (GetCertificateStatusResponseStatus)_obj["status"].as<size_t>();
+    }
+
+    Option<Get15118EVCertificateResponseStatusInfoEntriesView> statusInfo() {
+        if (!_obj.containsKey("statusInfo"))
+                return {};
+
+        return Option<Get15118EVCertificateResponseStatusInfoEntriesView>{Get15118EVCertificateResponseStatusInfoEntriesView{_obj["statusInfo"].as<JsonObject>()}};
+    }
+
+    const char * exiResponse() {
+
+        return _obj["exiResponse"].as<const char *>();
+    }
+
+    Option<int32_t> remainingContracts() {
+        if (!_obj.containsKey("remainingContracts"))
+                return {};
+
+        return _obj["remainingContracts"].as<int32_t>();
+    }
+
 };
 
 struct GetReportComponentVariableEntryEntriesVariableEntriesView {
@@ -5552,6 +5606,24 @@ struct GetReportResponse final : public ICall {
     size_t serializeJson(char *buf, size_t buf_len) const override;
 };
 
+struct Get15118EVCertificate final : public ICall {
+    const char *iso15118SchemaVersion;
+    Get15118EVCertificateAction action;
+    const char *exiRequest;
+    int32_t maximumContractCertificateChains;
+    const char **prioritizedEMAIDs; size_t prioritizedEMAIDs_length;
+
+    Get15118EVCertificate(const char iso15118SchemaVersion[51],
+        Get15118EVCertificateAction action,
+        const char exiRequest[11001],
+        int32_t maximumContractCertificateChains = OCPP_INTEGER_NOT_PASSED,
+        const char **prioritizedEMAIDs = nullptr, size_t prioritizedEMAIDs_length = 0);
+    Get15118EVCertificate(const Get15118EVCertificate&) = delete;
+    Get15118EVCertificate &operator=(const Get15118EVCertificate&) = delete;
+
+    size_t serializeJson(char *buf, size_t buf_len) const override;
+};
+
 CallResponse parseBootNotificationResponse(JsonObject obj);
 
 CallResponse parseHeartbeatResponse(JsonObject obj);
@@ -5599,6 +5671,8 @@ CallResponse parseSetNetworkProfile(JsonObject obj);
 CallResponse parseNotifyReportResponse(JsonObject obj);
 
 CallResponse parseGetReport(JsonObject obj);
+
+CallResponse parseGet15118EVCertificateResponse(JsonObject obj);
 
 CallResponse callResultHandler(int32_t connectorId, CallAction resultTo, JsonObject obj, ChargePoint *cp);
 
