@@ -5,7 +5,7 @@ import time
 
 import pytest
 
-from conftest import WS, DOCKER_OCPP
+from conftest import WS, DOCKER_OCPP, RFID_TOKENS
 
 STARTING = "Starting transaction ([0-9a-f-]+)"
 
@@ -172,6 +172,38 @@ def test_plug_first_tag_timeout(api, stations, hosts, rfid):
     h.wait_for("Stopping transaction")
     h.send("unplug")
     api.wait_for_ended_session(db_id, transaction_id)
+
+
+def test_stop_with_different_tag(api, stations, hosts, rfid):
+    other = RFID_TOKENS[(RFID_TOKENS.index(rfid) + 1) % len(RFID_TOKENS)]
+    name, db_id, h = start_station(api, stations, hosts)
+
+    h.send(f"tag {rfid}")
+    h.wait_for(f"Authorization of {rfid} accepted")
+    h.send("plug")
+    transaction_id = h.wait_for(STARTING).group(1)
+
+    # An unknown token is authorized against the CSMS and rejected, the
+    # transaction continues.
+    h.send("tag NOT-A-KNOWN-TOKEN")
+    h.wait_for("Authorizing it to stop the transaction")
+    h.wait_for("EVSE 1 tag NOT-A-KNOWN-TOKEN rejected")
+    assert h.count("Stopping transaction") == 0
+
+    # A different known token stops the transaction after authorization.
+    h.send(f"tag {other}")
+    h.wait_for(f"Authorization of {other} accepted, stopping the transaction")
+    h.wait_for("Stopping transaction")
+    h.send("unplug")
+
+    api.wait_for_ended_session(db_id, transaction_id)
+
+    # The Ended event reports the token that stopped the transaction.
+    frames = [entry["payload"] for entry in api.ocpp_logs(db_id, limit=100)
+              if entry["action"] == "TransactionEvent" and entry["direction"] == "inbound"
+              and entry["messageType"] == 2 and entry["payload"].get("eventType") == "Ended"
+              and entry["payload"].get("transactionInfo", {}).get("transactionId") == transaction_id]
+    assert frames and frames[0].get("idToken", {}).get("idToken") == other, frames
 
 
 @pytest.mark.docker

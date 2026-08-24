@@ -182,8 +182,11 @@ private:
     int32_t tag_evse_id = 0;
     char pending_tag[OCPP21_ID_TOKEN_LEN + 1] = {};
 
-    // Only one Authorize is in flight at a time.
+    // Only one Authorize is in flight at a time. authorize_for_stop marks
+    // an Authorize sent to stop a running transaction with a different
+    // token, the 1.6 AUTH_STOP flow.
     bool authorize_in_flight = false;
+    bool authorize_for_stop = false;
     int32_t authorize_evse_id = 0;
     char authorize_token[OCPP21_ID_TOKEN_LEN + 1] = {};
 

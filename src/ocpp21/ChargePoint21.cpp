@@ -314,6 +314,7 @@ void ChargePoint::onTimeout(CallAction action, uint64_t messageId)
     if (action == CallAction::AUTHORIZE) {
         log_info("Authorize timed out");
         authorize_in_flight = false;
+        authorize_for_stop = false;
         if (authorize_evse_id >= 1 && authorize_evse_id <= OCPP21_NUM_EVSES)
             platform_tag_rejected21(connection.platform_ctx, authorize_evse_id, authorize_token, TagRejectionType21::Invalid);
     }
@@ -413,8 +414,23 @@ void ChargePoint::tickEvses()
                 if (strcmp(pending_tag, t.id_token) == 0) {
                     platform_tag_accepted21(connection.platform_ctx, evse_id, pending_tag);
                     stopTransaction(evse_id, TransactionEventTriggerReason::STOP_AUTHORIZED, TransactionEventTransactionInfoStoppedReason::LOCAL, true);
+                } else if (authorize_in_flight) {
+                    log_info("Tag %s seen while an Authorize is in flight. Ignored", pending_tag);
+                } else if (!platform_ws_connected(connection.platform_ctx)) {
+                    log_info("Tag %s seen while offline. Only the token of the running transaction can stop it", pending_tag);
+                    platform_tag_timed_out21(connection.platform_ctx, evse_id);
                 } else {
-                    log_info("Tag %s does not match the token of the running transaction. Ignored", pending_tag);
+                    log_info("Tag %s does not match the token of the running transaction. Authorizing it to stop the transaction", pending_tag);
+                    authorize_in_flight = true;
+                    authorize_for_stop = true;
+                    authorize_evse_id = evse_id;
+                    strncpy(authorize_token, pending_tag, OCPP21_ID_TOKEN_LEN);
+                    authorize_token[OCPP21_ID_TOKEN_LEN] = '\0';
+
+                    AuthorizeIdToken token;
+                    token.idToken = authorize_token;
+                    token.type = "ISO14443";
+                    connection.sendCallAction(Authorize{&token});
                 }
             } else if (t.authorized) {
                 if (strcmp(pending_tag, t.id_token) == 0) {
@@ -434,6 +450,7 @@ void ChargePoint::tickEvses()
                     platform_tag_timed_out21(connection.platform_ctx, evse_id);
                 } else {
                     authorize_in_flight = true;
+                    authorize_for_stop = false;
                     authorize_evse_id = evse_id;
                     strncpy(authorize_token, pending_tag, OCPP21_ID_TOKEN_LEN);
                     authorize_token[OCPP21_ID_TOKEN_LEN] = '\0';
@@ -949,6 +966,8 @@ CallResponse ChargePoint::handleAuthorizeResponse(int32_t connectorId, Authorize
 {
     (void)connectorId;
     authorize_in_flight = false;
+    bool for_stop = authorize_for_stop;
+    authorize_for_stop = false;
 
     if (authorize_evse_id < 1 || authorize_evse_id > OCPP21_NUM_EVSES)
         return CallResponse{CallErrorCode::OK, nullptr};
@@ -959,6 +978,21 @@ CallResponse ChargePoint::handleAuthorizeResponse(int32_t connectorId, Authorize
     if (status != ResponseIdTokenInfoEntriesStatus::ACCEPTED) {
         log_info("Authorization of %s rejected (%s)", authorize_token, ResponseIdTokenInfoEntriesStatusStrings[(size_t)status]);
         platform_tag_rejected21(connection.platform_ctx, authorize_evse_id, authorize_token, rejection_type(status));
+        return CallResponse{CallErrorCode::OK, nullptr};
+    }
+
+    if (for_stop) {
+        if (!t.transaction_active) {
+            log_info("Authorization of %s accepted, but the transaction already ended. Ignored", authorize_token);
+            return CallResponse{CallErrorCode::OK, nullptr};
+        }
+        log_info("Authorization of %s accepted, stopping the transaction", authorize_token);
+        platform_tag_accepted21(connection.platform_ctx, authorize_evse_id, authorize_token);
+        // The Ended event reports the token that stopped the transaction.
+        memcpy(t.id_token, authorize_token, sizeof(t.id_token));
+        strncpy(t.id_token_type, "ISO14443", OCPP21_ID_TOKEN_TYPE_LEN);
+        t.id_token_type[OCPP21_ID_TOKEN_TYPE_LEN] = '\0';
+        stopTransaction(authorize_evse_id, TransactionEventTriggerReason::STOP_AUTHORIZED, TransactionEventTransactionInfoStoppedReason::LOCAL, true);
         return CallResponse{CallErrorCode::OK, nullptr};
     }
 
