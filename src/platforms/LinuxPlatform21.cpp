@@ -156,6 +156,25 @@ const char *platform_get_firmware_version() {
 static Ocpp21::ChargePoint cp;
 static Ocpp21::ChargePoint cp2;
 
+void platform_cert_store_changed21(void *ctx)
+{
+    (void)ctx;
+    size_t v2g_roots = 0, oem_roots = 0, mo_roots = 0;
+    int v2g_chain = 0, v2g20_chain = 0;
+    for (const auto &e : cp.cert_store.all()) {
+        switch (e.group) {
+            case Ocpp21::CertGroup::V2GRoot: ++v2g_roots; break;
+            case Ocpp21::CertGroup::OEMRoot: ++oem_roots; break;
+            case Ocpp21::CertGroup::MORoot: ++mo_roots; break;
+            case Ocpp21::CertGroup::V2GChain: v2g_chain = 1; break;
+            case Ocpp21::CertGroup::V2G20Chain: v2g20_chain = 1; break;
+            default: break;
+        }
+    }
+    printf("[SIM  ] Cert store changed: v2g chain %d, v2g20 chain %d, v2g roots %zu, oem roots %zu, mo roots %zu\n",
+           v2g_chain, v2g20_chain, v2g_roots, oem_roots, mo_roots);
+}
+
 // Simulated EVSE, driven by stdin commands. One global simulator shared by
 // all instances, sufficient for the host tests which use one instance.
 struct SimEvse {

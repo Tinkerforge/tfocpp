@@ -1815,6 +1815,7 @@ CallResponse ChargePoint::handleCertificateSigned(const char *uid, CertificateSi
     uint32_t chain_id = csr_pending_id;
     csr_pending_id = 0; // the key now belongs to the installed chain
     csr_active = false;
+    platform_cert_store_changed21(connection.platform_ctx);
 
     if (combined || chain_group == CertGroup::CsmsClientChain) {
         // A02.FR.08: reconnect with the new certificate after the
@@ -1865,6 +1866,7 @@ CallResponse ChargePoint::handleInstallCertificate(const char *uid, InstallCerti
         case CertInstallResult::Accepted:
             status = eResponseStatus::ACCEPTED;
             log_info("Installed a %s", InstallCertificateCertificateTypeStrings[(size_t)req.certificateType()]);
+            platform_cert_store_changed21(connection.platform_ctx);
             break;
         case CertInstallResult::Rejected:
             status = eResponseStatus::REJECTED;
@@ -1891,6 +1893,7 @@ CallResponse ChargePoint::handleDeleteCertificate(const char *uid, DeleteCertifi
             case CertDeleteResult::Accepted:
                 status = DeleteCertificateResponseStatus::ACCEPTED;
                 log_info("Deleted the certificate with serial %s", hash_data.serialNumber());
+                platform_cert_store_changed21(connection.platform_ctx);
                 break;
             case CertDeleteResult::Failed:
                 status = DeleteCertificateResponseStatus::FAILED;
@@ -2281,6 +2284,7 @@ CallResponse ChargePoint::handleGetCertificateStatusResponse(int32_t connectorId
                     s.used = false;
                 }
             }
+            platform_cert_store_changed21(connection.platform_ctx);
             break;
         }
         case OcppOcspStatus21::Unknown:

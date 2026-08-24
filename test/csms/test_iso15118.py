@@ -208,3 +208,31 @@ def test_get_15118_ev_certificate_disabled(csms, host):
     assert set_variable(csms, "Enabled", "false") == "Accepted"
     host.send("evcert")
     host.wait_for("EV certificate request refused", timeout=10)
+
+
+def test_cert_store_change_notification(csms, host, ca):
+    # The registered callback fires on root install, chain install
+    # and certificate deletion so the ISO 15118 stack can reload.
+    assert csms.call("InstallCertificate", {
+        "certificateType": "V2GRootCertificate",
+        "certificate": ca.cert_pem,
+    })["status"] == "Accepted"
+    host.wait_for("Cert store changed: v2g chain 0, v2g20 chain 0, v2g roots 1, oem roots 0, mo roots 0", timeout=10)
+
+    assert csms.call("TriggerMessage", {
+        "requestedMessage": "SignV2G20Certificate",
+    })["status"] == "Accepted"
+    sign_req, msg_id = csms.expect("SignCertificate")
+    assert sign_req["certificateType"] == "V2G20Certificate"
+    csms.respond(msg_id, {"status": "Accepted"})
+    leaf = ca.sign_csr(sign_req["csr"])
+    assert csms.call("CertificateSigned", {
+        "certificateChain": leaf,
+        "certificateType": "V2G20Certificate",
+        "requestId": sign_req["requestId"],
+    })["status"] == "Accepted"
+    host.wait_for("Cert store changed: v2g chain 0, v2g20 chain 1, v2g roots 1, oem roots 0, mo roots 0", timeout=10)
+
+    hd = ca.hash_data(ca.cert_pem, ca.cert_pem)
+    assert csms.call("DeleteCertificate", {"certificateHashData": hd})["status"] == "Accepted"
+    host.wait_for("Cert store changed: v2g chain 0, v2g20 chain 1, v2g roots 0, oem roots 0, mo roots 0", timeout=10)
