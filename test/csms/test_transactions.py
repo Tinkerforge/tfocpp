@@ -145,6 +145,35 @@ def test_tag_feedback(api, stations, hosts, rfid):
     api.wait_for_ended_session(db_id, transaction_id)
 
 
+def test_plug_first_tag_timeout(api, stations, hosts, rfid):
+    name, db_id, h = start_station(api, stations, hosts)
+
+    since = api.last_ocpp_log_id(db_id)
+    api.set_variable(name, "TxCtrlr", "EVConnectionTimeOut", "2")
+    api.wait_for_response(db_id, "SetVariables", since)
+
+    # A plugged EV without a tag times out, 1.6 ConnectionTimeOut behavior.
+    h.send("plug")
+    h.wait_for("EVSE 1 expects a tag")
+    h.wait_for("EVSE 1 tag timed out", timeout=15)
+
+    # Tags are ignored until a replug.
+    h.send(f"tag {rfid}")
+    h.wait_for("Ignored until replug")
+
+    h.send("unplug")
+    h.send("plug")
+    h.wait_for("EVSE 1 expects a tag", min_count=2)
+    h.send(f"tag {rfid}")
+    h.wait_for(f"EVSE 1 tag {rfid} accepted")
+    transaction_id = h.wait_for(STARTING).group(1)
+
+    h.send(f"tag {rfid}")
+    h.wait_for("Stopping transaction")
+    h.send("unplug")
+    api.wait_for_ended_session(db_id, transaction_id)
+
+
 @pytest.mark.docker
 def test_offline_transaction_continuation(api, stations, hosts, rfid):
     name, db_id, h = start_station(api, stations, hosts)

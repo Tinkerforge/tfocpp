@@ -425,6 +425,8 @@ void ChargePoint::tickEvses()
                 } else {
                     log_info("Tag %s seen while another token is authorized. Ignored", pending_tag);
                 }
+            } else if (t.tag_window_closed) {
+                log_info("Tag %s seen after the tag deadline. Ignored until replug", pending_tag);
             } else if (!authorize_in_flight) {
                 if (!platform_ws_connected(connection.platform_ctx)) {
                     // TODO: offline authorization (local auth list or cache)
@@ -449,6 +451,26 @@ void ChargePoint::tickEvses()
             log_info("EV connection timeout. Canceling the authorization for %s", t.id_token);
             t.authorized = false;
             t.remote_start = false;
+        }
+
+        if (!plugged)
+            t.tag_window_closed = false;
+
+        bool waiting_for_tag = plugged && !t.transaction_active && !t.authorized && !t.tag_window_closed;
+        if (waiting_for_tag && !t.waiting_for_tag) {
+            t.tag_deadline = set_deadline((uint32_t)device_model.ev_connection_timeout_s * 1000);
+            platform_tag_expected21(connection.platform_ctx, evse_id);
+        } else if (!waiting_for_tag && t.waiting_for_tag) {
+            platform_clear_tag_expected21(connection.platform_ctx, evse_id);
+        }
+        t.waiting_for_tag = waiting_for_tag;
+
+        if (t.waiting_for_tag && deadline_elapsed(t.tag_deadline)) {
+            log_info("No tag was presented in time on EVSE %d. Replug to start a new transaction", evse_id);
+            platform_tag_timed_out21(connection.platform_ctx, evse_id);
+            platform_clear_tag_expected21(connection.platform_ctx, evse_id);
+            t.tag_window_closed = true;
+            t.waiting_for_tag = false;
         }
 
         // TxStartPoint PowerPathClosed, simplified: authorized and cable plugged.
@@ -642,6 +664,9 @@ void ChargePoint::stopTransaction(int32_t evse_id, TransactionEventTriggerReason
     t.remote_start = false;
     t.charging_state = TransactionEventTransactionInfoChargingState::NONE;
     t.transaction_id[0] = '\0';
+    // 1.6 Finishing parity: a still plugged cable requires a replug before
+    // the next tag is accepted. Cleared in tickEvses on unplug.
+    t.tag_window_closed = true;
 }
 
 CallResponse ChargePoint::handleBootNotificationResponse(int32_t connectorId, BootNotificationResponseView conf)

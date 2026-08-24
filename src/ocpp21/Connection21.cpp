@@ -185,14 +185,16 @@ void Connection::sendCallError(const char *uid, CallErrorCode code, const char *
     TFJsonSerializer json{buf.get(), len + 1};
     buildCallError(json, uid, code, desc);
 
-    next_response.buf = std::move(buf);
-    next_response.len = len;
+    QueueItem item;
+    item.buf = std::move(buf);
+    item.len = len;
+    pending_responses.push_back(std::move(item));
 }
 
 bool Connection::sendCallResponse(const ICall &call)
 {
     log_info("Sending response for %s (id %s)", CallActionStrings[(size_t)call.action], call.ocppJcallId);
-    next_response = QueueItem{call};
+    pending_responses.emplace_back(call);
     return true;
 }
 
@@ -262,7 +264,7 @@ void Connection::tick() {
     if (!connected) {
         status_notifications.clear();
         messages.clear();
-        next_response = QueueItem{};
+        pending_responses.clear();
         // Transaction messages survive the disconnect. An in flight
         // transaction message goes back to the queue front, it is unknown
         // whether the CSMS received it.
@@ -290,10 +292,11 @@ void Connection::tick() {
         return;
     }
 
-    if (next_response.is_valid()) {
-        log_payload("Sending response", next_response.buf.get(), next_response.len);
-        if (platform_ws_send(platform_ctx, next_response.buf.get(), next_response.len))
-            next_response = QueueItem{};
+    if (!pending_responses.empty()) {
+        auto &response = pending_responses.front();
+        log_payload("Sending response", response.buf.get(), response.len);
+        if (platform_ws_send(platform_ctx, response.buf.get(), response.len))
+            pending_responses.pop_front();
         return;
     }
 

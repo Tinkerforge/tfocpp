@@ -42,6 +42,10 @@ struct EvseTracker {
     // EVConnectionTimeOut while authorized but no cable plugged.
     uint32_t ev_connect_deadline = 0;
 
+    bool waiting_for_tag = false;
+    uint32_t tag_deadline = 0;
+    bool tag_window_closed = false;
+
     // Active transaction.
     bool transaction_active = false;
     char transaction_id[OCPP21_TRANSACTION_ID_LEN + 1] = {};

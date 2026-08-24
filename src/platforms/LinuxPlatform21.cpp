@@ -350,7 +350,9 @@ static void sim_poll_stdin()
             line[used] = '\0';
             used = 0;
             sim_handle_command(line);
-            continue;
+            // One command per tick, otherwise the stack could miss state
+            // transitions (e.g. unplug directly followed by plug).
+            return;
         }
         if (used < sizeof(line) - 1)
             line[used++] = c;

@@ -73,8 +73,9 @@ public:
     std::deque<QueueItem> status_notifications;
     // Not cleared on disconnect. Strict FIFO to keep the seqNo order.
     std::deque<QueueItem> transaction_messages;
-    // As there can only be one call in flight, we don't need a queue here.
-    QueueItem next_response;
+    // Responses to CSMS calls. The CSMS may pipeline multiple calls, so
+    // responses queue up in order.
+    std::deque<QueueItem> pending_responses;
 
     std::unique_ptr<BasicAuthCredentials[]> basic_auth_credentials;
     std::string charge_point_name;
