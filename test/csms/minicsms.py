@@ -18,7 +18,12 @@ class MiniCsms:
         self.requests = queue.Queue()
         self.responses = queue.Queue()
         self.security_events = []
+        self.result_errors = []
         self.last_auth = None
+        # Answers the next Heartbeat with an invalid payload to provoke a
+        # CALLRESULTERROR, the mangled message id is appended to mangled_ids.
+        self.mangle_next_heartbeat = False
+        self.mangled_ids = []
         self.ws = None
         self.connected = threading.Event()
 
@@ -52,7 +57,12 @@ class MiniCsms:
                             "status": "Accepted",
                         })
                     elif action == "Heartbeat":
-                        self.respond(msg_id, {"currentTime": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())})
+                        if self.mangle_next_heartbeat:
+                            self.mangle_next_heartbeat = False
+                            self.mangled_ids.append(msg_id)
+                            self.respond(msg_id, {"currentTime": 42})
+                        else:
+                            self.respond(msg_id, {"currentTime": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())})
                     elif action == "SecurityEventNotification":
                         self.security_events.append(payload)
                         self.respond(msg_id, {})
@@ -62,6 +72,8 @@ class MiniCsms:
                         self.requests.put((action, payload, msg_id))
                 elif msg[0] == 3:
                     self.responses.put((msg[1], msg[2]))
+                elif msg[0] == 5:
+                    self.result_errors.append((msg[1], msg[2], msg[3]))
         except Exception:
             pass
         finally:
