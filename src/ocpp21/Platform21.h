@@ -39,6 +39,20 @@ void platform_tag_timed_out21(void *ctx, int32_t evse_id);
 // Close (true) or open (false) the power path of the EVSE.
 void platform_set_charging_allowed21(void *ctx, int32_t evse_id, bool allowed);
 
+enum class StopReason21 : uint8_t {
+    EmergencyStop, // EVSE emergency stop button
+    Local,         // "normal" EVSE stop button
+    Other,
+    PowerLoss,
+    Reboot,        // a locally initiated reset/reboot, e.g. watchdog
+    Remote,        // stopped on request of the user, e.g. web interface
+};
+
+void platform_register_stop_callback21(void *ctx, void (*cb)(int32_t evse_id, StopReason21 reason, void *user_data), void *user_data);
+
+void platform_lock_cable21(void *ctx, int32_t evse_id);
+void platform_unlock_cable21(void *ctx, int32_t evse_id);
+
 // Energy.Active.Import.Register of the EVSE meter in Wh.
 float platform_get_energy_wh21(void *ctx, int32_t evse_id);
 

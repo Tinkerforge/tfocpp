@@ -127,6 +127,10 @@ bool ChargePoint::start(const char *websocket_endpoint_url, const char *charge_p
         ((ChargePoint*)user_data)->onTagSeen(evse_id, tag_id);
     }, this);
 
+    platform_register_stop_callback21(connection.platform_ctx, [](int32_t evse_id, StopReason21 reason, void *user_data){
+        ((ChargePoint*)user_data)->onStop(evse_id, reason);
+    }, this);
+
     platform_ws_register_connection_error_callback(connection.platform_ctx, [](PlatformConnectionError error, void *user_data){
         ((ChargePoint*)user_data)->onConnectionError(error);
     }, this);
@@ -354,6 +358,17 @@ void ChargePoint::onTagSeen(int32_t evse_id, const char *tag_id)
     tag_pending = true;
 }
 
+void ChargePoint::onStop(int32_t evse_id, StopReason21 reason)
+{
+    if (stop_pending) {
+        log_info("Stop reported while a stop is still being processed. Ignored");
+        return;
+    }
+    stop_evse_id = evse_id;
+    stop_reason = reason;
+    stop_pending = true;
+}
+
 static StatusNotificationConnectorStatus connector_status(EvseState21 s, const EvseTracker &t)
 {
     if (s == EvseState21::Faulted)
@@ -384,6 +399,18 @@ static TagRejectionType21 rejection_type(ResponseIdTokenInfoEntriesStatus status
         case ResponseIdTokenInfoEntriesStatus::EXPIRED:       return TagRejectionType21::Expired;
         case ResponseIdTokenInfoEntriesStatus::CONCURRENT_TX: return TagRejectionType21::ConcurrentTx;
         default:                                              return TagRejectionType21::Invalid;
+    }
+}
+
+static TransactionEventTransactionInfoStoppedReason stopped_reason_for(StopReason21 reason)
+{
+    switch (reason) {
+        case StopReason21::EmergencyStop: return TransactionEventTransactionInfoStoppedReason::EMERGENCY_STOP;
+        case StopReason21::Local:         return TransactionEventTransactionInfoStoppedReason::LOCAL;
+        case StopReason21::PowerLoss:     return TransactionEventTransactionInfoStoppedReason::POWER_LOSS;
+        case StopReason21::Reboot:        return TransactionEventTransactionInfoStoppedReason::REBOOT;
+        case StopReason21::Remote:        return TransactionEventTransactionInfoStoppedReason::REMOTE;
+        default:                          return TransactionEventTransactionInfoStoppedReason::OTHER;
     }
 }
 
@@ -432,6 +459,15 @@ void ChargePoint::tickEvses()
                     token.type = "ISO14443";
                     connection.sendCallAction(Authorize{&token});
                 }
+            } else if (t.locked_after_stop) {
+                if (strcmp(pending_tag, t.id_token) == 0) {
+                    log_info("Tag %s unlocks the cable after a local stop", pending_tag);
+                    platform_tag_accepted21(connection.platform_ctx, evse_id, pending_tag);
+                    platform_unlock_cable21(connection.platform_ctx, evse_id);
+                    t.locked_after_stop = false;
+                } else {
+                    log_info("Tag %s does not match the token of the stopped transaction. Ignored", pending_tag);
+                }
             } else if (t.authorized) {
                 if (strcmp(pending_tag, t.id_token) == 0) {
                     log_info("Tag %s seen again before the EV was connected. Canceling the authorization", pending_tag);
@@ -463,6 +499,19 @@ void ChargePoint::tickEvses()
             }
         }
 
+        // A local stop reported by the platform, e.g. an emergency stop.
+        if (stop_pending && stop_evse_id == evse_id) {
+            stop_pending = false;
+            if (t.transaction_active) {
+                t.locked_after_stop = true;
+                auto trigger = stop_reason == StopReason21::Remote ? TransactionEventTriggerReason::REMOTE_STOP
+                                                                   : TransactionEventTriggerReason::ABNORMAL_CONDITION;
+                stopTransaction(evse_id, trigger, stopped_reason_for(stop_reason), false);
+            } else {
+                log_info("Stop reported on EVSE %d without a transaction. Ignored", evse_id);
+            }
+        }
+
         // The EV was not connected in time after the authorization.
         if (t.authorized && !t.transaction_active && !plugged && deadline_elapsed(t.ev_connect_deadline)) {
             log_info("EV connection timeout. Canceling the authorization for %s", t.id_token);
@@ -472,6 +521,11 @@ void ChargePoint::tickEvses()
 
         if (!plugged)
             t.tag_window_closed = false;
+
+        if (s == EvseState21::NotConnected && t.locked_after_stop) {
+            t.locked_after_stop = false;
+            platform_unlock_cable21(connection.platform_ctx, evse_id);
+        }
 
         bool waiting_for_tag = plugged && !t.transaction_active && !t.authorized && !t.tag_window_closed;
         if (waiting_for_tag && !t.waiting_for_tag) {
@@ -527,8 +581,9 @@ void ChargePoint::tickEvses()
         t.last_state = s;
     }
 
-    // A tag for an unknown EVSE id. Drop it.
+    // A tag or stop for an unknown EVSE id. Drop it.
     tag_pending = false;
+    stop_pending = false;
 }
 
 void ChargePoint::startTransaction(int32_t evse_id, TransactionEventTriggerReason trigger)
@@ -583,6 +638,7 @@ void ChargePoint::startTransaction(int32_t evse_id, TransactionEventTriggerReaso
         &evse,
         &token});
 
+    platform_lock_cable21(connection.platform_ctx, evse_id);
     platform_set_charging_allowed21(connection.platform_ctx, evse_id, true);
     if (device_model.tx_updated_interval_s > 0)
         t.next_sampled_value_deadline = set_deadline((uint32_t)device_model.tx_updated_interval_s * 1000);
@@ -684,6 +740,8 @@ void ChargePoint::stopTransaction(int32_t evse_id, TransactionEventTriggerReason
     // 1.6 Finishing parity: a still plugged cable requires a replug before
     // the next tag is accepted. Cleared in tickEvses on unplug.
     t.tag_window_closed = true;
+    if (!t.locked_after_stop)
+        platform_unlock_cable21(connection.platform_ctx, evse_id);
 }
 
 CallResponse ChargePoint::handleBootNotificationResponse(int32_t connectorId, BootNotificationResponseView conf)

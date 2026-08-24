@@ -46,6 +46,8 @@ struct EvseTracker {
     uint32_t tag_deadline = 0;
     bool tag_window_closed = false;
 
+    bool locked_after_stop = false;
+
     // Active transaction.
     bool transaction_active = false;
     char transaction_id[OCPP21_TRANSACTION_ID_LEN + 1] = {};
@@ -99,6 +101,7 @@ public:
 
     // Platform events
     void onTagSeen(int32_t evse_id, const char *tag_id);
+    void onStop(int32_t evse_id, StopReason21 reason);
 
     // Queues a critical security event for guaranteed delivery (A04).
     void sendSecurityEventNotification(const char *type, const char *tech_info = nullptr);
@@ -181,6 +184,11 @@ private:
     bool tag_pending = false;
     int32_t tag_evse_id = 0;
     char pending_tag[OCPP21_ID_TOKEN_LEN + 1] = {};
+
+    // A local stop reported by the platform, handled in the next tick.
+    bool stop_pending = false;
+    int32_t stop_evse_id = 0;
+    StopReason21 stop_reason = StopReason21::Other;
 
     // Only one Authorize is in flight at a time. authorize_for_stop marks
     // an Authorize sent to stop a running transaction with a different

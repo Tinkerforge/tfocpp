@@ -179,6 +179,38 @@ struct TagSeenCallback {
 
 static TagSeenCallback tag_seen_cbs[4];
 
+struct StopCallback {
+    void *ctx = nullptr;
+    void (*cb)(int32_t, StopReason21, void *) = nullptr;
+    void *user_data = nullptr;
+};
+
+static StopCallback stop_cbs[4];
+
+void platform_register_stop_callback21(void *ctx, void (*cb)(int32_t evse_id, StopReason21 reason, void *user_data), void *user_data)
+{
+    for (auto &entry : stop_cbs) {
+        if (entry.cb != nullptr && entry.ctx != ctx)
+            continue;
+        entry.ctx = ctx;
+        entry.cb = cb;
+        entry.user_data = user_data;
+        return;
+    }
+}
+
+void platform_lock_cable21(void *ctx, int32_t evse_id)
+{
+    (void)ctx;
+    printf("[SIM  ] EVSE %d cable locked\n", evse_id);
+}
+
+void platform_unlock_cable21(void *ctx, int32_t evse_id)
+{
+    (void)ctx;
+    printf("[SIM  ] EVSE %d cable unlocked\n", evse_id);
+}
+
 void platform_register_tag_seen_callback21(void *ctx, void (*cb)(int32_t evse_id, const char *tag_id, void *user_data), void *user_data)
 {
     for (auto &entry : tag_seen_cbs) {
@@ -276,7 +308,7 @@ void platform_tag_timed_out21(void *ctx, int32_t evse_id)
     printf("[SIM  ] EVSE %d tag timed out\n", evse_id);
 }
 
-// Commands: plug, unplug, detect, suspend, resume, tag <id>, fault, ok, secevent <type>
+// Commands: plug, unplug, detect, suspend, resume, tag <id>, stop <reason>, fault, ok, secevent <type>
 static void sim_handle_command(char *line)
 {
     auto &e = sim_evses[0];
@@ -313,6 +345,27 @@ static void sim_handle_command(char *line)
                 break;
             }
         }
+    } else if (strncmp(line, "stop ", 5) == 0) {
+        StopReason21 reason;
+        if (strcmp(line + 5, "emergency") == 0)
+            reason = StopReason21::EmergencyStop;
+        else if (strcmp(line + 5, "local") == 0)
+            reason = StopReason21::Local;
+        else if (strcmp(line + 5, "powerloss") == 0)
+            reason = StopReason21::PowerLoss;
+        else if (strcmp(line + 5, "reboot") == 0)
+            reason = StopReason21::Reboot;
+        else if (strcmp(line + 5, "remote") == 0)
+            reason = StopReason21::Remote;
+        else
+            reason = StopReason21::Other;
+        printf("[SIM  ] local stop (%s)\n", line + 5);
+        for (auto &entry : stop_cbs) {
+            if (entry.cb != nullptr) {
+                entry.cb(1, reason, entry.user_data);
+                break;
+            }
+        }
     } else if (strncmp(line, "secevent ", 9) == 0) {
         printf("[SIM  ] queueing security event %s\n", line + 9);
         cp.sendSecurityEventNotification(line + 9, "triggered via host simulator");
@@ -335,7 +388,7 @@ static void sim_handle_command(char *line)
         e.state = EvseState21::NotConnected;
         printf("[SIM  ] EVSE fault cleared\n");
     } else if (line[0] != '\0') {
-        printf("[SIM  ] unknown command %s (plug, unplug, detect, suspend, resume, tag <id>, fault, ok, secevent <type>, m07)\n", line);
+        printf("[SIM  ] unknown command %s (plug, unplug, detect, suspend, resume, tag <id>, stop <reason>, fault, ok, secevent <type>, m07)\n", line);
     }
 }
 
@@ -365,7 +418,7 @@ int main(int argc, char **argv)
         fprintf(stderr, "Usage: %s <websocket-endpoint-url> <charge-point-name> [basic-auth-pass] [--ca file] [--cert file] [--key file] [--name2 name] [--pass2 pass]\n", argv[0]);
         fprintf(stderr, "wss:// URLs require --ca (security profile 2), --cert and --key add mTLS (security profile 3).\n");
         fprintf(stderr, "--name2 starts a second, parallel client on the same endpoint.\n");
-        fprintf(stderr, "EVSE simulation via stdin: plug, unplug, detect, suspend, resume, tag <id>, fault, ok, secevent <type>\n");
+        fprintf(stderr, "EVSE simulation via stdin: plug, unplug, detect, suspend, resume, tag <id>, stop <reason>, fault, ok, secevent <type>\n");
         return 1;
     }
 

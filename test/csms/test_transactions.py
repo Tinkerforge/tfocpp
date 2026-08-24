@@ -206,6 +206,38 @@ def test_stop_with_different_tag(api, stations, hosts, rfid):
     assert frames and frames[0].get("idToken", {}).get("idToken") == other, frames
 
 
+def test_local_stop_keeps_cable_locked(api, stations, hosts, rfid):
+    name, db_id, h = start_station(api, stations, hosts)
+
+    h.send(f"tag {rfid}")
+    h.wait_for(f"Authorization of {rfid} accepted")
+    h.send("plug")
+    transaction_id = h.wait_for(STARTING).group(1)
+    h.wait_for("EVSE 1 cable locked")
+
+    h.send("stop emergency")
+    h.wait_for("Stopping transaction")
+    time.sleep(0.5)
+    assert h.count("EVSE 1 cable unlocked") == 0
+
+    # Only the token of the stopped transaction unlocks the cable.
+    h.send("tag NOT-A-KNOWN-TOKEN")
+    h.wait_for("does not match the token of the stopped transaction")
+    assert h.count("EVSE 1 cable unlocked") == 0
+
+    h.send(f"tag {rfid}")
+    h.wait_for("EVSE 1 cable unlocked")
+    h.send("unplug")
+
+    api.wait_for_ended_session(db_id, transaction_id)
+
+    frames = [entry["payload"] for entry in api.ocpp_logs(db_id, limit=100)
+              if entry["action"] == "TransactionEvent" and entry["direction"] == "inbound"
+              and entry["messageType"] == 2 and entry["payload"].get("eventType") == "Ended"
+              and entry["payload"].get("transactionInfo", {}).get("transactionId") == transaction_id]
+    assert frames and frames[0]["transactionInfo"].get("stoppedReason") == "EmergencyStop", frames
+
+
 @pytest.mark.docker
 def test_offline_transaction_continuation(api, stations, hosts, rfid):
     name, db_id, h = start_station(api, stations, hosts)
