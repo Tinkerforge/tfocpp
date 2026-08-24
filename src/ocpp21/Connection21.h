@@ -46,6 +46,8 @@ public:
     void handleMessage(char *message, size_t message_len);
 
     void sendCallError(const char *uid, CallErrorCode code, const char *desc);
+    // FR.06: rejects an invalid CALLRESULT received from the CSMS.
+    void sendCallResultError(const char *uid, CallErrorCode code, const char *desc);
 
     bool sendCallAction(const ICall &call);
     // Transaction related calls survive disconnects and timeouts. They are
@@ -54,6 +56,9 @@ public:
     bool sendCallResponse(const ICall &call);
 
     void setPongDeadline();
+
+    void sendErrorFrame(OcppRpcMessageType message_type, const char *uid, CallErrorCode code, const char *desc);
+    void clearInFlight();
 
     void *platform_ctx = nullptr;
     ChargePoint *cp = nullptr;

@@ -119,27 +119,35 @@ void Connection::handleMessage(char *message, size_t message_len)
     }
 
     if (messageType == (int32_t)OcppRpcMessageType::CALLRESULT) {
+        CallAction result_to = message_in_flight.action;
+
         if (doc.size() != 3) {
             log_error("received call result with %d members, but expected 3.", (int)doc.size());
+            sendCallResultError(uniqueID, CallErrorCode::RpcFrameworkError, "call result must have 3 members");
+            clearInFlight();
+            cp->onCallError(result_to, uid);
             return;
         }
 
         if (doc[2].isNull() || !doc[2].is<JsonObject>()) {
             log_error("received call result with payload being neither an object nor null.");
+            sendCallResultError(uniqueID, CallErrorCode::RpcFrameworkError, "call result payload must be an object");
+            clearInFlight();
+            cp->onCallError(result_to, uid);
             return;
         }
 
         log_info("Received result for %s (id %" PRIu64 ")", CallActionStrings[(size_t)message_in_flight.action], uid);
 
-        CallAction result_to = message_in_flight.action;
-        message_in_flight = QueueItem{};
-        in_flight_is_transaction = false;
-        message_timeout_deadline = 0;
+        clearInFlight();
         transaction_message_attempts = 0;
 
         CallResponse res = callResultHandler(0, result_to, doc[2].as<JsonObject>(), cp);
-        (void)res;
-        // TODO: send CALLRESULTERROR if res.result != OK.
+        // FR.06: an invalid response message is answered with a CALLRESULTERROR.
+        if (res.result != CallErrorCode::OK) {
+            sendCallResultError(uniqueID, res.result, res.error_description);
+            cp->onCallError(result_to, uid);
+        }
         return;
     }
 
@@ -170,21 +178,17 @@ void Connection::handleMessage(char *message, size_t message_len)
             transaction_retry_deadline = set_deadline(backoff_s * 1000);
             transaction_messages.push_front(std::move(message_in_flight));
         }
-        message_in_flight = QueueItem{};
-        in_flight_is_transaction = false;
-        message_timeout_deadline = 0;
+        clearInFlight();
         return;
     }
 
     cp->onCallError(message_in_flight.action, message_in_flight.message_id);
-    message_in_flight = QueueItem{};
-    in_flight_is_transaction = false;
-    message_timeout_deadline = 0;
+    clearInFlight();
 }
 
-static size_t buildCallError(TFJsonSerializer &json, const char *uid, CallErrorCode code, const char *desc) {
+static size_t buildErrorFrame(TFJsonSerializer &json, OcppRpcMessageType message_type, const char *uid, CallErrorCode code, const char *desc) {
     json.addArray();
-    json.addNumber((int32_t)OcppRpcMessageType::CALLERROR);
+    json.addNumber((int32_t)message_type);
     json.addString(uid);
     json.addString(CallErrorCodeStrings[(size_t)code]);
     json.addString(desc);
@@ -194,23 +198,40 @@ static size_t buildCallError(TFJsonSerializer &json, const char *uid, CallErrorC
     return json.end();
 }
 
-void Connection::sendCallError(const char *uid, CallErrorCode code, const char *desc)
+void Connection::sendErrorFrame(OcppRpcMessageType message_type, const char *uid, CallErrorCode code, const char *desc)
 {
-    log_info("Sending error %s (%s) for id %s", CallErrorCodeStrings[(size_t)code], desc, uid);
-
     size_t len = 0;
     {
         TFJsonSerializer json{nullptr, 0};
-        len = buildCallError(json, uid, code, desc);
+        len = buildErrorFrame(json, message_type, uid, code, desc);
     }
     auto buf = heap_alloc_array<char>(len + 1);
     TFJsonSerializer json{buf.get(), len + 1};
-    buildCallError(json, uid, code, desc);
+    buildErrorFrame(json, message_type, uid, code, desc);
 
     QueueItem item;
     item.buf = std::move(buf);
     item.len = len;
     pending_responses.push_back(std::move(item));
+}
+
+void Connection::sendCallError(const char *uid, CallErrorCode code, const char *desc)
+{
+    log_info("Sending error %s (%s) for id %s", CallErrorCodeStrings[(size_t)code], desc, uid);
+    sendErrorFrame(OcppRpcMessageType::CALLERROR, uid, code, desc);
+}
+
+void Connection::sendCallResultError(const char *uid, CallErrorCode code, const char *desc)
+{
+    log_info("Sending call result error %s (%s) for id %s", CallErrorCodeStrings[(size_t)code], desc, uid);
+    sendErrorFrame(OcppRpcMessageType::CALLRESULTERROR, uid, code, desc);
+}
+
+void Connection::clearInFlight()
+{
+    message_in_flight = QueueItem{};
+    in_flight_is_transaction = false;
+    message_timeout_deadline = 0;
 }
 
 bool Connection::sendCallResponse(const ICall &call)
