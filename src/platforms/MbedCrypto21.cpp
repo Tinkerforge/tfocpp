@@ -805,10 +805,23 @@ static bool responder_matches(const OcspBasicResponse *basic, mbedtls_x509_crt *
     return false;
 }
 
+// Parses one DER certificate into the chain unless an identical one is already in it.
+static bool add_der_unique(mbedtls_x509_crt *chain, const uint8_t *der, size_t der_len)
+{
+    for (const mbedtls_x509_crt *c = chain; c != nullptr && c->raw.len > 0; c = c->next) {
+        if (c->raw.len == der_len && memcmp(c->raw.p, der, der_len) == 0) {
+            return true;
+        }
+    }
+    return mbedtls_x509_crt_parse_der(chain, der, der_len) == 0;
+}
+
 // The responder chain is verified against the given roots with the
-// issuer available as untrusted intermediate (RFC 6960 4.2.2.2), a
-// delegated responder additionally needs the OCSPSigning EKU.
-static bool verify_responder(const OcspBasicResponse *basic, mbedtls_x509_crt *signer, mbedtls_x509_crt *issuer, bool delegated,
+// issuer and the rest of the SECC chain available as untrusted
+// intermediates (RFC 6960 4.2.2.2), a delegated responder additionally
+// needs the OCSPSigning EKU.
+static bool verify_responder(const OcspBasicResponse *basic, mbedtls_x509_crt *signer, mbedtls_x509_crt *issuer,
+                             CertList *untrusted, bool delegated,
                              const char * const *roots_pem, size_t roots_len)
 {
     if (delegated && mbedtls_x509_crt_check_extended_key_usage(signer, MBEDTLS_OID_OCSP_SIGNING, MBEDTLS_OID_SIZE(MBEDTLS_OID_OCSP_SIGNING)) != 0) {
@@ -820,14 +833,20 @@ static bool verify_responder(const OcspBasicResponse *basic, mbedtls_x509_crt *s
     bool ok = mbedtls_x509_crt_parse_der(&chain, signer->raw.p, signer->raw.len) == 0;
     if (ok && basic->has_certs) {
         for (const mbedtls_x509_crt *c = &basic->certs; ok && c != nullptr; c = c->next) {
-            if (c->raw.len == signer->raw.len && memcmp(c->raw.p, signer->raw.p, c->raw.len) == 0) {
-                continue;
-            }
-            ok = mbedtls_x509_crt_parse_der(&chain, c->raw.p, c->raw.len) == 0;
+            ok = add_der_unique(&chain, c->raw.p, c->raw.len);
         }
     }
-    if (ok && (issuer->raw.len != signer->raw.len || memcmp(issuer->raw.p, signer->raw.p, issuer->raw.len) != 0)) {
-        ok = mbedtls_x509_crt_parse_der(&chain, issuer->raw.p, issuer->raw.len) == 0;
+    if (ok) {
+        ok = add_der_unique(&chain, issuer->raw.p, issuer->raw.len);
+    }
+    // The signer chains up through the SECC chain intermediates when
+    // the PKI is deeper than one sub CA.
+    for (size_t i = 0; ok && untrusted != nullptr; ++i) {
+        mbedtls_x509_crt *c = untrusted->at(i);
+        if (c == nullptr) {
+            break;
+        }
+        ok = add_der_unique(&chain, c->raw.p, c->raw.len);
     }
 
     if (ok) {
@@ -846,10 +865,15 @@ OcppOcspStatus21 platform_ocsp_validate21(const char *ocsp_response_b64,
                                           const char *pem, size_t idx,
                                           const char *issuer_pem, size_t issuer_idx,
                                           const char * const *roots_pem, size_t roots_len,
-                                          time_t now, time_t *next_update)
+                                          time_t now, time_t *next_update,
+                                          uint8_t *response_der, size_t response_der_cap,
+                                          size_t *response_der_len)
 {
     if (next_update != nullptr) {
         *next_update = 0;
+    }
+    if (response_der_len != nullptr) {
+        *response_der_len = 0;
     }
 
     CertList certs(pem);
@@ -895,7 +919,7 @@ OcppOcspStatus21 platform_ocsp_validate21(const char *ocsp_response_b64,
             (mbedtls_oid_get_sig_alg(&basic.sig_alg_oid, &sig_md, &sig_pk) == 0) &&
             (md_hash(sig_md, basic.tbs.p, basic.tbs.len, hash, &hash_len)) &&
             (mbedtls_pk_verify(&signer->pk, sig_md, hash, hash_len, basic.signature.p, basic.signature.len) == 0) &&
-            verify_responder(&basic, signer, issuer, delegated, roots_pem, roots_len)) {
+            verify_responder(&basic, signer, issuer, &issuer_certs, delegated, roots_pem, roots_len)) {
             mbedtls_asn1_buf issuer_key;
             uint8_t *p = basic.responses.p;
             const uint8_t *responses_end = p + basic.responses.len;
@@ -936,6 +960,10 @@ OcppOcspStatus21 platform_ocsp_validate21(const char *ocsp_response_b64,
     }
 
     mbedtls_x509_crt_free(&basic.certs);
+    if (result == OcppOcspStatus21::Good && response_der != nullptr && response_der_len != nullptr && der_len <= response_der_cap) {
+        memcpy(response_der, der.get(), der_len);
+        *response_der_len = der_len;
+    }
     return result;
 }
 

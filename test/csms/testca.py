@@ -105,6 +105,28 @@ basicConstraints = critical,CA:TRUE
               "-notext"])
         return cert.read_text()
 
+    def intermediate_ca(self, name="tfocpp-test-subca"):
+        # A sub CA signed by this CA, for PKIs deeper than one level.
+        d = self.dir / "sub"
+        d.mkdir(exist_ok=True)
+        sub = SigningCa.__new__(SigningCa)
+        sub.dir = d
+        sub.key = d / "ca-key.pem"
+        sub.cert = d / "ca.pem"
+        sub._serial = d / "ca.srl"
+        csr = d / "ca.csr"
+        ext = d / "ca-ext.cnf"
+        _run(["openssl", "req", "-newkey", "ec",
+              "-pkeyopt", "ec_paramgen_curve:P-256", "-nodes",
+              "-keyout", str(sub.key), "-out", str(csr), "-subj", f"/CN={name}"])
+        ext.write_text("[ext]\nbasicConstraints = critical,CA:TRUE\nkeyUsage = critical,keyCertSign,cRLSign\n")
+        _run(["openssl", "x509", "-req", "-in", str(csr),
+              "-CA", str(self.cert), "-CAkey", str(self.key),
+              "-CAcreateserial", "-CAserial", str(self._serial),
+              "-days", "365", "-sha256", "-out", str(sub.cert),
+              "-extfile", str(ext), "-extensions", "ext"])
+        return sub
+
     def hash_data(self, cert_pem, issuer_pem):
         # OCPP CertificateHashData for cert_pem issued by issuer_pem,
         # hashed per RFC 6960 (issuer key hash over the SPKI bit string).

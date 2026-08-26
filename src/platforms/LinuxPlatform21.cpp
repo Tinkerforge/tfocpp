@@ -419,6 +419,34 @@ static void sim_handle_command(char *line)
         if (!cp.request15118EVCertificate("urn:iso:15118:2:2013:MsgDef", update, "3q2+7w==")) {
             printf("[SIM  ] EV certificate request refused\n");
         }
+    } else if (strcmp(line, "m06dump") == 0) {
+        // Prints the aggregated OCSP status and the retained raw
+        // responses (hex) of every SECC chain, for the M06 tests.
+        for (const auto &entry : cp.cert_store.all()) {
+            if (entry.group != Ocpp21::CertGroup::V2GChain && entry.group != Ocpp21::CertGroup::V2G20Chain) {
+                continue;
+            }
+            const char *status = "?";
+            switch (cp.seccChainOcspStatus(entry.id)) {
+                case OcppOcspStatus21::Good:    status = "good"; break;
+                case OcppOcspStatus21::Revoked: status = "revoked"; break;
+                case OcppOcspStatus21::Unknown: status = "unknown"; break;
+                case OcppOcspStatus21::Invalid: status = "invalid"; break;
+            }
+            printf("[SIM  ] m06 chain %u group %d status %s\n", entry.id, (int)entry.group, status);
+            for (uint8_t idx = 0; idx < OCPP21_CHAIN_MAX_CHILDREN + 1; ++idx) {
+                const uint8_t *der = nullptr;
+                size_t der_len = 0;
+                if (!cp.seccChainOcspResponse(entry.id, idx, &der, &der_len)) {
+                    continue;
+                }
+                printf("[SIM  ] m06 staple chain %u idx %u ", entry.id, idx);
+                for (size_t i = 0; i < der_len; ++i) {
+                    printf("%02x", der[i]);
+                }
+                printf("\n");
+            }
+        }
     } else if (strcmp(line, "fault") == 0) {
         e.state = EvseState21::Faulted;
         printf("[SIM  ] EVSE faulted\n");
@@ -426,7 +454,7 @@ static void sim_handle_command(char *line)
         e.state = EvseState21::NotConnected;
         printf("[SIM  ] EVSE fault cleared\n");
     } else if (line[0] != '\0') {
-        printf("[SIM  ] unknown command %s (plug, unplug, detect, suspend, resume, tag <id>, stop <reason>, fault, ok, secevent <type>, m07 [count], evcert [update])\n", line);
+        printf("[SIM  ] unknown command %s (plug, unplug, detect, suspend, resume, tag <id>, stop <reason>, fault, ok, secevent <type>, m07 [count], m06dump, evcert [update])\n", line);
     }
 }
 

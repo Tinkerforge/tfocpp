@@ -986,11 +986,16 @@ CallResponse ChargePoint::handleSetVariables(const char *uid, SetVariablesView r
 
     if (device_model.basic_auth_password_changed || device_model.organization_name_changed || device_model.iso15118_changed) {
         bool password_changed = device_model.basic_auth_password_changed;
+        bool iso15118_changed = device_model.iso15118_changed;
         device_model.basic_auth_password_changed = false;
         device_model.organization_name_changed = false;
         device_model.iso15118_changed = false;
 
         saveSecurityPersistence();
+
+        if (iso15118_changed) {
+            platform_cert_store_changed21(connection.platform_ctx);
+        }
 
         if (password_changed) {
             // A01: use the new password from the next connection on. Give
@@ -2176,7 +2181,7 @@ void ChargePoint::scheduleChainOcsp(uint32_t chain_id)
 
     for (auto &slot : ocsp_cache) {
         if (slot.used && slot.chain_id == chain_id) {
-            slot.used = false;
+            slot.clear();
         }
     }
 
@@ -2258,9 +2263,33 @@ CallResponse ChargePoint::handleGetCertificateStatusResponse(int32_t connectorId
 
     time_t now = platform_get_system_time(connection.platform_ctx);
     time_t next_update = 0;
+
+    // Retain the raw response of -20 chain certificates for TLS 1.3
+    // stapling (V2G20-2388). The DER is shorter than its base64 form.
+    bool retain = e->group == CertGroup::V2G20Chain;
+    std::unique_ptr<uint8_t[]> der_buf;
+    size_t der_cap = 0;
+    size_t der_len = 0;
+    if (retain) {
+        der_cap = strlen(conf.ocspResult().unwrap());
+        der_buf = heap_alloc_array<uint8_t>(der_cap);
+    }
+
+    OcppOcspStatus21 old_status = slot.status;
     auto result = platform_ocsp_validate21(conf.ocspResult().unwrap(), pem.get(), slot.cert_idx,
-                                           issuer_pem, issuer_idx, root_ptrs, roots, now, &next_update);
+                                           issuer_pem, issuer_idx, root_ptrs, roots, now, &next_update,
+                                           der_buf.get(), der_cap, retain ? &der_len : nullptr);
     slot.status = result;
+
+    bool staple_changed = false;
+    if (result == OcppOcspStatus21::Good && der_len > 0) {
+        staple_changed = (slot.response_der_len != der_len) || (memcmp(slot.response_der.get(), der_buf.get(), der_len) != 0);
+        if (staple_changed) {
+            slot.response_der = heap_alloc_array<uint8_t>(der_len);
+            memcpy(slot.response_der.get(), der_buf.get(), der_len);
+            slot.response_der_len = der_len;
+        }
+    }
 
     switch (result) {
         case OcppOcspStatus21::Good: {
@@ -2281,7 +2310,7 @@ CallResponse ChargePoint::handleGetCertificateStatusResponse(int32_t connectorId
             cert_store.removeChain(e->group, chain_id);
             for (auto &s : ocsp_cache) {
                 if (s.used && s.chain_id == chain_id) {
-                    s.used = false;
+                    s.clear();
                 }
             }
             platform_cert_store_changed21(connection.platform_ctx);
@@ -2296,7 +2325,44 @@ CallResponse ChargePoint::handleGetCertificateStatusResponse(int32_t connectorId
             break;
     }
 
+    // TLS 1.3 availability and the stapled data follow this cache
+    // (HUB20-532-002, V2G20-2388), trigger a reload in the ISO 15118
+    // stack. The Revoked path notified via the chain deletion already.
+    if (result != OcppOcspStatus21::Revoked && (result != old_status || staple_changed)) {
+        platform_cert_store_changed21(connection.platform_ctx);
+    }
+
     return CallResponse{CallErrorCode::OK, nullptr};
+}
+
+OcppOcspStatus21 ChargePoint::seccChainOcspStatus(uint32_t chain_id) const
+{
+    bool any = false;
+    for (const auto &slot : ocsp_cache) {
+        if (!slot.used || slot.chain_id != chain_id) {
+            continue;
+        }
+        if (slot.status == OcppOcspStatus21::Revoked) {
+            return OcppOcspStatus21::Revoked;
+        }
+        if (slot.status != OcppOcspStatus21::Good) {
+            return OcppOcspStatus21::Unknown;
+        }
+        any = true;
+    }
+    return any ? OcppOcspStatus21::Good : OcppOcspStatus21::Unknown;
+}
+
+bool ChargePoint::seccChainOcspResponse(uint32_t chain_id, uint8_t cert_idx, const uint8_t **der, size_t *der_len) const
+{
+    for (const auto &slot : ocsp_cache) {
+        if (slot.used && slot.chain_id == chain_id && slot.cert_idx == cert_idx && slot.response_der_len > 0) {
+            *der = slot.response_der.get();
+            *der_len = slot.response_der_len;
+            return true;
+        }
+    }
+    return false;
 }
 
 bool ChargePoint::requestVehicleChainStatus(const OcppCertHashData21 *hashes, const char * const *responder_urls, size_t count)

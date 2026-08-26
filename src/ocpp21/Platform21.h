@@ -137,7 +137,9 @@ OcppOcspStatus21 platform_ocsp_validate21(const char *ocsp_response_b64,
                                           const char *pem, size_t idx,
                                           const char *issuer_pem, size_t issuer_idx,
                                           const char * const *roots_pem, size_t roots_len,
-                                          time_t now, time_t *next_update);
+                                          time_t now, time_t *next_update,
+                                          uint8_t *response_der = nullptr, size_t response_der_cap = 0,
+                                          size_t *response_der_len = nullptr);
 
 // OCSP responder URL from the authority information access extension.
 bool platform_cert_ocsp_url21(const char *pem, size_t idx, char *url, size_t url_len);

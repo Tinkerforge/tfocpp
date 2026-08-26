@@ -2,6 +2,7 @@
 
 #include <time.h>
 
+#include <memory>
 #include <string>
 
 #include "CertStore21.h"
@@ -66,6 +67,14 @@ struct OcspCacheEntry {
     char url[256] = "";
     OcppOcspStatus21 status = OcppOcspStatus21::Unknown;
     uint32_t refresh_deadline = 0;
+    std::unique_ptr<uint8_t[]> response_der;
+    size_t response_der_len = 0;
+
+    void clear() {
+        used = false;
+        response_der.reset();
+        response_der_len = 0;
+    }
 };
 
 #define OCPP21_OCSP_CACHE_SIZE (OCPP21_CERTSTORE_MAX_CHAINS * (OCPP21_CHAIN_MAX_CHILDREN + 1))
@@ -111,6 +120,16 @@ public:
     // result lands in the vehicle status cache, see vehicleChainStatus.
     bool requestVehicleChainStatus(const OcppCertHashData21 *hashes, const char * const *responder_urls, size_t count);
     const VehicleOcspStatus *vehicleChainStatus(const OcppCertHashData21 &hash) const;
+
+    // M06: aggregated OCSP status of a SECC chain. Good only when every
+    // chain certificate with a responder URL has a currently Good
+    // response, Unknown when nothing is cached (HUB20-532-002 consumers).
+    OcppOcspStatus21 seccChainOcspStatus(uint32_t chain_id) const;
+
+    // M06: retained raw OCSP response for one -20 SECC chain
+    // certificate, for stapling into the TLS 1.3 handshake
+    // (V2G20-2388). The pointer stays valid until the next tick.
+    bool seccChainOcspResponse(uint32_t chain_id, uint8_t cert_idx, const uint8_t **der, size_t *der_len) const;
 
     bool request15118EVCertificate(const char *iso15118_schema_version, bool update, const char *exi_request,
                                    int32_t maximum_contract_certificate_chains = -1,

@@ -360,11 +360,16 @@ OcppOcspStatus21 platform_ocsp_validate21(const char *ocsp_response_b64,
                                           const char *pem, size_t idx,
                                           const char *issuer_pem, size_t issuer_idx,
                                           const char * const *roots_pem, size_t roots_len,
-                                          time_t now, time_t *next_update)
+                                          time_t now, time_t *next_update,
+                                          uint8_t *response_der, size_t response_der_cap,
+                                          size_t *response_der_len)
 {
     (void)now;
     if (next_update != nullptr) {
         *next_update = 0;
+    }
+    if (response_der_len != nullptr) {
+        *response_der_len = 0;
     }
 
     auto cert = load_cert(pem, idx);
@@ -393,11 +398,22 @@ OcppOcspStatus21 platform_ocsp_validate21(const char *ocsp_response_b64,
     if (OCSP_response_status(resp) == OCSP_RESPONSE_STATUS_SUCCESSFUL
      && (basic = OCSP_response_get1_basic(resp)) != nullptr
      && (store = build_root_store(roots_pem, roots_len)) != nullptr) {
-        // The issuer is needed as untrusted intermediate to build the
-        // delegated responder chain up to the root (RFC 6960 4.2.2.2).
+        // The issuer and the rest of its chain are needed as untrusted
+        // intermediates to build the responder chain up to the root
+        // (RFC 6960 4.2.2.2), the PKI may have more than one sub CA.
         StackPtr untrusted{sk_X509_new_null()};
         if (untrusted) {
             sk_X509_push(untrusted.get(), X509_dup(issuer.get()));
+            for (size_t i = 0;; ++i) {
+                if (i == issuer_idx) {
+                    continue;
+                }
+                auto extra = load_cert(issuer_pem, i);
+                if (!extra) {
+                    break;
+                }
+                sk_X509_push(untrusted.get(), X509_dup(extra.get()));
+            }
             if (OCSP_basic_verify(basic, untrusted.get(), store, 0) == 1) {
                 // The CertID digest is chosen by the requester. Try SHA256
                 // (A00.FR.506) first, then the SHA1 default.
@@ -437,6 +453,10 @@ OcppOcspStatus21 platform_ocsp_validate21(const char *ocsp_response_b64,
     X509_STORE_free(store);
     OCSP_BASICRESP_free(basic);
     OCSP_RESPONSE_free(resp);
+    if (result == OcppOcspStatus21::Good && response_der != nullptr && response_der_len != nullptr && der_len <= response_der_cap) {
+        memcpy(response_der, der.get(), der_len);
+        *response_der_len = der_len;
+    }
     return result;
 }
 

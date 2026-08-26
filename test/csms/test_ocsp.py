@@ -72,6 +72,65 @@ def test_m06_ocsp_good(csms, host, ca):
     host.wait_for("OCSP status good", timeout=10)
 
 
+def test_m06_raw_response_retained(csms, host, ca):
+    # V2G20-2388: the raw response of a -20 chain is kept for TLS 1.3
+    # stapling, byte for byte as delivered, and the aggregated chain
+    # status turns good.
+    import base64
+
+    leaf = install_v2g20_chain(csms, host, ca, ocsp_url="http://ocsp.test.example/")
+
+    _, msg_id = csms.expect("GetCertificateStatus")
+    response_b64 = ca.ocsp_response(leaf)
+    csms.respond(msg_id, {"status": "Accepted", "ocspResult": response_b64})
+    host.wait_for("OCSP status good", timeout=10)
+
+    host.send("m06dump")
+    host.wait_for("m06 chain [0-9]+ group [0-9]+ status good", timeout=10)
+    m = host.wait_for("m06 staple chain [0-9]+ idx 0 ([0-9a-f]+)$", timeout=10)
+    assert m.group(1) == base64.b64decode(response_b64).hex()
+
+
+def test_m06_status_unknown_without_response(csms, host, ca):
+    # HUB20-532-002 consumers see unknown until a good response exists.
+    install_v2g20_chain(csms, host, ca, ocsp_url="http://ocsp.test.example/")
+
+    host.send("m06dump")
+    host.wait_for("m06 chain [0-9]+ group [0-9]+ status unknown", timeout=10)
+
+
+def test_m06_ocsp_good_with_intermediate(csms, host, ca):
+    # The responder chain must build through the SECC chain sub CA up to
+    # the root when the PKI is deeper than one level (RFC 6960 4.2.2.2,
+    # found on hardware with the three level dev PKI).
+    sub = ca.intermediate_ca()
+
+    assert csms.call("InstallCertificate", {
+        "certificateType": "V2GRootCertificate",
+        "certificate": ca.cert_pem,
+    })["status"] == "Accepted"
+    assert csms.call("TriggerMessage", {
+        "requestedMessage": "SignV2G20Certificate",
+    })["status"] == "Accepted"
+    sign_req, msg_id = csms.expect("SignCertificate")
+    csms.respond(msg_id, {"status": "Accepted"})
+
+    leaf = sub.sign_csr(sign_req["csr"], ocsp_url="http://ocsp.test.example/")
+    assert csms.call("CertificateSigned", {
+        "certificateChain": leaf + sub.cert_pem,
+        "certificateType": "V2G20Certificate",
+        "requestId": sign_req["requestId"],
+    })["status"] == "Accepted"
+    host.wait_for("Installed the signed V2G20Certificate", timeout=10)
+
+    _, msg_id = csms.expect("GetCertificateStatus")
+    csms.respond(msg_id, {"status": "Accepted", "ocspResult": sub.ocsp_response(leaf)})
+    host.wait_for("OCSP status good", timeout=10)
+
+    host.send("m06dump")
+    host.wait_for("m06 chain [0-9]+ group [0-9]+ status good", timeout=10)
+
+
 def test_m06_ocsp_revoked_deletes_chain(csms, host, ca):
     leaf = install_v2g20_chain(csms, host, ca, ocsp_url="http://ocsp.test.example/")
 
