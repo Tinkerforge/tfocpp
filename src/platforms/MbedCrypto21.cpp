@@ -353,6 +353,9 @@ size_t platform_generate_csr21(const OcppCsrParams21 *params, char *csr_pem, siz
     if ((params->country != nullptr) && (params->country[0] != '\0') && !append_subject_part(subject, sizeof(subject), &pos, ",C=", params->country)) {
         return 0;
     }
+    if ((params->domain_component != nullptr) && (params->domain_component[0] != '\0') && !append_subject_part(subject, sizeof(subject), &pos, ",DC=", params->domain_component)) {
+        return 0;
+    }
 
     Rng rng;
     if (!rng.ok) {

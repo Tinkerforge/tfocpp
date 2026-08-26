@@ -1635,20 +1635,27 @@ void ChargePoint::startCsr(SignCertificateCertificateType type, bool renewal, co
             params.common_name = charge_point_name.c_str();
             params.organization = device_model.organization_name[0] != '\0' ? device_model.organization_name : nullptr;
             params.country = nullptr;
+            params.domain_component = nullptr;
             break;
         case SignCertificateCertificateType::V2_G_CERTIFICATE:
-            // ISO 15118-2 SECC leaf (A02.FR.22).
+            // ISO 15118-2 SECC leaf (A02.FR.22). The certificate profile
+            // requires domainComponent "CPO", the EVCC verifies it and
+            // aborts the TLS setup without it (V2G2-875).
             params.curve = OcppCurve21::Secp256r1;
             params.common_name = device_model.secc_id;
             params.organization = device_model.iso_organization_name;
             params.country = device_model.country_name;
+            params.domain_component = "CPO";
             break;
         case SignCertificateCertificateType::V2_G20_CERTIFICATE:
-            // ISO 15118-20 SECC leaf, crypto from V2G20SECCLeafCryptoSuite (A02.FR.23).
+            // ISO 15118-20 SECC leaf, crypto from V2G20SECCLeafCryptoSuite
+            // (A02.FR.23). The -20 certificate profile requires a
+            // domainComponent ending in "CSO".
             params.curve = device_model.v2g20_use_ed448 ? OcppCurve21::Ed448 : OcppCurve21::Secp521r1;
             params.common_name = device_model.secc_id;
             params.organization = device_model.iso_organization_name;
             params.country = device_model.country_name;
+            params.domain_component = "CSO";
             break;
         case SignCertificateCertificateType::NONE:
             // Combined certificate, used for the CSMS connection and as the
@@ -1657,6 +1664,7 @@ void ChargePoint::startCsr(SignCertificateCertificateType type, bool renewal, co
             params.common_name = device_model.secc_id;
             params.organization = device_model.iso_organization_name;
             params.country = device_model.country_name;
+            params.domain_component = "CPO";
             break;
         default:
             return;

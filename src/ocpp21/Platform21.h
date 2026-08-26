@@ -108,9 +108,13 @@ enum class OcppCurve21 : uint8_t {
 struct OcppCsrParams21 {
     OcppCurve21 curve;
     const char *common_name;
-    const char *organization; // nullptr to omit
-    const char *country;      // nullptr to omit
-    const char *key_name;     // platform storage name for the new private key
+    const char *organization;      // nullptr to omit
+    const char *country;           // nullptr to omit
+    const char *domain_component;  // nullptr to omit. SECC leafs carry the
+                                   // ISO 15118 PKI role: "CPO" for -2
+                                   // (V2G2-875, the EVCC verifies it) and
+                                   // "CSO" for -20 certificate profiles
+    const char *key_name;          // platform storage name for the new private key
 };
 
 // Generates a new key pair and a PEM encoded CSR (RFC 2986). The

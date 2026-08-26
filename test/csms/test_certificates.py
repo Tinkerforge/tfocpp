@@ -203,6 +203,16 @@ def test_sign_v2g_certificate(api, station, ca):
     assert sign_req is not None, "CSMS kept rejecting the V2G CSR"
 
     assert sign_req["certificateType"] == "V2G20Certificate"
+
+    # The -20 certificate profile requires a domainComponent ending in
+    # "CSO" in the SECC leaf subject (the -2 equivalent is "CPO" per
+    # V2G2-875), real V2G PKIs reject CSRs without it.
+    from cryptography import x509
+    from cryptography.x509.oid import NameOID
+    csr = x509.load_pem_x509_csr(sign_req["csr"].encode())
+    dc = csr.subject.get_attributes_for_oid(NameOID.DOMAIN_COMPONENT)
+    assert len(dc) == 1 and dc[0].value.endswith("CSO")
+
     api.command("CertificateSigned", s.name,
                 certificateChain=ca.sign_csr(sign_req["csr"]),
                 certificateType="V2G20Certificate",

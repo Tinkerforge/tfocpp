@@ -290,6 +290,9 @@ size_t platform_generate_csr21(const OcppCsrParams21 *params, char *csr_pem, siz
         if (params->country != nullptr && params->country[0] != '\0') {
             subject_ok = subject_ok && X509_NAME_add_entry_by_txt(name, "C", MBSTRING_ASC, (const unsigned char *)params->country, -1, -1, 0) == 1;
         }
+        if (params->domain_component != nullptr && params->domain_component[0] != '\0') {
+            subject_ok = subject_ok && X509_NAME_add_entry_by_txt(name, "DC", MBSTRING_ASC, (const unsigned char *)params->domain_component, -1, -1, 0) == 1;
+        }
 
         if (subject_ok
          && X509_REQ_set_pubkey(req, key) == 1
