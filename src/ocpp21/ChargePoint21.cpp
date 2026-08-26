@@ -236,6 +236,10 @@ void ChargePoint::onDisconnect()
         if (ev_cert_result_cb != nullptr)
             ev_cert_result_cb(false, nullptr, 0, ev_cert_result_user_data);
     }
+    if (vehicle_status_in_flight) {
+        vehicle_status_in_flight = false;
+        platform_vehicle_chain_status_result21(connection.platform_ctx, false);
+    }
 }
 
 void ChargePoint::onConnectionError(PlatformConnectionError error)
@@ -376,6 +380,11 @@ void ChargePoint::onTimeout(CallAction action, uint64_t messageId)
         log_warn("Get15118EVCertificate failed");
         if (ev_cert_result_cb != nullptr)
             ev_cert_result_cb(false, nullptr, 0, ev_cert_result_user_data);
+    }
+    if (action == CallAction::GET_CERTIFICATE_CHAIN_STATUS && vehicle_status_in_flight) {
+        vehicle_status_in_flight = false;
+        log_warn("GetCertificateChainStatus failed");
+        platform_vehicle_chain_status_result21(connection.platform_ctx, false);
     }
 }
 
@@ -2371,7 +2380,7 @@ bool ChargePoint::requestVehicleChainStatus(const OcppCertHashData21 *hashes, co
     // passes the full chain leaf first, i.e. Leaf, Sub2, Sub1, which is
     // the wire order required by HUB20-432-006 (and HUB20-432-005/007,
     // hashes for all chain certificates in every request).
-    if (count == 0 || count > OCPP21_VEHICLE_OCSP_CACHE_SIZE) {
+    if (count == 0 || count > OCPP21_VEHICLE_OCSP_CACHE_SIZE || vehicle_status_in_flight) {
         return false;
     }
 
@@ -2391,7 +2400,8 @@ bool ChargePoint::requestVehicleChainStatus(const OcppCertHashData21 *hashes, co
         requests[i].urls_length = 1;
     }
 
-    return connection.sendCallAction(GetCertificateChainStatus{requests, count});
+    vehicle_status_in_flight = connection.sendCallAction(GetCertificateChainStatus{requests, count});
+    return vehicle_status_in_flight;
 }
 
 const VehicleOcspStatus *ChargePoint::vehicleChainStatus(const OcppCertHashData21 &hash) const
@@ -2451,6 +2461,11 @@ CallResponse ChargePoint::handleGetCertificateChainStatusResponse(int32_t connec
         }
         log_info("Vehicle chain certificate %s: OCSP status %s", slot->hash.serial_number,
                  GetCertificateChainStatusResponseCertificateStatusEntryEntriesStatusStrings[(size_t)slot->status]);
+    }
+
+    if (vehicle_status_in_flight) {
+        vehicle_status_in_flight = false;
+        platform_vehicle_chain_status_result21(connection.platform_ctx, true);
     }
 
     return CallResponse{CallErrorCode::OK, nullptr};

@@ -205,6 +205,7 @@ def test_m07_vehicle_chain_status(csms, host):
         "nextUpdate": "2027-01-01T00:00:00Z",
     }]})
     host.wait_for("Vehicle chain certificate 1234: OCSP status Good", timeout=10)
+    host.wait_for("Vehicle chain status response received", timeout=10)
 
 
 def test_m07_vehicle_chain_order(csms, host):
@@ -226,6 +227,33 @@ def test_m07_vehicle_chain_order(csms, host):
     host.wait_for("Vehicle chain certificate 1234: OCSP status Good", timeout=10)
     host.wait_for("Vehicle chain certificate 5678: OCSP status Good", timeout=10)
     host.wait_for("Vehicle chain certificate 9abc: OCSP status Revoked", timeout=10)
+
+
+def test_m07_missing_entry_stays_uncached(csms, host):
+    # HUB20-432-010 support: the response arrival is reported even when
+    # entries are missing, the missing certificate stays uncached so the
+    # caller can treat it as Unknown.
+    host.send("m07 2")
+    status_req, msg_id = csms.expect("GetCertificateChainStatus")
+    requests = status_req["certificateStatusRequests"]
+    assert len(requests) == 2
+
+    csms.respond(msg_id, {"certificateStatus": [{
+        "certificateHashData": requests[1]["certificateHashData"],
+        "source": "OCSP",
+        "status": "Good",
+        "nextUpdate": "2027-01-01T00:00:00Z",
+    }]})
+    host.wait_for("Vehicle chain status response received", timeout=10)
+    assert host.count("Vehicle chain certificate 5678: OCSP status Good") == 1
+    assert host.count("Vehicle chain certificate 1234") == 0
+
+
+def test_m07_call_error_reported(csms, host):
+    host.send("m07")
+    status_req, msg_id = csms.expect("GetCertificateChainStatus")
+    csms.respond_error(msg_id, "InternalError")
+    host.wait_for("Vehicle chain status request failed", timeout=10)
 
 
 def sign_charging_station_certificate(csms, host, ca):

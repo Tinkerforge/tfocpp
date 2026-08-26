@@ -292,8 +292,10 @@ private:
     OcspCacheEntry ocsp_cache[OCPP21_OCSP_CACHE_SIZE];
     int32_t ocsp_in_flight_idx = -1;
 
-    // M07 plumbing.
+    // M07 plumbing. One request in flight at a time, the result is
+    // reported via platform_vehicle_chain_status_result21.
     VehicleOcspStatus vehicle_ocsp[OCPP21_VEHICLE_OCSP_CACHE_SIZE];
+    bool vehicle_status_in_flight = false;
 
     // M01/M02: one Get15118EVCertificate in flight at a time.
     bool ev_cert_in_flight = false;

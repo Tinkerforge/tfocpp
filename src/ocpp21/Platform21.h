@@ -145,3 +145,9 @@ OcppOcspStatus21 platform_ocsp_validate21(const char *ocsp_response_b64,
 bool platform_cert_ocsp_url21(const char *pem, size_t idx, char *url, size_t url_len);
 
 void platform_cert_store_changed21(void *ctx);
+
+// Fires once per requestVehicleChainStatus: response_received true
+// after the response was processed into the vehicle status cache
+// (entries missing from the response stay uncached), false on
+// CallError, timeout or disconnect.
+void platform_vehicle_chain_status_result21(void *ctx, bool response_received);

@@ -175,6 +175,12 @@ void platform_cert_store_changed21(void *ctx)
            v2g_chain, v2g20_chain, v2g_roots, oem_roots, mo_roots);
 }
 
+void platform_vehicle_chain_status_result21(void *ctx, bool response_received)
+{
+    (void)ctx;
+    printf("[SIM  ] Vehicle chain status %s\n", response_received ? "response received" : "request failed");
+}
+
 // Simulated EVSE, driven by stdin commands. One global simulator shared by
 // all instances, sufficient for the host tests which use one instance.
 struct SimEvse {
