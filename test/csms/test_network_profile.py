@@ -48,39 +48,52 @@ def set_priority(csms, value):
     return res["setVariableResult"][0]["attributeStatus"]
 
 
-def test_setnetworkprofile_validation(csms, hosts, ca):
-    h = hosts.start(csms.url, "tfocpp-netprof-val")
-    csms.wait_connected()
-    h.wait_for("Boot notification accepted", timeout=20)
+def test_setnetworkprofile_validation(hosts, ca):
+    plain = MiniCsms()
+    try:
+        h = hosts.start(plain.url, "tfocpp-netprof-no-ca")
+        plain.wait_connected()
+        h.wait_for("Boot notification accepted", timeout=20)
 
-    assert set_profile(csms, 0, csms.url, 1)["status"] == "Rejected"
-    assert set_profile(csms, 99, csms.url, 1)["status"] == "Rejected"
-    assert set_profile(csms, 1, csms.url, 1, ocppTransport="SOAP")["status"] == "Rejected"
-    assert set_profile(csms, 1, csms.url, 1, ocppVersion="OCPP16")["status"] == "Rejected"
-    # TLS profiles need a wss URL.
-    assert set_profile(csms, 1, "ws://127.0.0.1:9999", 2)["status"] == "Rejected"
-    # No VPN or APN backed interfaces.
-    assert set_profile(csms, 1, csms.url, 1, vpn={
-        "server": "vpn.example", "user": "u", "password": "p",
-        "key": "k", "type": "IKEv2",
-    })["status"] == "Rejected"
-    assert set_profile(csms, 1, csms.url, 1, basicAuthPassword="short")["status"] == "Rejected"
+        # TC_A_20 semantics: a TLS profile without a configured or
+        # OCPP-installed CSMS root is rejected.
+        assert set_profile(plain, 1, "wss://127.0.0.1:9999", 2)["status"] == "Rejected"
+        h.stop()
+    finally:
+        plain.stop()
 
-    # TC_A_20 semantics: a TLS profile without an installed CSMS root is
-    # rejected.
-    assert set_profile(csms, 1, "wss://127.0.0.1:9999", 2)["status"] == "Rejected"
-    assert csms.call("InstallCertificate", {
-        "certificateType": "CSMSRootCertificate",
-        "certificate": ca.cert_pem,
-    })["status"] == "Accepted"
-    # TC_A_21 semantics: profile 3 without a charging station certificate
-    # is rejected.
-    assert set_profile(csms, 1, "wss://127.0.0.1:9999", 3)["status"] == "Rejected"
-    assert set_profile(csms, 1, "wss://127.0.0.1:9999", 2)["status"] == "Accepted"
+    cert, key = ca.server_cert()
+    csms = MiniCsms(certfile=cert, keyfile=key)
+    try:
+        h = hosts.start(csms.url, "tfocpp-netprof-val",
+                        password="netprof-validation-password", ca=str(ca.cert))
+        csms.wait_connected()
+        h.wait_for("Boot notification accepted", timeout=20)
 
-    # NetworkConfigurationPriority accepts only filled slots.
-    assert set_priority(csms, "3") == "Rejected"
-    assert set_priority(csms, "0") == "Rejected"
+        assert set_profile(csms, 0, csms.url, 2)["status"] == "Rejected"
+        assert set_profile(csms, 99, csms.url, 2)["status"] == "Rejected"
+        assert set_profile(csms, 1, csms.url, 2, ocppTransport="SOAP")["status"] == "Rejected"
+        assert set_profile(csms, 1, csms.url, 2, ocppVersion="OCPP16")["status"] == "Rejected"
+        # TLS profiles need a wss URL.
+        assert set_profile(csms, 1, "ws://127.0.0.1:9999", 2)["status"] == "Rejected"
+        # No VPN or APN backed interfaces.
+        assert set_profile(csms, 1, csms.url, 2, vpn={
+            "server": "vpn.example", "user": "u", "password": "p",
+            "key": "k", "type": "IKEv2",
+        })["status"] == "Rejected"
+        assert set_profile(csms, 1, csms.url, 2, basicAuthPassword="short")["status"] == "Rejected"
+
+        # The configured TLS CA makes another profile 2 connection usable.
+        # TC_A_21 semantics: profile 3 without a charging station certificate
+        # is rejected.
+        assert set_profile(csms, 1, "wss://127.0.0.1:9999", 3)["status"] == "Rejected"
+        assert set_profile(csms, 1, "wss://127.0.0.1:9999", 2)["status"] == "Accepted"
+
+        # NetworkConfigurationPriority accepts only filled slots.
+        assert set_priority(csms, "3") == "Rejected"
+        assert set_priority(csms, "0") == "Rejected"
+    finally:
+        csms.stop()
 
 
 def test_downgrade_rejected(hosts, ca):

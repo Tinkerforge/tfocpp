@@ -11,13 +11,6 @@ from testca import SigningCa
 
 
 @pytest.fixture
-def csms():
-    c = MiniCsms()
-    yield c
-    c.stop()
-
-
-@pytest.fixture
 def ca(tmp_path):
     d = tmp_path / "ca"
     d.mkdir()
@@ -25,8 +18,17 @@ def ca(tmp_path):
 
 
 @pytest.fixture
-def host(csms, hosts):
-    h = hosts.start(csms.url, "tfocpp-ocsp-test")
+def csms(ca):
+    cert, key = ca.server_cert()
+    c = MiniCsms(certfile=cert, keyfile=key)
+    yield c
+    c.stop()
+
+
+@pytest.fixture
+def host(csms, hosts, ca):
+    h = hosts.start(csms.url, "tfocpp-ocsp-test",
+                    password="tfocpp-ocsp-test-password", ca=str(ca.cert))
     csms.wait_connected()
     h.wait_for("Boot notification accepted", timeout=20)
     return h

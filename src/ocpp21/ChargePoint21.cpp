@@ -1872,6 +1872,14 @@ void ChargePoint::applyClientCertificate(uint32_t chain_id)
 
 CallResponse ChargePoint::handleInstallCertificate(const char *uid, InstallCertificateView req)
 {
+    // HUB20-21-005: trust-store changes require an authenticated,
+    // integrity-protected OCPP connection (Security Profile 2 or 3).
+    if ((device_model.security_profile < 2) || !tls_in_use) {
+        log_warn("Refused to install a certificate over Security Profile %d", device_model.security_profile);
+        connection.sendCallResponse(InstallCertificateResponse{uid, eResponseStatus::REJECTED});
+        return CallResponse{CallErrorCode::OK, nullptr};
+    }
+
     CertGroup group;
     switch (req.certificateType()) {
         case InstallCertificateCertificateType::V2_G_ROOT_CERTIFICATE:          group = CertGroup::V2GRoot; break;
@@ -1906,6 +1914,12 @@ CallResponse ChargePoint::handleInstallCertificate(const char *uid, InstallCerti
 
 CallResponse ChargePoint::handleDeleteCertificate(const char *uid, DeleteCertificateView req)
 {
+    if ((device_model.security_profile < 2) || !tls_in_use) {
+        log_warn("Refused to delete a certificate over Security Profile %d", device_model.security_profile);
+        connection.sendCallResponse(DeleteCertificateResponse{uid, DeleteCertificateResponseStatus::FAILED});
+        return CallResponse{CallErrorCode::OK, nullptr};
+    }
+
     auto hash_data = req.certificateHashData();
     auto status = DeleteCertificateResponseStatus::NOT_FOUND;
 

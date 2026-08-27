@@ -8,13 +8,6 @@ from testca import SigningCa
 
 
 @pytest.fixture
-def csms():
-    c = MiniCsms()
-    yield c
-    c.stop()
-
-
-@pytest.fixture
 def ca(tmp_path):
     d = tmp_path / "ca"
     d.mkdir()
@@ -22,8 +15,20 @@ def ca(tmp_path):
 
 
 @pytest.fixture
-def host(csms, hosts):
-    h = hosts.start(csms.url, "tfocpp-iso-test")
+def csms(ca):
+    cert, key = ca.server_cert()
+    c = MiniCsms(certfile=cert, keyfile=key)
+    yield c
+    c.stop()
+
+
+def start_host(hosts, csms, name, ca):
+    return hosts.start(csms.url, name, password="tfocpp-iso-test-password", ca=str(ca.cert))
+
+
+@pytest.fixture
+def host(csms, hosts, ca):
+    h = start_host(hosts, csms, "tfocpp-iso-test", ca)
     csms.wait_connected()
     h.wait_for("Boot notification accepted", timeout=20)
     return h
@@ -59,9 +64,9 @@ def test_iso_variable_defaults(csms, host):
     assert values == ["true", "true", "true", "ZZ00000", "false", "false", "7"]
 
 
-def test_iso_variable_validation_and_persistence(csms, hosts):
+def test_iso_variable_validation_and_persistence(csms, hosts, ca):
     name = "tfocpp-iso-persist"
-    h = hosts.start(csms.url, name)
+    h = start_host(hosts, csms, name, ca)
     csms.wait_connected()
     h.wait_for("Boot notification accepted", timeout=20)
 
@@ -76,7 +81,7 @@ def test_iso_variable_validation_and_persistence(csms, hosts):
     assert set_variable(csms, "Enabled", "false") == "Accepted"
 
     h.stop()
-    h2 = hosts.start(csms.url, name)
+    h2 = start_host(hosts, csms, name, ca)
     csms.wait_connected()
     h2.wait_for("Boot notification accepted", timeout=20)
 

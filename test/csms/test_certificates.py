@@ -55,9 +55,9 @@ class StationApi:
 
 
 @pytest.fixture
-def station(api, stations, hosts):
-    name, db_id = stations.create(security_profile=1, password="test-basic-auth-pass-01")
-    h = hosts.start(WS, name, "test-basic-auth-pass-01")
+def station(api, stations, hosts, certs):
+    name, db_id = stations.create(security_profile=2, password="test-basic-auth-pass-01")
+    h = hosts.start(WSS, name, "test-basic-auth-pass-01", ca=certs["ca"])
     h.wait_for("Boot notification accepted", timeout=20)
     return StationApi(api, name, db_id), h
 
