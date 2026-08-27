@@ -2499,7 +2499,8 @@ bool ChargePoint::request15118EVCertificate(const char *iso15118_schema_version,
 {
     // M01/M02, gated by ISO15118Ctrlr Enabled and
     // ContractCertificateInstallationEnabled.
-    if (!device_model.iso15118_enabled || !device_model.contract_cert_install_enabled || ev_cert_in_flight) {
+    if (!device_model.iso15118_pnc_supported || !device_model.iso15118_enabled
+     || !device_model.contract_cert_install_enabled || ev_cert_in_flight) {
         return false;
     }
 

@@ -209,6 +209,21 @@ def test_get_15118_ev_certificate_disabled(csms, host):
     host.send("evcert")
     host.wait_for("EV certificate request refused", timeout=10)
 
+
+def test_pnc_capability_hides_contract_installation(csms, host):
+    host.send("pnc off")
+    host.wait_for("PnC capability disabled", timeout=10)
+    result = get_variables(csms, "ContractCertificateInstallationEnabled")[0]
+    assert result["attributeStatus"] == "UnknownVariable"
+    assert set_variable(csms, "ContractCertificateInstallationEnabled", "true") == "UnknownVariable"
+    host.send("evcert")
+    host.wait_for("EV certificate request refused", timeout=10)
+
+    host.send("pnc on")
+    host.wait_for("PnC capability enabled", timeout=10)
+    result = get_variables(csms, "ContractCertificateInstallationEnabled")[0]
+    assert result["attributeStatus"] == "Accepted"
+
     assert set_variable(csms, "ContractCertificateInstallationEnabled", "true") == "Accepted"
     assert set_variable(csms, "Enabled", "false") == "Accepted"
     host.send("evcert")

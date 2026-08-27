@@ -111,6 +111,7 @@ public:
 
     // ISO15118Ctrlr, read by the ISO 15118 stack.
     bool iso15118_enabled = true;
+    bool iso15118_pnc_supported = true;
     bool v2g_cert_install_enabled = true;
     bool contract_cert_install_enabled = true;
     char iso15118_evse_id[OCPP21_ISO15118_EVSE_ID_MAX_LEN + 1] = "ZZ00000";

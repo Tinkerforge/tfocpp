@@ -425,6 +425,9 @@ static void sim_handle_command(char *line)
         if (!cp.request15118EVCertificate("urn:iso:15118:2:2013:MsgDef", update, "3q2+7w==")) {
             printf("[SIM  ] EV certificate request refused\n");
         }
+    } else if (strcmp(line, "pnc on") == 0 || strcmp(line, "pnc off") == 0) {
+        cp.device_model.iso15118_pnc_supported = line[4] == 'o' && line[5] == 'n';
+        printf("[SIM  ] PnC capability %s\n", cp.device_model.iso15118_pnc_supported ? "enabled" : "disabled");
     } else if (strcmp(line, "m06dump") == 0) {
         // Prints the aggregated OCSP status and the retained raw
         // responses (hex) of every SECC chain, for the M06 tests.
@@ -460,7 +463,7 @@ static void sim_handle_command(char *line)
         e.state = EvseState21::NotConnected;
         printf("[SIM  ] EVSE fault cleared\n");
     } else if (line[0] != '\0') {
-        printf("[SIM  ] unknown command %s (plug, unplug, detect, suspend, resume, tag <id>, stop <reason>, fault, ok, secevent <type>, m07 [count], m06dump, evcert [update])\n", line);
+        printf("[SIM  ] unknown command %s (plug, unplug, detect, suspend, resume, tag <id>, stop <reason>, fault, ok, secevent <type>, m07 [count], m06dump, evcert [update], pnc on|off)\n", line);
     }
 }
 
@@ -490,7 +493,7 @@ int main(int argc, char **argv)
         fprintf(stderr, "Usage: %s <websocket-endpoint-url> <charge-point-name> [basic-auth-pass] [--ca file] [--cert file] [--key file] [--name2 name] [--pass2 pass]\n", argv[0]);
         fprintf(stderr, "wss:// URLs require --ca (security profile 2), --cert and --key add mTLS (security profile 3).\n");
         fprintf(stderr, "--name2 starts a second, parallel client on the same endpoint.\n");
-        fprintf(stderr, "EVSE simulation via stdin: plug, unplug, detect, suspend, resume, tag <id>, stop <reason>, fault, ok, secevent <type>\n");
+        fprintf(stderr, "EVSE simulation via stdin: plug, unplug, detect, suspend, resume, tag <id>, stop <reason>, fault, ok, secevent <type>, pnc on|off\n");
         return 1;
     }
 

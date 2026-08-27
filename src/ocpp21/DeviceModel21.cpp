@@ -113,6 +113,8 @@ const VariableDesc &DeviceModel::variableDesc(size_t idx)
 
 bool DeviceModel::variablePresent(size_t idx) const
 {
+    if (idx == VAR_CONTRACT_CERT_INSTALL_ENABLED)
+        return iso15118_pnc_supported;
     if (idx >= VAR_PROTOCOL_SUPPORTED_FIRST && idx <= VAR_PROTOCOL_SUPPORTED_LAST)
         return protocol_supported[idx - VAR_PROTOCOL_SUPPORTED_FIRST][0] != '\0';
     return true;
@@ -267,6 +269,8 @@ VariableResult DeviceModel::getVariable(const char *component, const char *varia
     VariableResult found = find_variable(component, variable, instance, &idx);
     if (found != VariableResult::Accepted)
         return found;
+    if (!variablePresent(idx))
+        return VariableResult::UnknownVariable;
     return getVariableByIndex(idx, buf, buf_len);
 }
 
@@ -289,6 +293,8 @@ VariableResult DeviceModel::setVariable(const char *component, const char *varia
     VariableResult found = find_variable(component, variable, instance, &idx);
     if (found != VariableResult::Accepted)
         return found;
+    if (!variablePresent(idx))
+        return VariableResult::UnknownVariable;
 
     switch (idx) {
         case VAR_HEARTBEAT_INTERVAL: {
