@@ -148,6 +148,27 @@ void ChargePoint::stop()
 
 void ChargePoint::tick()
 {
+    // OCSP freshness follows wall-clock time, not connection state. Expire
+    // cached SECC responses even while the CSMS is offline so ISO 15118 can
+    // immediately fall back to TLS 1.2 and never staple stale data.
+    bool ocsp_expired = false;
+    time_t now = platform_get_system_time(connection.platform_ctx);
+    for (auto &slot : ocsp_cache) {
+        if (!slot.used || (slot.status != OcppOcspStatus21::Good) || (slot.valid_until == 0) || (now < slot.valid_until)) {
+            continue;
+        }
+        log_warn("OCSP cache expired for chain certificate %u/%u", slot.chain_id, slot.cert_idx);
+        slot.status = OcppOcspStatus21::Unknown;
+        slot.valid_until = 0;
+        slot.response_der.reset();
+        slot.response_der_len = 0;
+        slot.refresh_deadline = set_deadline(0);
+        ocsp_expired = true;
+    }
+    if (ocsp_expired) {
+        platform_cert_store_changed21(connection.platform_ctx);
+    }
+
     connection.tick();
 
     // A01: the SetVariablesResponse had time to leave, switch to the new
@@ -2242,6 +2263,7 @@ void ChargePoint::scheduleChainOcsp(uint32_t chain_id)
             slot.hash = idx == 0 ? e->hash : e->child_hash[idx - 1];
             snprintf(slot.url, sizeof(slot.url), "%s", url);
             slot.status = OcppOcspStatus21::Unknown;
+            slot.valid_until = 0;
             slot.refresh_deadline = set_deadline(0);
             break;
         }
@@ -2311,6 +2333,7 @@ CallResponse ChargePoint::handleGetCertificateStatusResponse(int32_t connectorId
                                            issuer_pem, issuer_idx, root_ptrs, roots, now, &next_update,
                                            der_buf.get(), der_cap, retain ? &der_len : nullptr);
     slot.status = result;
+    slot.valid_until = 0;
 
     bool staple_changed = false;
     if (result == OcppOcspStatus21::Good && der_len > 0) {
@@ -2320,16 +2343,20 @@ CallResponse ChargePoint::handleGetCertificateStatusResponse(int32_t connectorId
             memcpy(slot.response_der.get(), der_buf.get(), der_len);
             slot.response_der_len = der_len;
         }
+    } else if (slot.response_der_len > 0) {
+        staple_changed = true;
+        slot.response_der.reset();
+        slot.response_der_len = 0;
     }
 
     switch (result) {
         case OcppOcspStatus21::Good: {
-            // HUB20-431-001: refresh at nextUpdate or after 7 days,
-            // whichever comes first (M06.FR.10).
-            time_t delta = next_update > now ? next_update - now : OCPP21_OCSP_MAX_CACHE_S;
-            if (delta > OCPP21_OCSP_MAX_CACHE_S) {
-                delta = OCPP21_OCSP_MAX_CACHE_S;
+            // HUB20-431-001: refresh at nextUpdate or after 7 days, whichever comes first (M06.FR.10).
+            slot.valid_until = (next_update) != 0 ? next_update : (now + OCPP21_OCSP_MAX_CACHE_S);
+            if (slot.valid_until > (now + OCPP21_OCSP_MAX_CACHE_S)) {
+                slot.valid_until = (now + OCPP21_OCSP_MAX_CACHE_S);
             }
+            time_t delta = (slot.valid_until > now) ? (slot.valid_until - now) : 0;
             slot.refresh_deadline = set_deadline((uint32_t)delta * 1000);
             log_info("OCSP status good for chain certificate %u/%u", slot.chain_id, slot.cert_idx);
             break;
@@ -2369,6 +2396,7 @@ CallResponse ChargePoint::handleGetCertificateStatusResponse(int32_t connectorId
 OcppOcspStatus21 ChargePoint::seccChainOcspStatus(uint32_t chain_id) const
 {
     bool any = false;
+    time_t now = platform_get_system_time(connection.platform_ctx);
     for (const auto &slot : ocsp_cache) {
         if (!slot.used || slot.chain_id != chain_id) {
             continue;
@@ -2376,7 +2404,7 @@ OcppOcspStatus21 ChargePoint::seccChainOcspStatus(uint32_t chain_id) const
         if (slot.status == OcppOcspStatus21::Revoked) {
             return OcppOcspStatus21::Revoked;
         }
-        if (slot.status != OcppOcspStatus21::Good) {
+        if (slot.status != OcppOcspStatus21::Good || (slot.valid_until == 0) || (now >= slot.valid_until)) {
             return OcppOcspStatus21::Unknown;
         }
         any = true;
@@ -2386,8 +2414,10 @@ OcppOcspStatus21 ChargePoint::seccChainOcspStatus(uint32_t chain_id) const
 
 bool ChargePoint::seccChainOcspResponse(uint32_t chain_id, uint8_t cert_idx, const uint8_t **der, size_t *der_len) const
 {
+    time_t now = platform_get_system_time(connection.platform_ctx);
     for (const auto &slot : ocsp_cache) {
-        if (slot.used && slot.chain_id == chain_id && slot.cert_idx == cert_idx && slot.response_der_len > 0) {
+        if (slot.used && (slot.chain_id == chain_id) && (slot.cert_idx == cert_idx) &&
+            (slot.status == OcppOcspStatus21::Good) && (slot.valid_until > now) && (slot.response_der_len > 0)) {
             *der = slot.response_der.get();
             *der_len = slot.response_der_len;
             return true;

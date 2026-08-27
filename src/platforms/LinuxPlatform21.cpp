@@ -456,6 +456,15 @@ static void sim_handle_command(char *line)
                 printf("\n");
             }
         }
+    } else if (strncmp(line, "time +", 6) == 0) {
+        char *end = nullptr;
+        long seconds = strtol(line + 6, &end, 10);
+        if (end == (line + 6) || (*end != '\0') || (seconds < 0)) {
+            printf("[SIM  ] invalid time offset %s\n", line + 6);
+        } else {
+            platform_set_system_time(nullptr, platform_get_system_time(nullptr) + seconds);
+            printf("[SIM  ] advanced system time by %ld seconds\n", seconds);
+        }
     } else if (strcmp(line, "fault") == 0) {
         e.state = EvseState21::Faulted;
         printf("[SIM  ] EVSE faulted\n");
@@ -463,7 +472,7 @@ static void sim_handle_command(char *line)
         e.state = EvseState21::NotConnected;
         printf("[SIM  ] EVSE fault cleared\n");
     } else if (line[0] != '\0') {
-        printf("[SIM  ] unknown command %s (plug, unplug, detect, suspend, resume, tag <id>, stop <reason>, fault, ok, secevent <type>, m07 [count], m06dump, evcert [update], pnc on|off)\n", line);
+        printf("[SIM  ] unknown command %s (plug, unplug, detect, suspend, resume, tag <id>, stop <reason>, fault, ok, secevent <type>, m07 [count], m06dump, evcert [update], pnc on|off, time +<seconds>)\n", line);
     }
 }
 

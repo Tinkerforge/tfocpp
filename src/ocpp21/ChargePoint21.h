@@ -66,12 +66,14 @@ struct OcspCacheEntry {
     OcppCertHashData21 hash{};
     char url[256] = "";
     OcppOcspStatus21 status = OcppOcspStatus21::Unknown;
+    time_t valid_until = 0;
     uint32_t refresh_deadline = 0;
     std::unique_ptr<uint8_t[]> response_der;
     size_t response_der_len = 0;
 
     void clear() {
         used = false;
+        valid_until = 0;
         response_der.reset();
         response_der_len = 0;
     }

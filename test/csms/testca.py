@@ -153,7 +153,7 @@ basicConstraints = critical,CA:TRUE
             "serialNumber": serial,
         }
 
-    def ocsp_response(self, leaf_pem, revoked=False):
+    def ocsp_response(self, leaf_pem, revoked=False, days=7):
         # Base64 encoded DER OCSP response for the leaf, signed by the CA
         # (RFC 6960), as carried in GetCertificateStatusResponse.ocspResult.
         leaf = self.dir / "ocsp-leaf.pem"
@@ -175,5 +175,5 @@ basicConstraints = critical,CA:TRUE
               "-no_nonce", "-reqout", str(req)])
         _run(["openssl", "ocsp", "-index", str(index), "-CA", str(self.cert),
               "-rsigner", str(self.cert), "-rkey", str(self.key),
-              "-reqin", str(req), "-respout", str(resp), "-ndays", "7"])
+              "-reqin", str(req), "-respout", str(resp), "-ndays", str(days)])
         return base64.b64encode(resp.read_bytes()).decode()

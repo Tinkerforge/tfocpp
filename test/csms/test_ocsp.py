@@ -93,6 +93,39 @@ def test_m06_raw_response_retained(csms, host, ca):
     assert m.group(1) == base64.b64decode(response_b64).hex()
 
 
+@pytest.mark.parametrize(("response_days", "advance_s", "boundary"), [
+    (1, 24 * 3600 + 10, "nextUpdate"),
+    (30, 7 * 24 * 3600 + 10, "seven-day cap"),
+])
+def test_m06_expiry_invalidates_status_and_staple(csms, host, ca, response_days, advance_s, boundary):
+    # HUB20-431-001/M06.FR.10/V2G20-1021: Good status and retained
+    # stapling data expire at nextUpdate or seven days, whichever is
+    # earlier. Expiry is fail-closed even while the refresh is pending.
+    leaf = install_v2g20_chain(csms, host, ca, ocsp_url="http://ocsp.test.example/")
+
+    _, msg_id = csms.expect("GetCertificateStatus")
+    csms.respond(msg_id, {
+        "status": "Accepted",
+        "ocspResult": ca.ocsp_response(leaf, days=response_days),
+    })
+    host.wait_for("OCSP status good", timeout=10)
+
+    host.send("m06dump")
+    host.wait_for("m06 chain [0-9]+ group [0-9]+ status good", timeout=10)
+    host.wait_for("m06 staple chain [0-9]+ idx 0", timeout=10)
+
+    host.send(f"time +{advance_s}")
+    host.wait_for("OCSP cache expired for chain certificate", timeout=10)
+    host.send("m06dump")
+    host.wait_for("m06 chain [0-9]+ group [0-9]+ status unknown", timeout=10)
+    assert host.count("m06 staple chain [0-9]+ idx 0") == 1, f"stale staple remained after {boundary}"
+
+    # Expiration also arms an immediate full refresh instead of waiting
+    # for the normal one-hour retry interval.
+    refresh, _ = csms.expect("GetCertificateStatus", timeout=10)
+    assert refresh["ocspRequestData"]["responderURL"] == "http://ocsp.test.example/"
+
+
 def test_m06_status_unknown_without_response(csms, host, ca):
     # HUB20-532-002 consumers see unknown until a good response exists.
     install_v2g20_chain(csms, host, ca, ocsp_url="http://ocsp.test.example/")
