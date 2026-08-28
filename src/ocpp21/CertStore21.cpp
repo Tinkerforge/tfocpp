@@ -17,6 +17,13 @@ static bool is_chain_group(CertGroup group)
     return group == CertGroup::CsmsClientChain || group == CertGroup::V2GChain || group == CertGroup::V2G20Chain;
 }
 
+// This is an application-level store because the ESP-IDF facilities do not
+// provide the certificate model required by OCPP and ISO 15118:
+// - esp_crt_bundle is a build-time trust-root bundle for server verification.
+// - the ESP-TLS global CA store is volatile TLS configuration, not persistence.
+// - esp_secure_cert_mgr targets provisioned device credentials and lacks OCPP
+//   groups, individual lifecycle operations, chain relationships and OCSP data.
+// CertStore owns mutable certificate groups, hashes, chain/key IDs and OCSP bindings.
 void CertStore::init(const char *charge_point_name)
 {
     dir = std::string(charge_point_name) + ".certs";
