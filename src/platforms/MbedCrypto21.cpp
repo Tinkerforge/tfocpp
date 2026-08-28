@@ -870,7 +870,8 @@ OcppOcspStatus21 platform_ocsp_validate21(const char *ocsp_response_b64,
                                           const char * const *roots_pem, size_t roots_len,
                                           time_t now, time_t *next_update,
                                           uint8_t *response_der, size_t response_der_cap,
-                                          size_t *response_der_len)
+                                          size_t *response_der_len,
+                                          bool require_embedded_certs)
 {
     if (next_update != nullptr) {
         *next_update = 0;
@@ -898,7 +899,7 @@ OcppOcspStatus21 platform_ocsp_validate21(const char *ocsp_response_b64,
     mbedtls_x509_crt_init(&basic.certs);
     auto result = OcppOcspStatus21::Invalid;
 
-    if (parse_basic_response(der.get(), der_len, &basic)) {
+    if (parse_basic_response(der.get(), der_len, &basic) && (!require_embedded_certs || basic.has_certs)) {
         // Find the signer, the issuer itself or an embedded responder.
         mbedtls_x509_crt *signer = nullptr;
         bool delegated = false;

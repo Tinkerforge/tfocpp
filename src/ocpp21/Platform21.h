@@ -136,14 +136,16 @@ enum class OcppOcspStatus21 : uint8_t {
 // Validates a base64 encoded DER OCSP response for pem[idx] (issued by
 // issuer_pem[issuer_idx]) per RFC 6960 including the responder
 // certificate chain up to one of roots_pem. next_update (if not null)
-// receives the nextUpdate time, 0 if the response has none.
+// receives the nextUpdate time, 0 if the response has none. Set
+// require_embedded_certs when BasicOCSPResponse.certs must be populated.
 OcppOcspStatus21 platform_ocsp_validate21(const char *ocsp_response_b64,
                                           const char *pem, size_t idx,
                                           const char *issuer_pem, size_t issuer_idx,
                                           const char * const *roots_pem, size_t roots_len,
                                           time_t now, time_t *next_update,
                                           uint8_t *response_der = nullptr, size_t response_der_cap = 0,
-                                          size_t *response_der_len = nullptr);
+                                          size_t *response_der_len = nullptr,
+                                          bool require_embedded_certs = false);
 
 // OCSP responder URL from the authority information access extension.
 bool platform_cert_ocsp_url21(const char *pem, size_t idx, char *url, size_t url_len);

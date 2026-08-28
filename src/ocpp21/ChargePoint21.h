@@ -128,9 +128,8 @@ public:
     // response, Unknown when nothing is cached (HUB20-532-002 consumers).
     OcppOcspStatus21 seccChainOcspStatus(uint32_t chain_id) const;
 
-    // M06: retained raw OCSP response for one -20 SECC chain
-    // certificate, for stapling into the TLS 1.3 handshake
-    // (V2G20-2388). The pointer stays valid until the next tick.
+    // M06: retained raw OCSP response for one ISO 15118-2 or -20 SECC
+    // chain certificate. The pointer stays valid until the next tick.
     bool seccChainOcspResponse(uint32_t chain_id, uint8_t cert_idx, const uint8_t **der, size_t *der_len) const;
 
     bool request15118EVCertificate(const char *iso15118_schema_version, bool update, const char *exi_request,

@@ -153,7 +153,7 @@ basicConstraints = critical,CA:TRUE
             "serialNumber": serial,
         }
 
-    def ocsp_response(self, leaf_pem, revoked=False, days=7):
+    def ocsp_response(self, leaf_pem, revoked=False, days=7, include_certs=True):
         # Base64 encoded DER OCSP response for the leaf, signed by the CA
         # (RFC 6960), as carried in GetCertificateStatusResponse.ocspResult.
         leaf = self.dir / "ocsp-leaf.pem"
@@ -173,7 +173,10 @@ basicConstraints = critical,CA:TRUE
         resp = self.dir / "ocsp-resp.der"
         _run(["openssl", "ocsp", "-issuer", str(self.cert), "-cert", str(leaf),
               "-no_nonce", "-reqout", str(req)])
-        _run(["openssl", "ocsp", "-index", str(index), "-CA", str(self.cert),
-              "-rsigner", str(self.cert), "-rkey", str(self.key),
-              "-reqin", str(req), "-respout", str(resp), "-ndays", str(days)])
+        command = ["openssl", "ocsp", "-index", str(index), "-CA", str(self.cert),
+                   "-rsigner", str(self.cert), "-rkey", str(self.key),
+                   "-reqin", str(req), "-respout", str(resp), "-ndays", str(days)]
+        if not include_certs:
+            command.append("-resp_no_certs")
+        _run(command)
         return base64.b64encode(resp.read_bytes()).decode()

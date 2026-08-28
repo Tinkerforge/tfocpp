@@ -2317,9 +2317,9 @@ CallResponse ChargePoint::handleGetCertificateStatusResponse(int32_t connectorId
     time_t now = platform_get_system_time(connection.platform_ctx);
     time_t next_update = 0;
 
-    // Retain the raw response of -20 chain certificates for TLS 1.3
-    // stapling (V2G20-2388). The DER is shorter than its base64 form.
-    bool retain = e->group == CertGroup::V2G20Chain;
+    // Retain validated Good responses for both SECC protocol groups. The
+    // DER is shorter than its base64 form.
+    bool retain = e->group == CertGroup::V2GChain || e->group == CertGroup::V2G20Chain;
     std::unique_ptr<uint8_t[]> der_buf;
     size_t der_cap = 0;
     size_t der_len = 0;
@@ -2331,7 +2331,8 @@ CallResponse ChargePoint::handleGetCertificateStatusResponse(int32_t connectorId
     OcppOcspStatus21 old_status = slot.status;
     auto result = platform_ocsp_validate21(conf.ocspResult().unwrap(), pem.get(), slot.cert_idx,
                                            issuer_pem, issuer_idx, root_ptrs, roots, now, &next_update,
-                                           der_buf.get(), der_cap, retain ? &der_len : nullptr);
+                                           der_buf.get(), der_cap, retain ? &der_len : nullptr,
+                                           e->group == CertGroup::V2GChain);
     slot.status = result;
     slot.valid_until = 0;
 
@@ -2383,7 +2384,7 @@ CallResponse ChargePoint::handleGetCertificateStatusResponse(int32_t connectorId
             break;
     }
 
-    // TLS 1.3 availability and the stapled data follow this cache
+    // TLS availability and the stapled data follow this cache
     // (HUB20-532-002, V2G20-2388), trigger a reload in the ISO 15118
     // stack. The Revoked path notified via the chain deletion already.
     if (result != OcppOcspStatus21::Revoked && (result != old_status || staple_changed)) {

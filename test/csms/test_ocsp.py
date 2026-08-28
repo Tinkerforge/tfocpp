@@ -35,28 +35,34 @@ def host(csms, hosts, ca):
 
 
 def install_v2g20_chain(csms, host, ca, days=365, ocsp_url=None):
-    # Trigger the V2G20 CSR flow and deliver a chain signed by the test CA.
+    return install_v2g_chain(csms, host, ca, True, days=days, ocsp_url=ocsp_url)
+
+
+def install_v2g_chain(csms, host, ca, iso20, days=365, ocsp_url=None):
+    # Trigger one V2G CSR flow and deliver a chain signed by the test CA.
+    trigger = "SignV2G20Certificate" if iso20 else "SignV2GCertificate"
+    cert_type = "V2G20Certificate" if iso20 else "V2GCertificate"
     assert csms.call("InstallCertificate", {
         "certificateType": "V2GRootCertificate",
         "certificate": ca.cert_pem,
     })["status"] == "Accepted"
 
     assert csms.call("TriggerMessage", {
-        "requestedMessage": "SignV2G20Certificate",
+        "requestedMessage": trigger,
     })["status"] == "Accepted"
 
     sign_req, msg_id = csms.expect("SignCertificate")
-    assert sign_req["certificateType"] == "V2G20Certificate"
+    assert sign_req["certificateType"] == cert_type
     csms.respond(msg_id, {"status": "Accepted"})
 
     leaf = ca.sign_csr(sign_req["csr"], days=days, ocsp_url=ocsp_url)
     assert csms.call("CertificateSigned", {
         "certificateChain": leaf,
-        "certificateType": "V2G20Certificate",
+        "certificateType": cert_type,
         "requestId": sign_req["requestId"],
     })["status"] == "Accepted"
 
-    host.wait_for("Installed the signed V2G20Certificate", timeout=10)
+    host.wait_for(f"Installed the signed {cert_type}", timeout=10)
     return leaf
 
 
@@ -74,13 +80,13 @@ def test_m06_ocsp_good(csms, host, ca):
     host.wait_for("OCSP status good", timeout=10)
 
 
-def test_m06_raw_response_retained(csms, host, ca):
-    # V2G20-2388: the raw response of a -20 chain is kept for TLS 1.3
-    # stapling, byte for byte as delivered, and the aggregated chain
-    # status turns good.
+@pytest.mark.parametrize("iso20", [False, True], ids=["iso2", "iso20"])
+def test_m06_raw_response_retained(csms, host, ca, iso20):
+    # Validated Good responses are retained for both SECC protocol groups,
+    # byte for byte as delivered, and the aggregated chain status turns good.
     import base64
 
-    leaf = install_v2g20_chain(csms, host, ca, ocsp_url="http://ocsp.test.example/")
+    leaf = install_v2g_chain(csms, host, ca, iso20, ocsp_url="http://ocsp.test.example/")
 
     _, msg_id = csms.expect("GetCertificateStatus")
     response_b64 = ca.ocsp_response(leaf)
@@ -91,6 +97,21 @@ def test_m06_raw_response_retained(csms, host, ca):
     host.wait_for("m06 chain [0-9]+ group [0-9]+ status good", timeout=10)
     m = host.wait_for("m06 staple chain [0-9]+ idx 0 ([0-9a-f]+)$", timeout=10)
     assert m.group(1) == base64.b64decode(response_b64).hex()
+
+
+def test_iso2_ocsp_requires_embedded_responder_certificate(csms, host, ca):
+    leaf = install_v2g_chain(csms, host, ca, False, ocsp_url="http://ocsp.test.example/")
+
+    _, msg_id = csms.expect("GetCertificateStatus")
+    csms.respond(msg_id, {
+        "status": "Accepted",
+        "ocspResult": ca.ocsp_response(leaf, include_certs=False),
+    })
+
+    host.wait_for("OCSP response failed validation, rejected", timeout=10)
+    host.send("m06dump")
+    host.wait_for("m06 chain [0-9]+ group [0-9]+ status unknown", timeout=10)
+    assert host.count("m06 staple chain [0-9]+ idx 0") == 0
 
 
 @pytest.mark.parametrize(("response_days", "advance_s", "boundary"), [

@@ -365,7 +365,8 @@ OcppOcspStatus21 platform_ocsp_validate21(const char *ocsp_response_b64,
                                           const char * const *roots_pem, size_t roots_len,
                                           time_t now, time_t *next_update,
                                           uint8_t *response_der, size_t response_der_cap,
-                                          size_t *response_der_len)
+                                          size_t *response_der_len,
+                                          bool require_embedded_certs)
 {
     (void)now;
     if (next_update != nullptr) {
@@ -400,6 +401,7 @@ OcppOcspStatus21 platform_ocsp_validate21(const char *ocsp_response_b64,
 
     if (OCSP_response_status(resp) == OCSP_RESPONSE_STATUS_SUCCESSFUL
      && (basic = OCSP_response_get1_basic(resp)) != nullptr
+     && (!require_embedded_certs || sk_X509_num(OCSP_resp_get0_certs(basic)) > 0)
      && (store = build_root_store(roots_pem, roots_len)) != nullptr) {
         // The issuer and the rest of its chain are needed as untrusted
         // intermediates to build the responder chain up to the root
