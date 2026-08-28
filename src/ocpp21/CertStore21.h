@@ -26,7 +26,7 @@ namespace Ocpp21 {
 // CertificateSigned certificateChain is at most 10000 characters.
 #define OCPP21_CERT_PEM_MAX 10000
 // A root certificate is a single PEM certificate.
-#define OCPP21_ROOT_PEM_MAX 4000
+#define OCPP21_ROOT_PEM_MAX OCPP21_CERT_PEM_MAX
 // Sub CAs per chain (SECC: CPO sub CA 1 and 2).
 #define OCPP21_CHAIN_MAX_CHILDREN 3
 
@@ -79,17 +79,21 @@ public:
     // The chain file and key file ids are reserved by the caller via
     // nextId (the key is written at CSR time). Replaces chains of the
     // same group anchored at the same root (HUB20-42-002, A02.FR.13).
-    bool installChain(CertGroup group, uint32_t id, const char *pem, const OcppCertHashData21 &anchor_root);
+    bool installChain(CertGroup group, uint32_t id, const char *pem, const OcppCertHashData21 &anchor_root, bool combined = false);
     CertDeleteResult deleteByHash(const char *issuer_name_hash, const char *issuer_key_hash, const char *serial_number);
     void removeChain(CertGroup group, uint32_t id);
 
-    size_t count() const { return entries.size(); }
+    // Number reported through SecurityCtrlr.CertificateEntries. A combined
+    // CSMS/V2G chain has two logical entries but one physical credential.
+    size_t count() const;
     const std::vector<CertEntry> &all() const { return entries; }
     const CertEntry *find(CertGroup group) const;
     const CertEntry *findById(uint32_t id) const;
     const CertEntry *findSeccChainById(uint32_t id) const;
 
-    uint32_t nextId() { return next_id++; }
+    // Reserves and returns an unused persistent object ID, or zero when none
+    // is available. IDs retained by quarantined files are not reused.
+    uint32_t nextId();
 
     std::string pemPath(CertGroup group, uint32_t id) const;
     std::string keyPath(uint32_t id) const;
@@ -102,11 +106,15 @@ public:
     std::string loadRootByHash(const OcppCertHashData21 &hash) const;
 
 private:
-    bool addEntry(CertGroup group, uint32_t id, const char *pem);
+    bool addEntry(CertGroup group, uint32_t id, const char *pem, bool require_anchor = false);
     size_t groupCount(CertGroup group) const;
     size_t groupLimit(CertGroup group) const;
+    size_t chainCredentialCount() const;
+    bool idReserved(uint32_t id) const;
+    void reserveId(uint32_t id);
 
     std::vector<CertEntry> entries;
+    std::vector<uint32_t> reserved_ids;
     std::string dir;
     uint32_t next_id = 1;
 };

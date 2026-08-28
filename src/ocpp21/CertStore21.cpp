@@ -1,8 +1,12 @@
 #include "CertStore21.h"
 
+#include <algorithm>
+#include <errno.h>
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 
 #include <common/Platform.h>
 
@@ -17,6 +21,62 @@ static bool is_chain_group(CertGroup group)
     return group == CertGroup::CsmsClientChain || group == CertGroup::V2GChain || group == CertGroup::V2G20Chain;
 }
 
+static bool same_hash(const OcppCertHashData21 &a, const OcppCertHashData21 &b)
+{
+    return strcasecmp(a.issuer_name_hash, b.issuer_name_hash) == 0
+        && strcasecmp(a.issuer_key_hash, b.issuer_key_hash) == 0
+        && strcasecmp(a.serial_number, b.serial_number) == 0;
+}
+
+static bool parse_object_id(const char *text, const char *suffix, uint32_t *id)
+{
+    if (text == nullptr || *text < '1' || *text > '9') {
+        return false;
+    }
+
+    errno = 0;
+    char *end = nullptr;
+    unsigned long value = strtoul(text, &end, 10);
+    if (errno != 0 || end == text || strcmp(end, suffix) != 0 || value == 0 || value >= UINT32_MAX) {
+        return false;
+    }
+    *id = static_cast<uint32_t>(value);
+    return true;
+}
+
+static bool parse_pem_name(const char *name, CertGroup *group, uint32_t *id)
+{
+    for (size_t g = 0; g < sizeof(group_prefixes) / sizeof(group_prefixes[0]); ++g) {
+        const size_t prefix_len = strlen(group_prefixes[g]);
+        if (strncmp(name, group_prefixes[g], prefix_len) == 0 && name[prefix_len] == '.'
+         && parse_object_id(name + prefix_len + 1, ".pem", id)) {
+            *group = static_cast<CertGroup>(g);
+            return true;
+        }
+    }
+    return false;
+}
+
+static bool parse_key_name(const char *name, uint32_t *id)
+{
+    return strncmp(name, "key.", 4) == 0 && parse_object_id(name + 4, "", id);
+}
+
+static bool read_pem_file(const std::string &path, size_t max_len, std::unique_ptr<char[]> *buf, size_t *len_out = nullptr)
+{
+    auto data = std::unique_ptr<char[]>(new char[max_len + 2]);
+    const size_t len = platform_read_file(path.c_str(), data.get(), max_len + 1);
+    if (len == 0 || len > max_len) {
+        return false;
+    }
+    data[len] = '\0';
+    if (len_out != nullptr) {
+        *len_out = len;
+    }
+    *buf = std::move(data);
+    return true;
+}
+
 // This is an application-level store because the ESP-IDF facilities do not
 // provide the certificate model required by OCPP and ISO 15118:
 // - esp_crt_bundle is a build-time trust-root bundle for server verification.
@@ -28,6 +88,7 @@ void CertStore::init(const char *charge_point_name)
 {
     dir = std::string(charge_point_name) + ".certs";
     entries.clear();
+    reserved_ids.clear();
     next_id = 1;
 
     struct Found {
@@ -35,6 +96,7 @@ void CertStore::init(const char *charge_point_name)
         uint32_t id;
     };
     std::vector<Found> found;
+    std::vector<uint32_t> key_ids;
 
     void *d = platform_open_dir(dir.c_str());
     if (d != nullptr) {
@@ -43,46 +105,203 @@ void CertStore::init(const char *charge_point_name)
             if (ent->is_dir) {
                 continue;
             }
-            char prefix[8] = "";
+            CertGroup group = CertGroup::None;
             uint32_t id = 0;
-            if (sscanf(ent->name, "%7[a-z0-9].%u.pem", prefix, &id) != 2) {
-                uint32_t key_id = 0;
-                if (sscanf(ent->name, "key.%u", &key_id) == 1 && key_id >= next_id) {
-                    next_id = key_id + 1;
+            if (!parse_pem_name(ent->name, &group, &id)) {
+                if (parse_key_name(ent->name, &id)) {
+                    key_ids.push_back(id);
+                    reserveId(id);
                 }
                 continue;
             }
-            for (size_t g = 0; g < sizeof(group_prefixes) / sizeof(group_prefixes[0]); ++g) {
-                if (strcmp(prefix, group_prefixes[g]) == 0) {
-                    found.push_back({(CertGroup)g, id});
-                    if (id >= next_id) {
-                        next_id = id + 1;
-                    }
-                    break;
-                }
-            }
+            found.push_back({group, id});
+            reserveId(id);
         }
         platform_close_dir(d);
     }
 
-    // Roots first, chains need them to recover the anchor root.
-    auto buf = std::unique_ptr<char[]>(new char[OCPP21_CERT_PEM_MAX + 1]);
-    for (int pass = 0; pass < 2; ++pass) {
+    std::sort(found.begin(), found.end(), [](const Found &a, const Found &b) {
+        return a.group != b.group ? a.group < b.group : a.id > b.id;
+    });
+
+    // IDs are globally unique except for a combined certificate, which is
+    // represented by one CSMS and one ISO 15118-2 chain sharing a key.
+    auto valid_id_layout = [&found](uint32_t id) {
+        size_t count = 0;
+        bool csms = false;
+        bool v2g2 = false;
+        for (const auto &f : found) {
+            if (f.id != id) {
+                continue;
+            }
+            ++count;
+            csms |= f.group == CertGroup::CsmsClientChain;
+            v2g2 |= f.group == CertGroup::V2GChain;
+        }
+        return count == 1 || (count == 2 && csms && v2g2);
+    };
+
+    // Roots first, chains need them to recover the anchor root. Chains get a
+    // second pass so an identical combined pair is retained when only one of
+    // its two logical roles has an installed root.
+    for (int pass = 0; pass < 3; ++pass) {
         for (auto &f : found) {
-            if (is_chain_group(f.group) != (pass == 1)) {
+            if (is_chain_group(f.group) != (pass != 0)) {
                 continue;
             }
+            bool already_loaded = false;
+            for (const auto &e : entries) {
+                if (e.group == f.group && e.id == f.id) {
+                    already_loaded = true;
+                    break;
+                }
+            }
+            if (already_loaded) {
+                continue;
+            }
+            if (!valid_id_layout(f.id)) {
+                log_warn("Certificate store: quarantining ambiguous object ID %u", static_cast<unsigned>(f.id));
+                continue;
+            }
+            if (!is_chain_group(f.group) && groupCount(f.group) >= groupLimit(f.group)) {
+                log_warn("Certificate store: ignoring %s.%u above the group limit",
+                         group_prefixes[static_cast<size_t>(f.group)], static_cast<unsigned>(f.id));
+                continue;
+            }
+            if (is_chain_group(f.group) && findById(f.id) == nullptr
+             && chainCredentialCount() >= OCPP21_CERTSTORE_MAX_CHAINS) {
+                log_warn("Certificate store: ignoring chain %s.%u above the credential limit",
+                         group_prefixes[static_cast<size_t>(f.group)], static_cast<unsigned>(f.id));
+                continue;
+            }
+
             std::string path = pemPath(f.group, f.id);
-            size_t len = platform_read_file(path.c_str(), buf.get(), OCPP21_CERT_PEM_MAX);
-            if (len == 0) {
+            std::unique_ptr<char[]> buf;
+            size_t len = 0;
+            const size_t max_len = is_chain_group(f.group) ? OCPP21_CERT_PEM_MAX : OCPP21_ROOT_PEM_MAX;
+            if (!read_pem_file(path, max_len, &buf, &len)) {
+                log_warn("Certificate store: quarantining unreadable or oversized %s", path.c_str());
                 continue;
             }
-            buf[len] = '\0';
-            if (!addEntry(f.group, f.id, buf.get())) {
+
+            const CertEntry *same_id_entry = findById(f.id);
+            if (same_id_entry != nullptr) {
+                bool combined_pair = is_chain_group(f.group) && is_chain_group(same_id_entry->group)
+                                  && ((f.group == CertGroup::CsmsClientChain && same_id_entry->group == CertGroup::V2GChain)
+                                   || (f.group == CertGroup::V2GChain && same_id_entry->group == CertGroup::CsmsClientChain));
+                std::unique_ptr<char[]> other;
+                size_t other_len = 0;
+                if (!combined_pair
+                 || !read_pem_file(pemPath(same_id_entry->group, same_id_entry->id), OCPP21_CERT_PEM_MAX, &other, &other_len)
+                 || len != other_len || memcmp(buf.get(), other.get(), len) != 0) {
+                    log_warn("Certificate store: quarantining conflicting object ID %u", static_cast<unsigned>(f.id));
+                    continue;
+                }
+            }
+
+            if (is_chain_group(f.group) && !platform_key_matches_cert21(keyPath(f.id).c_str(), buf.get())) {
+                log_warn("Certificate store: quarantining chain %s.%u with a missing or mismatched key",
+                         group_prefixes[static_cast<size_t>(f.group)], static_cast<unsigned>(f.id));
+                continue;
+            }
+            const bool require_anchor = is_chain_group(f.group)
+                                     && (same_id_entry == nullptr || f.group != CertGroup::CsmsClientChain);
+            if (!addEntry(f.group, f.id, buf.get(), require_anchor)) {
                 log_warn("Certificate store: failed to load %s", path.c_str());
             }
         }
     }
+
+    // A key without any recognized chain file can only belong to an
+    // interrupted CSR. Retain keys next to quarantined chains for diagnosis.
+    for (uint32_t id : key_ids) {
+        bool has_chain_file = false;
+        for (const auto &f : found) {
+            if (f.id == id && is_chain_group(f.group)) {
+                has_chain_file = true;
+                break;
+            }
+        }
+        if (!has_chain_file) {
+            platform_remove_file(keyPath(id).c_str());
+            bool has_pem_file = false;
+            for (const auto &f : found) {
+                if (f.id == id) {
+                    has_pem_file = true;
+                    break;
+                }
+            }
+            if (!has_pem_file) {
+                reserved_ids.erase(std::remove(reserved_ids.begin(), reserved_ids.end(), id), reserved_ids.end());
+            }
+        }
+    }
+
+    next_id = 1;
+    while (next_id < UINT32_MAX && idReserved(next_id)) {
+        ++next_id;
+    }
+}
+
+size_t CertStore::count() const
+{
+    size_t result = 0;
+    std::vector<uint32_t> chain_ids;
+    for (const auto &e : entries) {
+        if (!is_chain_group(e.group)) {
+            ++result;
+        } else if (std::find(chain_ids.begin(), chain_ids.end(), e.id) == chain_ids.end()) {
+            chain_ids.push_back(e.id);
+            ++result;
+        }
+    }
+    return result;
+}
+
+size_t CertStore::chainCredentialCount() const
+{
+    size_t result = 0;
+    std::vector<uint32_t> ids;
+    for (const auto &e : entries) {
+        if (is_chain_group(e.group) && std::find(ids.begin(), ids.end(), e.id) == ids.end()) {
+            ids.push_back(e.id);
+            ++result;
+        }
+    }
+    return result;
+}
+
+bool CertStore::idReserved(uint32_t id) const
+{
+    return std::find(reserved_ids.begin(), reserved_ids.end(), id) != reserved_ids.end();
+}
+
+void CertStore::reserveId(uint32_t id)
+{
+    if (id != 0 && id != UINT32_MAX && !idReserved(id)) {
+        reserved_ids.push_back(id);
+    }
+}
+
+uint32_t CertStore::nextId()
+{
+    if (next_id == 0 || next_id == UINT32_MAX) {
+        next_id = 1;
+    }
+    const uint32_t start = next_id;
+    do {
+        if (!idReserved(next_id)) {
+            const uint32_t result = next_id;
+            reserveId(result);
+            ++next_id;
+            return result;
+        }
+        ++next_id;
+        if (next_id == UINT32_MAX) {
+            next_id = 1;
+        }
+    } while (next_id != start);
+    return 0;
 }
 
 size_t CertStore::groupLimit(CertGroup group) const
@@ -154,13 +373,16 @@ std::string CertStore::keyPath(uint32_t id) const
 
 size_t CertStore::readPem(const CertEntry &e, char *buf, size_t buf_len) const
 {
+    if (buf == nullptr || buf_len == 0) {
+        return 0;
+    }
     std::string path = pemPath(e.group, e.id);
     size_t len = platform_read_file(path.c_str(), buf, buf_len - 1);
     buf[len] = '\0';
     return len;
 }
 
-bool CertStore::addEntry(CertGroup group, uint32_t id, const char *pem)
+bool CertStore::addEntry(CertGroup group, uint32_t id, const char *pem, bool require_anchor)
 {
     CertEntry e;
     e.group = group;
@@ -179,7 +401,7 @@ bool CertStore::addEntry(CertGroup group, uint32_t id, const char *pem)
     e.not_after = info.not_after;
 
     if (!is_chain_group(group)) {
-        if (cert_count != 1) {
+        if (cert_count != 1 || !info.is_ca) {
             return false;
         }
         if (!platform_cert_hash_data21(pem, 0, nullptr, 0, &e.hash)) {
@@ -225,9 +447,23 @@ bool CertStore::addEntry(CertGroup group, uint32_t id, const char *pem)
     }
 
     if (!e.has_anchor) {
-        // Without the anchor the issuer key hashes can not be computed.
-        // Keep the chain usable for TLS but invisible to M03.
+        if (require_anchor) {
+            return false;
+        }
+        // CertificateSigned validates the chain before installation. Keeping
+        // the unanchored logical copy preserves combined-certificate behavior
+        // when a root is installed for only one of its two roles.
         log_warn("Certificate store: no anchor root for chain %s.%u", group_prefixes[(size_t)group], id);
+    }
+
+    for (const auto &existing : entries) {
+        if (existing.group != group) {
+            continue;
+        }
+        if (group == CertGroup::CsmsClientChain
+         || (existing.has_anchor && e.has_anchor && same_hash(existing.anchor_root, e.anchor_root))) {
+            return false;
+        }
     }
 
     entries.push_back(e);
@@ -236,7 +472,7 @@ bool CertStore::addEntry(CertGroup group, uint32_t id, const char *pem)
 
 CertInstallResult CertStore::installRoot(CertGroup group, const char *pem, time_t now)
 {
-    if (is_chain_group(group)) {
+    if (is_chain_group(group) || pem == nullptr || strlen(pem) > OCPP21_ROOT_PEM_MAX) {
         return CertInstallResult::Rejected;
     }
 
@@ -277,6 +513,9 @@ CertInstallResult CertStore::installRoot(CertGroup group, const char *pem, time_
     }
 
     uint32_t id = nextId();
+    if (id == 0) {
+        return CertInstallResult::Failed;
+    }
     std::string path = pemPath(group, id);
     if (!platform_write_file(path.c_str(), (char *)pem, strlen(pem))) {
         return CertInstallResult::Failed;
@@ -292,11 +531,65 @@ CertInstallResult CertStore::installRoot(CertGroup group, const char *pem, time_
     return CertInstallResult::Accepted;
 }
 
-bool CertStore::installChain(CertGroup group, uint32_t id, const char *pem, const OcppCertHashData21 &anchor_root)
+bool CertStore::installChain(CertGroup group, uint32_t id, const char *pem, const OcppCertHashData21 &anchor_root,
+                             bool combined)
 {
-    if (!is_chain_group(group)) {
+    if (!is_chain_group(group) || id == 0 || id == UINT32_MAX || pem == nullptr || strlen(pem) > OCPP21_CERT_PEM_MAX) {
         return false;
     }
+
+    const CertEntry *same_id_entry = findById(id);
+    if (same_id_entry != nullptr && same_id_entry->group != group) {
+        bool combined_pair = (group == CertGroup::CsmsClientChain && same_id_entry->group == CertGroup::V2GChain)
+                          || (group == CertGroup::V2GChain && same_id_entry->group == CertGroup::CsmsClientChain);
+        std::unique_ptr<char[]> existing;
+        size_t existing_len = 0;
+        if (!combined_pair
+         || !read_pem_file(pemPath(same_id_entry->group, id), OCPP21_CERT_PEM_MAX, &existing, &existing_len)
+         || existing_len != strlen(pem) || memcmp(existing.get(), pem, existing_len) != 0) {
+            return false;
+        }
+    }
+
+    auto will_replace = [group, &anchor_root](const CertEntry &e) {
+        return e.group == group && (group == CertGroup::CsmsClientChain
+            || (e.has_anchor && same_hash(e.anchor_root, anchor_root)));
+    };
+    auto will_replace_final = [group, combined, &anchor_root](const CertEntry &e) {
+        if (!combined) {
+            return e.group == group && (group == CertGroup::CsmsClientChain
+                || (e.has_anchor && same_hash(e.anchor_root, anchor_root)));
+        }
+        return e.group == CertGroup::CsmsClientChain
+            || (e.group == CertGroup::V2GChain && e.has_anchor && same_hash(e.anchor_root, anchor_root));
+    };
+
+    size_t resulting_credentials = chainCredentialCount();
+    if (same_id_entry == nullptr) {
+        ++resulting_credentials;
+    }
+    std::vector<uint32_t> removed_ids;
+    for (const auto &e : entries) {
+        if (!is_chain_group(e.group) || !will_replace_final(e) || e.id == id
+         || std::find(removed_ids.begin(), removed_ids.end(), e.id) != removed_ids.end()) {
+            continue;
+        }
+        bool id_remains = false;
+        for (const auto &other : entries) {
+            if (other.id == e.id && is_chain_group(other.group) && !will_replace_final(other)) {
+                id_remains = true;
+                break;
+            }
+        }
+        if (!id_remains) {
+            removed_ids.push_back(e.id);
+            --resulting_credentials;
+        }
+    }
+    if (resulting_credentials > OCPP21_CERTSTORE_MAX_CHAINS) {
+        return false;
+    }
+    reserveId(id);
 
     // A02.FR.13 / HUB20-42-002: the CSMS client chain is unique, SECC
     // chains are unique per anchoring root.
@@ -305,8 +598,7 @@ bool CertStore::installChain(CertGroup group, uint32_t id, const char *pem, cons
         if (e.group != group) {
             continue;
         }
-        if (group != CertGroup::CsmsClientChain
-         && (!e.has_anchor || strcmp(e.anchor_root.issuer_key_hash, anchor_root.issuer_key_hash) != 0)) {
+        if (!will_replace(e)) {
             continue;
         }
         removeChain(e.group, e.id);
@@ -388,9 +680,8 @@ size_t CertStore::loadRoots(CertGroup group, std::unique_ptr<char[]> *bufs, cons
         if (e.group != group || count >= max) {
             continue;
         }
-        bufs[count] = std::unique_ptr<char[]>(new char[OCPP21_ROOT_PEM_MAX + 1]);
-        size_t len = readPem(e, bufs[count].get(), OCPP21_ROOT_PEM_MAX + 1);
-        if (len == 0) {
+        size_t len = 0;
+        if (!read_pem_file(pemPath(e.group, e.id), OCPP21_ROOT_PEM_MAX, &bufs[count], &len)) {
             continue;
         }
         ptrs[count] = bufs[count].get();
@@ -406,9 +697,9 @@ std::string CertStore::loadRootByHash(const OcppCertHashData21 &hash) const
          || strcmp(e.hash.serial_number, hash.serial_number) != 0) {
             continue;
         }
-        auto buf = std::unique_ptr<char[]>(new char[OCPP21_ROOT_PEM_MAX + 1]);
-        size_t len = readPem(e, buf.get(), OCPP21_ROOT_PEM_MAX + 1);
-        if (len == 0) {
+        std::unique_ptr<char[]> buf;
+        size_t len = 0;
+        if (!read_pem_file(pemPath(e.group, e.id), OCPP21_ROOT_PEM_MAX, &buf, &len)) {
             return "";
         }
         return std::string(buf.get(), len);

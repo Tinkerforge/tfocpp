@@ -135,6 +135,76 @@ def test_install_invalid_certificate_rejected(station, ca):
     assert s.certificate_entries() == 0
 
 
+def test_store_recovery_validates_chains_and_removes_orphan_keys(api, stations, hosts, certs, ca, tmp_path):
+    name, db_id = stations.create(security_profile=2, password="0123456789abcdef")
+    store = hosts.workdir / f"{name}.certs"
+    store.mkdir()
+
+    valid_chain = ca.issue_leaf("valid-recovered-chain")
+    (store / "v2gr.1.pem").write_text(ca.cert_pem)
+    (store / "v2g2.2.pem").write_text(valid_chain)
+    (store / "key.2").write_bytes((ca.dir / "leaf-key.pem").read_bytes())
+
+    other_ca = SigningCa(_mkdir(tmp_path, "other-ca"), name="other-recovery-ca")
+    (store / "v2g20.3.pem").write_text(other_ca.issue_leaf("mismatched-recovered-chain"))
+    (store / "key.3").write_bytes((ca.dir / "leaf-key.pem").read_bytes())
+    (store / "key.4").write_text("orphaned CSR key")
+    (store / "v2gr.5.pem.tmp").write_text(other_ca.cert_pem)
+
+    h = hosts.start(WSS, name, "0123456789abcdef", ca=certs["ca"])
+    h.wait_for("quarantining chain v2g20.3 with a missing or mismatched key", timeout=10)
+    h.wait_for("Boot notification accepted", timeout=20)
+    s = StationApi(api, name, db_id)
+
+    assert s.certificate_entries() == 2
+    listed = s.get_installed(["V2GRootCertificate", "V2GCertificateChain"])
+    assert len(listed["certificateHashDataChain"]) == 2
+    assert not (store / "key.4").exists()
+    assert (store / "key.3").exists(), "keys next to quarantined chains are retained for diagnosis"
+
+
+def test_store_recovery_enforces_physical_chain_limit(api, stations, hosts, certs, tmp_path):
+    name, db_id = stations.create(security_profile=2, password="0123456789abcdef")
+    store = hosts.workdir / f"{name}.certs"
+    store.mkdir()
+
+    for i in range(5):
+        chain_ca = SigningCa(_mkdir(tmp_path, f"limit-ca-{i}"), name=f"limit-ca-{i}")
+        chain = chain_ca.issue_leaf(f"limit-chain-{i}")
+        object_id = i + 1
+        (store / f"v2gr.{object_id}.pem").write_text(chain_ca.cert_pem)
+        (store / f"v2g2.{object_id + 100}.pem").write_text(chain)
+        (store / f"key.{object_id + 100}").write_bytes((chain_ca.dir / "leaf-key.pem").read_bytes())
+
+    h = hosts.start(WSS, name, "0123456789abcdef", ca=certs["ca"])
+    h.wait_for("ignoring chain v2g2.101 above the credential limit", timeout=10)
+    h.wait_for("Boot notification accepted", timeout=20)
+    s = StationApi(api, name, db_id)
+
+    assert s.certificate_entries() == 5 + 4
+    listed = s.get_installed(["V2GCertificateChain"])
+    assert listed["status"] == "Accepted"
+    assert len(listed["certificateHashDataChain"]) == 4
+
+
+def test_root_larger_than_legacy_limit_remains_usable(api, station, ca):
+    s, h = station
+    large_root = ca.cert_pem + "\n" * (4001 - len(ca.cert_pem))
+    assert 4000 < len(large_root) <= 10000
+    assert s.install("CSMSRootCertificate", large_root)["status"] == "Accepted"
+
+    since = api.last_ocpp_log_id(s.db_id)
+    api.command("TriggerMessage", s.name, requestedMessage="SignChargingStationCertificate")
+    h.wait_for("Sending CSR for the ChargingStationCertificate", timeout=10)
+    sign_req = api.wait_for_request(s.db_id, "SignCertificate", since_id=since)
+    api.command("CertificateSigned", s.name,
+                certificateChain=ca.sign_csr(sign_req["csr"]),
+                certificateType="ChargingStationCertificate",
+                requestId=sign_req["requestId"])
+    response = api.wait_for_response(s.db_id, "CertificateSigned", since_id=since)
+    assert response["status"] == "Accepted"
+
+
 def test_sign_charging_station_certificate(api, stations, hosts, certs, ca):
     # A02 with this test as PKI: trigger, sign the CSR from the
     # SignCertificate request with the test CA, deliver it via

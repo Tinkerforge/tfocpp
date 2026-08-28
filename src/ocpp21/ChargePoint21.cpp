@@ -1646,6 +1646,10 @@ void ChargePoint::startCsr(SignCertificateCertificateType type, bool renewal, co
     abortCsr();
 
     csr_pending_id = cert_store.nextId();
+    if (csr_pending_id == 0) {
+        log_error("Failed to reserve a certificate store ID for the %s", sign_type_names[(size_t)type]);
+        return;
+    }
     std::string key_path = cert_store.keyPath(csr_pending_id);
 
     OcppCsrParams21 params;
@@ -1839,8 +1843,8 @@ CallResponse ChargePoint::handleCertificateSigned(const char *uid, CertificateSi
     OcppCertHashData21 anchor_hash;
     bool installed = platform_cert_hash_data21(root_ptrs[anchor_idx], 0, nullptr, 0, &anchor_hash);
     if (installed && combined) {
-        installed = cert_store.installChain(CertGroup::V2GChain, csr_pending_id, chain, anchor_hash)
-                 && cert_store.installChain(CertGroup::CsmsClientChain, csr_pending_id, chain, anchor_hash);
+        installed = cert_store.installChain(CertGroup::V2GChain, csr_pending_id, chain, anchor_hash, true)
+                 && cert_store.installChain(CertGroup::CsmsClientChain, csr_pending_id, chain, anchor_hash, true);
     } else if (installed) {
         installed = cert_store.installChain(chain_group, csr_pending_id, chain, anchor_hash);
     }
