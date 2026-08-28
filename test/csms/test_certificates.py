@@ -229,6 +229,21 @@ def test_sign_v2g_certificate(api, station, ca):
     assert s.delete(chain["certificateHashData"])["status"] == "Accepted"
 
 
+def test_private_key_policy_denies_csr(api, stations, hosts, certs, monkeypatch):
+    monkeypatch.setenv("OCPP21_DENY_PRIVATE_KEY_OPERATIONS", "1")
+    name, db_id = stations.create(security_profile=2, password="0123456789abcdef")
+    h = hosts.start(WSS, name, password="0123456789abcdef", ca=certs["ca"])
+    h.wait_for("Boot notification accepted", timeout=20)
+
+    since = api.last_ocpp_log_id(db_id)
+    api.command("TriggerMessage", name, requestedMessage="SignV2G20Certificate")
+    h.wait_for("Failed to generate a key pair and CSR for the V2G20Certificate", timeout=10)
+
+    assert not list((hosts.workdir / f"{name}.certs").glob("key.*"))
+    assert not [entry for entry in api.ocpp_logs(db_id, limit=20)
+                if entry["id"] > since and entry["action"] == "SignCertificate"]
+
+
 def test_certificate_signed_without_csr_rejected(station, ca):
     s, h = station
     response = s.command_response("CertificateSigned", certificateChain=ca.cert_pem)
