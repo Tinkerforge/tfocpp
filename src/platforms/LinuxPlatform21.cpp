@@ -25,6 +25,10 @@
 
 #include "LinuxWS.h"
 
+#ifdef OCPP_CRYPTO_MBEDTLS
+#include <mbedtls/pk.h>
+#endif
+
 uint32_t platform_now_ms() {
     struct timespec ts;
     clock_gettime(CLOCK_MONOTONIC, &ts);
@@ -456,6 +460,87 @@ static void sim_handle_command(char *line)
                 printf("\n");
             }
         }
+    } else if (strncmp(line, "ed448csr ", 9) == 0) {
+        char csr[2048];
+        char key_name[256];
+        if (snprintf(key_name, sizeof(key_name), "%s.key", line + 9) >= (int)sizeof(key_name)) {
+            printf("[SIM  ] Ed448 CSR path too long\n");
+        } else {
+            OcppCsrParams21 params = {
+                OcppCurve21::Ed448,
+                "DE*TNK*E123456",
+                "Tinkerforge GmbH",
+                "DE",
+                "CSO",
+                key_name,
+            };
+            size_t len = platform_generate_csr21(&params, csr, sizeof(csr));
+            FILE *out = len > 0 ? fopen(line + 9, "wb") : nullptr;
+            if (out != nullptr && fwrite(csr, 1, len, out) == len && fclose(out) == 0) {
+                printf("[SIM  ] Ed448 CSR written to %s, key %s\n", line + 9, key_name);
+            } else {
+                if (out != nullptr) {
+                    fclose(out);
+                }
+                printf("[SIM  ] Ed448 CSR generation failed\n");
+            }
+        }
+    } else if (strncmp(line, "ed448check ", 11) == 0) {
+        char key_name[256], leaf_name[256], root_name[256];
+        if (sscanf(line + 11, "%255s %255s %255s", key_name, leaf_name, root_name) != 3) {
+            printf("[SIM  ] Ed448 check requires key, leaf and root paths\n");
+        } else {
+            auto read_text = [](const char *path) -> std::string {
+                FILE *file = fopen(path, "rb");
+                if (file == nullptr) {
+                    return {};
+                }
+                fseek(file, 0, SEEK_END);
+                long size = ftell(file);
+                rewind(file);
+                std::string text(size > 0 ? static_cast<size_t>(size) : 0, '\0');
+                if (size > 0 && fread(&text[0], 1, text.size(), file) != text.size()) {
+                    text.clear();
+                }
+                fclose(file);
+                return text;
+            };
+            std::string leaf = read_text(leaf_name);
+            std::string root = read_text(root_name);
+            const char *roots[] = {root.c_str()};
+            size_t anchor = SIZE_MAX;
+            bool match = !leaf.empty() && platform_key_matches_cert21(key_name, leaf.c_str());
+            OcppChainVerifyResult21 verified = !leaf.empty() && !root.empty()
+                ? platform_verify_chain21(leaf.c_str(), roots, 1, time(nullptr), &anchor)
+                : OcppChainVerifyResult21::Invalid;
+            bool pk_api = false;
+#ifdef OCPP_CRYPTO_MBEDTLS
+            char key_pem[2048];
+            size_t key_len = platform_read_file(key_name, key_pem, sizeof(key_pem) - 1);
+            if (key_len > 0) {
+                key_pem[key_len] = '\0';
+                mbedtls_pk_context key;
+                mbedtls_pk_init(&key);
+                unsigned char sig[MBEDTLS_ED448_SIGNATURE_SIZE + 1];
+                size_t sig_len = 0;
+                int rc = mbedtls_pk_parse_key(&key, reinterpret_cast<const uint8_t *>(key_pem),
+                                               key_len + 1, nullptr, 0, nullptr, nullptr);
+                rc = rc == 0
+                    ? mbedtls_pk_sign(&key, MBEDTLS_MD_NONE, nullptr, 0,
+                                      sig, sizeof(sig), &sig_len, nullptr, nullptr)
+                    : rc;
+                rc = rc == 0
+                    ? mbedtls_pk_verify(&key, MBEDTLS_MD_NONE, nullptr, 0, sig, sig_len)
+                    : rc;
+                pk_api = rc == 0 && sig_len == MBEDTLS_ED448_SIGNATURE_SIZE &&
+                         mbedtls_pk_verify(&key, MBEDTLS_MD_NONE, nullptr, 0,
+                                           sig, sig_len + 1) == MBEDTLS_ERR_PK_SIG_LEN_MISMATCH;
+                mbedtls_pk_free(&key);
+            }
+#endif
+            printf("[SIM  ] Ed448 check match %d verify %d anchor %zu pk_api %d\n",
+                   match ? 1 : 0, static_cast<int>(verified), anchor, pk_api ? 1 : 0);
+        }
     } else if (strncmp(line, "time +", 6) == 0) {
         char *end = nullptr;
         long seconds = strtol(line + 6, &end, 10);
@@ -472,7 +557,7 @@ static void sim_handle_command(char *line)
         e.state = EvseState21::NotConnected;
         printf("[SIM  ] EVSE fault cleared\n");
     } else if (line[0] != '\0') {
-        printf("[SIM  ] unknown command %s (plug, unplug, detect, suspend, resume, tag <id>, stop <reason>, fault, ok, secevent <type>, m07 [count], m06dump, evcert [update], pnc on|off, time +<seconds>)\n", line);
+        printf("[SIM  ] unknown command %s (plug, unplug, detect, suspend, resume, tag <id>, stop <reason>, fault, ok, secevent <type>, m07 [count], m06dump, evcert [update], pnc on|off, ed448csr <path>, ed448check <key> <leaf> <root>, time +<seconds>)\n", line);
     }
 }
 

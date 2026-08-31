@@ -399,6 +399,7 @@ bool CertStore::addEntry(CertGroup group, uint32_t id, const char *pem, bool req
     }
     e.not_before = info.not_before;
     e.not_after = info.not_after;
+    e.public_key_curve = info.public_key_curve;
 
     if (!is_chain_group(group)) {
         if (cert_count != 1 || !info.is_ca) {
@@ -461,7 +462,8 @@ bool CertStore::addEntry(CertGroup group, uint32_t id, const char *pem, bool req
             continue;
         }
         if (group == CertGroup::CsmsClientChain
-         || (existing.has_anchor && e.has_anchor && same_hash(existing.anchor_root, e.anchor_root))) {
+         || (existing.has_anchor && e.has_anchor && same_hash(existing.anchor_root, e.anchor_root) &&
+             (group != CertGroup::V2G20Chain || existing.public_key_curve == e.public_key_curve))) {
             return false;
         }
     }
@@ -551,14 +553,21 @@ bool CertStore::installChain(CertGroup group, uint32_t id, const char *pem, cons
         }
     }
 
-    auto will_replace = [group, &anchor_root](const CertEntry &e) {
+    OcppCertInfo21 leaf_info;
+    if (!platform_cert_info21(pem, 0, &leaf_info)) {
+        return false;
+    }
+
+    auto will_replace = [group, &anchor_root, &leaf_info](const CertEntry &e) {
         return e.group == group && (group == CertGroup::CsmsClientChain
-            || (e.has_anchor && same_hash(e.anchor_root, anchor_root)));
+            || (e.has_anchor && same_hash(e.anchor_root, anchor_root) &&
+                (group != CertGroup::V2G20Chain || e.public_key_curve == leaf_info.public_key_curve)));
     };
-    auto will_replace_final = [group, combined, &anchor_root](const CertEntry &e) {
+    auto will_replace_final = [group, combined, &anchor_root, &leaf_info](const CertEntry &e) {
         if (!combined) {
             return e.group == group && (group == CertGroup::CsmsClientChain
-                || (e.has_anchor && same_hash(e.anchor_root, anchor_root)));
+                || (e.has_anchor && same_hash(e.anchor_root, anchor_root) &&
+                    (group != CertGroup::V2G20Chain || e.public_key_curve == leaf_info.public_key_curve)));
         }
         return e.group == CertGroup::CsmsClientChain
             || (e.group == CertGroup::V2GChain && e.has_anchor && same_hash(e.anchor_root, anchor_root));

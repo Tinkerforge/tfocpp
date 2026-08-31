@@ -72,11 +72,14 @@ struct OcspCacheEntry {
     size_t response_der_len = 0;
 
     void clear() {
-        used = false;
-        valid_until = 0;
-        response_der.reset();
-        response_der_len = 0;
+        *this = OcspCacheEntry{};
     }
+};
+
+struct OcspInFlight {
+    bool active = false;
+    uint32_t chain_id = 0;
+    uint8_t cert_idx = 0;
 };
 
 #define OCPP21_OCSP_CACHE_SIZE (OCPP21_CERTSTORE_MAX_CHAINS * (OCPP21_CHAIN_MAX_CHILDREN + 1))
@@ -186,7 +189,8 @@ private:
     void saveNetworkPersistence();
     void applyNetworkProfile();
 
-    void startCsr(SignCertificateCertificateType type, bool renewal, const OcppCertHashData21 *root_hash);
+    void startCsr(SignCertificateCertificateType type, bool renewal, const OcppCertHashData21 *root_hash,
+                  OcppCurve21 renewal_curve = OcppCurve21::Unknown);
     void abortCsr();
     void sendSignCertificate();
     void tickCertificates();
@@ -291,7 +295,7 @@ private:
 
     // M06: SECC chain OCSP status cache. One request in flight at a time.
     OcspCacheEntry ocsp_cache[OCPP21_OCSP_CACHE_SIZE];
-    int32_t ocsp_in_flight_idx = -1;
+    OcspInFlight ocsp_in_flight;
 
     // M07 plumbing. One request in flight at a time, the result is
     // reported via platform_vehicle_chain_status_result21.

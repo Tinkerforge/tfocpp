@@ -4,6 +4,9 @@
 # Also covers the A03 renewal trigger, which needs control over the
 # certificate validity.
 
+import base64
+import time
+
 import pytest
 
 from minicsms import MiniCsms
@@ -155,10 +158,9 @@ def test_m06_status_unknown_without_response(csms, host, ca):
     host.wait_for("m06 chain [0-9]+ group [0-9]+ status unknown", timeout=10)
 
 
-def test_m06_ocsp_good_with_intermediate(csms, host, ca):
-    # The responder chain must build through the SECC chain sub CA up to
-    # the root when the PKI is deeper than one level (RFC 6960 4.2.2.2,
-    # found on hardware with the three level dev PKI).
+def test_m06_ocsp_incomplete_with_intermediate(csms, host, ca):
+    # A good leaf response is insufficient when the intermediate has no AIA,
+    # because HUB20-532-002 requires status for every transmitted certificate.
     sub = ca.intermediate_ca()
 
     assert csms.call("InstallCertificate", {
@@ -184,7 +186,7 @@ def test_m06_ocsp_good_with_intermediate(csms, host, ca):
     host.wait_for("OCSP status good", timeout=10)
 
     host.send("m06dump")
-    host.wait_for("m06 chain [0-9]+ group [0-9]+ status good", timeout=10)
+    host.wait_for("m06 chain [0-9]+ group [0-9]+ status unknown", timeout=10)
 
 
 def test_m06_ocsp_revoked_deletes_chain(csms, host, ca):
@@ -215,6 +217,63 @@ def test_m06_ocsp_invalid_response_rejected(csms, host, ca, tmp_path):
     host.wait_for("OCSP response failed validation, rejected", timeout=10)
     listed = csms.call("GetInstalledCertificateIds", {"certificateType": ["V2GCertificateChain"]})
     assert listed["status"] == "Accepted"
+
+
+def test_m06_chain_replacement_does_not_retarget_in_flight_response(csms, host, ca):
+    old_leaf = install_v2g20_chain(
+        csms, host, ca, ocsp_url="http://ocsp.test.example/old")
+    _, old_status_id = csms.expect("GetCertificateStatus")
+    csms.respond(old_status_id, {
+        "status": "Accepted",
+        "ocspResult": ca.ocsp_response(old_leaf, days=1),
+    })
+    host.wait_for("OCSP status good", timeout=10)
+
+    # Prepare the replacement while no OCSP request is in flight. Sending its
+    # CertificateSigned request is delayed until the old status refresh is out.
+    assert csms.call("TriggerMessage", {
+        "requestedMessage": "SignV2G20Certificate",
+    })["status"] == "Accepted"
+    sign_req, sign_id = csms.expect("SignCertificate")
+    csms.respond(sign_id, {"status": "Accepted"})
+    new_leaf = ca.sign_csr(
+        sign_req["csr"], ocsp_url="http://ocsp.test.example/new")
+
+    host.send(f"time +{24 * 3600 + 10}")
+    host.wait_for("OCSP cache expired for chain certificate", timeout=10)
+    old_refresh, old_refresh_id = csms.expect("GetCertificateStatus", timeout=10)
+    assert old_refresh["ocspRequestData"]["responderURL"].endswith("/old")
+
+    assert csms.call("CertificateSigned", {
+        "certificateChain": new_leaf,
+        "certificateType": "V2G20Certificate",
+        "requestId": sign_req["requestId"],
+    })["status"] == "Accepted"
+    host.wait_for("Installed the signed V2G20Certificate", min_count=2, timeout=10)
+
+    # This result belongs to the removed chain. It must be discarded instead
+    # of being validated against whichever entry reused the old array slot.
+    invalid_before = host.count("OCSP response failed validation, rejected")
+    csms.respond(old_refresh_id, {
+        "status": "Accepted",
+        "ocspResult": ca.ocsp_response(old_leaf),
+    })
+    time.sleep(1)
+    assert host.count("OCSP response failed validation, rejected") == invalid_before
+
+    new_status, new_status_id = csms.expect("GetCertificateStatus", timeout=10)
+    assert new_status["ocspRequestData"]["responderURL"].endswith("/new")
+    new_response = ca.ocsp_response(new_leaf)
+    csms.respond(new_status_id, {
+        "status": "Accepted",
+        "ocspResult": new_response,
+    })
+    host.wait_for("OCSP status good", min_count=2, timeout=10)
+
+    host.send("m06dump")
+    host.wait_for("m06 chain [0-9]+ group [0-9]+ status good", timeout=10)
+    staple = host.wait_for("m06 staple chain [0-9]+ idx 0 ([0-9a-f]+)$", timeout=10)
+    assert staple.group(1) == base64.b64decode(new_response).hex()
 
 
 def _csr_for(ca, directory):

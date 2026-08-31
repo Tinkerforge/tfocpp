@@ -78,7 +78,8 @@ bool platform_cert_info21(const char *pem, size_t idx, OcppCertInfo21 *info)
     if (idx != 0 || platform_cert_count21(pem) == 0) {
         return false;
     }
-    *info = {1, 4102444800, strncmp(pem, "ROOT", 4) == 0, strncmp(pem, "ROOT", 4) == 0};
+    const OcppCurve21 curve = strstr(pem, "ED448") != nullptr ? OcppCurve21::Ed448 : OcppCurve21::Secp521r1;
+    *info = {1, 4102444800, strncmp(pem, "ROOT", 4) == 0, strncmp(pem, "ROOT", 4) == 0, curve};
     return true;
 }
 
@@ -96,8 +97,9 @@ OcppChainVerifyResult21 platform_verify_chain21(const char *chain, const char * 
     if (roots_len == 0 || strncmp(chain, "CHAIN", 5) != 0) {
         return OcppChainVerifyResult21::Untrusted;
     }
+    const size_t chain_suffix_len = strcspn(chain + 5, ":");
     for (size_t i = 0; i < roots_len; ++i) {
-        if (strcmp(chain + 5, roots[i] + 4) != 0) {
+        if (strlen(roots[i] + 4) != chain_suffix_len || strncmp(chain + 5, roots[i] + 4, chain_suffix_len) != 0) {
             continue;
         }
         if (anchor_idx != nullptr) {
@@ -168,6 +170,24 @@ int main()
     assert(limited.count() == 5 + OCPP21_CERTSTORE_MAX_CHAINS);
     assert(limited.findSeccChainById(14) != nullptr);
     assert(limited.findSeccChainById(10) == nullptr);
+
+    files.clear();
+    files["dual.certs/v2gr.1.pem"] = "ROOT-dual";
+    files["dual.certs/key.2"] = "CHAIN-dual";
+    CertStore dual;
+    dual.init("dual");
+    OcppCertHashData21 anchor{};
+    assert(platform_cert_hash_data21("ROOT-dual", 0, nullptr, 0, &anchor));
+    assert(dual.installChain(CertGroup::V2G20Chain, 2, "CHAIN-dual", anchor));
+    files["dual.certs/key.3"] = "CHAIN-dual:ED448";
+    assert(dual.installChain(CertGroup::V2G20Chain, 3, "CHAIN-dual:ED448", anchor));
+    assert(dual.findSeccChainById(2) != nullptr);
+    assert(dual.findSeccChainById(3) != nullptr);
+    files["dual.certs/key.4"] = "CHAIN-dual:ED448-renewed";
+    assert(dual.installChain(CertGroup::V2G20Chain, 4, "CHAIN-dual:ED448-renewed", anchor));
+    assert(dual.findSeccChainById(2) != nullptr);
+    assert(dual.findSeccChainById(3) == nullptr);
+    assert(dual.findSeccChainById(4) != nullptr);
 
     std::string large_root = "ROOT-large";
     large_root.resize(5000, '\n');

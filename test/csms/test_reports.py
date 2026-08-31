@@ -90,6 +90,27 @@ def test_full_inventory(csms, host):
     assert suite["variableCharacteristics"]["valuesList"] == "ecdsa_secp521r1_sha512,ed448"
 
 
+def test_v2g20_crypto_suite_option_list(csms, host):
+    variable = {
+        "component": {"name": "ISO15118Ctrlr"},
+        "variable": {"name": "V2G20SECCLeafCryptoSuite"},
+    }
+
+    for value in ("ed448", "ecdsa_secp521r1_sha512,ed448", "ecdsa_secp521r1_sha512"):
+        response = csms.call("SetVariables", {
+            "setVariableData": [{**variable, "attributeValue": value}],
+        })
+        assert response["setVariableResult"][0]["attributeStatus"] == "Accepted"
+
+        response = csms.call("GetVariables", {"getVariableData": [variable]})
+        assert response["getVariableResult"][0]["attributeValue"] == value
+
+    response = csms.call("SetVariables", {
+        "setVariableData": [{**variable, "attributeValue": ""}],
+    })
+    assert response["setVariableResult"][0]["attributeStatus"] == "Rejected"
+
+
 def test_configuration_inventory(csms, host):
     resp = csms.call("GetBaseReport", {"requestId": 18, "reportBase": "ConfigurationInventory"})
     assert resp["status"] == "Accepted"

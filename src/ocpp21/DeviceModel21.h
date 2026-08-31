@@ -106,7 +106,8 @@ public:
     char secc_id[OCPP21_SECC_ID_MAX_LEN + 1] = "DE*TFO*E000001";
     char country_name[OCPP21_COUNTRY_NAME_LEN + 1] = "DE";
     char iso_organization_name[OCPP21_ORGANIZATION_NAME_MAX_LEN + 1] = "Tinkerforge GmbH";
-    // V2G20SECCLeafCryptoSuite: ecdsa_secp521r1_sha512 (default) or ed448.
+    // V2G20SECCLeafCryptoSuite may enable either or both suites.
+    bool v2g20_use_secp521r1 = true;
     bool v2g20_use_ed448 = false;
 
     // ISO15118Ctrlr, read by the ISO 15118 stack.

@@ -61,11 +61,19 @@ float platform_get_energy_wh21(void *ctx, int32_t evse_id);
 // chain, leaf first), idx selects one certificate within the PEM.
 // Implemented with OpenSSL on the Linux host and mbedTLS on the ESP32.
 
+enum class OcppCurve21 : uint8_t {
+    Secp256r1,
+    Secp521r1,
+    Ed448,
+    Unknown,
+};
+
 struct OcppCertInfo21 {
     time_t not_before;
     time_t not_after;
     bool is_ca;
     bool self_signed;
+    OcppCurve21 public_key_curve;
 };
 
 // SHA256 hex, lower case, null terminated (A00.FR.506).
@@ -98,12 +106,6 @@ enum class OcppChainVerifyResult21 : uint8_t {
 // roots at time now. On Ok anchor_idx (if not null) receives the index
 // of the root that anchored the chain.
 OcppChainVerifyResult21 platform_verify_chain21(const char *chain_pem, const char * const *roots_pem, size_t roots_len, time_t now, size_t *anchor_idx);
-
-enum class OcppCurve21 : uint8_t {
-    Secp256r1,
-    Secp521r1,
-    Ed448,
-};
 
 struct OcppCsrParams21 {
     OcppCurve21 curve;

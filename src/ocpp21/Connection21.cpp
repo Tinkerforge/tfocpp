@@ -24,10 +24,9 @@ static void log_payload(const char *prefix, const char *buf, size_t buf_len) {
 
 void Connection::handleMessage(char *message, size_t message_len)
 {
-    (void)message_len;
     log_payload("Received message", message, message_len);
     DynamicJsonDocument doc{8192};
-    DeserializationError error = deserializeJson(doc, message);
+    DeserializationError error = deserializeJson(doc, message, message_len);
     if (error) {
         log_error("deserializeJson() failed: %s", error.c_str());
         return;

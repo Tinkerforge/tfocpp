@@ -82,6 +82,21 @@ bool platform_cert_info21(const char *pem, size_t idx, OcppCertInfo21 *info)
     info->not_after = timegm(&tm_after);
     info->is_ca = X509_check_ca(cert.get()) != 0;
     info->self_signed = X509_check_issued(cert.get(), cert.get()) == X509_V_OK;
+    info->public_key_curve = OcppCurve21::Unknown;
+    EVP_PKEY *key = X509_get0_pubkey(cert.get());
+    if (key != nullptr && EVP_PKEY_is_a(key, "ED448")) {
+        info->public_key_curve = OcppCurve21::Ed448;
+    } else if (key != nullptr && EVP_PKEY_is_a(key, "EC")) {
+        char group[32];
+        size_t group_len = 0;
+        if (EVP_PKEY_get_group_name(key, group, sizeof(group), &group_len) == 1) {
+            if (strcmp(group, "prime256v1") == 0) {
+                info->public_key_curve = OcppCurve21::Secp256r1;
+            } else if (strcmp(group, "secp521r1") == 0) {
+                info->public_key_curve = OcppCurve21::Secp521r1;
+            }
+        }
+    }
     return true;
 }
 
@@ -270,6 +285,8 @@ size_t platform_generate_csr21(const OcppCsrParams21 *params, char *csr_pem, siz
         case OcppCurve21::Ed448:
             key = EVP_PKEY_Q_keygen(nullptr, nullptr, "ED448");
             md = nullptr;
+            break;
+        case OcppCurve21::Unknown:
             break;
     }
     if (key == nullptr) {

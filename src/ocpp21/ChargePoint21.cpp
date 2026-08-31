@@ -324,6 +324,12 @@ void ChargePoint::loadSecurityPersistence()
     if (doc["v2g20_use_ed448"].is<bool>()) {
         device_model.v2g20_use_ed448 = doc["v2g20_use_ed448"].as<bool>();
     }
+    if (doc["v2g20_use_secp521r1"].is<bool>()) {
+        device_model.v2g20_use_secp521r1 = doc["v2g20_use_secp521r1"].as<bool>();
+    } else if (device_model.v2g20_use_ed448) {
+        // Compatibility with the former single-suite persisted representation.
+        device_model.v2g20_use_secp521r1 = false;
+    }
     if (doc["iso15118_enabled"].is<bool>()) {
         device_model.iso15118_enabled = doc["iso15118_enabled"].as<bool>();
     }
@@ -359,6 +365,7 @@ void ChargePoint::saveSecurityPersistence()
     json.addMemberString("country_name", device_model.country_name);
     json.addMemberString("iso_organization_name", device_model.iso_organization_name);
     json.addMemberBoolean("v2g20_use_ed448", device_model.v2g20_use_ed448);
+    json.addMemberBoolean("v2g20_use_secp521r1", device_model.v2g20_use_secp521r1);
     json.addMemberBoolean("iso15118_enabled", device_model.iso15118_enabled);
     json.addMemberBoolean("v2g_cert_install_enabled", device_model.v2g_cert_install_enabled);
     json.addMemberBoolean("contract_cert_install_enabled", device_model.contract_cert_install_enabled);
@@ -388,11 +395,16 @@ void ChargePoint::onTimeout(CallAction action, uint64_t messageId)
         if (authorize_evse_id >= 1 && authorize_evse_id <= OCPP21_NUM_EVSES)
             platform_tag_rejected21(connection.platform_ctx, authorize_evse_id, authorize_token, TagRejectionType21::Invalid);
     }
-    if (action == CallAction::GET_CERTIFICATE_STATUS && ocsp_in_flight_idx >= 0) {
-        auto &slot = ocsp_cache[ocsp_in_flight_idx];
-        slot.in_flight = false;
-        slot.refresh_deadline = set_deadline(10 * 60 * 1000);
-        ocsp_in_flight_idx = -1;
+    if (action == CallAction::GET_CERTIFICATE_STATUS && ocsp_in_flight.active) {
+        for (auto &slot : ocsp_cache) {
+            if (slot.used && slot.chain_id == ocsp_in_flight.chain_id &&
+                slot.cert_idx == ocsp_in_flight.cert_idx) {
+                slot.in_flight = false;
+                slot.refresh_deadline = set_deadline(10 * 60 * 1000);
+                break;
+            }
+        }
+        ocsp_in_flight = {};
     }
     if (action == CallAction::NOTIFY_REPORT)
         abortReport();
@@ -1601,6 +1613,11 @@ void ChargePoint::tickCertificates()
                     // A03 for the V2G types is turned off (V2GCertificateInstallationEnabled).
                     continue;
                 }
+                if (e.group == CertGroup::V2G20Chain &&
+                    ((e.public_key_curve == OcppCurve21::Ed448 && !device_model.v2g20_use_ed448) ||
+                     (e.public_key_curve == OcppCurve21::Secp521r1 && !device_model.v2g20_use_secp521r1))) {
+                    continue;
+                }
                 if (e.not_after == 0 || e.not_after - now > OCPP21_A03_RENEWAL_WINDOW_S) {
                     continue;
                 }
@@ -1612,16 +1629,15 @@ void ChargePoint::tickCertificates()
                     type = SignCertificateCertificateType::NONE;
                 }
                 log_info("The %s expires soon, requesting renewal (A03)", sign_type_names[(size_t)type]);
-                startCsr(type, true, e.has_anchor ? &e.anchor_root : nullptr);
+                startCsr(type, true, e.has_anchor ? &e.anchor_root : nullptr, e.public_key_curve);
                 break;
             }
         }
     }
 
     // M06: refresh cached OCSP status, one request in flight at a time.
-    if (ocsp_in_flight_idx < 0) {
-        for (int32_t i = 0; i < (int32_t)OCPP21_OCSP_CACHE_SIZE; ++i) {
-            auto &slot = ocsp_cache[i];
+    if (!ocsp_in_flight.active) {
+        for (auto &slot : ocsp_cache) {
             if (!slot.used || !deadline_elapsed(slot.refresh_deadline)) {
                 continue;
             }
@@ -1633,14 +1649,17 @@ void ChargePoint::tickCertificates()
             data.responderURL = slot.url;
             if (connection.sendCallAction(GetCertificateStatus{&data})) {
                 slot.in_flight = true;
-                ocsp_in_flight_idx = i;
+                ocsp_in_flight.active = true;
+                ocsp_in_flight.chain_id = slot.chain_id;
+                ocsp_in_flight.cert_idx = slot.cert_idx;
             }
             break;
         }
     }
 }
 
-void ChargePoint::startCsr(SignCertificateCertificateType type, bool renewal, const OcppCertHashData21 *root_hash)
+void ChargePoint::startCsr(SignCertificateCertificateType type, bool renewal, const OcppCertHashData21 *root_hash,
+                           OcppCurve21 renewal_curve)
 {
     // HUB20-42-003: a new trigger aborts a pending retry.
     abortCsr();
@@ -1676,7 +1695,11 @@ void ChargePoint::startCsr(SignCertificateCertificateType type, bool renewal, co
             // ISO 15118-20 SECC leaf, crypto from V2G20SECCLeafCryptoSuite
             // (A02.FR.23). The -20 certificate profile requires a
             // domainComponent ending in "CSO".
-            params.curve = device_model.v2g20_use_ed448 ? OcppCurve21::Ed448 : OcppCurve21::Secp521r1;
+            params.curve = renewal_curve != OcppCurve21::Unknown
+                               ? renewal_curve
+                               : (!device_model.v2g20_use_secp521r1 && device_model.v2g20_use_ed448
+                                      ? OcppCurve21::Ed448
+                                      : OcppCurve21::Secp521r1);
             params.common_name = device_model.secc_id;
             params.organization = device_model.iso_organization_name;
             params.country = device_model.country_name;
@@ -2235,8 +2258,9 @@ void ChargePoint::scheduleChainOcsp(uint32_t chain_id)
         return;
     }
 
-    for (auto &slot : ocsp_cache) {
-        if (slot.used && slot.chain_id == chain_id) {
+    for (size_t i = 0; i < OCPP21_OCSP_CACHE_SIZE; ++i) {
+        auto &slot = ocsp_cache[i];
+        if (slot.used && (slot.chain_id == chain_id || cert_store.findSeccChainById(slot.chain_id) == nullptr)) {
             slot.clear();
         }
     }
@@ -2277,12 +2301,24 @@ void ChargePoint::scheduleChainOcsp(uint32_t chain_id)
 CallResponse ChargePoint::handleGetCertificateStatusResponse(int32_t connectorId, GetCertificateStatusResponseView conf)
 {
     (void)connectorId;
-    if (ocsp_in_flight_idx < 0) {
+    if (!ocsp_in_flight.active) {
         return CallResponse{CallErrorCode::OK, nullptr};
     }
 
-    auto &slot = ocsp_cache[ocsp_in_flight_idx];
-    ocsp_in_flight_idx = -1;
+    OcspCacheEntry *slot_ptr = nullptr;
+    for (auto &slot : ocsp_cache) {
+        if (slot.used && slot.chain_id == ocsp_in_flight.chain_id &&
+            slot.cert_idx == ocsp_in_flight.cert_idx) {
+            slot_ptr = &slot;
+            break;
+        }
+    }
+    ocsp_in_flight = {};
+    if (slot_ptr == nullptr) {
+        return CallResponse{CallErrorCode::OK, nullptr};
+    }
+
+    auto &slot = *slot_ptr;
     slot.in_flight = false;
     slot.refresh_deadline = set_deadline(OCPP21_OCSP_RETRY_MS);
 
@@ -2400,7 +2436,16 @@ CallResponse ChargePoint::handleGetCertificateStatusResponse(int32_t connectorId
 
 OcppOcspStatus21 ChargePoint::seccChainOcspStatus(uint32_t chain_id) const
 {
-    bool any = false;
+    const CertEntry *chain = cert_store.findSeccChainById(chain_id);
+    if (chain == nullptr) {
+        return OcppOcspStatus21::Unknown;
+    }
+    auto pem = heap_alloc_array<char>(OCPP21_CERT_PEM_MAX + 1);
+    if (pem == nullptr || cert_store.readPem(*chain, pem.get(), OCPP21_CERT_PEM_MAX + 1) == 0) {
+        return OcppOcspStatus21::Unknown;
+    }
+    const size_t required = platform_cert_count21(pem.get());
+    size_t good = 0;
     time_t now = platform_get_system_time(connection.platform_ctx);
     for (const auto &slot : ocsp_cache) {
         if (!slot.used || slot.chain_id != chain_id) {
@@ -2412,9 +2457,9 @@ OcppOcspStatus21 ChargePoint::seccChainOcspStatus(uint32_t chain_id) const
         if (slot.status != OcppOcspStatus21::Good || (slot.valid_until == 0) || (now >= slot.valid_until)) {
             return OcppOcspStatus21::Unknown;
         }
-        any = true;
+        ++good;
     }
-    return any ? OcppOcspStatus21::Good : OcppOcspStatus21::Unknown;
+    return required > 0 && good == required ? OcppOcspStatus21::Good : OcppOcspStatus21::Unknown;
 }
 
 bool ChargePoint::seccChainOcspResponse(uint32_t chain_id, uint8_t cert_idx, const uint8_t **der, size_t *der_len) const

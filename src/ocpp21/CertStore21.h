@@ -49,6 +49,7 @@ struct CertEntry {
     OcppCertHashData21 hash{};
     time_t not_before = 0;
     time_t not_after = 0;
+    OcppCurve21 public_key_curve = OcppCurve21::Unknown;
     // Chains only: sub CA hash data in chain order (CPO sub CA 2, then
     // CPO sub CA 1) and the anchoring root for A03 renewals.
     uint8_t child_count = 0;

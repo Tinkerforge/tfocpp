@@ -229,7 +229,10 @@ VariableResult DeviceModel::getVariableByIndex(size_t idx, char *buf, size_t buf
             snprintf(buf, buf_len, "%s", iso_organization_name);
             return VariableResult::Accepted;
         case VAR_V2G20_SECC_LEAF_CRYPTO_SUITE:
-            snprintf(buf, buf_len, "%s", v2g20_use_ed448 ? "ed448" : "ecdsa_secp521r1_sha512");
+            snprintf(buf, buf_len, "%s",
+                     v2g20_use_secp521r1
+                         ? (v2g20_use_ed448 ? "ecdsa_secp521r1_sha512,ed448" : "ecdsa_secp521r1_sha512")
+                         : "ed448");
             return VariableResult::Accepted;
         case VAR_ISO15118_ENABLED:
             snprintf(buf, buf_len, "%s", iso15118_enabled ? "true" : "false");
@@ -399,13 +402,15 @@ VariableResult DeviceModel::setVariable(const char *component, const char *varia
             return VariableResult::Accepted;
         }
         case VAR_V2G20_SECC_LEAF_CRYPTO_SUITE: {
-            if (strcmp(value, "ecdsa_secp521r1_sha512") == 0) {
-                v2g20_use_ed448 = false;
-            } else if (strcmp(value, "ed448") == 0) {
-                v2g20_use_ed448 = true;
-            } else {
+            const bool secp521r1_only = strcmp(value, "ecdsa_secp521r1_sha512") == 0;
+            const bool ed448_only = strcmp(value, "ed448") == 0;
+            const bool both = strcmp(value, "ecdsa_secp521r1_sha512,ed448") == 0 ||
+                              strcmp(value, "ed448,ecdsa_secp521r1_sha512") == 0;
+            if (!secp521r1_only && !ed448_only && !both) {
                 return VariableResult::Rejected;
             }
+            v2g20_use_secp521r1 = secp521r1_only || both;
+            v2g20_use_ed448 = ed448_only || both;
             iso15118_changed = true;
             return VariableResult::Accepted;
         }

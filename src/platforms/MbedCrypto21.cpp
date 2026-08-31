@@ -2,7 +2,7 @@
 // primitives (Platform21.h). Uses only mbedTLS and the platform file API.
 // mbedTLS has no OCSP and no AIA support, both are implemented here on the
 // ASN.1 layer per RFC 6960 and RFC 5280.
-// Ed448 is not supported by mbedTLS, CSR generation for it fails.
+// Ed448 primitive and RFC 8410 CSR/key support are provided by tf_ed448.
 
 #ifdef OCPP_CRYPTO_MBEDTLS
 
@@ -158,6 +158,24 @@ bool platform_cert_info21(const char *pem, size_t idx, OcppCertInfo21 *info)
     info->not_after = x509_time_to_unix(&cert->valid_to);
     info->is_ca = cert->ca_istrue != 0;
     info->self_signed = (cert->issuer_raw.len == cert->subject_raw.len) && memcmp(cert->issuer_raw.p, cert->subject_raw.p, cert->issuer_raw.len) == 0;
+    info->public_key_curve = OcppCurve21::Unknown;
+#if defined(MBEDTLS_ED448_C)
+    if (mbedtls_pk_get_type(&cert->pk) == MBEDTLS_PK_ED448) {
+        info->public_key_curve = OcppCurve21::Ed448;
+    } else
+#endif
+    if (mbedtls_pk_can_do(&cert->pk, MBEDTLS_PK_ECKEY)) {
+        switch (mbedtls_pk_ec(cert->pk)->MBEDTLS_PRIVATE(grp).id) {
+            case MBEDTLS_ECP_DP_SECP256R1:
+                info->public_key_curve = OcppCurve21::Secp256r1;
+                break;
+            case MBEDTLS_ECP_DP_SECP521R1:
+                info->public_key_curve = OcppCurve21::Secp521r1;
+                break;
+            default:
+                break;
+        }
+    }
     return true;
 }
 
@@ -325,10 +343,59 @@ static size_t der_to_pem(const char *label, const uint8_t *der, size_t der_len, 
     return pos;
 }
 
+#if defined(MBEDTLS_ED448_C)
+static size_t generate_ed448_csr(const OcppCsrParams21 *params, const char *subject,
+                                 char *csr_pem, size_t csr_pem_len, Rng *rng)
+{
+    const size_t der_size = 2048;
+    std::unique_ptr<uint8_t[]> der{new uint8_t[der_size]};
+    const size_t key_pem_size = 2048;
+    std::unique_ptr<uint8_t[]> key_pem{new uint8_t[key_pem_size]};
+    size_t result = 0;
+    mbedtls_pk_context key;
+    mbedtls_pk_init(&key);
+    mbedtls_x509write_csr req;
+    mbedtls_x509write_csr_init(&req);
+
+    if (mbedtls_pk_setup(&key, mbedtls_pk_info_from_type(MBEDTLS_PK_ED448)) == 0 &&
+        mbedtls_ed448_gen_key(mbedtls_pk_ed448(key), mbedtls_ctr_drbg_random, &rng->drbg) == 0) {
+        mbedtls_x509write_csr_set_md_alg(&req, MBEDTLS_MD_NONE);
+        mbedtls_x509write_csr_set_key(&req, &key);
+        int csr_der_len = mbedtls_x509write_csr_set_subject_name(&req, subject) == 0
+            ? mbedtls_x509write_csr_der(&req, der.get(), der_size,
+                                        mbedtls_ctr_drbg_random, &rng->drbg)
+            : 0;
+        size_t csr_len = csr_der_len > 0
+            ? der_to_pem("CERTIFICATE REQUEST", der.get() + der_size - csr_der_len,
+                         static_cast<size_t>(csr_der_len), csr_pem, csr_pem_len)
+            : 0;
+
+        int key_der_len = csr_len > 0
+            ? mbedtls_pk_write_key_der(&key, der.get(), der_size)
+            : 0;
+        size_t key_len = key_der_len > 0
+            ? der_to_pem("PRIVATE KEY", der.get() + der_size - key_der_len,
+                         static_cast<size_t>(key_der_len),
+                         reinterpret_cast<char *>(key_pem.get()), key_pem_size)
+            : 0;
+        if (key_len > 0 && platform_write_file(
+                params->key_name, reinterpret_cast<char *>(key_pem.get()), key_len)) {
+            result = csr_len;
+        }
+    }
+
+    mbedtls_platform_zeroize(der.get(), der_size);
+    mbedtls_platform_zeroize(key_pem.get(), key_pem_size);
+    mbedtls_x509write_csr_free(&req);
+    mbedtls_pk_free(&key);
+    return result;
+}
+#endif
+
 size_t platform_generate_csr21(const OcppCsrParams21 *params, char *csr_pem, size_t csr_pem_len)
 {
-    mbedtls_ecp_group_id group;
-    mbedtls_md_type_t md;
+    mbedtls_ecp_group_id group = MBEDTLS_ECP_DP_NONE;
+    mbedtls_md_type_t md = MBEDTLS_MD_NONE;
     switch (params->curve) {
         case OcppCurve21::Secp256r1:
             group = MBEDTLS_ECP_DP_SECP256R1;
@@ -339,6 +406,12 @@ size_t platform_generate_csr21(const OcppCsrParams21 *params, char *csr_pem, siz
             md = MBEDTLS_MD_SHA512;
             break;
         case OcppCurve21::Ed448:
+#if !defined(MBEDTLS_ED448_C)
+            return 0;
+#else
+            break;
+#endif
+        case OcppCurve21::Unknown:
             return 0;
     }
 
@@ -360,6 +433,18 @@ size_t platform_generate_csr21(const OcppCsrParams21 *params, char *csr_pem, siz
     Rng rng;
     if (!rng.ok) {
         return 0;
+    }
+
+    if (params->curve == OcppCurve21::Ed448) {
+#if defined(MBEDTLS_ED448_C)
+        size_t result = generate_ed448_csr(params, subject, csr_pem, csr_pem_len, &rng);
+        if (result == 0) {
+            platform_remove_file(params->key_name);
+        }
+        return result;
+#else
+        return 0;
+#endif
     }
 
     size_t result = 0;
@@ -655,6 +740,7 @@ struct OcspBasicResponse {
     mbedtls_asn1_buf responder_name;  // byName Name element, len 0 if byKey
     mbedtls_asn1_buf responder_key;   // byKey SHA1 key hash, len 0 if byName
     mbedtls_asn1_buf sig_alg_oid;
+    mbedtls_asn1_buf sig_alg_params;
     mbedtls_asn1_buf signature;
     mbedtls_asn1_buf responses;       // content of the responses SEQUENCE
     mbedtls_x509_crt certs;           // embedded responder certificates
@@ -751,8 +837,7 @@ static bool parse_basic_response(uint8_t *der, size_t der_len, OcspBasicResponse
     p = tbs_end; // responseExtensions skipped
 
     // signatureAlgorithm
-    mbedtls_asn1_buf alg_params;
-    if (mbedtls_asn1_get_alg(&p, end, &out->sig_alg_oid, &alg_params) != 0) {
+    if (mbedtls_asn1_get_alg(&p, end, &out->sig_alg_oid, &out->sig_alg_params) != 0) {
         return false;
     }
 
@@ -918,11 +1003,27 @@ OcppOcspStatus21 platform_ocsp_validate21(const char *ocsp_response_b64,
         mbedtls_md_type_t sig_md;
         mbedtls_pk_type_t sig_pk;
         uint8_t hash[64];
-        size_t hash_len;
+        size_t hash_len = 0;
+        bool signature_ok = false;
+        if (signer != nullptr &&
+            mbedtls_oid_get_sig_alg(&basic.sig_alg_oid, &sig_md, &sig_pk) == 0) {
+#if defined(MBEDTLS_ED448_C)
+            if (sig_pk == MBEDTLS_PK_ED448) {
+                signature_ok = basic.sig_alg_params.tag == 0 &&
+                    basic.sig_alg_params.len == 0 &&
+                    mbedtls_pk_verify(&signer->pk, MBEDTLS_MD_NONE,
+                                      basic.tbs.p, basic.tbs.len,
+                                      basic.signature.p, basic.signature.len) == 0;
+            } else
+#endif
+            {
+                signature_ok = md_hash(sig_md, basic.tbs.p, basic.tbs.len, hash, &hash_len) &&
+                    mbedtls_pk_verify(&signer->pk, sig_md, hash, hash_len,
+                                      basic.signature.p, basic.signature.len) == 0;
+            }
+        }
         if ((signer != nullptr) &&
-            (mbedtls_oid_get_sig_alg(&basic.sig_alg_oid, &sig_md, &sig_pk) == 0) &&
-            (md_hash(sig_md, basic.tbs.p, basic.tbs.len, hash, &hash_len)) &&
-            (mbedtls_pk_verify(&signer->pk, sig_md, hash, hash_len, basic.signature.p, basic.signature.len) == 0) &&
+            signature_ok &&
             verify_responder(&basic, signer, issuer, &issuer_certs, delegated, roots_pem, roots_len)) {
             mbedtls_asn1_buf issuer_key;
             uint8_t *p = basic.responses.p;
