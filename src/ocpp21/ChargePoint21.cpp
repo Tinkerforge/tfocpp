@@ -2261,9 +2261,9 @@ void ChargePoint::scheduleChainOcsp(uint32_t chain_id)
     for (size_t i = 0; i < OCPP21_OCSP_CACHE_SIZE; ++i) {
         auto &slot = ocsp_cache[i];
         if (slot.used && (slot.chain_id == chain_id || cert_store.findSeccChainById(slot.chain_id) == nullptr)) {
-            if (slot.in_flight && ocsp_in_flight.active && (slot.chain_id == ocsp_in_flight.chain_id) && (slot.cert_idx == ocsp_in_flight.cert_idx)) {
-                ocsp_in_flight = {};
-            }
+            // Keep an outstanding request active after its cache slot is
+            // removed. Its response or timeout will find no matching slot and
+            // be discarded before a replacement-chain request may start.
             slot.clear();
         }
     }

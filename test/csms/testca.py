@@ -43,6 +43,26 @@ class SigningCa:
         _run(args)
         return leaf.read_text()
 
+    def sign_csr_at(self, csr_pem, not_before, not_after):
+        from cryptography import x509
+        from cryptography.hazmat.primitives import hashes, serialization
+
+        csr = x509.load_pem_x509_csr(csr_pem.encode())
+        issuer = x509.load_pem_x509_certificate(self.cert.read_bytes())
+        key = serialization.load_pem_private_key(self.key.read_bytes(), None)
+        certificate = (
+            x509.CertificateBuilder()
+            .subject_name(csr.subject)
+            .issuer_name(issuer.subject)
+            .public_key(csr.public_key())
+            .serial_number(x509.random_serial_number())
+            .not_valid_before(not_before)
+            .not_valid_after(not_after)
+            .add_extension(x509.BasicConstraints(ca=False, path_length=None), critical=True)
+            .sign(key, hashes.SHA256())
+        )
+        return certificate.public_bytes(serialization.Encoding.PEM).decode()
+
     def issue_leaf(self, cn):
         # A non-CA end entity certificate, e.g. to test M05 rejection.
         key = self.dir / "leaf-key.pem"

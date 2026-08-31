@@ -5,6 +5,7 @@
 # certificate validity.
 
 import base64
+import datetime
 import time
 
 import pytest
@@ -67,6 +68,102 @@ def install_v2g_chain(csms, host, ca, iso20, days=365, ocsp_url=None):
 
     host.wait_for(f"Installed the signed {cert_type}", timeout=10)
     return leaf
+
+
+def start_v2g_csr(csms, iso20=False):
+    trigger = "SignV2G20Certificate" if iso20 else "SignV2GCertificate"
+    cert_type = "V2G20Certificate" if iso20 else "V2GCertificate"
+    assert csms.call("TriggerMessage", {"requestedMessage": trigger})["status"] == "Accepted"
+    request, message_id = csms.expect("SignCertificate")
+    csms.respond(message_id, {"status": "Accepted"})
+    assert request["certificateType"] == cert_type
+    return request, cert_type
+
+
+def installed_v2g_chains(csms):
+    response = csms.call("GetInstalledCertificateIds", {
+        "certificateType": ["V2GCertificateChain"],
+    })
+    assert response["status"] == "Accepted"
+    return response["certificateHashDataChain"]
+
+
+def test_m03_two_intermediate_order_and_root_inclusion_rejection(csms, host, ca):
+    sub1 = ca.intermediate_ca("CPO Sub-CA 1")
+    sub2 = sub1.intermediate_ca("CPO Sub-CA 2")
+    assert csms.call("InstallCertificate", {
+        "certificateType": "V2GRootCertificate",
+        "certificate": ca.cert_pem,
+    })["status"] == "Accepted"
+
+    request, cert_type = start_v2g_csr(csms)
+    leaf = sub2.sign_csr(request["csr"])
+    chain = leaf + sub2.cert_pem + sub1.cert_pem
+    assert csms.call("CertificateSigned", {
+        "certificateChain": chain,
+        "certificateType": cert_type,
+        "requestId": request["requestId"],
+    })["status"] == "Accepted"
+    host.wait_for("Installed the signed V2GCertificate", timeout=10)
+
+    installed = installed_v2g_chains(csms)
+    assert len(installed) == 1
+    entry = installed[0]
+    assert entry["certificateHashData"] == sub2.hash_data(leaf, sub2.cert_pem)
+    assert entry["childCertificateHashData"] == [
+        sub1.hash_data(sub2.cert_pem, sub1.cert_pem),
+        ca.hash_data(sub1.cert_pem, ca.cert_pem),
+    ]
+    root_hash = ca.hash_data(ca.cert_pem, ca.cert_pem)
+    assert root_hash not in entry["childCertificateHashData"]
+
+    before = installed
+    request, cert_type = start_v2g_csr(csms)
+    replacement = sub2.sign_csr(request["csr"])
+    rejected = csms.call("CertificateSigned", {
+        "certificateChain": replacement + sub2.cert_pem + sub1.cert_pem + ca.cert_pem,
+        "certificateType": cert_type,
+        "requestId": request["requestId"],
+    })
+    assert rejected["status"] == "Rejected"
+    assert rejected["statusInfo"]["reasonCode"] == "ChainIncludesRoot"
+    host.wait_for("CertificateSigned rejected: ChainIncludesRoot", timeout=10)
+    assert installed_v2g_chains(csms) == before
+
+
+def test_certificate_signed_future_validity_boundary(csms, host, ca):
+    assert csms.call("InstallCertificate", {
+        "certificateType": "V2GRootCertificate",
+        "certificate": ca.cert_pem,
+    })["status"] == "Accepted"
+    epoch = int(time.time())
+    host.send(f"time ={epoch}")
+    host.wait_for(f"froze system time at {epoch}", timeout=10)
+    now = datetime.datetime.fromtimestamp(epoch, datetime.timezone.utc)
+
+    request, cert_type = start_v2g_csr(csms)
+    accepted_leaf = ca.sign_csr_at(
+        request["csr"], now + datetime.timedelta(seconds=300), now + datetime.timedelta(days=30))
+    assert csms.call("CertificateSigned", {
+        "certificateChain": accepted_leaf,
+        "certificateType": cert_type,
+        "requestId": request["requestId"],
+    })["status"] == "Accepted"
+    host.wait_for("Installed the signed V2GCertificate", timeout=10)
+    before = installed_v2g_chains(csms)
+
+    request, cert_type = start_v2g_csr(csms)
+    rejected_leaf = ca.sign_csr_at(
+        request["csr"], now + datetime.timedelta(seconds=301), now + datetime.timedelta(days=30))
+    rejected = csms.call("CertificateSigned", {
+        "certificateChain": rejected_leaf,
+        "certificateType": cert_type,
+        "requestId": request["requestId"],
+    })
+    assert rejected["status"] == "Rejected"
+    assert rejected["statusInfo"]["reasonCode"] == "InvalidChain"
+    host.wait_for("CertificateSigned rejected: InvalidChain", timeout=10)
+    assert installed_v2g_chains(csms) == before
 
 
 def test_m06_ocsp_good(csms, host, ca):

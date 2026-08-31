@@ -37,17 +37,19 @@ uint32_t platform_now_ms() {
 
 static time_t last_system_time = 0;
 static uint32_t last_system_time_set_at = 0;
+static bool system_time_frozen = false;
 
 void platform_set_system_time(void *ctx, time_t t)
 {
     (void)ctx;
     last_system_time = t;
     last_system_time_set_at = platform_now_ms();
+    system_time_frozen = false;
 }
 
 time_t platform_get_system_time(void *ctx) {
     (void)ctx;
-    return last_system_time + (platform_now_ms() - last_system_time_set_at) / 1000;
+    return last_system_time + (system_time_frozen ? 0 : (platform_now_ms() - last_system_time_set_at) / 1000);
 }
 
 void platform_printfln(int level, const char *fmt, ...)
@@ -550,6 +552,17 @@ static void sim_handle_command(char *line)
             platform_set_system_time(nullptr, platform_get_system_time(nullptr) + seconds);
             printf("[SIM  ] advanced system time by %ld seconds\n", seconds);
         }
+    } else if (strncmp(line, "time =", 6) == 0) {
+        char *end = nullptr;
+        long long seconds = strtoll(line + 6, &end, 10);
+        if (end == (line + 6) || (*end != '\0') || (seconds < 0)) {
+            printf("[SIM  ] invalid absolute time %s\n", line + 6);
+        } else {
+            last_system_time = (time_t)seconds;
+            last_system_time_set_at = platform_now_ms();
+            system_time_frozen = true;
+            printf("[SIM  ] froze system time at %lld\n", seconds);
+        }
     } else if (strcmp(line, "fault") == 0) {
         e.state = EvseState21::Faulted;
         printf("[SIM  ] EVSE faulted\n");
@@ -557,7 +570,7 @@ static void sim_handle_command(char *line)
         e.state = EvseState21::NotConnected;
         printf("[SIM  ] EVSE fault cleared\n");
     } else if (line[0] != '\0') {
-        printf("[SIM  ] unknown command %s (plug, unplug, detect, suspend, resume, tag <id>, stop <reason>, fault, ok, secevent <type>, m07 [count], m06dump, evcert [update], pnc on|off, ed448csr <path>, ed448check <key> <leaf> <root>, time +<seconds>)\n", line);
+        printf("[SIM  ] unknown command %s (plug, unplug, detect, suspend, resume, tag <id>, stop <reason>, fault, ok, secevent <type>, m07 [count], m06dump, evcert [update], pnc on|off, ed448csr <path>, ed448check <key> <leaf> <root>, time +<seconds>, time =<epoch>)\n", line);
     }
 }
 
