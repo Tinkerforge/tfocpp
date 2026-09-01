@@ -167,6 +167,15 @@ mbedtls_ed448_tls_test: build/mbedtls_ed448_tls_test.o $(ED448_OBJECTS) $(MBEDTL
 	$(CC) build/mbedtls_ed448_tls_test.o $(ED448_OBJECTS) $(MBEDTLS_TLS_LIBS) $(LDFLAGS) -o $@
 	./$@
 
+build/mbedtls_ticket_expiry_test.o: test/mbedtls_ticket_expiry_test.c
+	mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) -DMBEDTLS_ALLOW_PRIVATE_ACCESS -I$(MBEDTLS_DIR)/include -c $< -o $@
+
+mbedtls_ticket_expiry_test: build/mbedtls_ticket_expiry_test.o
+	$(MAKE) -C $(MBEDTLS_DIR)/library CFLAGS="-O2" libmbedcrypto.a libmbedx509.a libmbedtls.a
+	$(CC) build/mbedtls_ticket_expiry_test.o $(MBEDTLS_TLS_LIBS) $(LDFLAGS) -o $@
+	./$@
+
 all: libocpp.so ocpp16_linux ocpp21_linux ocpp21_linux_mbedtls
 
 cert_store_test: test/cert_store_test.cpp src/ocpp21/CertStore21.cpp
@@ -191,4 +200,4 @@ ocpp21_linux_mbedtls: $(OBJECTS_21_MBEDTLS) $(MBEDTLS_LIBS)
 .PHONY: all cert_store_test mbedtls_ed448_tls_test clean
 
 clean: Makefile
-	$(E)$(RM) -r build libocpp.so ocpp16_linux ocpp21_linux ocpp21_linux_mbedtls cert_store_test mbedtls_ed448_tls_test
+	$(E)$(RM) -r build libocpp.so ocpp16_linux ocpp21_linux ocpp21_linux_mbedtls cert_store_test mbedtls_ed448_tls_test mbedtls_ticket_expiry_test
