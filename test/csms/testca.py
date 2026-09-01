@@ -43,14 +43,15 @@ class SigningCa:
         _run(args)
         return leaf.read_text()
 
-    def sign_csr_at(self, csr_pem, not_before, not_after):
+    def sign_csr_at(self, csr_pem, not_before, not_after, ocsp_url=None):
         from cryptography import x509
         from cryptography.hazmat.primitives import hashes, serialization
+        from cryptography.x509.oid import AuthorityInformationAccessOID
 
         csr = x509.load_pem_x509_csr(csr_pem.encode())
         issuer = x509.load_pem_x509_certificate(self.cert.read_bytes())
         key = serialization.load_pem_private_key(self.key.read_bytes(), None)
-        certificate = (
+        builder = (
             x509.CertificateBuilder()
             .subject_name(csr.subject)
             .issuer_name(issuer.subject)
@@ -59,8 +60,15 @@ class SigningCa:
             .not_valid_before(not_before)
             .not_valid_after(not_after)
             .add_extension(x509.BasicConstraints(ca=False, path_length=None), critical=True)
-            .sign(key, hashes.SHA256())
         )
+        if ocsp_url is not None:
+            builder = builder.add_extension(x509.AuthorityInformationAccess([
+                x509.AccessDescription(
+                    AuthorityInformationAccessOID.OCSP,
+                    x509.UniformResourceIdentifier(ocsp_url),
+                ),
+            ]), critical=False)
+        certificate = builder.sign(key, hashes.SHA256())
         return certificate.public_bytes(serialization.Encoding.PEM).decode()
 
     def issue_leaf(self, cn):

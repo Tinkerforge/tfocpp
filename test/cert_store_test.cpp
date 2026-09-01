@@ -79,7 +79,9 @@ bool platform_cert_info21(const char *pem, size_t idx, OcppCertInfo21 *info)
         return false;
     }
     const OcppCurve21 curve = strstr(pem, "ED448") != nullptr ? OcppCurve21::Ed448 : OcppCurve21::Secp521r1;
-    *info = {1, 4102444800, strncmp(pem, "ROOT", 4) == 0, strncmp(pem, "ROOT", 4) == 0, curve};
+    const char *validity = strstr(pem, "NB");
+    const time_t not_before = validity == nullptr ? 1 : static_cast<time_t>(strtoul(validity + 2, nullptr, 10));
+    *info = {not_before, 4102444800, strncmp(pem, "ROOT", 4) == 0, strncmp(pem, "ROOT", 4) == 0, curve};
     return true;
 }
 
@@ -178,16 +180,26 @@ int main()
     dual.init("dual");
     OcppCertHashData21 anchor{};
     assert(platform_cert_hash_data21("ROOT-dual", 0, nullptr, 0, &anchor));
-    assert(dual.installChain(CertGroup::V2G20Chain, 2, "CHAIN-dual", anchor));
+    assert(dual.installChain(CertGroup::V2G20Chain, 2, "CHAIN-dual:NB200", anchor, 1000) == ChainInstallResult::Installed);
     files["dual.certs/key.3"] = "CHAIN-dual:ED448";
-    assert(dual.installChain(CertGroup::V2G20Chain, 3, "CHAIN-dual:ED448", anchor));
+    assert(dual.installChain(CertGroup::V2G20Chain, 3, "CHAIN-dual:ED448", anchor, 1000) == ChainInstallResult::Installed);
     assert(dual.findSeccChainById(2) != nullptr);
     assert(dual.findSeccChainById(3) != nullptr);
-    files["dual.certs/key.4"] = "CHAIN-dual:ED448-renewed";
-    assert(dual.installChain(CertGroup::V2G20Chain, 4, "CHAIN-dual:ED448-renewed", anchor));
+    files["dual.certs/key.4"] = "CHAIN-dual:ED448-renewed:NB200";
+    assert(dual.installChain(CertGroup::V2G20Chain, 4, "CHAIN-dual:ED448-renewed:NB200", anchor, 1000) == ChainInstallResult::Installed);
     assert(dual.findSeccChainById(2) != nullptr);
     assert(dual.findSeccChainById(3) == nullptr);
     assert(dual.findSeccChainById(4) != nullptr);
+
+    files["dual.certs/key.5"] = "CHAIN-dual:ED448-older:NB100";
+    assert(dual.installChain(CertGroup::V2G20Chain, 5, "CHAIN-dual:ED448-older:NB100", anchor, 1000) == ChainInstallResult::RetainedExisting);
+    assert(dual.findSeccChainById(4) != nullptr);
+    assert(dual.findSeccChainById(5) == nullptr);
+
+    files["dual.certs/key.6"] = "CHAIN-dual:ED448-newest:NB300";
+    assert(dual.installChain(CertGroup::V2G20Chain, 6, "CHAIN-dual:ED448-newest:NB300", anchor, 1000) == ChainInstallResult::Installed);
+    assert(dual.findSeccChainById(4) == nullptr);
+    assert(dual.findSeccChainById(6) != nullptr);
 
     std::string large_root = "ROOT-large";
     large_root.resize(5000, '\n');
@@ -202,6 +214,32 @@ int main()
     assert(limited.installRoot(CertGroup::MfrRoot, maximum_root.c_str(), 100) == CertInstallResult::Accepted);
     maximum_root.push_back('\n');
     assert(limited.installRoot(CertGroup::MORoot, maximum_root.c_str(), 100) == CertInstallResult::Rejected);
+
+    files.clear();
+    CertStore capacity;
+    capacity.init("capacity");
+    auto fill_roots = [&capacity](CertGroup group, const char *prefix, size_t limit) {
+        std::string first;
+        for (size_t i = 0; i < limit; ++i) {
+            const std::string root = std::string("ROOT-") + prefix + "-" + std::to_string(i);
+            if (i == 0) {
+                first = root;
+            }
+            assert(capacity.installRoot(group, root.c_str(), 100) == CertInstallResult::Accepted);
+        }
+        const size_t count_at_limit = capacity.count();
+        const std::string overflow = std::string("ROOT-") + prefix + "-overflow";
+        assert(capacity.installRoot(group, overflow.c_str(), 100) == CertInstallResult::Rejected);
+        assert(capacity.count() == count_at_limit);
+        assert(capacity.installRoot(group, first.c_str(), 100) == CertInstallResult::Accepted);
+        assert(capacity.count() == count_at_limit);
+    };
+    fill_roots(CertGroup::V2GRoot, "v2g", OCPP21_CERTSTORE_MAX_V2G_ROOT);
+    fill_roots(CertGroup::OEMRoot, "oem", OCPP21_CERTSTORE_MAX_OEM_ROOT);
+    fill_roots(CertGroup::MORoot, "mo", OCPP21_CERTSTORE_MAX_MO_ROOT);
+    assert(capacity.count() == OCPP21_CERTSTORE_MAX_V2G_ROOT
+                              + OCPP21_CERTSTORE_MAX_OEM_ROOT
+                              + OCPP21_CERTSTORE_MAX_MO_ROOT);
 
     return 0;
 }

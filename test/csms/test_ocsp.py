@@ -88,6 +88,115 @@ def installed_v2g_chains(csms):
     return response["certificateHashDataChain"]
 
 
+def set_variable(csms, component, variable, value):
+    response = csms.call("SetVariables", {"setVariableData": [{
+        "component": {"name": component},
+        "variable": {"name": variable},
+        "attributeValue": str(value),
+    }]})
+    assert response["setVariableResult"][0]["attributeStatus"] == "Accepted"
+
+
+def test_csr_retry_reuses_payload_and_starts_after_acceptance(csms, host):
+    set_variable(csms, "SecurityCtrlr", "CertSigningWaitMinimum", 1)
+    set_variable(csms, "SecurityCtrlr", "CertSigningRepeatTimes", 1)
+    assert csms.call("TriggerMessage", {
+        "requestedMessage": "SignChargingStationCertificate",
+    })["status"] == "Accepted"
+
+    first, first_message_id = csms.expect("SignCertificate")
+    with pytest.raises(TimeoutError):
+        csms.expect("SignCertificate", timeout=1.2)
+
+    accepted_at = time.monotonic()
+    csms.respond(first_message_id, {"status": "Accepted"})
+    second, second_message_id = csms.expect("SignCertificate", timeout=2)
+    assert time.monotonic() - accepted_at >= 0.9
+    assert second == first
+
+    accepted_at = time.monotonic()
+    csms.respond(second_message_id, {"status": "Accepted"})
+    third, third_message_id = csms.expect("SignCertificate", timeout=3)
+    assert time.monotonic() - accepted_at >= 1.9
+    assert third == first
+
+    csms.respond(third_message_id, {"status": "Accepted"})
+    host.wait_for("CSR retries exhausted", timeout=3)
+    with pytest.raises(TimeoutError):
+        csms.expect("SignCertificate", timeout=0.5)
+
+
+def test_certificate_signed_unknown_request_id_keeps_csr_active(csms, host, ca):
+    assert csms.call("InstallCertificate", {
+        "certificateType": "V2GRootCertificate",
+        "certificate": ca.cert_pem,
+    })["status"] == "Accepted"
+    request, cert_type = start_v2g_csr(csms)
+    leaf = ca.sign_csr(request["csr"])
+
+    rejected = csms.call("CertificateSigned", {
+        "certificateChain": leaf,
+        "certificateType": cert_type,
+        "requestId": request["requestId"] + 1,
+    })
+    assert rejected["status"] == "Rejected"
+    assert rejected["statusInfo"]["reasonCode"] == "UnknownRequestId"
+
+    accepted = csms.call("CertificateSigned", {
+        "certificateChain": leaf,
+        "certificateType": cert_type,
+        "requestId": request["requestId"],
+    })
+    assert accepted["status"] == "Accepted"
+    host.wait_for("Installed the signed V2GCertificate", timeout=10)
+
+
+@pytest.mark.parametrize("iso20", [False, True], ids=["iso2", "iso20"])
+def test_same_root_retains_newest_validity_start(csms, host, hosts, ca, iso20):
+    assert csms.call("InstallCertificate", {
+        "certificateType": "V2GRootCertificate",
+        "certificate": ca.cert_pem,
+    })["status"] == "Accepted"
+    base = datetime.datetime.now(datetime.timezone.utc)
+    now = base + datetime.timedelta(hours=2)
+    host.send(f"time ={int(now.timestamp())}")
+    host.wait_for("froze system time", timeout=10)
+
+    def install(not_before):
+        request, cert_type = start_v2g_csr(csms, iso20)
+        leaf = ca.sign_csr_at(request["csr"], not_before, now + datetime.timedelta(days=300))
+        response = csms.call("CertificateSigned", {
+            "certificateChain": leaf,
+            "certificateType": cert_type,
+            "requestId": request["requestId"],
+        })
+        assert response["status"] == "Accepted"
+        return leaf
+
+    first = install(base + datetime.timedelta(minutes=20))
+    host.wait_for("Installed the signed V2G", timeout=10)
+    chain_glob = "v2g20.*.pem" if iso20 else "v2g2.*.pem"
+    chain_files = list((hosts.workdir / "tfocpp-ocsp-test.certs").glob(chain_glob))
+    assert len(chain_files) == 1
+    assert chain_files[0].read_text() == first
+
+    install(base + datetime.timedelta(minutes=10))
+    host.wait_for("Discarded the signed V2G", timeout=10)
+    installed = installed_v2g_chains(csms)
+    assert len(installed) == 1
+    chain_files = list((hosts.workdir / "tfocpp-ocsp-test.certs").glob(chain_glob))
+    assert len(chain_files) == 1
+    assert chain_files[0].read_text() == first
+
+    newest = install(base + datetime.timedelta(minutes=30))
+    host.wait_for("Installed the signed V2G", min_count=2, timeout=10)
+    installed = installed_v2g_chains(csms)
+    assert len(installed) == 1
+    chain_files = list((hosts.workdir / "tfocpp-ocsp-test.certs").glob(chain_glob))
+    assert len(chain_files) == 1
+    assert chain_files[0].read_text() == newest
+
+
 def test_m03_two_intermediate_order_and_root_inclusion_rejection(csms, host, ca):
     sub1 = ca.intermediate_ca("CPO Sub-CA 1")
     sub2 = sub1.intermediate_ca("CPO Sub-CA 2")
@@ -333,8 +442,12 @@ def test_m06_chain_replacement_does_not_retarget_in_flight_response(csms, host, 
     })["status"] == "Accepted"
     sign_req, sign_id = csms.expect("SignCertificate")
     csms.respond(sign_id, {"status": "Accepted"})
-    new_leaf = ca.sign_csr(
-        sign_req["csr"], ocsp_url="http://ocsp.test.example/new")
+    from cryptography import x509
+    old_not_before = x509.load_pem_x509_certificate(old_leaf.encode()).not_valid_before_utc
+    new_leaf = ca.sign_csr_at(
+        sign_req["csr"], old_not_before + datetime.timedelta(seconds=1),
+        old_not_before + datetime.timedelta(days=365),
+        ocsp_url="http://ocsp.test.example/new")
 
     host.send(f"time +{24 * 3600 + 10}")
     host.wait_for("OCSP cache expired for chain certificate", timeout=10)
