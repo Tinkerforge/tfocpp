@@ -138,10 +138,11 @@ void Connection::handleMessage(char *message, size_t message_len)
 
         log_info("Received result for %s (id %" PRIu64 ")", CallActionStrings[(size_t)message_in_flight.action], uid);
 
+        const uint64_t result_message_id = message_in_flight.message_id;
         clearInFlight();
         transaction_message_attempts = 0;
 
-        CallResponse res = callResultHandler(0, result_to, doc[2].as<JsonObject>(), cp);
+        CallResponse res = callResultHandler(0, result_to, result_message_id, doc[2].as<JsonObject>(), cp);
         // FR.06: an invalid response message is answered with a CALLRESULTERROR.
         if (res.result != CallErrorCode::OK) {
             sendCallResultError(uniqueID, res.result, res.error_description);

@@ -5674,7 +5674,7 @@ CallResponse parseGetReport(JsonObject obj);
 
 CallResponse parseGet15118EVCertificateResponse(JsonObject obj);
 
-CallResponse callResultHandler(int32_t connectorId, CallAction resultTo, JsonObject obj, ChargePoint *cp);
+CallResponse callResultHandler(int32_t connectorId, CallAction resultTo, uint64_t messageId, JsonObject obj, ChargePoint *cp);
 
 
 } // namespace Ocpp21

@@ -64,6 +64,12 @@ enum class CertInstallResult : uint8_t {
     Failed,
 };
 
+enum class ChainInstallResult : uint8_t {
+    Installed,
+    RetainedExisting,
+    Failed,
+};
+
 enum class CertDeleteResult : uint8_t {
     Accepted,
     Failed,
@@ -78,9 +84,12 @@ public:
 
     CertInstallResult installRoot(CertGroup group, const char *pem, time_t now);
     // The chain file and key file ids are reserved by the caller via
-    // nextId (the key is written at CSR time). Replaces chains of the
-    // same group anchored at the same root (HUB20-42-002, A02.FR.13).
-    bool installChain(CertGroup group, uint32_t id, const char *pem, const OcppCertHashData21 &anchor_root, bool combined = false);
+    // nextId (the key is written at CSR time). SECC chains are unique per
+    // root and suite, retaining the newest validity start (HUB20-42-002,
+    // A02.FR.15).
+    ChainInstallResult installChain(CertGroup group, uint32_t id, const char *pem,
+                                    const OcppCertHashData21 &anchor_root, time_t now,
+                                    bool combined = false);
     CertDeleteResult deleteByHash(const char *issuer_name_hash, const char *issuer_key_hash, const char *serial_number);
     void removeChain(CertGroup group, uint32_t id);
 
@@ -107,7 +116,8 @@ public:
     std::string loadRootByHash(const OcppCertHashData21 &hash) const;
 
 private:
-    bool addEntry(CertGroup group, uint32_t id, const char *pem, bool require_anchor = false);
+    bool addEntry(CertGroup group, uint32_t id, const char *pem, bool require_anchor = false,
+                  const OcppCertHashData21 *known_anchor = nullptr);
     size_t groupCount(CertGroup group) const;
     size_t groupLimit(CertGroup group) const;
     size_t chainCredentialCount() const;

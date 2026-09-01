@@ -382,7 +382,8 @@ size_t CertStore::readPem(const CertEntry &e, char *buf, size_t buf_len) const
     return len;
 }
 
-bool CertStore::addEntry(CertGroup group, uint32_t id, const char *pem, bool require_anchor)
+bool CertStore::addEntry(CertGroup group, uint32_t id, const char *pem, bool require_anchor,
+                         const OcppCertHashData21 *known_anchor)
 {
     CertEntry e;
     e.group = group;
@@ -423,7 +424,17 @@ bool CertStore::addEntry(CertGroup group, uint32_t id, const char *pem, bool req
     const char *root_ptrs[OCPP21_CERTSTORE_MAX_OEM_ROOT];
     size_t roots = loadRoots(root_group, root_bufs, root_ptrs, OCPP21_CERTSTORE_MAX_OEM_ROOT);
     size_t anchor_idx = 0;
-    if (roots > 0 && platform_verify_chain21(pem, root_ptrs, roots, e.not_before + 1, &anchor_idx) == OcppChainVerifyResult21::Ok) {
+    if (known_anchor != nullptr) {
+        for (size_t i = 0; i < roots; ++i) {
+            OcppCertHashData21 hash;
+            if (platform_cert_hash_data21(root_ptrs[i], 0, nullptr, 0, &hash) && same_hash(hash, *known_anchor)) {
+                anchor_idx = i;
+                e.anchor_root = *known_anchor;
+                e.has_anchor = true;
+                break;
+            }
+        }
+    } else if (roots > 0 && platform_verify_chain21(pem, root_ptrs, roots, e.not_before + 1, &anchor_idx) == OcppChainVerifyResult21::Ok) {
         e.has_anchor = platform_cert_hash_data21(root_ptrs[anchor_idx], 0, nullptr, 0, &e.anchor_root);
     }
     const char *anchor_pem = e.has_anchor ? root_ptrs[anchor_idx] : nullptr;
@@ -533,11 +544,12 @@ CertInstallResult CertStore::installRoot(CertGroup group, const char *pem, time_
     return CertInstallResult::Accepted;
 }
 
-bool CertStore::installChain(CertGroup group, uint32_t id, const char *pem, const OcppCertHashData21 &anchor_root,
-                             bool combined)
+ChainInstallResult CertStore::installChain(CertGroup group, uint32_t id, const char *pem,
+                                           const OcppCertHashData21 &anchor_root, time_t now,
+                                           bool combined)
 {
     if (!is_chain_group(group) || id == 0 || id == UINT32_MAX || pem == nullptr || strlen(pem) > OCPP21_CERT_PEM_MAX) {
-        return false;
+        return ChainInstallResult::Failed;
     }
 
     const CertEntry *same_id_entry = findById(id);
@@ -549,13 +561,13 @@ bool CertStore::installChain(CertGroup group, uint32_t id, const char *pem, cons
         if (!combined_pair
          || !read_pem_file(pemPath(same_id_entry->group, id), OCPP21_CERT_PEM_MAX, &existing, &existing_len)
          || existing_len != strlen(pem) || memcmp(existing.get(), pem, existing_len) != 0) {
-            return false;
+            return ChainInstallResult::Failed;
         }
     }
 
     OcppCertInfo21 leaf_info;
     if (!platform_cert_info21(pem, 0, &leaf_info)) {
-        return false;
+        return ChainInstallResult::Failed;
     }
 
     auto will_replace = [group, &anchor_root, &leaf_info](const CertEntry &e) {
@@ -572,6 +584,17 @@ bool CertStore::installChain(CertGroup group, uint32_t id, const char *pem, cons
         return e.group == CertGroup::CsmsClientChain
             || (e.group == CertGroup::V2GChain && e.has_anchor && same_hash(e.anchor_root, anchor_root));
     };
+
+    // A02.FR.15: delivery order must not let an older SECC certificate
+    // displace the newest certificate from the same root and crypto suite.
+    if (group == CertGroup::V2GChain || group == CertGroup::V2G20Chain) {
+        for (const auto &e : entries) {
+            if (will_replace(e) && e.not_before <= now && leaf_info.not_before <= now
+             && e.not_before >= leaf_info.not_before) {
+                return ChainInstallResult::RetainedExisting;
+            }
+        }
+    }
 
     size_t resulting_credentials = chainCredentialCount();
     if (same_id_entry == nullptr) {
@@ -596,12 +619,12 @@ bool CertStore::installChain(CertGroup group, uint32_t id, const char *pem, cons
         }
     }
     if (resulting_credentials > OCPP21_CERTSTORE_MAX_CHAINS) {
-        return false;
+        return ChainInstallResult::Failed;
     }
     reserveId(id);
 
-    // A02.FR.13 / HUB20-42-002: the CSMS client chain is unique, SECC
-    // chains are unique per anchoring root.
+    // A02.FR.15 / HUB20-42-002: the CSMS client chain is unique, SECC
+    // chains are unique per anchoring root and crypto suite.
     for (size_t i = entries.size(); i > 0; --i) {
         auto &e = entries[i - 1];
         if (e.group != group) {
@@ -615,14 +638,14 @@ bool CertStore::installChain(CertGroup group, uint32_t id, const char *pem, cons
 
     std::string path = pemPath(group, id);
     if (!platform_write_file(path.c_str(), (char *)pem, strlen(pem))) {
-        return false;
+        return ChainInstallResult::Failed;
     }
 
-    if (!addEntry(group, id, pem)) {
+    if (!addEntry(group, id, pem, true, &anchor_root)) {
         platform_remove_file(path.c_str());
-        return false;
+        return ChainInstallResult::Failed;
     }
-    return true;
+    return ChainInstallResult::Installed;
 }
 
 void CertStore::removeChain(CertGroup group, uint32_t id)

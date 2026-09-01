@@ -936,10 +936,10 @@ def generate_on_call(all_action_name_list: List[str], supported_to_recv: List[Ob
 
 
 def generate_on_call_response(all_action_name_list: List[str], supported_to_recv: List[Object]):
-    h_content = "CallResponse callResultHandler(int32_t connectorId, CallAction resultTo, JsonObject obj, ChargePoint *cp);\n"
+    h_content = "CallResponse callResultHandler(int32_t connectorId, CallAction resultTo, uint64_t messageId, JsonObject obj, ChargePoint *cp);\n"
     cpp_content = ""
 
-    template = """CallResponse callResultHandler(int32_t connectorId, CallAction resultTo, JsonObject obj, ChargePoint *cp) {{
+    template = """CallResponse callResultHandler(int32_t connectorId, CallAction resultTo, uint64_t messageId, JsonObject obj, ChargePoint *cp) {{
 
     switch(resultTo) {{{cases}
         {default_cases}
@@ -955,7 +955,7 @@ def generate_on_call_response(all_action_name_list: List[str], supported_to_recv
             if (res.result != CallErrorCode::OK)
                 return res;
 
-            return cp->handle{actionName}(connectorId, {actionName}View{{obj}});
+            return cp->handle{actionName}(connectorId, {messageId}{actionName}View{{obj}});
         }}
 """
 
@@ -963,7 +963,8 @@ def generate_on_call_response(all_action_name_list: List[str], supported_to_recv
 
     cases = [case_template.format(
                     actionNameUpper=camel_to_upper_snake(obj.__name__.removesuffix("Response")),
-                    actionName=obj.__name__)
+                    actionName=obj.__name__,
+                    messageId="messageId, " if obj.__name__ == "SignCertificateResponse" else "")
                 for obj in supported_to_recv
                     if obj.__name__.endswith("Response")]
 

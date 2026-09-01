@@ -1581,17 +1581,23 @@ void ChargePoint::tickCertificates()
         startCsr(trigger_sign_type, false, nullptr);
     }
 
-    // A02.FR.17/18/19: resend the same CSR with doubling backoff until
-    // CertSigningRepeatTimes is exhausted.
-    if (csr_active && deadline_elapsed(csr_retry_deadline)) {
-        if (csr_attempts_left > 0) {
-            --csr_attempts_left;
-            csr_backoff_s *= 2;
-            log_info("No CertificateSigned received, resending the CSR (requestId %d)", csr_request_id);
-            sendSignCertificate();
-        } else {
+    // A02.FR.17/18/19: after each Accepted response, resend the same CSR
+    // when its current backoff expires. RepeatTimes counts doublings, so
+    // zero permits the initial backoff and one resend.
+    if (csr_active && csr_retry_deadline != 0 && deadline_elapsed(csr_retry_deadline)) {
+        if (csr_backoff_doublings_left < 0) {
             log_warn("CSR retries exhausted, resuming only on TriggerMessage");
             abortCsr();
+        } else {
+            log_info("No CertificateSigned received, resending the CSR (requestId %d)", csr_request_id);
+            sendSignCertificate();
+            if (csr_backoff_doublings_left == 0) {
+                csr_backoff_doublings_left = -1;
+            } else {
+                --csr_backoff_doublings_left;
+                const uint32_t max_backoff_s = (UINT32_MAX / 2 - 1) / 1000;
+                csr_backoff_s = csr_backoff_s > max_backoff_s / 2 ? max_backoff_s : csr_backoff_s * 2;
+            }
         }
     }
 
@@ -1727,7 +1733,7 @@ void ChargePoint::startCsr(SignCertificateCertificateType type, bool renewal, co
     csr_active = true;
     csr_type = type;
     csr_request_id = ++last_sign_request_id;
-    csr_attempts_left = device_model.cert_signing_repeat_times;
+    csr_backoff_doublings_left = device_model.cert_signing_repeat_times;
     csr_backoff_s = (uint32_t)device_model.cert_signing_wait_minimum_s;
     // A03.FR.23: the renewal CSR identifies the issuing PKI. Never sent
     // for A02 (HUB20-421-002).
@@ -1747,6 +1753,9 @@ void ChargePoint::abortCsr()
     }
     csr_pending_id = 0;
     csr_active = false;
+    csr_retry_deadline = 0;
+    csr_sign_message_id = 0;
+    csr_waiting_for_sign_response = false;
 }
 
 void ChargePoint::sendSignCertificate()
@@ -1759,22 +1768,32 @@ void ChargePoint::sendSignCertificate()
         root.serialNumber = csr_root_hash.serial_number;
     }
 
-    connection.sendCallAction(SignCertificate{csr_buf, csr_type, csr_has_root_hash ? &root : nullptr, csr_request_id});
-    csr_retry_deadline = set_deadline(csr_backoff_s * 1000);
+    SignCertificate request{csr_buf, csr_type, csr_has_root_hash ? &root : nullptr, csr_request_id};
+    if (connection.sendCallAction(request)) {
+        csr_sign_message_id = request.ocppJmessageId;
+        csr_waiting_for_sign_response = true;
+        csr_retry_deadline = 0;
+    }
 }
 
-CallResponse ChargePoint::handleSignCertificateResponse(int32_t connectorId, SignCertificateResponseView conf)
+CallResponse ChargePoint::handleSignCertificateResponse(int32_t connectorId, uint64_t message_id,
+                                                        SignCertificateResponseView conf)
 {
     (void)connectorId;
-    if (!csr_active) {
+    if (!csr_active || !csr_waiting_for_sign_response || message_id != csr_sign_message_id) {
         return CallResponse{CallErrorCode::OK, nullptr};
     }
 
+    csr_waiting_for_sign_response = false;
     if (conf.status() == SignCertificateResponseStatus::REJECTED) {
         // A02.FR.20: no backoff resend until the next TriggerMessage.
         // HUB20-421-001: a rejected V2G CSR does not turn off ISO 15118.
         log_warn("SignCertificate rejected by the CSMS, resuming only on TriggerMessage");
         abortCsr();
+    } else {
+        // A02.FR.17: the wait begins when the CSMS accepts this request,
+        // not while it is queued or in flight.
+        csr_retry_deadline = set_deadline(csr_backoff_s * 1000);
     }
 
     return CallResponse{CallErrorCode::OK, nullptr};
@@ -1864,14 +1883,22 @@ CallResponse ChargePoint::handleCertificateSigned(const char *uid, CertificateSi
     // The combined certificate serves both connections, the V2G copy is
     // installed first so that findSeccChainById and the boot scan see it.
     OcppCertHashData21 anchor_hash;
-    bool installed = platform_cert_hash_data21(root_ptrs[anchor_idx], 0, nullptr, 0, &anchor_hash);
-    if (installed && combined) {
-        installed = cert_store.installChain(CertGroup::V2GChain, csr_pending_id, chain, anchor_hash, true)
-                 && cert_store.installChain(CertGroup::CsmsClientChain, csr_pending_id, chain, anchor_hash, true);
-    } else if (installed) {
-        installed = cert_store.installChain(chain_group, csr_pending_id, chain, anchor_hash);
+    const time_t install_time = platform_get_system_time(connection.platform_ctx);
+    bool hash_ok = platform_cert_hash_data21(root_ptrs[anchor_idx], 0, nullptr, 0, &anchor_hash);
+    ChainInstallResult secc_result = ChainInstallResult::Failed;
+    ChainInstallResult client_result = ChainInstallResult::Failed;
+    if (hash_ok && combined) {
+        secc_result = cert_store.installChain(CertGroup::V2GChain, csr_pending_id, chain, anchor_hash, install_time, true);
+        if (secc_result != ChainInstallResult::Failed) {
+            client_result = cert_store.installChain(CertGroup::CsmsClientChain, csr_pending_id, chain, anchor_hash, install_time, true);
+        }
+    } else if (hash_ok) {
+        secc_result = cert_store.installChain(chain_group, csr_pending_id, chain, anchor_hash, install_time);
     }
-    if (!installed) {
+    const bool installed = combined ? client_result == ChainInstallResult::Installed
+                                    : secc_result == ChainInstallResult::Installed;
+    const bool retained_existing = !combined && secc_result == ChainInstallResult::RetainedExisting;
+    if (!installed && !retained_existing) {
         log_error("Failed to store the signed certificate chain");
         CertificateSignedResponseStatusInfo info;
         info.reasonCode = "StorageFailure";
@@ -1880,14 +1907,26 @@ CallResponse ChargePoint::handleCertificateSigned(const char *uid, CertificateSi
     }
 
     connection.sendCallResponse(CertificateSignedResponse{uid, ResponseStatus::ACCEPTED});
-    log_info("Installed the signed %s", sign_type_names[(size_t)csr_type]);
+    if (retained_existing) {
+        log_info("Discarded the signed %s because a newer same-root certificate is installed",
+                 sign_type_names[(size_t)csr_type]);
+    } else {
+        log_info("Installed the signed %s", sign_type_names[(size_t)csr_type]);
+    }
 
     uint32_t chain_id = csr_pending_id;
-    csr_pending_id = 0; // the key now belongs to the installed chain
+    if (installed) {
+        csr_pending_id = 0; // the key now belongs to the installed chain
+    } else {
+        platform_remove_file(cert_store.keyPath(csr_pending_id).c_str());
+        csr_pending_id = 0;
+    }
     csr_active = false;
-    platform_cert_store_changed21(connection.platform_ctx);
+    if (installed) {
+        platform_cert_store_changed21(connection.platform_ctx);
+    }
 
-    if (combined || chain_group == CertGroup::CsmsClientChain) {
+    if (installed && (combined || chain_group == CertGroup::CsmsClientChain)) {
         // A02.FR.08: reconnect with the new certificate after the
         // response left. No reconnect for the V2G types.
         if (tls_in_use) {
@@ -1895,7 +1934,8 @@ CallResponse ChargePoint::handleCertificateSigned(const char *uid, CertificateSi
             cert_reconnect_deadline = set_deadline(3000);
         }
     }
-    if (combined || chain_group != CertGroup::CsmsClientChain) {
+    if ((combined && secc_result == ChainInstallResult::Installed)
+     || (!combined && installed && chain_group != CertGroup::CsmsClientChain)) {
         // M06.FR.07: refresh the OCSP status of the new chain.
         scheduleChainOcsp(chain_id);
     }

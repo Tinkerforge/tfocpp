@@ -148,7 +148,7 @@ public:
     CallResponse handleTransactionEventResponse(int32_t connectorId, TransactionEventResponseView conf);
     CallResponse handleMeterValuesResponse(int32_t connectorId, MeterValuesResponseView conf);
     CallResponse handleSecurityEventNotificationResponse(int32_t connectorId, SecurityEventNotificationResponseView conf);
-    CallResponse handleSignCertificateResponse(int32_t connectorId, SignCertificateResponseView conf);
+    CallResponse handleSignCertificateResponse(int32_t connectorId, uint64_t message_id, SignCertificateResponseView conf);
     CallResponse handleGetCertificateStatusResponse(int32_t connectorId, GetCertificateStatusResponseView conf);
     CallResponse handleGetCertificateChainStatusResponse(int32_t connectorId, GetCertificateChainStatusResponseView conf);
     CallResponse handleGet15118EVCertificateResponse(int32_t connectorId, Get15118EVCertificateResponseView conf);
@@ -259,9 +259,9 @@ private:
     PlatformConnectionError last_reported_conn_error = PlatformConnectionError::Unknown;
 
     // A02/A03: one CSR flow at a time. The CSR is kept for resends
-    // (A02.FR.18), the retry backoff starts at CertSigningWaitMinimum
-    // and doubles (A02.FR.17/18), stopping after CertSigningRepeatTimes
-    // resends (A02.FR.19).
+    // (A02.FR.17), the retry backoff starts after an Accepted response at
+    // CertSigningWaitMinimum and doubles CertSigningRepeatTimes times
+    // (A02.FR.18/19).
     bool csr_active = false;
     SignCertificateCertificateType csr_type = SignCertificateCertificateType::NONE;
     uint32_t csr_pending_id = 0; // reserved store id, names the key file
@@ -269,8 +269,10 @@ private:
     int32_t last_sign_request_id = 0;
     char csr_buf[5501] = "";
     uint32_t csr_retry_deadline = 0;
-    int32_t csr_attempts_left = 0;
+    int32_t csr_backoff_doublings_left = 0;
     uint32_t csr_backoff_s = 0;
+    uint64_t csr_sign_message_id = 0;
+    bool csr_waiting_for_sign_response = false;
     bool csr_has_root_hash = false; // A03.FR.23, omitted for A02 (HUB20-421-002)
     OcppCertHashData21 csr_root_hash{};
 

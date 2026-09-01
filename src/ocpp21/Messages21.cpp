@@ -13636,7 +13636,7 @@ CallResponse callHandler(const char *uid, const char *action_string, JsonObject 
     SILENCE_GCC_UNREACHABLE();
 }
 
-CallResponse callResultHandler(int32_t connectorId, CallAction resultTo, JsonObject obj, ChargePoint *cp) {
+CallResponse callResultHandler(int32_t connectorId, CallAction resultTo, uint64_t messageId, JsonObject obj, ChargePoint *cp) {
 
     switch(resultTo) {
         case CallAction::BOOT_NOTIFICATION: {
@@ -13700,7 +13700,7 @@ CallResponse callResultHandler(int32_t connectorId, CallAction resultTo, JsonObj
             if (res.result != CallErrorCode::OK)
                 return res;
 
-            return cp->handleSignCertificateResponse(connectorId, SignCertificateResponseView{obj});
+            return cp->handleSignCertificateResponse(connectorId, messageId, SignCertificateResponseView{obj});
         }
 
         case CallAction::GET_CERTIFICATE_STATUS: {
