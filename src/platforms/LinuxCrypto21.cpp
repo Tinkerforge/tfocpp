@@ -3,6 +3,7 @@
 
 #if defined(OCPP_PLATFORM_LINUX21) && !defined(OCPP_CRYPTO_MBEDTLS)
 
+#include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
 
@@ -270,6 +271,10 @@ static BIO *open_key_file(const char *key_name)
 
 size_t platform_generate_csr21(const OcppCsrParams21 *params, char *csr_pem, size_t csr_pem_len)
 {
+    if (getenv("OCPP21_DENY_PRIVATE_KEY_OPERATIONS") != nullptr) {
+        return 0;
+    }
+
     EVP_PKEY *key = nullptr;
     const EVP_MD *md = nullptr;
 

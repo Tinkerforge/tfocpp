@@ -13,8 +13,16 @@ import uuid
 from websockets.sync.server import serve
 
 
+class OcppCallError(Exception):
+    def __init__(self, code, description, details):
+        super().__init__(f"{code}: {description}")
+        self.code = code
+        self.description = description
+        self.details = details
+
+
 class MiniCsms:
-    def __init__(self, certfile=None, keyfile=None):
+    def __init__(self, certfile=None, keyfile=None, client_ca=None):
         self.requests = queue.Queue()
         self.responses = queue.Queue()
         self.security_events = []
@@ -26,13 +34,19 @@ class MiniCsms:
         self.mangled_ids = []
         self.ws = None
         self.connected = threading.Event()
+        self.connection_history = []
+        self.connection_condition = threading.Condition()
 
         ssl_context = None
         host = "127.0.0.1"
         if certfile is not None:
             ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
             ssl_context.load_cert_chain(certfile, keyfile)
+            if client_ca is not None:
+                ssl_context.verify_mode = ssl.CERT_OPTIONAL
+                ssl_context.load_verify_locations(client_ca)
             host = "localhost"
+        self.ssl_context = ssl_context
         self.server = serve(self._handler, host, 0, ssl=ssl_context,
                             select_subprotocol=lambda conn, protos: "ocpp2.1")
         self.port = self.server.socket.getsockname()[1]
@@ -44,6 +58,10 @@ class MiniCsms:
     def _handler(self, ws):
         self.ws = ws
         self.last_auth = ws.request.headers.get("Authorization")
+        peer_certificate = ws.socket.getpeercert(binary_form=True) if self.ssl_context is not None else None
+        with self.connection_condition:
+            self.connection_history.append(peer_certificate)
+            self.connection_condition.notify_all()
         self.connected.set()
         try:
             for raw in ws:
@@ -72,12 +90,15 @@ class MiniCsms:
                         self.requests.put((action, payload, msg_id))
                 elif msg[0] == 3:
                     self.responses.put((msg[1], msg[2]))
+                elif msg[0] == 4:
+                    self.responses.put((msg[1], OcppCallError(msg[2], msg[3], msg[4])))
                 elif msg[0] == 5:
                     self.result_errors.append((msg[1], msg[2], msg[3]))
         except Exception:
             pass
         finally:
-            self.connected.clear()
+            if self.ws is ws:
+                self.connected.clear()
 
     def respond(self, msg_id, payload):
         self.ws.send(json.dumps([3, msg_id, payload]))
@@ -95,6 +116,8 @@ class MiniCsms:
             except queue.Empty:
                 break
             if rid == msg_id:
+                if isinstance(rpayload, OcppCallError):
+                    raise rpayload
                 return rpayload
         raise TimeoutError(f"no response to {action} within {timeout} s")
 
@@ -117,6 +140,20 @@ class MiniCsms:
     def wait_connected(self, timeout=15):
         if not self.connected.wait(timeout):
             raise TimeoutError("charge point did not connect")
+
+    def wait_connection_count(self, count, timeout=15):
+        deadline = time.monotonic() + timeout
+        with self.connection_condition:
+            while len(self.connection_history) < count:
+                remaining = deadline - time.monotonic()
+                if remaining <= 0:
+                    raise TimeoutError(f"charge point did not establish connection {count}")
+                self.connection_condition.wait(remaining)
+
+    def trust_client_ca(self, cafile):
+        if self.ssl_context is None:
+            raise RuntimeError("client CAs require TLS")
+        self.ssl_context.load_verify_locations(cafile)
 
     def stop(self):
         self.server.shutdown()

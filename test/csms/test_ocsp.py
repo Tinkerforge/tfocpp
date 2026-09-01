@@ -9,8 +9,9 @@ import datetime
 import time
 
 import pytest
+from cryptography import x509
 
-from minicsms import MiniCsms
+from minicsms import MiniCsms, OcppCallError
 from testca import SigningCa
 
 
@@ -24,7 +25,7 @@ def ca(tmp_path):
 @pytest.fixture
 def csms(ca):
     cert, key = ca.server_cert()
-    c = MiniCsms(certfile=cert, keyfile=key)
+    c = MiniCsms(certfile=cert, keyfile=key, client_ca=str(ca.cert))
     yield c
     c.stop()
 
@@ -97,6 +98,40 @@ def set_variable(csms, component, variable, value):
     assert response["setVariableResult"][0]["attributeStatus"] == "Accepted"
 
 
+def get_variable(csms, component, variable):
+    response = csms.call("GetVariables", {"getVariableData": [{
+        "component": {"name": component},
+        "variable": {"name": variable},
+    }]})
+    result = response["getVariableResult"][0]
+    assert result["attributeStatus"] == "Accepted"
+    return result["attributeValue"]
+
+
+def certificate_serial(pem_or_der):
+    if isinstance(pem_or_der, str):
+        cert = x509.load_pem_x509_certificate(pem_or_der.encode())
+    else:
+        cert = x509.load_der_x509_certificate(pem_or_der)
+    return cert.serial_number
+
+
+def client_credentials(workdir):
+    cert_dir = workdir / "tfocpp-ocsp-test.certs"
+    chains = set(cert_dir.glob("cs.*.pem"))
+    keys = {cert_dir / f"key.{chain.name.split('.')[1]}" for chain in chains}
+    return chains, keys
+
+
+def wait_until(predicate, timeout=10):
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        if predicate():
+            return
+        time.sleep(0.05)
+    raise TimeoutError("condition not met")
+
+
 def test_csr_retry_reuses_payload_and_starts_after_acceptance(csms, host):
     set_variable(csms, "SecurityCtrlr", "CertSigningWaitMinimum", 1)
     set_variable(csms, "SecurityCtrlr", "CertSigningRepeatTimes", 1)
@@ -124,6 +159,79 @@ def test_csr_retry_reuses_payload_and_starts_after_acceptance(csms, host):
     host.wait_for("CSR retries exhausted", timeout=3)
     with pytest.raises(TimeoutError):
         csms.expect("SignCertificate", timeout=0.5)
+
+
+def test_same_trigger_replaces_pending_csr(csms, host, hosts, ca):
+    assert csms.call("InstallCertificate", {
+        "certificateType": "V2GRootCertificate",
+        "certificate": ca.cert_pem,
+    })["status"] == "Accepted"
+    set_variable(csms, "SecurityCtrlr", "CertSigningWaitMinimum", 60)
+
+    first, cert_type = start_v2g_csr(csms)
+    cert_dir = hosts.workdir / "tfocpp-ocsp-test.certs"
+    first_keys = set(cert_dir.glob("key.*"))
+    assert len(first_keys) == 1
+
+    assert csms.call("TriggerMessage", {
+        "requestedMessage": "SignV2GCertificate",
+    })["status"] == "Accepted"
+    second, second_message_id = csms.expect("SignCertificate")
+    csms.respond(second_message_id, {"status": "Accepted"})
+    assert second["requestId"] != first["requestId"]
+    assert second["csr"] != first["csr"]
+    second_keys = set(cert_dir.glob("key.*"))
+    assert len(second_keys) == 1
+    assert second_keys.isdisjoint(first_keys)
+
+    rejected = csms.call("CertificateSigned", {
+        "certificateChain": ca.sign_csr(first["csr"]),
+        "certificateType": cert_type,
+        "requestId": first["requestId"],
+    })
+    assert rejected["status"] == "Rejected"
+    assert rejected["statusInfo"]["reasonCode"] == "UnknownRequestId"
+
+    accepted = csms.call("CertificateSigned", {
+        "certificateChain": ca.sign_csr(second["csr"]),
+        "certificateType": cert_type,
+        "requestId": second["requestId"],
+    })
+    assert accepted["status"] == "Accepted"
+    host.wait_for("Installed the signed V2GCertificate", timeout=10)
+
+
+def test_certificate_signed_chain_size_boundary(csms, host, hosts, ca):
+    limit = int(get_variable(csms, "SecurityCtrlr", "MaxCertificateChainSize"))
+    assert limit == 10000
+    assert csms.call("InstallCertificate", {
+        "certificateType": "V2GRootCertificate",
+        "certificate": ca.cert_pem,
+    })["status"] == "Accepted"
+    request, cert_type = start_v2g_csr(csms)
+    leaf = ca.sign_csr(request["csr"])
+    exact = leaf + "\n" * (limit - len(leaf))
+    assert len(exact) == limit
+
+    with pytest.raises(OcppCallError) as exc:
+        csms.call("CertificateSigned", {
+            "certificateChain": exact + "\n",
+            "certificateType": cert_type,
+            "requestId": request["requestId"],
+        })
+    assert exc.value.code == "PropertyConstraintViolation"
+    assert exc.value.description == "certificateChain: string too long"
+    assert not list((hosts.workdir / "tfocpp-ocsp-test.certs").glob("v2g2.*.pem"))
+
+    assert csms.call("CertificateSigned", {
+        "certificateChain": exact,
+        "certificateType": cert_type,
+        "requestId": request["requestId"],
+    })["status"] == "Accepted"
+    host.wait_for("Installed the signed V2GCertificate", timeout=10)
+    chain_files = list((hosts.workdir / "tfocpp-ocsp-test.certs").glob("v2g2.*.pem"))
+    assert len(chain_files) == 1
+    assert len(chain_files[0].read_text()) == limit
 
 
 def test_certificate_signed_unknown_request_id_keeps_csr_active(csms, host, ca):
@@ -496,21 +604,93 @@ def _csr_for(ca, directory):
     return csr.read_text()
 
 
-def test_a03_renewal_on_expiring_certificate(csms, host, ca):
-    # A03.FR.02: a certificate within one month of expiry triggers an
-    # autonomous CSR with the root hash of the issuing PKI (A03.FR.23).
-    install_v2g20_chain(csms, host, ca, days=20)
+def test_a03_renewal_retries_replaces_and_reconnects(csms, host, hosts, ca):
+    set_variable(csms, "SecurityCtrlr", "CertSigningWaitMinimum", 1)
+    set_variable(csms, "SecurityCtrlr", "CertSigningRepeatTimes", 1)
 
-    # The expiry check runs shortly after each connect.
+    initial_request = sign_charging_station_certificate(csms, host, ca)
+    initial_leaf = ca.sign_csr(initial_request["csr"], days=20)
+    assert csms.call("CertificateSigned", {
+        "certificateChain": initial_leaf,
+        "certificateType": "ChargingStationCertificate",
+        "requestId": initial_request["requestId"],
+    })["status"] == "Accepted"
+    host.wait_for("Installed the signed ChargingStationCertificate", timeout=10)
+    csms.wait_connection_count(2, timeout=10)
+    assert certificate_serial(csms.connection_history[1]) == certificate_serial(initial_leaf)
+
+    host.wait_for("expires soon, requesting renewal \\(A03\\)", timeout=10)
+    renewal, message_id = csms.expect("SignCertificate")
+    assert renewal["certificateType"] == "ChargingStationCertificate"
+    assert isinstance(renewal["requestId"], int)
+    assert renewal["requestId"] != initial_request["requestId"]
+    assert renewal["hashRootCertificate"] == ca.hash_data(ca.cert_pem, ca.cert_pem)
+
+    with pytest.raises(TimeoutError):
+        csms.expect("SignCertificate", timeout=1.2)
+    accepted_at = time.monotonic()
+    csms.respond(message_id, {"status": "Accepted"})
+    retry, retry_message_id = csms.expect("SignCertificate", timeout=2)
+    assert time.monotonic() - accepted_at >= 0.9
+    assert retry == renewal
+    renewed_leaf = ca.sign_csr(renewal["csr"], days=365)
+    csms.respond(retry_message_id, {"status": "Accepted"})
+    old_chains, old_keys = client_credentials(hosts.workdir)
+    assert len(old_chains) == 1
+    assert len(old_keys) == 1
+    rejected = csms.call("CertificateSigned", {
+        "certificateChain": renewed_leaf,
+        "certificateType": renewal["certificateType"],
+        "requestId": renewal["requestId"] + 1,
+    })
+    assert rejected["status"] == "Rejected"
+    assert rejected["statusInfo"]["reasonCode"] == "UnknownRequestId"
+    response = csms.call("CertificateSigned", {
+        "certificateChain": renewed_leaf,
+        "certificateType": renewal["certificateType"],
+        "requestId": renewal["requestId"],
+    })
+    assert response["status"] == "Accepted", response
+    chains, keys = client_credentials(hosts.workdir)
+    assert len(chains) == 2
+    assert len(keys) == 2
+    assert old_chains <= chains
+    assert old_keys <= keys
+
+    csms.wait_connection_count(3, timeout=10)
+    assert certificate_serial(csms.connection_history[2]) == certificate_serial(renewed_leaf)
+    wait_until(lambda: all(not path.exists() for path in old_chains | old_keys))
+    chains, keys = client_credentials(hosts.workdir)
+    assert len(chains) == 1
+    assert len(keys) == 1
+    with pytest.raises(TimeoutError):
+        csms.expect("SignCertificate", timeout=6)
+
+
+def test_a03_v2g_renewal_retains_newest_chain(csms, host, hosts, ca):
+    initial_leaf = install_v2g20_chain(csms, host, ca, days=20)
+    chain_files = list((hosts.workdir / "tfocpp-ocsp-test.certs").glob("v2g20.*.pem"))
+    assert len(chain_files) == 1
+    assert chain_files[0].read_text() == initial_leaf
+
     csms.disconnect()
-    csms.wait_connected(timeout=30)
+    csms.wait_connection_count(2, timeout=30)
     host.wait_for("expires soon, requesting renewal \\(A03\\)", timeout=30)
+    renewal, message_id = csms.expect("SignCertificate")
+    assert renewal["certificateType"] == "V2G20Certificate"
+    assert renewal["hashRootCertificate"] == ca.hash_data(ca.cert_pem, ca.cert_pem)
+    csms.respond(message_id, {"status": "Accepted"})
 
-    sign_req, msg_id = csms.expect("SignCertificate")
-    csms.respond(msg_id, {"status": "Accepted"})
-    assert sign_req["certificateType"] == "V2G20Certificate"
-    assert "hashRootCertificate" in sign_req, "A03 CSR must identify the issuing PKI"
-    assert len(sign_req["hashRootCertificate"]["issuerKeyHash"]) == 64
+    renewed_leaf = ca.sign_csr(renewal["csr"], days=365)
+    assert csms.call("CertificateSigned", {
+        "certificateChain": renewed_leaf,
+        "certificateType": renewal["certificateType"],
+        "requestId": renewal["requestId"],
+    })["status"] == "Accepted"
+    host.wait_for("Installed the signed V2G20Certificate", min_count=2, timeout=10)
+    chain_files = list((hosts.workdir / "tfocpp-ocsp-test.certs").glob("v2g20.*.pem"))
+    assert len(chain_files) == 1
+    assert chain_files[0].read_text() == renewed_leaf
 
 
 def test_m07_vehicle_chain_status(csms, host):
@@ -592,6 +772,58 @@ def sign_charging_station_certificate(csms, host, ca):
     sign_req, msg_id = csms.expect("SignCertificate")
     csms.respond(msg_id, {"status": "Accepted"})
     return sign_req
+
+
+def test_old_client_certificate_removed_after_successful_reconnect(csms, host, hosts, ca, tmp_path):
+    initial_request = sign_charging_station_certificate(csms, host, ca)
+    initial_leaf = ca.sign_csr(initial_request["csr"])
+    assert csms.call("CertificateSigned", {
+        "certificateChain": initial_leaf,
+        "certificateType": "ChargingStationCertificate",
+        "requestId": initial_request["requestId"],
+    })["status"] == "Accepted"
+    csms.wait_connection_count(2, timeout=10)
+    assert certificate_serial(csms.connection_history[1]) == certificate_serial(initial_leaf)
+    old_chains, old_keys = client_credentials(hosts.workdir)
+    assert len(old_chains) == 1
+    assert len(old_keys) == 1
+
+    replacement_dir = tmp_path / "replacement-ca"
+    replacement_dir.mkdir()
+    replacement_ca = SigningCa(replacement_dir, name="tfocpp-replacement-ca")
+    assert csms.call("InstallCertificate", {
+        "certificateType": "CSMSRootCertificate",
+        "certificate": replacement_ca.cert_pem,
+    })["status"] == "Accepted"
+    assert csms.call("TriggerMessage", {
+        "requestedMessage": "SignChargingStationCertificate",
+    })["status"] == "Accepted"
+    replacement_request, message_id = csms.expect("SignCertificate")
+    csms.respond(message_id, {"status": "Accepted"})
+    replacement_leaf = replacement_ca.sign_csr(replacement_request["csr"])
+    assert csms.call("CertificateSigned", {
+        "certificateChain": replacement_leaf,
+        "certificateType": "ChargingStationCertificate",
+        "requestId": replacement_request["requestId"],
+    })["status"] == "Accepted"
+
+    chains, keys = client_credentials(hosts.workdir)
+    assert len(chains) == 2
+    assert len(keys) == 2
+    assert old_chains <= chains
+    assert old_keys <= keys
+    host.wait_for("Reconnecting with the new charging station certificate", timeout=10)
+    time.sleep(2)
+    assert len(csms.connection_history) == 2
+    assert all(path.exists() for path in old_chains | old_keys)
+
+    csms.trust_client_ca(str(replacement_ca.cert))
+    csms.wait_connection_count(3, timeout=20)
+    assert certificate_serial(csms.connection_history[2]) == certificate_serial(replacement_leaf)
+    wait_until(lambda: all(not path.exists() for path in old_chains | old_keys))
+    chains, keys = client_credentials(hosts.workdir)
+    assert len(chains) == 1
+    assert len(keys) == 1
 
 
 def test_certificate_signed_invalid_chain_rejected(csms, host, ca, tmp_path):

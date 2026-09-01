@@ -8,6 +8,9 @@
 
 #define MBEDTLS_ALLOW_PRIVATE_ACCESS
 
+#if defined(OCPP_PLATFORM_LINUX21)
+#include <stdlib.h>
+#endif
 #include <string.h>
 #include <stdio.h>
 
@@ -394,6 +397,12 @@ static size_t generate_ed448_csr(const OcppCsrParams21 *params, const char *subj
 
 size_t platform_generate_csr21(const OcppCsrParams21 *params, char *csr_pem, size_t csr_pem_len)
 {
+#if defined(OCPP_PLATFORM_LINUX21)
+    if (getenv("OCPP21_DENY_PRIVATE_KEY_OPERATIONS") != nullptr) {
+        return 0;
+    }
+#endif
+
     mbedtls_ecp_group_id group = MBEDTLS_ECP_DP_NONE;
     mbedtls_md_type_t md = MBEDTLS_MD_NONE;
     switch (params->curve) {

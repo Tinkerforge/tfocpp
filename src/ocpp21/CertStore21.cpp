@@ -168,8 +168,14 @@ void CertStore::init(const char *charge_point_name)
                          group_prefixes[static_cast<size_t>(f.group)], static_cast<unsigned>(f.id));
                 continue;
             }
+            if (f.group == CertGroup::CsmsClientChain && groupCount(f.group) >= 2) {
+                log_warn("Certificate store: ignoring extra staged charging station chain %s.%u",
+                         group_prefixes[static_cast<size_t>(f.group)], static_cast<unsigned>(f.id));
+                continue;
+            }
+            const size_t chain_limit = OCPP21_CERTSTORE_MAX_CHAINS + (groupCount(CertGroup::CsmsClientChain) == 2 ? 1 : 0);
             if (is_chain_group(f.group) && findById(f.id) == nullptr
-             && chainCredentialCount() >= OCPP21_CERTSTORE_MAX_CHAINS) {
+             && chainCredentialCount() >= chain_limit) {
                 log_warn("Certificate store: ignoring chain %s.%u above the credential limit",
                          group_prefixes[static_cast<size_t>(f.group)], static_cast<unsigned>(f.id));
                 continue;
@@ -206,7 +212,7 @@ void CertStore::init(const char *charge_point_name)
             }
             const bool require_anchor = is_chain_group(f.group)
                                      && (same_id_entry == nullptr || f.group != CertGroup::CsmsClientChain);
-            if (!addEntry(f.group, f.id, buf.get(), require_anchor)) {
+            if (!addEntry(f.group, f.id, buf.get(), require_anchor, nullptr, f.group == CertGroup::CsmsClientChain)) {
                 log_warn("Certificate store: failed to load %s", path.c_str());
             }
         }
@@ -383,7 +389,7 @@ size_t CertStore::readPem(const CertEntry &e, char *buf, size_t buf_len) const
 }
 
 bool CertStore::addEntry(CertGroup group, uint32_t id, const char *pem, bool require_anchor,
-                         const OcppCertHashData21 *known_anchor)
+                         const OcppCertHashData21 *known_anchor, bool retain_replaced)
 {
     CertEntry e;
     e.group = group;
@@ -472,9 +478,11 @@ bool CertStore::addEntry(CertGroup group, uint32_t id, const char *pem, bool req
         if (existing.group != group) {
             continue;
         }
-        if (group == CertGroup::CsmsClientChain
-         || (existing.has_anchor && e.has_anchor && same_hash(existing.anchor_root, e.anchor_root) &&
-             (group != CertGroup::V2G20Chain || existing.public_key_curve == e.public_key_curve))) {
+        if (((group == CertGroup::CsmsClientChain) && !retain_replaced) ||
+            ((group != CertGroup::CsmsClientChain) && existing.has_anchor &&
+                e.has_anchor &&
+                same_hash(existing.anchor_root, e.anchor_root) &&
+                ((group != CertGroup::V2G20Chain) || (existing.public_key_curve == e.public_key_curve)))) {
             return false;
         }
     }
@@ -546,7 +554,7 @@ CertInstallResult CertStore::installRoot(CertGroup group, const char *pem, time_
 
 ChainInstallResult CertStore::installChain(CertGroup group, uint32_t id, const char *pem,
                                            const OcppCertHashData21 &anchor_root, time_t now,
-                                           bool combined)
+                                           bool combined, bool retain_replaced)
 {
     if (!is_chain_group(group) || id == 0 || id == UINT32_MAX || pem == nullptr || strlen(pem) > OCPP21_CERT_PEM_MAX) {
         return ChainInstallResult::Failed;
@@ -633,6 +641,9 @@ ChainInstallResult CertStore::installChain(CertGroup group, uint32_t id, const c
         if (!will_replace(e)) {
             continue;
         }
+        if (retain_replaced && group == CertGroup::CsmsClientChain) {
+            continue;
+        }
         removeChain(e.group, e.id);
     }
 
@@ -641,7 +652,8 @@ ChainInstallResult CertStore::installChain(CertGroup group, uint32_t id, const c
         return ChainInstallResult::Failed;
     }
 
-    if (!addEntry(group, id, pem, true, &anchor_root)) {
+    const bool require_anchor = !(combined && group == CertGroup::CsmsClientChain);
+    if (!addEntry(group, id, pem, require_anchor, &anchor_root, retain_replaced)) {
         platform_remove_file(path.c_str());
         return ChainInstallResult::Failed;
     }

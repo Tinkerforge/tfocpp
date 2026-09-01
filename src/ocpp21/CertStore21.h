@@ -86,10 +86,11 @@ public:
     // The chain file and key file ids are reserved by the caller via
     // nextId (the key is written at CSR time). SECC chains are unique per
     // root and suite, retaining the newest validity start (HUB20-42-002,
-    // A02.FR.15).
+    // A02.FR.15). retain_replaced stages a CSMS client replacement until
+    // the caller confirms the new credential connected successfully.
     ChainInstallResult installChain(CertGroup group, uint32_t id, const char *pem,
                                     const OcppCertHashData21 &anchor_root, time_t now,
-                                    bool combined = false);
+                                    bool combined = false, bool retain_replaced = false);
     CertDeleteResult deleteByHash(const char *issuer_name_hash, const char *issuer_key_hash, const char *serial_number);
     void removeChain(CertGroup group, uint32_t id);
 
@@ -117,7 +118,7 @@ public:
 
 private:
     bool addEntry(CertGroup group, uint32_t id, const char *pem, bool require_anchor = false,
-                  const OcppCertHashData21 *known_anchor = nullptr);
+                  const OcppCertHashData21 *known_anchor = nullptr, bool retain_replaced = false);
     size_t groupCount(CertGroup group) const;
     size_t groupLimit(CertGroup group) const;
     size_t chainCredentialCount() const;

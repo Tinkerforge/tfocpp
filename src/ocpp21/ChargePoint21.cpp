@@ -100,6 +100,7 @@ bool ChargePoint::start(const char *websocket_endpoint_url, const char *charge_p
         const CertEntry *client_chain = cert_store.find(CertGroup::CsmsClientChain);
         if (client_chain != nullptr) {
             log_info("Using the charging station certificate installed via OCPP");
+            active_client_chain_id = client_chain->id;
             tls_client_cert_file = cert_store.pemPath(CertGroup::CsmsClientChain, client_chain->id);
             tls_client_key_file = cert_store.keyPath(client_chain->id);
         }
@@ -238,6 +239,40 @@ void ChargePoint::onConnect()
 {
     log_info("Connected (subprotocol ocpp2.1)");
     last_reported_conn_error = PlatformConnectionError::Unknown;
+
+    uint32_t connected_client_chain_id = 0;
+    if (client_certificate_reconnect_started) {
+        connected_client_chain_id = pending_client_chain_id;
+    } else if (pending_client_chain_id == 0) {
+        // Also completes cleanup after a reboot interrupted a replacement.
+        connected_client_chain_id = active_client_chain_id;
+    }
+    if (connected_client_chain_id != 0) {
+        bool removed = false;
+        while (true) {
+            uint32_t obsolete_id = 0;
+            for (const auto &e : cert_store.all()) {
+                if (e.group == CertGroup::CsmsClientChain && e.id != connected_client_chain_id) {
+                    obsolete_id = e.id;
+                    break;
+                }
+            }
+            if (obsolete_id == 0) {
+                break;
+            }
+            cert_store.removeChain(CertGroup::CsmsClientChain, obsolete_id);
+            removed = true;
+        }
+        active_client_chain_id = connected_client_chain_id;
+        if (client_certificate_reconnect_started) {
+            pending_client_chain_id = 0;
+            client_certificate_reconnect_started = false;
+        }
+        if (removed) {
+            platform_cert_store_changed21(connection.platform_ctx);
+        }
+    }
+
     if (state != State::Idle)
         boot_retry_deadline = set_deadline(0);
     else
@@ -1890,10 +1925,10 @@ CallResponse ChargePoint::handleCertificateSigned(const char *uid, CertificateSi
     if (hash_ok && combined) {
         secc_result = cert_store.installChain(CertGroup::V2GChain, csr_pending_id, chain, anchor_hash, install_time, true);
         if (secc_result != ChainInstallResult::Failed) {
-            client_result = cert_store.installChain(CertGroup::CsmsClientChain, csr_pending_id, chain, anchor_hash, install_time, true);
+            client_result = cert_store.installChain(CertGroup::CsmsClientChain, csr_pending_id, chain, anchor_hash, install_time, true, true);
         }
     } else if (hash_ok) {
-        secc_result = cert_store.installChain(chain_group, csr_pending_id, chain, anchor_hash, install_time);
+        secc_result = cert_store.installChain(chain_group, csr_pending_id, chain, anchor_hash, install_time, false, chain_group == CertGroup::CsmsClientChain);
     }
     const bool installed = combined ? client_result == ChainInstallResult::Installed
                                     : secc_result == ChainInstallResult::Installed;
@@ -1955,6 +1990,7 @@ void ChargePoint::applyClientCertificate(uint32_t chain_id)
     platform_update_tls(connection.platform_ctx, &tls);
 
     log_info("Reconnecting with the new charging station certificate");
+    client_certificate_reconnect_started = true;
     platform_reconnect(connection.platform_ctx);
 }
 

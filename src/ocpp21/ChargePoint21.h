@@ -288,6 +288,8 @@ private:
     // after the CertificateSignedResponse left. 0 = not armed.
     uint32_t cert_reconnect_deadline = 0;
     uint32_t pending_client_chain_id = 0;
+    uint32_t active_client_chain_id = 0;
+    bool client_certificate_reconnect_started = false;
 
     // TLS configuration in use, needed to swap the client certificate.
     bool tls_in_use = false;

@@ -161,6 +161,23 @@ int main()
     assert(csms_only.find(CertGroup::V2GChain) == nullptr);
 
     files.clear();
+    files["staged-client.certs/csmsr.1.pem"] = "ROOT-csms";
+    files["staged-client.certs/cs.2.pem"] = "CHAIN-csms:old";
+    files["staged-client.certs/key.2"] = "CHAIN-csms:old";
+    files["staged-client.certs/cs.3.pem"] = "CHAIN-csms:new";
+    files["staged-client.certs/key.3"] = "CHAIN-csms:new";
+    CertStore staged_client;
+    staged_client.init("staged-client");
+    size_t staged_client_chains = 0;
+    for (const auto &entry : staged_client.all()) {
+        if (entry.group == CertGroup::CsmsClientChain) {
+            ++staged_client_chains;
+        }
+    }
+    assert(staged_client_chains == 2);
+    assert(staged_client.find(CertGroup::CsmsClientChain)->id == 3);
+
+    files.clear();
     for (uint32_t id = 10; id < 15; ++id) {
         const std::string chain = "CHAIN-" + std::to_string(id);
         files["limit.certs/v2gr." + std::to_string(id - 9) + ".pem"] = "ROOT-" + std::to_string(id);
