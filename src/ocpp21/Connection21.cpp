@@ -8,6 +8,7 @@
 #include "ChargePoint21.h"
 #include <common/Platform.h>
 #include <common/Tools.h>
+#include <common/PayloadLog.h>
 
 // TODO: make these configurable via the device model (OCPPCommCtrlr).
 #define OCPP21_MESSAGE_TIMEOUT_S 30
@@ -18,13 +19,9 @@
 
 namespace Ocpp21 {
 
-static void log_payload(const char *prefix, const char *buf, size_t buf_len) {
-    log_debug("%s (len %zu) %.*s%s", prefix, buf_len, (int)std::min(buf_len, (size_t)100), buf, buf_len > 96 ? " ..." : "");
-}
-
 void Connection::handleMessage(char *message, size_t message_len)
 {
-    log_payload("Received message", message, message_len);
+    ocpp_log_payload("Received message", message, message_len);
     DynamicJsonDocument doc{8192};
     DeserializationError error = deserializeJson(doc, message, message_len);
     if (error) {
@@ -337,7 +334,7 @@ void Connection::tick() {
 
     if (!pending_responses.empty()) {
         auto &response = pending_responses.front();
-        log_payload("Sending response", response.buf.get(), response.len);
+        ocpp_log_payload("Sending response", response.buf.get(), response.len);
         if (platform_ws_send(platform_ctx, response.buf.get(), response.len))
             pending_responses.pop_front();
         return;
@@ -379,7 +376,7 @@ void Connection::tick() {
 
         auto new_deadline = set_deadline(1000 * OCPP21_MESSAGE_TIMEOUT_S);
 
-        log_payload("Sending request", to_send->buf.get(), to_send->len);
+        ocpp_log_payload("Sending request", to_send->buf.get(), to_send->len);
         if (!platform_ws_send(platform_ctx, to_send->buf.get(), to_send->len)) {
             log_info("Send failed");
             return;

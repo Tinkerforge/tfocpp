@@ -8,6 +8,7 @@
 #include "Persistency16.h"
 #include "Types16.h"
 #include "Platform16.h"
+#include <common/PayloadLog.h>
 
 static bool is_transaction_related(CallAction action) {
      // TODO: only "periodic or clock-aligned MeterValues.req messages" are transaction related. Are those all MeterValues messages?
@@ -16,14 +17,10 @@ static bool is_transaction_related(CallAction action) {
         || action == CallAction::METER_VALUES;
 }
 
-static void log_payload(const char *prefix, const char *buf, size_t buf_len) {
-    log_debug("%s (len %zu) %.*s%s", prefix, buf_len, (int)std::min(buf_len, (size_t)100), buf, buf_len > 96 ? " ..." : "");
-}
-
 void OcppConnection::handleMessage(char *message, size_t message_len)
 {
     (void) message_len;
-    log_payload("Received message", message, message_len);
+    ocpp_log_payload("Received message", message, message_len);
     DynamicJsonDocument doc{4096};
     // TODO: we should use
     // https://arduinojson.org/v6/how-to/deserialize-a-very-large-document/#deserialization-in-chunks
@@ -368,7 +365,7 @@ void OcppConnection::tick() {
     }
 
     if (next_response.is_valid()) {
-        log_payload("Sending response", next_response.buf.get(), next_response.len);
+        ocpp_log_payload("Sending response", next_response.buf.get(), next_response.len);
         if (platform_ws_send(platform_ctx, next_response.buf.get(), next_response.len))
             next_response = QueueItem{};
         // TODO: make this robust against platform_ws_send always returning false. Use a timeout?
@@ -416,7 +413,7 @@ void OcppConnection::tick() {
                                                             getIntConfigUnsigned(ConfigKey::TransactionMessageRetryInterval) :
                                                             getIntConfigUnsigned(ConfigKey::MessageTimeout)));
 
-        log_payload("Sending request", to_send->buf.get(), to_send->len);
+        ocpp_log_payload("Sending request", to_send->buf.get(), to_send->len);
         if (!platform_ws_send(platform_ctx, to_send->buf.get(), to_send->len)) {
             log_info("Send failed");
             return;
