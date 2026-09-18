@@ -176,7 +176,8 @@ public:
     CertStore cert_store;
 
 private:
-    void sendBootNotification();
+    void sendBootNotification(BootNotificationReason reason);
+    void refreshDeviceModelAvailability();
     void sendStatusNotifications();
     void tickEvses();
     void tickReset();

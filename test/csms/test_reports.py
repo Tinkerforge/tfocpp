@@ -89,6 +89,110 @@ def test_full_inventory(csms, host):
     assert suite["variableCharacteristics"]["dataType"] == "OptionList"
     assert suite["variableCharacteristics"]["valuesList"] == "ecdsa_secp521r1_sha512,ed448"
 
+    assert_infrastructure(entries)
+
+
+def assert_infrastructure(entries):
+    report = by_key(entries)
+    for name, tier in (("ChargingStation", None), ("EVSE", {"id": 1}),
+                       ("Connector", {"id": 1, "connectorId": 1})):
+        for variable, value in (("Available", "true"), ("AvailabilityState", "Available")):
+            entry = report[(name, variable, None)]
+            assert entry["component"].get("evse") == tier
+            assert entry["variableAttribute"][0]["value"] == value
+            assert entry["variableAttribute"][0]["mutability"] == "ReadOnly"
+    connector = report[("Connector", "ConnectorType", None)]
+    assert connector["component"]["evse"] == {"id": 1, "connectorId": 1}
+    assert connector["variableAttribute"][0]["value"] == "cType2"
+
+
+def test_pending_inventory_triggered_boot(hosts):
+    # Exercise onboarding with acceptance gated on the full inventory.
+    csms = MiniCsms(manual_boot=True)
+    try:
+        host = hosts.start(csms.url, "tfocpp-onboarding-test")
+        csms.wait_connected()
+        boot, msg_id = csms.expect("BootNotification")
+        assert boot["reason"] == "PowerUp"
+        response = {"currentTime": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+                    "interval": 300, "status": "Pending"}
+        csms.respond(msg_id, response)
+        host.wait_for("Boot notification pending")
+
+        assert csms.call("GetBaseReport", {"requestId": 31, "reportBase": "FullInventory"})["status"] == "Accepted"
+        entries = collect_report(csms, 31)
+        assert_infrastructure(entries)
+        report = by_key(entries)
+        for variable, field in (("Model", "model"), ("VendorName", "vendorName"),
+                                ("SerialNumber", "serialNumber"), ("FirmwareVersion", "firmwareVersion")):
+            assert report[("ChargingStation", variable, None)]["variableAttribute"][0]["value"] == boot["chargingStation"][field]
+
+        assert csms.call("TriggerMessage", {"requestedMessage": "BootNotification"})["status"] == "Accepted"
+        triggered, msg_id = csms.expect("BootNotification")
+        assert triggered["reason"] == "Triggered"
+        assert triggered["chargingStation"] == boot["chargingStation"]
+
+        # A normal timed retry must not retain the Triggered reason.
+        csms.respond(msg_id, {**response, "interval": 1})
+        retry, msg_id = csms.expect("BootNotification")
+        assert retry["reason"] == "PowerUp"
+        csms.respond(msg_id, {**response, "status": "Accepted"})
+        host.wait_for("Boot notification accepted")
+    finally:
+        csms.stop()
+
+
+def test_infrastructure_addressing_and_live_state(csms, host):
+    components = [{"name": "ChargingStation"}, {"name": "EVSE", "evse": {"id": 1}},
+                  {"name": "Connector", "evse": {"id": 1, "connectorId": 1}}]
+    for command, log, state in (("plug", "EV connected", "Occupied"),
+                                ("fault", "EVSE faulted", "Faulted"),
+                                ("ok", "EVSE fault cleared", "Available")):
+        host.send(command)
+        host.wait_for(log)
+        response = csms.call("GetVariables", {"getVariableData": [
+            {"component": c, "variable": {"name": "AvailabilityState"}} for c in components]})
+        for component, result in zip(components, response["getVariableResult"]):
+            assert result["component"] == component
+            assert result["attributeStatus"] == "Accepted"
+            assert result["attributeValue"] == state
+
+        assert csms.call("GetReport", {"requestId": 32, "componentVariable": [
+            {"component": components[2], "variable": {"name": "AvailabilityState"}}]})["status"] == "Accepted"
+        entries = collect_report(csms, 32)
+        assert len(entries) == 1
+        assert entries[0]["variableAttribute"][0]["value"] == state
+
+    bad_components = [{"name": "Connector"}, {"name": "Connector", "evse": {"id": 1}},
+                      {"name": "Connector", "evse": {"id": 2, "connectorId": 1}},
+                      {"name": "Connector", "evse": {"id": 1, "connectorId": 2}},
+                      {"name": "EVSE", "evse": {"id": 1, "connectorId": 1}},
+                      {"name": "SecurityCtrlr", "evse": {"id": 1}}]
+    for action, data_key, result_key in (("GetVariables", "getVariableData", "getVariableResult"),
+                                        ("SetVariables", "setVariableData", "setVariableResult")):
+        requests = [{"component": c, "variable": {"name": "Available"}} for c in components + bad_components]
+        if action == "SetVariables":
+            requests = [{**r, "attributeValue": "false"} for r in requests]
+        results = csms.call(action, {data_key: requests})[result_key]
+        for request, result in zip(requests, results):
+            assert result["component"] == request["component"]
+            if request["component"] in bad_components:
+                assert result["attributeStatus"] == "UnknownComponent"
+            else:
+                assert result["attributeStatus"] == ("Accepted" if action == "GetVariables" else "Rejected")
+
+
+@pytest.mark.parametrize("tier", [None, {"id": 1}, {"id": 1, "connectorId": 1}])
+def test_get_report_connector_tier_wildcards(csms, host, tier):
+    component = {"name": "Connector"}
+    if tier is not None:
+        component["evse"] = tier
+    assert csms.call("GetReport", {"requestId": 33, "componentVariable": [
+        {"component": component, "variable": {"name": "ConnectorType"}}]})["status"] == "Accepted"
+    entries = collect_report(csms, 33)
+    assert len(entries) == 1
+    assert entries[0]["component"] == {"name": "Connector", "evse": {"id": 1, "connectorId": 1}}
+
 
 def test_v2g20_crypto_suite_option_list(csms, host):
     variable = {

@@ -212,8 +212,8 @@ void ChargePoint::tick()
         case State::Pending:
         case State::Rejected:
             if ((deadline_elapsed(boot_retry_deadline) || trigger_boot_notification) && !boot_notification_in_flight) {
+                sendBootNotification(trigger_boot_notification ? BootNotificationReason::TRIGGERED : BootNotificationReason::POWER_UP);
                 trigger_boot_notification = false;
-                sendBootNotification();
             }
             break;
 
@@ -461,7 +461,7 @@ void ChargePoint::onCallError(CallAction action, uint64_t messageId)
     this->onTimeout(action, messageId);
 }
 
-void ChargePoint::sendBootNotification()
+void ChargePoint::sendBootNotification(BootNotificationReason reason)
 {
     BootNotificationChargingStation cs;
     cs.model = platform_get_charge_point_model();
@@ -469,7 +469,7 @@ void ChargePoint::sendBootNotification()
     cs.serialNumber = platform_get_charge_point_serial_number();
     cs.firmwareVersion = platform_get_firmware_version();
 
-    boot_notification_in_flight = connection.sendCallAction(BootNotification{&cs, BootNotificationReason::POWER_UP});
+    boot_notification_in_flight = connection.sendCallAction(BootNotification{&cs, reason});
 }
 
 void ChargePoint::onTagSeen(int32_t evse_id, const char *tag_id)
@@ -538,6 +538,13 @@ static TransactionEventTransactionInfoStoppedReason stopped_reason_for(StopReaso
         case StopReason21::Remote:        return TransactionEventTransactionInfoStoppedReason::REMOTE;
         default:                          return TransactionEventTransactionInfoStoppedReason::OTHER;
     }
+}
+
+void ChargePoint::refreshDeviceModelAvailability()
+{
+    // Same mapping as StatusNotification, also usable before boot acceptance.
+    auto status = connector_status(platform_get_evse_state21(connection.platform_ctx, 1), evses[0]);
+    device_model.availability_state = StatusNotificationConnectorStatusStrings[(size_t)status];
 }
 
 void ChargePoint::sendStatusNotifications()
@@ -932,8 +939,11 @@ CallResponse ChargePoint::handleGetVariables(const char *uid, GetVariablesView r
 
     auto results = heap_alloc_array<GetVariablesResponseGetVariableResult>(count);
     auto components = heap_alloc_array<GetVariablesResponseGetVariableResultComponent>(count);
+    auto component_evses = heap_alloc_array<GetVariablesResponseGetVariableResultComponentEvse>(count);
     auto variables = heap_alloc_array<GetVariablesResponseGetVariableResultVariable>(count);
     auto value_bufs = heap_alloc_array<char[96]>(count);
+
+    refreshDeviceModelAvailability();
 
     for (size_t i = 0; i < count; ++i) {
         auto data = req.getVariableData(i);
@@ -941,6 +951,18 @@ CallResponse ChargePoint::handleGetVariables(const char *uid, GetVariablesView r
         auto variable = data.variable();
 
         components[i].name = component.name();
+        int32_t evse_id = -1;
+        int32_t connector_id = -1;
+        if (component.evse().is_some()) {
+            auto evse = component.evse().unwrap();
+            evse_id = evse.id();
+            component_evses[i].id = evse_id;
+            if (evse.connectorId().is_some()) {
+                connector_id = evse.connectorId().unwrap();
+                component_evses[i].connectorId = connector_id;
+            }
+            components[i].evse = &component_evses[i];
+        }
         if (component.instance().is_some())
             components[i].instance = component.instance().unwrap();
 
@@ -960,15 +982,15 @@ CallResponse ChargePoint::handleGetVariables(const char *uid, GetVariablesView r
             continue;
         }
 
-        // No EVSE bound components and no component instances exist.
-        if (component.evse().is_some() || component.instance().is_some()) {
+        // No component instances exist. EVSE/connector tiers are matched below.
+        if (component.instance().is_some()) {
             results[i].attributeStatus = GetVariablesResponseGetVariableResultAttributeStatus::UNKNOWN_COMPONENT;
             continue;
         }
 
         auto res = device_model.getVariable(component.name(), variable.name(),
                                             variable.instance().is_some() ? variable.instance().unwrap() : nullptr,
-                                            value_bufs[i], sizeof(value_bufs[i]));
+                                            value_bufs[i], sizeof(value_bufs[i]), evse_id, connector_id);
         switch (res) {
             case VariableResult::Accepted:
                 results[i].attributeStatus = GetVariablesResponseGetVariableResultAttributeStatus::ACCEPTED;
@@ -1001,6 +1023,7 @@ CallResponse ChargePoint::handleSetVariables(const char *uid, SetVariablesView r
 
     auto results = heap_alloc_array<SetVariablesResponseSetVariableResult>(count);
     auto components = heap_alloc_array<SetVariablesResponseSetVariableResultComponent>(count);
+    auto component_evses = heap_alloc_array<SetVariablesResponseSetVariableResultComponentEvse>(count);
     auto variables = heap_alloc_array<SetVariablesResponseSetVariableResultVariable>(count);
 
     for (size_t i = 0; i < count; ++i) {
@@ -1009,6 +1032,18 @@ CallResponse ChargePoint::handleSetVariables(const char *uid, SetVariablesView r
         auto variable = data.variable();
 
         components[i].name = component.name();
+        int32_t evse_id = -1;
+        int32_t connector_id = -1;
+        if (component.evse().is_some()) {
+            auto evse = component.evse().unwrap();
+            evse_id = evse.id();
+            component_evses[i].id = evse_id;
+            if (evse.connectorId().is_some()) {
+                connector_id = evse.connectorId().unwrap();
+                component_evses[i].connectorId = connector_id;
+            }
+            components[i].evse = &component_evses[i];
+        }
         if (component.instance().is_some())
             components[i].instance = component.instance().unwrap();
 
@@ -1027,15 +1062,15 @@ CallResponse ChargePoint::handleSetVariables(const char *uid, SetVariablesView r
             continue;
         }
 
-        // No EVSE bound components and no component instances exist.
-        if (component.evse().is_some() || component.instance().is_some()) {
+        // No component instances exist. EVSE/connector tiers are matched below.
+        if (component.instance().is_some()) {
             results[i].attributeStatus = SetVariablesResponseSetVariableResultAttributeStatus::UNKNOWN_COMPONENT;
             continue;
         }
 
         auto res = device_model.setVariable(component.name(), variable.name(),
                                             variable.instance().is_some() ? variable.instance().unwrap() : nullptr,
-                                            data.attributeValue());
+                                            data.attributeValue(), evse_id, connector_id);
         switch (res) {
             case VariableResult::Accepted:
                 results[i].attributeStatus = SetVariablesResponseSetVariableResultAttributeStatus::ACCEPTED;
@@ -1124,9 +1159,8 @@ CallResponse ChargePoint::handleGetBaseReport(const char *uid, GetBaseReportView
     return CallResponse{CallErrorCode::OK, nullptr};
 }
 
-// B08.FR.07/08/09/10/13: criteria are ORed. No component has the Active,
-// Available, Enabled or Problem variable, so the first three match every
-// component and Problem matches none.
+// B08.FR.07/08/09/10/13: criteria are ORed. Available is always true for
+// our installed infrastructure. Problem is not implemented.
 static bool criteria_match(GetReportView &req)
 {
     size_t count = req.componentCriteria_count();
@@ -1153,23 +1187,37 @@ static bool component_variable_match(GetReportView &req, const VariableDesc &des
         auto entry = entry_opt.unwrap();
         auto component = entry.component();
 
-        // No EVSE bound components and no component instances exist.
-        if (component.evse().is_some() || component.instance().is_some())
+        if (component.instance().is_some())
             continue;
-        if (strcasecmp(component.name(), desc.component) != 0)
+        // B08.FR.22/23: omitted tiers are wildcards in report filters.
+        if (component.evse().is_some()) {
+            auto evse = component.evse().unwrap();
+            if (desc.evse_id != evse.id()) {
+                continue;
+            }
+            if (evse.connectorId().is_some() && (desc.connector_id != evse.connectorId().unwrap())) {
+                continue;
+            }
+        }
+        if (strcasecmp(component.name(), desc.component) != 0) {
             continue;
+        }
 
         // B08.FR.20: a missing variable matches every variable of the component.
-        if (entry.variable().is_none())
+        if (entry.variable().is_none()) {
             return true;
+        }
         auto variable = entry.variable().unwrap();
-        if (strcasecmp(variable.name(), desc.variable) != 0)
+        if (strcasecmp(variable.name(), desc.variable) != 0) {
             continue;
+        }
         // B08.FR.21: a missing instance matches every instance.
-        if (variable.instance().is_none())
+        if (variable.instance().is_none()) {
             return true;
-        if (desc.instance != nullptr && strcasecmp(variable.instance().unwrap(), desc.instance) == 0)
+        }
+        if ((desc.instance != nullptr) && (strcasecmp(variable.instance().unwrap(), desc.instance) == 0)) {
             return true;
+        }
     }
     return false;
 }
@@ -1234,8 +1282,10 @@ void ChargePoint::abortReport()
 
 void ChargePoint::sendReportChunk()
 {
+    refreshDeviceModelAvailability();
     NotifyReportReportData report_data[OCPP21_REPORT_CHUNK_SIZE];
     NotifyReportReportDataComponent components[OCPP21_REPORT_CHUNK_SIZE];
+    NotifyReportReportDataComponentEvse component_evses[OCPP21_REPORT_CHUNK_SIZE];
     NotifyReportReportDataVariable variables[OCPP21_REPORT_CHUNK_SIZE];
     NotifyReportReportDataVariableAttribute attributes[OCPP21_REPORT_CHUNK_SIZE];
     NotifyReportReportDataVariableCharacteristics characteristics[OCPP21_REPORT_CHUNK_SIZE];
@@ -1250,6 +1300,13 @@ void ChargePoint::sendReportChunk()
         const auto &desc = DeviceModel::variableDesc(idx);
 
         components[n].name = desc.component;
+        if (desc.evse_id >= 0) {
+            component_evses[n].id = desc.evse_id;
+            if (desc.connector_id >= 0) {
+                component_evses[n].connectorId = desc.connector_id;
+            }
+            components[n].evse = &component_evses[n];
+        }
         variables[n].name = desc.variable;
         variables[n].instance = desc.instance;
 

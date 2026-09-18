@@ -22,7 +22,8 @@ class OcppCallError(Exception):
 
 
 class MiniCsms:
-    def __init__(self, certfile=None, keyfile=None, client_ca=None):
+    def __init__(self, certfile=None, keyfile=None, client_ca=None, manual_boot=False):
+        self.manual_boot = manual_boot
         self.requests = queue.Queue()
         self.responses = queue.Queue()
         self.security_events = []
@@ -68,7 +69,7 @@ class MiniCsms:
                 msg = json.loads(raw)
                 if msg[0] == 2:
                     _, msg_id, action, payload = msg
-                    if action == "BootNotification":
+                    if action == "BootNotification" and not self.manual_boot:
                         self.respond(msg_id, {
                             "currentTime": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
                             "interval": 300,

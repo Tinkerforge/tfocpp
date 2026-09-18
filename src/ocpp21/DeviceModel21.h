@@ -63,6 +63,14 @@ enum class VariableDataType : uint8_t {
 
 // Static per variable metadata for B07/B08 reporting.
 struct VariableDesc {
+    constexpr VariableDesc(const char *component_, const char *variable_, const char *instance_,
+                 VariableDataType data_type_, VariableMutability mutability_, bool persistent_,
+                 bool constant_, float max_limit_, const char *values_list_, const char *unit_,
+                 int32_t evse_id_ = -1, int32_t connector_id_ = -1)
+        : component(component_), variable(variable_), instance(instance_), data_type(data_type_),
+          mutability(mutability_), persistent(persistent_), constant(constant_), max_limit(max_limit_),
+          values_list(values_list_), unit(unit_), evse_id(evse_id_), connector_id(connector_id_) {}
+
     const char *component;
     const char *variable;
     const char *instance; // nullptr if the variable has no instance
@@ -73,6 +81,8 @@ struct VariableDesc {
     float max_limit; // < 0 if not reported
     const char *values_list; // required for OptionList/SequenceList/MemberList
     const char *unit;
+    int32_t evse_id;
+    int32_t connector_id;
 };
 
 class CertStore;
@@ -83,6 +93,8 @@ public:
     int32_t heartbeat_interval_s = 300;
     int32_t ev_connection_timeout_s = 60;
     int32_t tx_updated_interval_s = 60;
+
+    const char *availability_state = "Available";
 
     int32_t message_attempts = 3;
     int32_t message_attempt_interval_s = 10;
@@ -143,9 +155,8 @@ public:
 
     // On success writes the value as string into buf. WriteOnly variables
     // are Rejected (B06.FR.09), use variableDesc for reporting.
-    VariableResult getVariable(const char *component, const char *variable, const char *instance, char *buf, size_t buf_len);
-    VariableResult setVariable(const char *component, const char *variable, const char *instance, const char *value);
-
+    VariableResult getVariable(const char *component, const char *variable, const char *instance, char *buf, size_t buf_len, int32_t evse_id = -1, int32_t connector_id = -1);
+    VariableResult setVariable(const char *component, const char *variable, const char *instance, const char *value, int32_t evse_id = -1, int32_t connector_id = -1);
     VariableResult getVariableByIndex(size_t idx, char *buf, size_t buf_len);
 };
 

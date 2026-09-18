@@ -5,6 +5,7 @@
 #include <strings.h>
 
 #include <common/Tools.h>
+#include <common/Platform.h>
 
 #include "CertStore21.h"
 
@@ -48,6 +49,17 @@ enum VarId : size_t {
     VAR_PWM_CHARGING_FALLBACK_TIMEOUT,
     VAR_PROTOCOL_SUPPORTED_FIRST,
     VAR_PROTOCOL_SUPPORTED_LAST = VAR_PROTOCOL_SUPPORTED_FIRST + OCPP21_SUPPORTED_PROTOCOLS - 1,
+    VAR_STATION_AVAILABLE,
+    VAR_STATION_AVAILABILITY_STATE,
+    VAR_STATION_MODEL,
+    VAR_STATION_VENDOR,
+    VAR_STATION_SERIAL_NUMBER,
+    VAR_STATION_FIRMWARE_VERSION,
+    VAR_EVSE_AVAILABLE,
+    VAR_EVSE_AVAILABILITY_STATE,
+    VAR_CONNECTOR_AVAILABLE,
+    VAR_CONNECTOR_AVAILABILITY_STATE,
+    VAR_CONNECTOR_TYPE,
     VAR_COUNT
 };
 
@@ -56,47 +68,58 @@ static_assert(VAR_COUNT <= 64, "report mask width exceeded");
 
 // Must match the VarId order.
 static const VariableDesc variable_descs[VAR_COUNT] = {
-    {"OCPPCommCtrlr", "HeartbeatInterval",            nullptr,            VariableDataType::Integer,      VariableMutability::ReadWrite, false, false, -1,    nullptr, "s"},
-    {"OCPPCommCtrlr", "NetworkConfigurationPriority", nullptr,            VariableDataType::SequenceList, VariableMutability::ReadWrite, true,  false, 1,     "1,2,3,4", nullptr},
-    {"OCPPCommCtrlr", "MessageAttempts",              "TransactionEvent", VariableDataType::Integer,      VariableMutability::ReadWrite, false, false, -1,    nullptr, nullptr},
-    {"OCPPCommCtrlr", "MessageAttemptInterval",       "TransactionEvent", VariableDataType::Integer,      VariableMutability::ReadWrite, false, false, -1,    nullptr, "s"},
-    {"TxCtrlr",       "EVConnectionTimeOut",          nullptr,            VariableDataType::Integer,      VariableMutability::ReadWrite, false, false, -1,    nullptr, "s"},
-    {"TxCtrlr",       "StopTxOnEVSideDisconnect",     nullptr,            VariableDataType::Boolean,      VariableMutability::ReadOnly,  false, true,  -1,    nullptr, nullptr},
-    {"TxCtrlr",       "TxStartPoint",                 nullptr,            VariableDataType::MemberList,   VariableMutability::ReadOnly,  false, true,  -1,    "PowerPathClosed", nullptr},
-    {"TxCtrlr",       "TxStopPoint",                  nullptr,            VariableDataType::MemberList,   VariableMutability::ReadOnly,  false, true,  -1,    "PowerPathClosed", nullptr},
-    {"SampledDataCtrlr", "TxUpdatedInterval",         nullptr,            VariableDataType::Integer,      VariableMutability::ReadWrite, false, false, -1,    nullptr, "s"},
-    {"AuthCtrlr",     "AuthorizeRemoteStart",         nullptr,            VariableDataType::Boolean,      VariableMutability::ReadOnly,  false, true,  -1,    nullptr, nullptr},
-    {"DeviceDataCtrlr", "ItemsPerMessage",            "GetReport",        VariableDataType::Integer,      VariableMutability::ReadOnly,  false, true,  -1,    nullptr, nullptr},
-    {"DeviceDataCtrlr", "ItemsPerMessage",            "GetVariables",     VariableDataType::Integer,      VariableMutability::ReadOnly,  false, true,  -1,    nullptr, nullptr},
-    {"DeviceDataCtrlr", "ItemsPerMessage",            "SetVariables",     VariableDataType::Integer,      VariableMutability::ReadOnly,  false, true,  -1,    nullptr, nullptr},
-    {"DeviceDataCtrlr", "BytesPerMessage",            "GetReport",        VariableDataType::Integer,      VariableMutability::ReadOnly,  false, true,  -1,    nullptr, nullptr},
-    {"DeviceDataCtrlr", "BytesPerMessage",            "GetVariables",     VariableDataType::Integer,      VariableMutability::ReadOnly,  false, true,  -1,    nullptr, nullptr},
-    {"DeviceDataCtrlr", "BytesPerMessage",            "SetVariables",     VariableDataType::Integer,      VariableMutability::ReadOnly,  false, true,  -1,    nullptr, nullptr},
-    {"SecurityCtrlr", "SecurityProfile",              nullptr,            VariableDataType::Integer,      VariableMutability::ReadOnly,  true,  false, -1,    nullptr, nullptr},
-    {"SecurityCtrlr", "Identity",                     nullptr,            VariableDataType::String,       VariableMutability::ReadOnly,  true,  false, -1,    nullptr, nullptr},
-    {"SecurityCtrlr", "OrganizationName",             nullptr,            VariableDataType::String,       VariableMutability::ReadWrite, true,  false, OCPP21_ORGANIZATION_NAME_MAX_LEN, nullptr, nullptr},
+    {"OCPPCommCtrlr",    "HeartbeatInterval",                      nullptr,            VariableDataType::Integer,      VariableMutability::ReadWrite, false, false, -1,                                 nullptr,                                           "s"},
+    {"OCPPCommCtrlr",    "NetworkConfigurationPriority",           nullptr,            VariableDataType::SequenceList, VariableMutability::ReadWrite, true,  false,  1,                                 "1,2,3,4",                                         nullptr},
+    {"OCPPCommCtrlr",    "MessageAttempts",                        "TransactionEvent", VariableDataType::Integer,      VariableMutability::ReadWrite, false, false, -1,                                 nullptr,                                           nullptr},
+    {"OCPPCommCtrlr",    "MessageAttemptInterval",                 "TransactionEvent", VariableDataType::Integer,      VariableMutability::ReadWrite, false, false, -1,                                 nullptr,                                           "s"},
+    {"TxCtrlr",          "EVConnectionTimeOut",                    nullptr,            VariableDataType::Integer,      VariableMutability::ReadWrite, false, false, -1,                                 nullptr,                                           "s"},
+    {"TxCtrlr",          "StopTxOnEVSideDisconnect",               nullptr,            VariableDataType::Boolean,      VariableMutability::ReadOnly,  false, true,  -1,                                 nullptr,                                           nullptr},
+    {"TxCtrlr",          "TxStartPoint",                           nullptr,            VariableDataType::MemberList,   VariableMutability::ReadOnly,  false, true,  -1,                                 "PowerPathClosed",                                 nullptr},
+    {"TxCtrlr",          "TxStopPoint",                            nullptr,            VariableDataType::MemberList,   VariableMutability::ReadOnly,  false, true,  -1,                                 "PowerPathClosed",                                 nullptr},
+    {"SampledDataCtrlr", "TxUpdatedInterval",                      nullptr,            VariableDataType::Integer,      VariableMutability::ReadWrite, false, false, -1,                                 nullptr,                                           "s"},
+    {"AuthCtrlr",        "AuthorizeRemoteStart",                   nullptr,            VariableDataType::Boolean,      VariableMutability::ReadOnly,  false, true,  -1,                                 nullptr,                                           nullptr},
+    {"DeviceDataCtrlr",  "ItemsPerMessage",                        "GetReport",        VariableDataType::Integer,      VariableMutability::ReadOnly,  false, true,  -1,                                 nullptr,                                           nullptr},
+    {"DeviceDataCtrlr",  "ItemsPerMessage",                        "GetVariables",     VariableDataType::Integer,      VariableMutability::ReadOnly,  false, true,  -1,                                 nullptr,                                           nullptr},
+    {"DeviceDataCtrlr",  "ItemsPerMessage",                        "SetVariables",     VariableDataType::Integer,      VariableMutability::ReadOnly,  false, true,  -1,                                 nullptr,                                           nullptr},
+    {"DeviceDataCtrlr",  "BytesPerMessage",                        "GetReport",        VariableDataType::Integer,      VariableMutability::ReadOnly,  false, true,  -1,                                 nullptr,                                           nullptr},
+    {"DeviceDataCtrlr",  "BytesPerMessage",                        "GetVariables",     VariableDataType::Integer,      VariableMutability::ReadOnly,  false, true,  -1,                                 nullptr,                                           nullptr},
+    {"DeviceDataCtrlr",  "BytesPerMessage",                        "SetVariables",     VariableDataType::Integer,      VariableMutability::ReadOnly,  false, true,  -1,                                 nullptr,                                           nullptr},
+    {"SecurityCtrlr",    "SecurityProfile",                        nullptr,            VariableDataType::Integer,      VariableMutability::ReadOnly,  true,  false, -1,                                 nullptr,                                           nullptr},
+    {"SecurityCtrlr",    "Identity",                               nullptr,            VariableDataType::String,       VariableMutability::ReadOnly,  true,  false, -1,                                 nullptr,                                           nullptr},
+    {"SecurityCtrlr",    "OrganizationName",                       nullptr,            VariableDataType::String,       VariableMutability::ReadWrite, true,  false, OCPP21_ORGANIZATION_NAME_MAX_LEN,   nullptr,                                           nullptr},
     // HUB20-411-006..008: capacity for 30 V2G, 50 OEM and 40 MO roots.
-    {"SecurityCtrlr", "CertificateEntries",           nullptr,            VariableDataType::Integer,      VariableMutability::ReadOnly,  true,  false, OCPP21_CERTSTORE_MAX_ENTRIES, nullptr, nullptr},
-    {"SecurityCtrlr", "MaxCertificateChainSize",      nullptr,            VariableDataType::Integer,      VariableMutability::ReadOnly,  false, true,  -1,    nullptr, nullptr},
-    {"SecurityCtrlr", "CertSigningWaitMinimum",       nullptr,            VariableDataType::Integer,      VariableMutability::ReadWrite, false, false, -1,    nullptr, "s"},
-    {"SecurityCtrlr", "CertSigningRepeatTimes",       nullptr,            VariableDataType::Integer,      VariableMutability::ReadWrite, false, false, -1,    nullptr, nullptr},
+    {"SecurityCtrlr",    "CertificateEntries",                     nullptr,            VariableDataType::Integer,      VariableMutability::ReadOnly,  true,  false, OCPP21_CERTSTORE_MAX_ENTRIES,       nullptr,                                           nullptr},
+    {"SecurityCtrlr",    "MaxCertificateChainSize",                nullptr,            VariableDataType::Integer,      VariableMutability::ReadOnly,  false, true,  -1,                                 nullptr,                                           nullptr},
+    {"SecurityCtrlr",    "CertSigningWaitMinimum",                 nullptr,            VariableDataType::Integer,      VariableMutability::ReadWrite, false, false, -1,                                 nullptr,                                           "s"},
+    {"SecurityCtrlr",    "CertSigningRepeatTimes",                 nullptr,            VariableDataType::Integer,      VariableMutability::ReadWrite, false, false, -1,                                 nullptr,                                           nullptr},
     // A00.FR.304: maxLimit at least 40, at most 64.
-    {"SecurityCtrlr", "BasicAuthPassword",            nullptr,            VariableDataType::String,       VariableMutability::WriteOnly, true,  false, OCPP21_BASIC_AUTH_PASSWORD_MAX_LEN, nullptr, nullptr},
-    {"ISO15118Ctrlr", "SeccId",                       nullptr,            VariableDataType::String,       VariableMutability::ReadWrite, true,  false, OCPP21_SECC_ID_MAX_LEN, nullptr, nullptr},
-    {"ISO15118Ctrlr", "CountryName",                  nullptr,            VariableDataType::String,       VariableMutability::ReadWrite, true,  false, OCPP21_COUNTRY_NAME_LEN, nullptr, nullptr},
-    {"ISO15118Ctrlr", "OrganizationName",             nullptr,            VariableDataType::String,       VariableMutability::ReadWrite, true,  false, OCPP21_ORGANIZATION_NAME_MAX_LEN, nullptr, nullptr},
-    {"ISO15118Ctrlr", "V2G20SECCLeafCryptoSuite",     nullptr,            VariableDataType::OptionList,   VariableMutability::ReadWrite, true,  false, -1,    "ecdsa_secp521r1_sha512,ed448", nullptr},
-    {"ISO15118Ctrlr", "Enabled",                      nullptr,            VariableDataType::Boolean,      VariableMutability::ReadWrite, true,  false, -1,    nullptr, nullptr},
-    {"ISO15118Ctrlr", "V2GCertificateInstallationEnabled", nullptr,       VariableDataType::Boolean,      VariableMutability::ReadWrite, true,  false, -1,    nullptr, nullptr},
-    {"ISO15118Ctrlr", "ContractCertificateInstallationEnabled", nullptr,  VariableDataType::Boolean,      VariableMutability::ReadWrite, true,  false, -1,    nullptr, nullptr},
-    {"ISO15118Ctrlr", "ISO15118EvseId",               nullptr,            VariableDataType::String,       VariableMutability::ReadWrite, true,  false, OCPP21_ISO15118_EVSE_ID_MAX_LEN, nullptr, nullptr},
-    {"ISO15118Ctrlr", "EnforceTlsEnabled",            nullptr,            VariableDataType::Boolean,      VariableMutability::ReadWrite, true,  false, -1,    nullptr, nullptr},
-    {"ISO15118Ctrlr", "PrivateEnviromentEnabled",     nullptr,            VariableDataType::Boolean,      VariableMutability::ReadWrite, true,  false, -1,    nullptr, nullptr},
-    {"ISO15118Ctrlr", "PWMChargingFallbackTimeout",   nullptr,            VariableDataType::Integer,      VariableMutability::ReadWrite, true,  false, -1,    nullptr, "s"},
-    {"ISO15118Ctrlr", "ProtocolSupported",            "1",                VariableDataType::String,       VariableMutability::ReadOnly,  false, false, -1,    nullptr, nullptr},
-    {"ISO15118Ctrlr", "ProtocolSupported",            "2",                VariableDataType::String,       VariableMutability::ReadOnly,  false, false, -1,    nullptr, nullptr},
-    {"ISO15118Ctrlr", "ProtocolSupported",            "3",                VariableDataType::String,       VariableMutability::ReadOnly,  false, false, -1,    nullptr, nullptr},
-    {"ISO15118Ctrlr", "ProtocolSupported",            "4",                VariableDataType::String,       VariableMutability::ReadOnly,  false, false, -1,    nullptr, nullptr},
+    {"SecurityCtrlr",    "BasicAuthPassword",                      nullptr,            VariableDataType::String,       VariableMutability::WriteOnly, true,  false, OCPP21_BASIC_AUTH_PASSWORD_MAX_LEN, nullptr,                                           nullptr},
+    {"ISO15118Ctrlr",    "SeccId",                                 nullptr,            VariableDataType::String,       VariableMutability::ReadWrite, true,  false, OCPP21_SECC_ID_MAX_LEN,             nullptr,                                           nullptr},
+    {"ISO15118Ctrlr",    "CountryName",                            nullptr,            VariableDataType::String,       VariableMutability::ReadWrite, true,  false, OCPP21_COUNTRY_NAME_LEN,            nullptr,                                           nullptr},
+    {"ISO15118Ctrlr",    "OrganizationName",                       nullptr,            VariableDataType::String,       VariableMutability::ReadWrite, true,  false, OCPP21_ORGANIZATION_NAME_MAX_LEN,   nullptr,                                           nullptr},
+    {"ISO15118Ctrlr",    "V2G20SECCLeafCryptoSuite",               nullptr,            VariableDataType::OptionList,   VariableMutability::ReadWrite, true,  false, -1,                                 "ecdsa_secp521r1_sha512,ed448",                    nullptr},
+    {"ISO15118Ctrlr",    "Enabled",                                nullptr,            VariableDataType::Boolean,      VariableMutability::ReadWrite, true,  false, -1,                                 nullptr,                                           nullptr},
+    {"ISO15118Ctrlr",    "V2GCertificateInstallationEnabled",      nullptr,            VariableDataType::Boolean,      VariableMutability::ReadWrite, true,  false, -1,                                 nullptr,                                           nullptr},
+    {"ISO15118Ctrlr",    "ContractCertificateInstallationEnabled", nullptr,            VariableDataType::Boolean,      VariableMutability::ReadWrite, true,  false, -1,                                 nullptr,                                           nullptr},
+    {"ISO15118Ctrlr",    "ISO15118EvseId",                         nullptr,            VariableDataType::String,       VariableMutability::ReadWrite, true,  false, OCPP21_ISO15118_EVSE_ID_MAX_LEN,    nullptr,                                           nullptr},
+    {"ISO15118Ctrlr",    "EnforceTlsEnabled",                      nullptr,            VariableDataType::Boolean,      VariableMutability::ReadWrite, true,  false, -1,                                 nullptr,                                           nullptr},
+    {"ISO15118Ctrlr",    "PrivateEnviromentEnabled",               nullptr,            VariableDataType::Boolean,      VariableMutability::ReadWrite, true,  false, -1,                                 nullptr,                                           nullptr},
+    {"ISO15118Ctrlr",    "PWMChargingFallbackTimeout",             nullptr,            VariableDataType::Integer,      VariableMutability::ReadWrite, true,  false, -1,                                 nullptr,                                           "s"},
+    {"ISO15118Ctrlr",    "ProtocolSupported",                      "1",                VariableDataType::String,       VariableMutability::ReadOnly,  false, false, -1,                                 nullptr,                                           nullptr},
+    {"ISO15118Ctrlr",    "ProtocolSupported",                      "2",                VariableDataType::String,       VariableMutability::ReadOnly,  false, false, -1,                                 nullptr,                                           nullptr},
+    {"ISO15118Ctrlr",    "ProtocolSupported",                      "3",                VariableDataType::String,       VariableMutability::ReadOnly,  false, false, -1,                                 nullptr,                                           nullptr},
+    {"ISO15118Ctrlr",    "ProtocolSupported",                      "4",                VariableDataType::String,       VariableMutability::ReadOnly,  false, false, -1,                                 nullptr,                                           nullptr},
+    {"ChargingStation",  "Available",                              nullptr,            VariableDataType::Boolean,      VariableMutability::ReadOnly,  false, true,  -1,                                 nullptr,                                           nullptr},
+    {"ChargingStation",  "AvailabilityState",                      nullptr,            VariableDataType::OptionList,   VariableMutability::ReadOnly,  false, false, -1,                                 "Available,Occupied,Reserved,Unavailable,Faulted", nullptr},
+    {"ChargingStation",  "Model",                                  nullptr,            VariableDataType::String,       VariableMutability::ReadOnly,  false, true,  -1,                                 nullptr,                                           nullptr},
+    {"ChargingStation",  "VendorName",                             nullptr,            VariableDataType::String,       VariableMutability::ReadOnly,  false, true,  -1,                                 nullptr,                                           nullptr},
+    {"ChargingStation",  "SerialNumber",                           nullptr,            VariableDataType::String,       VariableMutability::ReadOnly,  false, true,  -1,                                 nullptr,                                           nullptr},
+    {"ChargingStation",  "FirmwareVersion",                        nullptr,            VariableDataType::String,       VariableMutability::ReadOnly,  false, false, -1,                                 nullptr,                                           nullptr},
+    {"EVSE",             "Available",                              nullptr,            VariableDataType::Boolean,      VariableMutability::ReadOnly,  false, true,  -1,                                 nullptr,                                           nullptr, 1},
+    {"EVSE",             "AvailabilityState",                      nullptr,            VariableDataType::OptionList,   VariableMutability::ReadOnly,  false, false, -1,                                 "Available,Occupied,Reserved,Unavailable,Faulted", nullptr, 1},
+    {"Connector",        "Available",                              nullptr,            VariableDataType::Boolean,      VariableMutability::ReadOnly,  false, true,  -1,                                 nullptr,                                           nullptr, 1, 1},
+    {"Connector",        "AvailabilityState",                      nullptr,            VariableDataType::OptionList,   VariableMutability::ReadOnly,  false, false, -1,                                 "Available,Occupied,Reserved,Unavailable,Faulted", nullptr, 1, 1},
+    {"Connector",        "ConnectorType",                          nullptr,            VariableDataType::String,       VariableMutability::ReadOnly,  false, true,  -1,                                 nullptr,                                           nullptr, 1, 1},
 };
 
 static_assert(VAR_PROTOCOL_SUPPORTED_LAST - VAR_PROTOCOL_SUPPORTED_FIRST + 1 == OCPP21_SUPPORTED_PROTOCOLS, "descriptor table out of sync");
@@ -130,12 +153,12 @@ static bool instance_matches(const VariableDesc &desc, const char *instance)
     return desc.instance != nullptr && strcasecmp(desc.instance, instance) == 0;
 }
 
-static VariableResult find_variable(const char *component, const char *variable, const char *instance, size_t *idx_out)
+static VariableResult find_variable(const char *component, const char *variable, const char *instance, size_t *idx_out, int32_t evse_id, int32_t connector_id)
 {
     bool component_known = false;
     for (size_t i = 0; i < VAR_COUNT; ++i) {
         const auto &desc = variable_descs[i];
-        if (strcasecmp(desc.component, component) != 0)
+        if ((strcasecmp(desc.component, component) != 0) || (desc.evse_id != evse_id) || (desc.connector_id != connector_id))
             continue;
         component_known = true;
         if (strcasecmp(desc.variable, variable) != 0)
@@ -151,6 +174,31 @@ static VariableResult find_variable(const char *component, const char *variable,
 VariableResult DeviceModel::getVariableByIndex(size_t idx, char *buf, size_t buf_len)
 {
     switch (idx) {
+        case VAR_STATION_AVAILABLE:
+        case VAR_EVSE_AVAILABLE:
+        case VAR_CONNECTOR_AVAILABLE:
+            snprintf(buf, buf_len, "true");
+            return VariableResult::Accepted;
+        case VAR_STATION_AVAILABILITY_STATE:
+        case VAR_EVSE_AVAILABILITY_STATE:
+        case VAR_CONNECTOR_AVAILABILITY_STATE:
+            snprintf(buf, buf_len, "%s", availability_state);
+            return VariableResult::Accepted;
+        case VAR_STATION_MODEL:
+            snprintf(buf, buf_len, "%s", platform_get_charge_point_model());
+            return VariableResult::Accepted;
+        case VAR_STATION_VENDOR:
+            snprintf(buf, buf_len, "%s", platform_get_charge_point_vendor());
+            return VariableResult::Accepted;
+        case VAR_STATION_SERIAL_NUMBER:
+            snprintf(buf, buf_len, "%s", platform_get_charge_point_serial_number());
+            return VariableResult::Accepted;
+        case VAR_STATION_FIRMWARE_VERSION:
+            snprintf(buf, buf_len, "%s", platform_get_firmware_version());
+            return VariableResult::Accepted;
+        case VAR_CONNECTOR_TYPE:
+            snprintf(buf, buf_len, "cType2");
+            return VariableResult::Accepted;
         case VAR_HEARTBEAT_INTERVAL:
             snprintf(buf, buf_len, "%d", heartbeat_interval_s);
             return VariableResult::Accepted;
@@ -266,10 +314,10 @@ VariableResult DeviceModel::getVariableByIndex(size_t idx, char *buf, size_t buf
     return VariableResult::UnknownVariable;
 }
 
-VariableResult DeviceModel::getVariable(const char *component, const char *variable, const char *instance, char *buf, size_t buf_len)
+VariableResult DeviceModel::getVariable(const char *component, const char *variable, const char *instance, char *buf, size_t buf_len, int32_t evse_id, int32_t connector_id)
 {
     size_t idx;
-    VariableResult found = find_variable(component, variable, instance, &idx);
+    VariableResult found = find_variable(component, variable, instance, &idx, evse_id, connector_id);
     if (found != VariableResult::Accepted)
         return found;
     if (!variablePresent(idx))
@@ -290,10 +338,10 @@ static bool parse_bool(const char *value, bool *out)
     return false;
 }
 
-VariableResult DeviceModel::setVariable(const char *component, const char *variable, const char *instance, const char *value)
+VariableResult DeviceModel::setVariable(const char *component, const char *variable, const char *instance, const char *value, int32_t evse_id, int32_t connector_id)
 {
     size_t idx;
-    VariableResult found = find_variable(component, variable, instance, &idx);
+    VariableResult found = find_variable(component, variable, instance, &idx, evse_id, connector_id);
     if (found != VariableResult::Accepted)
         return found;
     if (!variablePresent(idx))
