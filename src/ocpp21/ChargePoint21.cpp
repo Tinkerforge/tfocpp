@@ -705,7 +705,8 @@ void ChargePoint::tickEvses()
         }
 
         auto status = connector_status(s, t);
-        if (status != t.last_sent_status) {
+        // A pending full status report sends the current state later in this tick.
+        if ((status != t.last_sent_status) && !status_notifications_pending && !trigger_status_notification) {
             t.last_sent_status = status;
             connection.sendCallAction(StatusNotification{
                 platform_get_system_time(connection.platform_ctx),

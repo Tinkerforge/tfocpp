@@ -27,6 +27,7 @@ class MiniCsms:
         self.requests = queue.Queue()
         self.responses = queue.Queue()
         self.security_events = []
+        self.status_notifications = queue.Queue()
         self.result_errors = []
         self.last_auth = None
         # Answers the next Heartbeat with an invalid payload to provoke a
@@ -86,6 +87,7 @@ class MiniCsms:
                         self.security_events.append(payload)
                         self.respond(msg_id, {})
                     elif action == "StatusNotification":
+                        self.status_notifications.put(payload)
                         self.respond(msg_id, {})
                     else:
                         self.requests.put((action, payload, msg_id))

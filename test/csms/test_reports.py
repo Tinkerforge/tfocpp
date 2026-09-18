@@ -1,6 +1,7 @@
 # B07/B08 device model reporting and the CALLRESULTERROR RPC flow
 # against the scripted mini CSMS.
 
+import queue
 import time
 
 import pytest
@@ -138,6 +139,41 @@ def test_pending_inventory_triggered_boot(hosts):
         assert retry["reason"] == "PowerUp"
         csms.respond(msg_id, {**response, "status": "Accepted"})
         host.wait_for("Boot notification accepted")
+    finally:
+        csms.stop()
+
+
+@pytest.mark.parametrize("pending", [False, True])
+def test_status_notifications_after_boot(hosts, pending):
+    csms = MiniCsms(manual_boot=True)
+    try:
+        host = hosts.start(csms.url, "tfocpp-status-test")
+        csms.wait_connected()
+        _, msg_id = csms.expect("BootNotification")
+        response = {"currentTime": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+                    "interval": 300, "status": "Accepted"}
+        if pending:
+            csms.respond(msg_id, {**response, "status": "Pending"})
+            host.wait_for("Boot notification pending")
+            assert csms.call("TriggerMessage", {"requestedMessage": "BootNotification"})["status"] == "Accepted"
+            _, msg_id = csms.expect("BootNotification")
+        csms.respond(msg_id, response)
+
+        def expect_single_status(status):
+            payload = csms.status_notifications.get(timeout=5)
+            assert payload["connectorStatus"] == status
+            assert payload["evseId"] == 1
+            assert payload["connectorId"] == 1
+            with pytest.raises(queue.Empty):
+                csms.status_notifications.get(timeout=0.5)
+
+        expect_single_status("Available")
+        # Explicit requests still report an unchanged status.
+        assert csms.call("TriggerMessage", {"requestedMessage": "StatusNotification"})["status"] == "Accepted"
+        expect_single_status("Available")
+        for command, status in (("plug", "Occupied"), ("fault", "Faulted"), ("ok", "Available")):
+            host.send(command)
+            expect_single_status(status)
     finally:
         csms.stop()
 
