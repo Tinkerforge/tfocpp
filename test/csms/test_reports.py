@@ -5,7 +5,7 @@ import time
 
 import pytest
 
-from minicsms import MiniCsms
+from minicsms import MiniCsms, OcppCallError
 
 
 @pytest.fixture
@@ -136,6 +136,47 @@ def test_pending_inventory_triggered_boot(hosts):
         csms.respond(msg_id, {**response, "interval": 1})
         retry, msg_id = csms.expect("BootNotification")
         assert retry["reason"] == "PowerUp"
+        csms.respond(msg_id, {**response, "status": "Accepted"})
+        host.wait_for("Boot notification accepted")
+    finally:
+        csms.stop()
+
+
+def test_rejected_calls_and_pending_recovery(hosts):
+    csms = MiniCsms(manual_boot=True)
+    try:
+        host = hosts.start(csms.url, "tfocpp-rejected-test")
+        csms.wait_connected()
+        _, msg_id = csms.expect("BootNotification")
+        response = {"currentTime": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+                    "interval": 4, "status": "Rejected"}
+        csms.respond(msg_id, response)
+        host.wait_for("Boot notification rejected")
+
+        for action, payload in (
+                ("GetBaseReport", {"requestId": 34, "reportBase": "FullInventory"}),
+                ("Reset", {"type": "ImmediateAndResume"}),
+                ("TriggerMessage", {"requestedMessage": "BootNotification"})):
+            with pytest.raises(OcppCallError) as error:
+                csms.call(action, payload)
+            assert error.value.code == "SecurityError"
+
+        # Rejecting the call must not start a report or trigger an early boot.
+        with pytest.raises(TimeoutError):
+            csms.expect("NotifyReport", timeout=0.5)
+        assert host.count("Sending request.*BootNotification") == 1
+        assert host.count("Sending request.*NotifyReport") == 0
+
+        retry, msg_id = csms.expect("BootNotification")
+        assert retry["reason"] == "PowerUp"
+        csms.respond(msg_id, {**response, "interval": 300, "status": "Pending"})
+        host.wait_for("Boot notification pending")
+        assert csms.call("GetBaseReport", {"requestId": 35, "reportBase": "FullInventory"})["status"] == "Accepted"
+        assert_infrastructure(collect_report(csms, 35))
+
+        assert csms.call("TriggerMessage", {"requestedMessage": "BootNotification"})["status"] == "Accepted"
+        boot, msg_id = csms.expect("BootNotification")
+        assert boot["reason"] == "Triggered"
         csms.respond(msg_id, {**response, "status": "Accepted"})
         host.wait_for("Boot notification accepted")
     finally:

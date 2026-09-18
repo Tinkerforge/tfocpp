@@ -66,8 +66,14 @@ void Connection::handleMessage(char *message, size_t message_len)
         }
 
         if (cp->state == State::Rejected) {
-            // B03.FR.06: while Rejected the Charging Station shall not respond to CSMS initiated messages.
-            log_warn("received call while being rejected. Ignoring call.");
+            // B03.FR.08. SEND never receives an RPC response.
+            log_warn("Received %s action %s (id %s) while registration is Rejected%s",
+                     is_send ? "send" : "call", doc[2].as<const char *>(), uniqueID,
+                     is_send ? ". Ignoring send." : ". Responding with SecurityError.");
+            if (!is_send) {
+                sendCallError(uniqueID, CallErrorCode::SecurityError, "Charging station registration is Rejected");
+            }
+
             return;
         }
 
