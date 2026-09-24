@@ -1323,6 +1323,8 @@ void ChargePoint::sendReportChunk()
 
         characteristics[n].dataType = (NotifyReportReportDataVariableCharacteristicsDataType)(size_t)desc.data_type;
         characteristics[n].supportsMonitoring = false;
+        if (desc.min_limit >= 0)
+            characteristics[n].minLimit = desc.min_limit;
         if (desc.max_limit >= 0)
             characteristics[n].maxLimit = desc.max_limit;
         characteristics[n].valuesList = desc.values_list;

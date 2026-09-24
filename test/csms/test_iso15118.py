@@ -34,14 +34,17 @@ def host(csms, hosts, ca):
     return h
 
 
-def get_variables(csms, *names):
+def get_variables(csms, *names, evse_id=None):
     data = []
+    component = {"name": "ISO15118Ctrlr"}
+    if evse_id is not None:
+        component["evse"] = {"id": evse_id}
     for name in names:
         if isinstance(name, tuple):
-            data.append({"component": {"name": "ISO15118Ctrlr"},
+            data.append({"component": component,
                          "variable": {"name": name[0], "instance": name[1]}})
         else:
-            data.append({"component": {"name": "ISO15118Ctrlr"}, "variable": {"name": name}})
+            data.append({"component": component, "variable": {"name": name}})
     return csms.call("GetVariables", {"getVariableData": data})["getVariableResult"]
 
 
@@ -93,7 +96,8 @@ def test_iso_variable_validation_and_persistence(csms, hosts, ca):
 
 def test_protocol_supported_instances(csms, host):
     results = get_variables(csms, ("ProtocolSupported", "1"), ("ProtocolSupported", "2"),
-                            ("ProtocolSupported", "3"))
+                            ("ProtocolSupported", "3"), evse_id=1)
+    assert all(r["component"] == {"name": "ISO15118Ctrlr", "evse": {"id": 1}} for r in results)
     assert results[0]["attributeStatus"] == "Accepted"
     assert results[0]["attributeValue"] == "urn:iso:15118:2:2013:MsgDef,2,0"
     assert results[1]["attributeStatus"] == "Accepted"
@@ -103,7 +107,7 @@ def test_protocol_supported_instances(csms, host):
 
     # Read only.
     res = csms.call("SetVariables", {"setVariableData": [{
-        "component": {"name": "ISO15118Ctrlr"},
+        "component": {"name": "ISO15118Ctrlr", "evse": {"id": 1}},
         "variable": {"name": "ProtocolSupported", "instance": "1"},
         "attributeValue": "urn:example,1,0",
     }]})
@@ -118,6 +122,20 @@ def test_protocol_supported_instances(csms, host):
     csms.respond(msg_id, {})
     instances = sorted(e["variable"].get("instance") for e in payload["reportData"])
     assert instances == ["1", "2"]
+    assert all(e["component"] == {"name": "ISO15118Ctrlr", "evse": {"id": 1}}
+               for e in payload["reportData"])
+
+    # GetVariables uses exact addressing; GetReport above permits a tier wildcard.
+    assert get_variables(csms, ("ProtocolSupported", "1"))[0]["attributeStatus"] == "UnknownVariable"
+    assert get_variables(csms, ("ProtocolSupported", "1"), evse_id=2)[0]["attributeStatus"] == "UnknownComponent"
+    resp = csms.call("GetReport", {"requestId": 32, "componentVariable": [{
+        "component": {"name": "ISO15118Ctrlr", "evse": {"id": 1}},
+        "variable": {"name": "ProtocolSupported"},
+    }]})
+    assert resp["status"] == "Accepted"
+    payload, msg_id = csms.expect("NotifyReport")
+    csms.respond(msg_id, {})
+    assert sorted(e["variable"]["instance"] for e in payload["reportData"]) == ["1", "2"]
 
 
 def test_v2g_certificate_installation_disabled(csms, host):

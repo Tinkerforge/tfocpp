@@ -82,6 +82,16 @@ def test_full_inventory(csms, host):
     assert private["variableAttribute"][0]["value"] == "false"
     assert private["variableAttribute"][0]["mutability"] == "ReadWrite"
 
+    for name, minimum, maximum in (("SeccId", 7, 64), ("CountryName", 2, 2),
+                                    ("OrganizationName", 1, 64), ("ISO15118EvseId", 7, 37)):
+        entry = report[("ISO15118Ctrlr", name, None)]
+        assert "evse" not in entry["component"]  # Optional association; station-level identity.
+        assert entry["variableCharacteristics"]["minLimit"] == minimum
+        assert entry["variableCharacteristics"]["maxLimit"] == maximum
+        assert entry["variableCharacteristics"]["dataType"] == "string"
+        assert entry["variableAttribute"][0]["mutability"] == "ReadWrite"
+        assert entry["variableAttribute"][0]["persistent"] is True
+
     # Instanced variable.
     ma = report[("OCPPCommCtrlr", "MessageAttempts", "TransactionEvent")]
     assert ma["variableAttribute"][0]["value"] == "3"
@@ -89,6 +99,7 @@ def test_full_inventory(csms, host):
     hb = report[("OCPPCommCtrlr", "HeartbeatInterval", None)]
     assert hb["variableAttribute"][0]["value"] == "300"
     assert hb["variableCharacteristics"]["unit"] == "s"
+    assert "minLimit" not in hb["variableCharacteristics"]
 
     # ReadOnly variables are included in the full inventory.
     assert ("SecurityCtrlr", "SecurityProfile", None) in report

@@ -66,10 +66,10 @@ struct VariableDesc {
     constexpr VariableDesc(const char *component_, const char *variable_, const char *instance_,
                  VariableDataType data_type_, VariableMutability mutability_, bool persistent_,
                  bool constant_, float max_limit_, const char *values_list_, const char *unit_,
-                 int32_t evse_id_ = -1, int32_t connector_id_ = -1)
+                 int32_t evse_id_ = -1, int32_t connector_id_ = -1, float min_limit_ = -1)
         : component(component_), variable(variable_), instance(instance_), data_type(data_type_),
           mutability(mutability_), persistent(persistent_), constant(constant_), max_limit(max_limit_),
-          values_list(values_list_), unit(unit_), evse_id(evse_id_), connector_id(connector_id_) {}
+          values_list(values_list_), unit(unit_), evse_id(evse_id_), connector_id(connector_id_), min_limit(min_limit_) {}
 
     const char *component;
     const char *variable;
@@ -83,6 +83,7 @@ struct VariableDesc {
     const char *unit;
     int32_t evse_id;
     int32_t connector_id;
+    float min_limit; // < 0 if not reported
 };
 
 class CertStore;
