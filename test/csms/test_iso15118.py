@@ -57,7 +57,7 @@ def set_variable(csms, name, value):
 def test_iso_variable_defaults(csms, host):
     results = get_variables(csms, "Enabled", "V2GCertificateInstallationEnabled",
                             "ContractCertificateInstallationEnabled", "ISO15118EvseId",
-                            "EnforceTlsEnabled", "PrivateEnviromentEnabled",
+                            "EnforceTlsEnabled", "PrivateEnvironmentEnabled",
                             "PWMChargingFallbackTimeout")
     values = [r["attributeValue"] for r in results]
     assert all(r["attributeStatus"] == "Accepted" for r in results)
@@ -77,7 +77,8 @@ def test_iso_variable_validation_and_persistence(csms, hosts, ca):
     assert set_variable(csms, "PWMChargingFallbackTimeout", "0") == "Rejected"
     assert set_variable(csms, "PWMChargingFallbackTimeout", "15") == "Accepted"
     assert set_variable(csms, "EnforceTlsEnabled", "true") == "Accepted"
-    assert set_variable(csms, "PrivateEnviromentEnabled", "maybe") == "Rejected"
+    assert set_variable(csms, "PrivateEnvironmentEnabled", "maybe") == "Rejected"
+    assert set_variable(csms, "PrivateEnvironmentEnabled", "true") == "Accepted"
     assert set_variable(csms, "Enabled", "false") == "Accepted"
 
     h.stop()
@@ -86,8 +87,8 @@ def test_iso_variable_validation_and_persistence(csms, hosts, ca):
     h2.wait_for("Boot notification accepted", timeout=20)
 
     results = get_variables(csms, "ISO15118EvseId", "PWMChargingFallbackTimeout",
-                            "EnforceTlsEnabled", "Enabled")
-    assert [r["attributeValue"] for r in results] == ["DE*ICE*E*1234567890*1", "15", "true", "false"]
+                            "EnforceTlsEnabled", "Enabled", "PrivateEnvironmentEnabled")
+    assert [r["attributeValue"] for r in results] == ["DE*ICE*E*1234567890*1", "15", "true", "false", "true"]
 
 
 def test_protocol_supported_instances(csms, host):
@@ -140,7 +141,8 @@ def test_v2g_certificate_installation_disabled(csms, host):
     csms.respond(msg_id, {"status": "Rejected"})
 
 
-def test_sign_combined_certificate(csms, host, ca):
+@pytest.mark.parametrize("include_root", [False, True], ids=["root-free", "bundled-root"])
+def test_sign_combined_certificate(csms, host, hosts, ca, include_root):
     # A combined certificate serves the CSMS connection and ISO 15118,
     # certificateType is omitted in both directions.
     assert csms.call("InstallCertificate", {
@@ -165,10 +167,16 @@ def test_sign_combined_certificate(csms, host, ca):
 
     leaf = ca.sign_csr(sign_req["csr"])
     assert csms.call("CertificateSigned", {
-        "certificateChain": leaf,
+        "certificateChain": leaf + (ca.cert_pem if include_root else ""),
         "requestId": sign_req["requestId"],
     })["status"] == "Accepted"
     host.wait_for("Installed the signed CombinedCertificate", timeout=10)
+
+    cert_dir = hosts.workdir / "tfocpp-iso-test.certs"
+    for pattern in ("v2g2.*.pem", "cs.*.pem"):
+        chain_files = list(cert_dir.glob(pattern))
+        assert len(chain_files) == 1
+        assert chain_files[0].read_text() == leaf
 
     # The chain is listed as a V2G certificate chain (M03).
     listed = csms.call("GetInstalledCertificateIds", {"certificateType": ["V2GCertificateChain"]})

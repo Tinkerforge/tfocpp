@@ -1892,9 +1892,48 @@ CallResponse ChargePoint::handleSignCertificateResponse(int32_t connectorId, uin
     return CallResponse{CallErrorCode::OK, nullptr};
 }
 
+static bool strip_secc_root(const char *chain, std::string &normalized, size_t &cert_count)
+{
+    const char *cursor = chain;
+    size_t parsed = 0;
+    while (true) {
+        cursor += strspn(cursor, " \t\r\n");
+        if (*cursor == '\0') {
+            break;
+        }
+        static const char begin[] = "-----BEGIN CERTIFICATE-----";
+        static const char end[] = "-----END CERTIFICATE-----";
+        if (strncmp(cursor, begin, sizeof(begin) - 1) != 0) {
+            return false;
+        }
+        const char *next = strstr(cursor + sizeof(begin) - 1, end);
+        if (next == nullptr) {
+            return false;
+        }
+        next += sizeof(end) - 1;
+        std::string pem(cursor, (size_t)(next - cursor));
+        OcppCertInfo21 info;
+        if (platform_cert_count21(pem.c_str()) != 1 || !platform_cert_info21(pem.c_str(), 0, &info)) {
+            return false;
+        }
+        ++parsed;
+        if (info.self_signed) {
+            if (parsed == 1 || !info.is_ca || next[strspn(next, " \t\r\n")] != '\0') {
+                return false;
+            }
+            normalized.assign(chain, (size_t)(cursor - chain));
+            --cert_count;
+        }
+        cursor = next;
+    }
+    return parsed == cert_count + (normalized.empty() ? 0 : 1)
+        && cert_count > 0 && cert_count <= OCPP21_CHAIN_MAX_CHILDREN + 1;
+}
+
 CallResponse ChargePoint::handleCertificateSigned(const char *uid, CertificateSignedView req)
 {
     const char *chain = req.certificateChain();
+    std::string normalized_chain;
     const char *reject_reason = nullptr;
     size_t cert_count = 0;
     bool combined = csr_type == SignCertificateCertificateType::NONE;
@@ -1915,12 +1954,16 @@ CallResponse ChargePoint::handleCertificateSigned(const char *uid, CertificateSi
         reject_reason = "UnknownRequestId";
     } else if (req.certificateType().is_some() && (size_t)req.certificateType().unwrap() != (size_t)csr_type) {
         reject_reason = "TypeMismatch";
-    } else if ((cert_count = platform_cert_count21(chain)) == 0 || cert_count > OCPP21_CHAIN_MAX_CHILDREN + 1) {
+    } else if (((cert_count = platform_cert_count21(chain)) == 0) || (cert_count > (OCPP21_CHAIN_MAX_CHILDREN + (needs_v2g_roots ? 2 : 1)))) {
         reject_reason = "InvalidChain";
-    } else if (!platform_key_matches_cert21(cert_store.keyPath(csr_pending_id).c_str(), chain)) {
-        reject_reason = "KeyMismatch";
+    } else if (needs_v2g_roots) {
+        // HUB20-42-004: discard the supplied root before validation and storage.
+        if (!strip_secc_root(chain, normalized_chain, cert_count)) {
+            reject_reason = "InvalidChain";
+        } else if (!normalized_chain.empty()) {
+            chain = normalized_chain.c_str();
+        }
     } else {
-        // HUB20-42-004: the chain must not include the root.
         for (size_t i = 0; i < cert_count; ++i) {
             OcppCertInfo21 info;
             if (!platform_cert_info21(chain, i, &info)) {
@@ -1932,6 +1975,10 @@ CallResponse ChargePoint::handleCertificateSigned(const char *uid, CertificateSi
                 break;
             }
         }
+    }
+
+    if (reject_reason == nullptr && !platform_key_matches_cert21(cert_store.keyPath(csr_pending_id).c_str(), chain)) {
+        reject_reason = "KeyMismatch";
     }
 
     if (reject_reason == nullptr) {

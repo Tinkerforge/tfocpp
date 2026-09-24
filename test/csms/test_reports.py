@@ -70,8 +70,17 @@ def test_full_inventory(csms, host):
     ce = report[("SecurityCtrlr", "CertificateEntries", None)]
     assert ce["variableAttribute"][0]["mutability"] == "ReadOnly"
     assert ce["variableAttribute"][0]["value"] == "0"
-    assert ce["variableCharacteristics"]["maxLimit"] >= 120
+    assert ce["variableCharacteristics"]["maxLimit"] >= 130
     assert ce["variableCharacteristics"]["dataType"] == "integer"
+
+    chain_size = report[("SecurityCtrlr", "MaxCertificateChainSize", None)]
+    assert chain_size["variableAttribute"][0]["mutability"] == "ReadOnly"
+    assert chain_size["variableAttribute"][0]["value"] == "10000"
+    assert chain_size["variableCharacteristics"]["maxLimit"] == 10000
+
+    private = report[("ISO15118Ctrlr", "PrivateEnvironmentEnabled", None)]
+    assert private["variableAttribute"][0]["value"] == "false"
+    assert private["variableAttribute"][0]["mutability"] == "ReadWrite"
 
     # Instanced variable.
     ma = report[("OCPPCommCtrlr", "MessageAttempts", "TransactionEvent")]
@@ -332,7 +341,7 @@ def test_get_report_component_filter(csms, host):
     assert {"SeccId", "CountryName", "OrganizationName", "V2G20SECCLeafCryptoSuite",
             "Enabled", "V2GCertificateInstallationEnabled",
             "ContractCertificateInstallationEnabled", "ISO15118EvseId",
-            "EnforceTlsEnabled", "PrivateEnviromentEnabled",
+            "EnforceTlsEnabled", "PrivateEnvironmentEnabled",
             "PWMChargingFallbackTimeout", "ProtocolSupported"} == names
 
 

@@ -305,7 +305,9 @@ def test_same_root_retains_newest_validity_start(csms, host, hosts, ca, iso20):
     assert chain_files[0].read_text() == newest
 
 
-def test_m03_two_intermediate_order_and_root_inclusion_rejection(csms, host, ca):
+@pytest.mark.parametrize("iso20", [False, True], ids=["iso2", "iso20"])
+@pytest.mark.parametrize("include_root", [False, True], ids=["root-free", "bundled-root"])
+def test_m03_two_intermediate_order_and_root_omission(csms, host, hosts, ca, iso20, include_root):
     sub1 = ca.intermediate_ca("CPO Sub-CA 1")
     sub2 = sub1.intermediate_ca("CPO Sub-CA 2")
     assert csms.call("InstallCertificate", {
@@ -313,15 +315,20 @@ def test_m03_two_intermediate_order_and_root_inclusion_rejection(csms, host, ca)
         "certificate": ca.cert_pem,
     })["status"] == "Accepted"
 
-    request, cert_type = start_v2g_csr(csms)
+    request, cert_type = start_v2g_csr(csms, iso20)
+    assert "hashRootCertificate" not in request
     leaf = sub2.sign_csr(request["csr"])
     chain = leaf + sub2.cert_pem + sub1.cert_pem
     assert csms.call("CertificateSigned", {
-        "certificateChain": chain,
+        "certificateChain": chain + (ca.cert_pem if include_root else ""),
         "certificateType": cert_type,
         "requestId": request["requestId"],
     })["status"] == "Accepted"
-    host.wait_for("Installed the signed V2GCertificate", timeout=10)
+    host.wait_for(f"Installed the signed {cert_type}", timeout=10)
+    chain_glob = "v2g20.*.pem" if iso20 else "v2g2.*.pem"
+    chain_files = list((hosts.workdir / "tfocpp-ocsp-test.certs").glob(chain_glob))
+    assert len(chain_files) == 1
+    assert chain_files[0].read_text() == chain
 
     installed = installed_v2g_chains(csms)
     assert len(installed) == 1
@@ -335,17 +342,86 @@ def test_m03_two_intermediate_order_and_root_inclusion_rejection(csms, host, ca)
     assert root_hash not in entry["childCertificateHashData"]
 
     before = installed
-    request, cert_type = start_v2g_csr(csms)
+    request, cert_type = start_v2g_csr(csms, iso20)
     replacement = sub2.sign_csr(request["csr"])
     rejected = csms.call("CertificateSigned", {
-        "certificateChain": replacement + sub2.cert_pem + sub1.cert_pem + ca.cert_pem,
+        "certificateChain": replacement + sub1.cert_pem + ca.cert_pem,
         "certificateType": cert_type,
         "requestId": request["requestId"],
     })
     assert rejected["status"] == "Rejected"
-    assert rejected["statusInfo"]["reasonCode"] == "ChainIncludesRoot"
-    host.wait_for("CertificateSigned rejected: ChainIncludesRoot", timeout=10)
     assert installed_v2g_chains(csms) == before
+    assert chain_files[0].read_text() == chain
+
+
+@pytest.mark.parametrize("iso20", [False, True], ids=["iso2", "iso20"])
+@pytest.mark.parametrize("unrelated_root", [False, True], ids=["no-root", "unrelated-root"])
+def test_bundled_root_does_not_establish_trust(csms, host, hosts, ca, iso20, unrelated_root, tmp_path):
+    if unrelated_root:
+        other_dir = tmp_path / "other-ca"
+        other_dir.mkdir()
+        other = SigningCa(other_dir, name="Unrelated root")
+        assert csms.call("InstallCertificate", {
+            "certificateType": "V2GRootCertificate", "certificate": other.cert_pem,
+        })["status"] == "Accepted"
+    request, cert_type = start_v2g_csr(csms, iso20)
+    response = csms.call("CertificateSigned", {
+        "certificateChain": ca.sign_csr(request["csr"]) + ca.cert_pem,
+        "certificateType": cert_type,
+        "requestId": request["requestId"],
+    })
+    assert response["status"] == "Rejected"
+    assert response["statusInfo"]["reasonCode"] == ("UntrustedChain" if unrelated_root else "NoTrustedRoot")
+    chain_glob = "v2g20.*.pem" if iso20 else "v2g2.*.pem"
+    assert not list((hosts.workdir / "tfocpp-ocsp-test.certs").glob(chain_glob))
+
+
+@pytest.mark.parametrize("suffix", ["garbage", "malformed-pem", "duplicate-root", "root-before-intermediate"])
+def test_bundled_root_rejects_malformed_chain(csms, host, ca, suffix):
+    assert csms.call("InstallCertificate", {
+        "certificateType": "V2GRootCertificate", "certificate": ca.cert_pem,
+    })["status"] == "Accepted"
+    request, cert_type = start_v2g_csr(csms, True)
+    leaf = ca.sign_csr(request["csr"])
+    extra = {
+        "garbage": "invalid",
+        "malformed-pem": "-----BEGIN CERTIFICATE-----\ninvalid\n-----END CERTIFICATE-----\n",
+        "duplicate-root": ca.cert_pem,
+        "root-before-intermediate": ca.intermediate_ca("Misplaced CA").cert_pem,
+    }[suffix]
+    response = csms.call("CertificateSigned", {
+        "certificateChain": leaf + ca.cert_pem + extra,
+        "certificateType": cert_type, "requestId": request["requestId"],
+    })
+    assert response["status"] == "Rejected"
+    assert response["statusInfo"]["reasonCode"] == "InvalidChain"
+
+
+@pytest.mark.parametrize("intermediates", [3, 4])
+def test_bundled_root_does_not_consume_chain_capacity(csms, host, hosts, ca, intermediates):
+    assert csms.call("InstallCertificate", {
+        "certificateType": "V2GRootCertificate", "certificate": ca.cert_pem,
+    })["status"] == "Accepted"
+    issuer = ca
+    intermediate_chain = ""
+    for index in range(intermediates):
+        issuer = issuer.intermediate_ca(f"Sub-CA {index}")
+        intermediate_chain = issuer.cert_pem + intermediate_chain
+    request, cert_type = start_v2g_csr(csms, True)
+    chain = issuer.sign_csr(request["csr"]) + intermediate_chain
+    result = csms.call("CertificateSigned", {
+        "certificateChain": chain + ca.cert_pem,
+        "certificateType": cert_type, "requestId": request["requestId"],
+    })
+    chain_files = list((hosts.workdir / "tfocpp-ocsp-test.certs").glob("v2g20.*.pem"))
+    if intermediates == 3:
+        assert result["status"] == "Accepted"
+        assert len(chain_files) == 1
+        assert chain_files[0].read_text() == chain
+    else:
+        assert result["status"] == "Rejected"
+        assert result["statusInfo"]["reasonCode"] == "InvalidChain"
+        assert not chain_files
 
 
 def test_certificate_signed_future_validity_boundary(csms, host, ca):
@@ -667,7 +743,8 @@ def test_a03_renewal_retries_replaces_and_reconnects(csms, host, hosts, ca):
         csms.expect("SignCertificate", timeout=6)
 
 
-def test_a03_v2g_renewal_retains_newest_chain(csms, host, hosts, ca):
+@pytest.mark.parametrize("include_root", [False, True], ids=["root-free", "bundled-root"])
+def test_a03_v2g_renewal_retains_newest_chain(csms, host, hosts, ca, include_root):
     initial_leaf = install_v2g20_chain(csms, host, ca, days=20)
     chain_files = list((hosts.workdir / "tfocpp-ocsp-test.certs").glob("v2g20.*.pem"))
     assert len(chain_files) == 1
@@ -683,7 +760,7 @@ def test_a03_v2g_renewal_retains_newest_chain(csms, host, hosts, ca):
 
     renewed_leaf = ca.sign_csr(renewal["csr"], days=365)
     assert csms.call("CertificateSigned", {
-        "certificateChain": renewed_leaf,
+        "certificateChain": renewed_leaf + (ca.cert_pem if include_root else ""),
         "certificateType": renewal["certificateType"],
         "requestId": renewal["requestId"],
     })["status"] == "Accepted"
