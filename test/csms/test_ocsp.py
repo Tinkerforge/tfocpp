@@ -770,6 +770,46 @@ def test_a03_v2g_renewal_retains_newest_chain(csms, host, hosts, ca, include_roo
     assert chain_files[0].read_text() == renewed_leaf
 
 
+@pytest.mark.parametrize("iso20", [False, True], ids=["iso2", "iso20"])
+def test_a03_short_lived_installation_renews_without_reconnect(csms, host, hosts, ca, iso20):
+    # OCPP A03.FR.02/A03.FR.23: a fresh short-lived chain must not wait
+    # for the periodic six-hour scan, and expiry must not abort enrollment.
+    time.sleep(6)  # Let the initial post-registration expiry scan finish.
+    assert csms.call("InstallCertificate", {
+        "certificateType": "V2GRootCertificate", "certificate": ca.cert_pem,
+    })["status"] == "Accepted"
+    initial, kind = start_v2g_csr(csms, iso20)
+    now = datetime.datetime.now(datetime.timezone.utc).replace(microsecond=0)
+    leaf = ca.sign_csr_at(initial["csr"], now - datetime.timedelta(seconds=5),
+                          now + datetime.timedelta(seconds=295))
+    assert csms.call("CertificateSigned", {"certificateType": kind, "requestId": initial["requestId"],
+                                           "certificateChain": leaf})["status"] == "Accepted"
+    before = installed_v2g_chains(csms)
+    assert len(before) == 1
+    renewal, mid = csms.expect("SignCertificate", timeout=10)
+    assert renewal["certificateType"] == kind
+    assert renewal["requestId"] != initial["requestId"]
+    assert renewal["hashRootCertificate"] == ca.hash_data(ca.cert_pem, ca.cert_pem)
+    csr = x509.load_pem_x509_csr(renewal["csr"].encode())
+    assert csr.is_signature_valid
+    assert csr.subject == x509.load_pem_x509_csr(initial["csr"].encode()).subject
+    csms.respond(mid, {"status": "Accepted"})
+    host.send("time +301")
+    host.wait_for("advanced system time by 301 seconds")
+    replacement = ca.sign_csr_at(renewal["csr"], now, now + datetime.timedelta(days=365))
+    assert csms.call("CertificateSigned", {"certificateType": kind, "requestId": renewal["requestId"],
+                                           "certificateChain": replacement})["status"] == "Accepted"
+    after = installed_v2g_chains(csms)
+    assert len(after) == 1
+    assert after[0]["certificateHashData"] == ca.hash_data(replacement, ca.cert_pem)
+    assert after[0]["certificateHashData"] != before[0]["certificateHashData"]
+    cert_dir = hosts.workdir / "tfocpp-ocsp-test.certs"
+    assert len(list(cert_dir.glob("key.*"))) == 1
+    assert len(csms.connection_history) == 1
+    with pytest.raises(TimeoutError):
+        csms.expect("SignCertificate", timeout=1)
+
+
 def test_m07_vehicle_chain_status(csms, host):
     # M07 plumbing: the host requests the vehicle chain status (driven by
     # the simulator, the ISO 15118 stack arrives later) and caches the

@@ -1772,7 +1772,7 @@ void ChargePoint::tickCertificates()
     }
 
     // A03.FR.02: renew certificates expiring within one month.
-    if (deadline_elapsed(cert_expiry_check_deadline)) {
+    if (!csr_active && deadline_elapsed(cert_expiry_check_deadline)) {
         cert_expiry_check_deadline = set_deadline(6 * 3600 * 1000);
         time_t now = platform_get_system_time(connection.platform_ctx);
         if (!csr_active) {
@@ -2144,6 +2144,9 @@ CallResponse ChargePoint::handleCertificateSigned(const char *uid, CertificateSi
     }
     csr_active = false;
     if (installed) {
+        // A03.FR.02: a newly installed short-lived certificate may expire
+        // before the next periodic scan. Recheck promptly after installation.
+        cert_expiry_check_deadline = set_deadline(5000);
         platform_cert_store_changed21(connection.platform_ctx);
     }
 
