@@ -367,7 +367,7 @@ void Connection::tick() {
     // Transaction events first, they are the authoritative session record
     // and their order relative to the status notifications matters at
     // transaction end (Ended before Available).
-    if (!transaction_messages.empty() && deadline_elapsed(transaction_retry_deadline)) {
+    if (cp->state == State::Idle && !transaction_messages.empty() && deadline_elapsed(transaction_retry_deadline)) {
         to_pop = &transaction_messages;
         sending_transaction = true;
     } else if (!status_notifications.empty()) {

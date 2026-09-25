@@ -102,7 +102,7 @@ public:
     ChargePoint(const ChargePoint&) = delete;
     ChargePoint &operator=(const ChargePoint&) = delete;
 
-    bool start(const char *websocket_endpoint_url, const char *charge_point_name, const char *basic_auth_pass, int32_t security_profile = 1, const PlatformTlsConfig *tls = nullptr);
+    bool start(const char *websocket_endpoint_url, const char *charge_point_name, const char *basic_auth_pass, int32_t security_profile = 1, const PlatformTlsConfig *tls = nullptr, BootNotificationReason boot_reason = BootNotificationReason::POWER_UP);
     void stop();
     void tick();
 
@@ -180,6 +180,7 @@ private:
     void sendBootNotification(BootNotificationReason reason);
     void refreshDeviceModelAvailability();
     void sendStatusNotifications();
+    void sendBootAvailabilityNotifications();
     void tickEvses();
     void tickReset();
     void startTransaction(int32_t evse_id, TransactionEventTriggerReason trigger);
@@ -211,6 +212,7 @@ private:
     // Interval requested by the CSMS in a Pending or Rejected boot response. 0 = use default.
     int32_t boot_retry_interval_s = 0;
     bool boot_notification_in_flight = false;
+    BootNotificationReason boot_reason = BootNotificationReason::POWER_UP;
 
     uint32_t next_heartbeat_deadline = 0;
 

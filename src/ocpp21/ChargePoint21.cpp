@@ -30,8 +30,9 @@ static void generate_transaction_id(char buf[OCPP21_TRANSACTION_ID_LEN + 1])
              (unsigned long long)(r2 & 0xffffffffffffull));
 }
 
-bool ChargePoint::start(const char *websocket_endpoint_url, const char *charge_point_name, const char *basic_auth_pass, int32_t security_profile, const PlatformTlsConfig *tls)
+bool ChargePoint::start(const char *websocket_endpoint_url, const char *charge_point_name, const char *basic_auth_pass, int32_t security_profile, const PlatformTlsConfig *tls, BootNotificationReason initial_boot_reason)
 {
+    boot_reason = initial_boot_reason;
     this->charge_point_name = charge_point_name;
     device_model.identity = this->charge_point_name.c_str();
     device_model.security_profile = security_profile;
@@ -212,7 +213,7 @@ void ChargePoint::tick()
         case State::Pending:
         case State::Rejected:
             if ((deadline_elapsed(boot_retry_deadline) || trigger_boot_notification) && !boot_notification_in_flight) {
-                sendBootNotification(trigger_boot_notification ? BootNotificationReason::TRIGGERED : BootNotificationReason::POWER_UP);
+                sendBootNotification(trigger_boot_notification ? BootNotificationReason::TRIGGERED : boot_reason);
                 trigger_boot_notification = false;
             }
             break;
@@ -326,16 +327,18 @@ void ChargePoint::sendSecurityEventNotification(const char *type, const char *te
 
 void ChargePoint::notifyMissingV2GRoot(const char *reason)
 {
-    // Hubject catalogue 47/E5: installation diagnostics are an N07 hardwired
+    // Installation diagnostics are an OCPP N07 hardwired
     // alert, not the V2G security event prohibited by A02.FR.07. Reference the
     // existing certificate-store variable and report its unchanged actual value.
     NotifyEventEventDataComponent component;
     component.name = "SecurityCtrlr";
+
     NotifyEventEventDataVariable variable;
     variable.name = "CertificateEntries";
     char actual_value[16];
     snprintf(actual_value, sizeof(actual_value), "%u", static_cast<unsigned>(cert_store.count()));
     const time_t now = platform_get_system_time(connection.platform_ctx);
+
     NotifyEventEventData event;
     event.eventId = next_event_id;
     next_event_id = next_event_id == INT32_MAX ? 0 : next_event_id + 1;
@@ -348,6 +351,7 @@ void ChargePoint::notifyMissingV2GRoot(const char *reason)
     event.variable = &variable;
     event.eventNotificationType = NotifyEventEventDataEventNotificationType::HARD_WIRED_NOTIFICATION;
     event.severity = 3;
+
     // Serialize immediately and retain across disconnects/timeouts like critical
     // security events. No configurable VariableMonitoring exists for this alert.
     connection.sendTransactionCallAction(NotifyEvent{now, 0, &event, 1});
@@ -594,6 +598,39 @@ void ChargePoint::sendStatusNotifications()
             status,
             evse_id,
             1});
+    }
+}
+
+void ChargePoint::sendBootAvailabilityNotifications()
+{
+    // Send one availability snapshot per Connector after
+    // registration, not a configurable delta monitor or a state transition.
+    const time_t now = platform_get_system_time(connection.platform_ctx);
+    for (int32_t evse_id = 1; evse_id <= OCPP21_NUM_EVSES; ++evse_id) {
+        NotifyEventEventDataComponentEvse evse;
+        evse.id = evse_id;
+        evse.connectorId = 1;
+
+        NotifyEventEventDataComponent component;
+        component.name = "Connector";
+        component.evse = &evse;
+
+        NotifyEventEventDataVariable variable;
+        variable.name = "AvailabilityState";
+        const auto status = connector_status(platform_get_evse_state21(connection.platform_ctx, evse_id), evses[evse_id - 1]);
+
+        NotifyEventEventData event;
+        event.eventId = next_event_id;
+        next_event_id = (next_event_id == INT32_MAX) ? 0 : (next_event_id + 1);
+        event.timestamp = now;
+        event.trigger = NotifyEventEventDataTrigger::ALERTING;
+        event.actualValue = StatusNotificationConnectorStatusStrings[(size_t)status];
+        event.component = &component;
+        event.variable = &variable;
+        event.eventNotificationType = NotifyEventEventDataEventNotificationType::HARD_WIRED_NOTIFICATION;
+        event.severity = 8;
+
+        connection.sendTransactionCallAction(NotifyEvent{now, 0, &event, 1});
     }
 }
 
@@ -929,6 +966,8 @@ CallResponse ChargePoint::handleBootNotificationResponse(int32_t connectorId, Bo
     switch (conf.status()) {
         case BootNotificationResponseStatus::ACCEPTED:
             log_info("Boot notification accepted");
+            if (state != State::Idle)
+                sendBootAvailabilityNotifications();
             state = State::Idle;
             if (interval > 0)
                 device_model.heartbeat_interval_s = interval;
@@ -1527,7 +1566,7 @@ void ChargePoint::tickReset()
     if (reset_drain_deadline == 0)
         reset_drain_deadline = set_deadline(OCPP21_RESET_DRAIN_TIMEOUT_MS);
 
-    bool queue_empty = connection.transaction_messages.empty() && !connection.in_flight_is_transaction;
+    bool queue_empty = connection.pending_responses.empty() && connection.transaction_messages.empty() && !connection.in_flight_is_transaction;
     if (!queue_empty && !deadline_elapsed(reset_drain_deadline))
         return;
 

@@ -27,6 +27,8 @@ class MiniCsms:
         self.requests = queue.Queue()
         self.responses = queue.Queue()
         self.security_events = []
+        self.availability_events = []
+        self.received_calls = []
         self.status_notifications = queue.Queue()
         self.result_errors = []
         self.last_auth = None
@@ -70,6 +72,7 @@ class MiniCsms:
                 msg = json.loads(raw)
                 if msg[0] == 2:
                     _, msg_id, action, payload = msg
+                    self.received_calls.append((action, payload))
                     if action == "BootNotification" and not self.manual_boot:
                         self.respond(msg_id, {
                             "currentTime": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
@@ -85,6 +88,9 @@ class MiniCsms:
                             self.respond(msg_id, {"currentTime": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())})
                     elif action == "SecurityEventNotification":
                         self.security_events.append(payload)
+                        self.respond(msg_id, {})
+                    elif action == "NotifyEvent" and all(e["variable"]["name"] == "AvailabilityState" for e in payload["eventData"]):
+                        self.availability_events.append(payload)
                         self.respond(msg_id, {})
                     elif action == "StatusNotification":
                         self.status_notifications.put(payload)

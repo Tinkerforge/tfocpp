@@ -1,4 +1,4 @@
-# Hubject catalogue check 47/E5, A02.FR.06 and N07.
+# OCPP A02.FR.06 and N07: certificate rejection and installation diagnostics.
 from datetime import datetime, timezone
 
 import pytest
