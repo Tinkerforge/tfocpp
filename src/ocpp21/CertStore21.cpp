@@ -687,6 +687,7 @@ CertDeleteResult CertStore::deleteByHash(const char *issuer_name_hash, const cha
     // under multiple types. Delete every matching entry.
     bool deleted = false;
     bool in_use = false;
+    std::vector<OcppCertHashData21> deleted_v2g_roots;
 
     for (size_t i = entries.size(); i > 0; --i) {
         auto &e = entries[i - 1];
@@ -705,10 +706,30 @@ CertDeleteResult CertStore::deleteByHash(const char *issuer_name_hash, const cha
         if (is_chain_group(e.group)) {
             removeChain(e.group, e.id);
         } else {
+            if (e.group == CertGroup::V2GRoot) {
+                deleted_v2g_roots.push_back(e.hash);
+            }
             platform_remove_file(pemPath(e.group, e.id).c_str());
             entries.erase(entries.begin() + (i - 1));
         }
         deleted = true;
+    }
+
+    // TC_HU_SECC_ISO20_Install_Leaf_Certificate_Without_Trusted_Root_001
+    // permits deleting dependent SECC chains with their trust anchor. They
+    // cannot be served without that root. Remove their keys as well unless
+    // a combined CSMS credential still owns the key.
+    for (size_t i = entries.size(); i > 0; --i) {
+        const auto &e = entries[i - 1];
+        if ((e.group != CertGroup::V2GChain && e.group != CertGroup::V2G20Chain) || !e.has_anchor) {
+            continue;
+        }
+        for (const auto &root : deleted_v2g_roots) {
+            if (same_hash(e.anchor_root, root)) {
+                removeChain(e.group, e.id);
+                break;
+            }
+        }
     }
 
     if (deleted) {

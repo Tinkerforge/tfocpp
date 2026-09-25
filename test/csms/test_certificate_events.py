@@ -7,6 +7,52 @@ from test_iso15118 import ca, csms, host  # noqa: F401 - shared fixtures
 from testca import SigningCa
 
 
+@pytest.mark.parametrize("combined", [False, True])
+def test_root_deletion_removes_only_dependent_secc_credentials(csms, host, hosts, ca, tmp_path, combined):
+    # OCPP M04 and TC_HU_SECC_ISO20_Install_Leaf_Certificate_Without_Trusted_Root_001.
+    directory = tmp_path / "independent-root"
+    directory.mkdir()
+    other = SigningCa(directory, name="independent-root")
+    for issuer in (ca, other):
+        assert csms.call("InstallCertificate", {"certificateType": "V2GRootCertificate",
+                                               "certificate": issuer.cert_pem})["status"] == "Accepted"
+    chains = []
+    for issuer, kind in ((ca, None if combined else "V2GCertificate"),
+                         (ca, "V2G20Certificate"), (other, "V2G20Certificate")):
+        trigger = "SignCombinedCertificate" if kind is None else f"Sign{kind}"
+        assert csms.call("TriggerMessage", {"requestedMessage": trigger})["status"] == "Accepted"
+        request, mid = csms.expect("SignCertificate")
+        csms.respond(mid, {"status": "Accepted"})
+        leaf = issuer.sign_csr(request["csr"])
+        payload = {"requestId": request["requestId"], "certificateChain": leaf}
+        if kind is not None:
+            payload["certificateType"] = kind
+        assert csms.call("CertificateSigned", payload)["status"] == "Accepted"
+        chains.append(issuer.hash_data(leaf, issuer.cert_pem))
+    before = csms.call("GetInstalledCertificateIds", {})["certificateHashDataChain"]
+    assert len(before) == 5
+    root_hash = ca.hash_data(ca.cert_pem, ca.cert_pem)
+    # M04 hash matching is case-insensitive.
+    upper_hash = {key: value.upper() for key, value in root_hash.items()}
+    assert csms.call("DeleteCertificate", {"certificateHashData": upper_hash})["status"] == "Accepted"
+    after = csms.call("GetInstalledCertificateIds", {})["certificateHashDataChain"]
+    expected = [e for e in before if e["certificateHashData"] not in [root_hash, *chains[:2]]]
+    assert after == expected
+    cert_dir = hosts.workdir / "tfocpp-iso-test.certs"
+    assert not list(cert_dir.glob("v2g2.*.pem"))
+    assert len(list(cert_dir.glob("v2g20.*.pem"))) == 1
+    # Combined credentials retain their CSMS copy and shared private key.
+    assert len(list(cert_dir.glob("cs.*.pem"))) == int(combined)
+    assert len(list(cert_dir.glob("key.*"))) == 1 + int(combined)
+    assert csms.call("DeleteCertificate", {"certificateHashData": root_hash})["status"] == "NotFound"
+    host.stop()
+    from test_iso15118 import start_host
+    restarted = start_host(hosts, csms, "tfocpp-iso-test", ca)
+    csms.wait_connected()
+    restarted.wait_for("Boot notification accepted", timeout=20)
+    assert csms.call("GetInstalledCertificateIds", {})["certificateHashDataChain"] == expected
+
+
 @pytest.mark.parametrize("bundled_root", [False, True])
 @pytest.mark.parametrize("unrelated_root", [False, True])
 def test_missing_v2g_root_event(csms, host, ca, tmp_path, bundled_root, unrelated_root):

@@ -281,4 +281,4 @@ def test_cert_store_change_notification(csms, host, ca):
 
     hd = ca.hash_data(ca.cert_pem, ca.cert_pem)
     assert csms.call("DeleteCertificate", {"certificateHashData": hd})["status"] == "Accepted"
-    host.wait_for("Cert store changed: v2g chain 0, v2g20 chain 1, v2g roots 0, oem roots 0, mo roots 0", timeout=10)
+    host.wait_for("Cert store changed: v2g chain 0, v2g20 chain 0, v2g roots 0, oem roots 0, mo roots 0", timeout=10)
