@@ -159,6 +159,7 @@ public:
     CallResponse handleGetBaseReport(const char *uid, GetBaseReportView req);
     CallResponse handleGetReport(const char *uid, GetReportView req);
     CallResponse handleNotifyReportResponse(int32_t connectorId, NotifyReportResponseView conf);
+    CallResponse handleNotifyEventResponse(int32_t connectorId, NotifyEventResponseView conf);
     CallResponse handleTriggerMessage(const char *uid, TriggerMessageView req);
     CallResponse handleReset(const char *uid, ResetView req);
     CallResponse handleRequestStartTransaction(const char *uid, RequestStartTransactionView req);
@@ -318,6 +319,8 @@ private:
     int32_t report_request_id = 0;
     int32_t report_seq_no = 0;
     size_t report_next_idx = 0;
+    int32_t next_event_id = 0;
+    void notifyMissingV2GRoot(const char *reason);
     uint64_t report_mask = 0;
 };
 

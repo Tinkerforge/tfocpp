@@ -486,6 +486,19 @@ const char * const GetInstalledCertificateIdsResponseCertificateHashDataChainCer
     "OEMRootCertificate"
 };
 
+const char * const NotifyEventEventDataTriggerStrings[] = {
+    "Alerting",
+    "Delta",
+    "Periodic"
+};
+
+const char * const NotifyEventEventDataEventNotificationTypeStrings[] = {
+    "HardWiredNotification",
+    "HardWiredMonitor",
+    "PreconfiguredMonitor",
+    "CustomMonitor"
+};
+
 const char * const TransactionEventCostDetailsTotalCostTypeOfCostStrings[] = {
     "NormalCost",
     "MinCost",
@@ -959,6 +972,23 @@ void NotifyReportReportData::serializeInto(TFJsonSerializer &json) {
         if (variableCharacteristics != nullptr) { json.addMemberObject("variableCharacteristics"); variableCharacteristics->serializeInto(json); json.endObject(); }
     }
 
+void NotifyEventEventData::serializeInto(TFJsonSerializer &json) {
+        if (eventId != OCPP_INTEGER_NOT_PASSED) json.addMemberNumber("eventId", eventId);
+        if (timestamp != OCPP_DATETIME_NOT_PASSED) unix_timestamp_to_iso_string(timestamp, json, "timestamp");
+        if (trigger != NotifyEventEventDataTrigger::NONE) json.addMemberString("trigger", NotifyEventEventDataTriggerStrings[(size_t)trigger]);
+        if (cause != OCPP_INTEGER_NOT_PASSED) json.addMemberNumber("cause", cause);
+        if (actualValue != nullptr) json.addMemberString("actualValue", actualValue);
+        if (techCode != nullptr) json.addMemberString("techCode", techCode);
+        if (techInfo != nullptr) json.addMemberString("techInfo", techInfo);
+        if (cleared != OCPP_BOOL_NOT_PASSED) json.addMemberBoolean("cleared", cleared == 1);
+        if (transactionId != nullptr) json.addMemberString("transactionId", transactionId);
+        if (component != nullptr) { json.addMemberObject("component"); component->serializeInto(json); json.endObject(); }
+        if (variableMonitoringId != OCPP_INTEGER_NOT_PASSED) json.addMemberNumber("variableMonitoringId", variableMonitoringId);
+        if (eventNotificationType != NotifyEventEventDataEventNotificationType::NONE) json.addMemberString("eventNotificationType", NotifyEventEventDataEventNotificationTypeStrings[(size_t)eventNotificationType]);
+        if (variable != nullptr) { json.addMemberObject("variable"); variable->serializeInto(json); json.endObject(); }
+        if (severity != OCPP_INTEGER_NOT_PASSED) json.addMemberNumber("severity", severity);
+    }
+
 void GetReportResponseStatusInfo::serializeInto(TFJsonSerializer &json) {
         if (reasonCode != nullptr) json.addMemberString("reasonCode", reasonCode);
         if (additionalInfo != nullptr) json.addMemberString("additionalInfo", additionalInfo);
@@ -1113,6 +1143,17 @@ void NotifyReportReportDataVariableCharacteristics::serializeInto(TFJsonSerializ
         json.addMemberBoolean("supportsMonitoring", supportsMonitoring);
     }
 
+void NotifyEventEventDataComponent::serializeInto(TFJsonSerializer &json) {
+        if (evse != nullptr) { json.addMemberObject("evse"); evse->serializeInto(json); json.endObject(); }
+        if (name != nullptr) json.addMemberString("name", name);
+        if (instance != nullptr) json.addMemberString("instance", instance);
+    }
+
+void NotifyEventEventDataVariable::serializeInto(TFJsonSerializer &json) {
+        if (name != nullptr) json.addMemberString("name", name);
+        if (instance != nullptr) json.addMemberString("instance", instance);
+    }
+
 void GetVariablesResponseGetVariableResultComponentEvse::serializeInto(TFJsonSerializer &json) {
         if (id != OCPP_INTEGER_NOT_PASSED) json.addMemberNumber("id", id);
         if (connectorId != OCPP_INTEGER_NOT_PASSED) json.addMemberNumber("connectorId", connectorId);
@@ -1194,6 +1235,11 @@ void MeterValuesMeterValueSampledValueUnitOfMeasure::serializeInto(TFJsonSeriali
     }
 
 void NotifyReportReportDataComponentEvse::serializeInto(TFJsonSerializer &json) {
+        if (id != OCPP_INTEGER_NOT_PASSED) json.addMemberNumber("id", id);
+        if (connectorId != OCPP_INTEGER_NOT_PASSED) json.addMemberNumber("connectorId", connectorId);
+    }
+
+void NotifyEventEventDataComponentEvse::serializeInto(TFJsonSerializer &json) {
         if (id != OCPP_INTEGER_NOT_PASSED) json.addMemberNumber("id", id);
         if (connectorId != OCPP_INTEGER_NOT_PASSED) json.addMemberNumber("connectorId", connectorId);
     }
@@ -1812,6 +1858,35 @@ size_t NotifyReport::serializeJson(char *buf, size_t buf_len) const {
             if (reportData != nullptr) { json.addMemberArray("reportData"); for(size_t i = 0; i < reportData_length; ++i) { json.addObject(); reportData[i].serializeInto(json); json.endObject(); } json.endArray(); }
             if (tbc != OCPP_BOOL_NOT_PASSED) json.addMemberBoolean("tbc", tbc == 1);
             if (seqNo != OCPP_INTEGER_NOT_PASSED) json.addMemberNumber("seqNo", seqNo);
+        json.endObject();
+    json.endArray();
+
+    return json.end();
+}
+
+NotifyEvent::NotifyEvent(time_t generatedAt,
+        int32_t seqNo,
+        NotifyEventEventData *eventData, size_t eventData_length,
+        int8_t tbc) :
+    ICall(CallAction::NOTIFY_EVENT, next_call_id++),
+    generatedAt(generatedAt),
+    tbc(tbc),
+    seqNo(seqNo),
+    eventData(eventData),
+    eventData_length(eventData_length)
+{}
+
+size_t NotifyEvent::serializeJson(char *buf, size_t buf_len) const {
+    TFJsonSerializer json{buf, buf_len};
+    json.addArray();
+        json.addNumber((int32_t)OcppRpcMessageType::CALL);
+        json.addNumber(this->ocppJmessageId, true);
+        json.addString(CallActionStrings[(size_t)ICall::action]);
+        json.addObject();
+            if (generatedAt != OCPP_DATETIME_NOT_PASSED) unix_timestamp_to_iso_string(generatedAt, json, "generatedAt");
+            if (tbc != OCPP_BOOL_NOT_PASSED) json.addMemberBoolean("tbc", tbc == 1);
+            if (seqNo != OCPP_INTEGER_NOT_PASSED) json.addMemberNumber("seqNo", seqNo);
+            if (eventData != nullptr) { json.addMemberArray("eventData"); for(size_t i = 0; i < eventData_length; ++i) { json.addObject(); eventData[i].serializeInto(json); json.endObject(); } json.endArray(); }
         json.endObject();
     json.endArray();
 
@@ -12868,6 +12943,18 @@ CallResponse parseNotifyReportResponse(JsonObject obj) {
     return CallResponse{CallErrorCode::OK, nullptr};
 }
 
+CallResponse parseNotifyEventResponse(JsonObject obj) {
+    size_t keys_handled = 0;
+
+    if (obj.containsKey("customData")) ++keys_handled;
+
+    if (obj.size() != keys_handled) {
+        return CallResponse{CallErrorCode::FormatViolation, "NotifyEventResponse: unknown members passed"};
+    }
+
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
 static CallResponse parseGetReportComponentVariableEntryEntriesComponentEntriesEvseEntriesId(JsonVariant var) {
 
     if (!var.is<int32_t>())
@@ -13727,6 +13814,14 @@ CallResponse callResultHandler(int32_t connectorId, CallAction resultTo, uint64_
             return cp->handleNotifyReportResponse(connectorId, NotifyReportResponseView{obj});
         }
 
+        case CallAction::NOTIFY_EVENT: {
+            CallResponse res = parseNotifyEventResponse(obj);
+            if (res.result != CallErrorCode::OK)
+                return res;
+
+            return cp->handleNotifyEventResponse(connectorId, NotifyEventResponseView{obj});
+        }
+
         case CallAction::GET15118_EV_CERTIFICATE: {
             CallResponse res = parseGet15118EVCertificateResponse(obj);
             if (res.result != CallErrorCode::OK)
@@ -13830,7 +13925,6 @@ CallResponse callResultHandler(int32_t connectorId, CallAction resultTo, uint64_
         case CallAction::NOTIFY_EV_CHARGING_NEEDS_RESPONSE:
         case CallAction::NOTIFY_EV_CHARGING_SCHEDULE:
         case CallAction::NOTIFY_EV_CHARGING_SCHEDULE_RESPONSE:
-        case CallAction::NOTIFY_EVENT:
         case CallAction::NOTIFY_EVENT_RESPONSE:
         case CallAction::NOTIFY_MONITORING_REPORT:
         case CallAction::NOTIFY_MONITORING_REPORT_RESPONSE:

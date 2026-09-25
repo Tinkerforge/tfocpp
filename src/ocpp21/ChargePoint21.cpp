@@ -324,6 +324,42 @@ void ChargePoint::sendSecurityEventNotification(const char *type, const char *te
     connection.sendTransactionCallAction(SecurityEventNotification{type, platform_get_system_time(connection.platform_ctx), tech_info});
 }
 
+void ChargePoint::notifyMissingV2GRoot(const char *reason)
+{
+    // Hubject catalogue 47/E5: installation diagnostics are an N07 hardwired
+    // alert, not the V2G security event prohibited by A02.FR.07. Reference the
+    // existing certificate-store variable and report its unchanged actual value.
+    NotifyEventEventDataComponent component;
+    component.name = "SecurityCtrlr";
+    NotifyEventEventDataVariable variable;
+    variable.name = "CertificateEntries";
+    char actual_value[16];
+    snprintf(actual_value, sizeof(actual_value), "%u", static_cast<unsigned>(cert_store.count()));
+    const time_t now = platform_get_system_time(connection.platform_ctx);
+    NotifyEventEventData event;
+    event.eventId = next_event_id;
+    next_event_id = next_event_id == INT32_MAX ? 0 : next_event_id + 1;
+    event.timestamp = now;
+    event.trigger = NotifyEventEventDataTrigger::ALERTING;
+    event.actualValue = actual_value;
+    event.techCode = reason;
+    event.techInfo = "V2GCertificateChain installation failed because the corresponding V2G root was not found.";
+    event.component = &component;
+    event.variable = &variable;
+    event.eventNotificationType = NotifyEventEventDataEventNotificationType::HARD_WIRED_NOTIFICATION;
+    event.severity = 3;
+    // Serialize immediately and retain across disconnects/timeouts like critical
+    // security events. No configurable VariableMonitoring exists for this alert.
+    connection.sendTransactionCallAction(NotifyEvent{now, 0, &event, 1});
+}
+
+CallResponse ChargePoint::handleNotifyEventResponse(int32_t connectorId, NotifyEventResponseView conf)
+{
+    (void)connectorId;
+    (void)conf;
+    return CallResponse{CallErrorCode::OK, nullptr};
+}
+
 #define OCPP21_SECURITY_PERSISTENCE_BUF_LEN 1024
 
 void ChargePoint::loadSecurityPersistence()
@@ -2014,6 +2050,10 @@ CallResponse ChargePoint::handleCertificateSigned(const char *uid, CertificateSi
         CertificateSignedResponseStatusInfo info;
         info.reasonCode = reject_reason;
         connection.sendCallResponse(CertificateSignedResponse{uid, ResponseStatus::REJECTED, &info});
+        if (csr_active && csr_type == SignCertificateCertificateType::V2_G20_CERTIFICATE
+            && (strcmp(reject_reason, "NoTrustedRoot") == 0 || strcmp(reject_reason, "UntrustedChain") == 0)) {
+            notifyMissingV2GRoot(reject_reason);
+        }
         // A02.FR.07: security event only for the charging station
         // certificate, not for the V2G types.
         if (csr_active && (combined || csr_type == SignCertificateCertificateType::CHARGING_STATION_CERTIFICATE)) {

@@ -106,9 +106,11 @@ network_profile = [[ #send
 # Messages for device model reporting (B07/B08).
 reports_profile = [[ #send
         schema21.NotifyReportRequest.NotifyReportRequest,
+        schema21.NotifyEventRequest.NotifyEventRequest,
         schema21.GetReportResponse.GetReportResponse,
     ], [ #recv
         schema21.NotifyReportResponse.NotifyReportResponse,
+        schema21.NotifyEventResponse.NotifyEventResponse,
         schema21.GetReportRequest.GetReportRequest,
 ]]
 

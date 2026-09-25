@@ -603,6 +603,25 @@ enum class GetInstalledCertificateIdsResponseCertificateHashDataChainCertificate
     NONE
 };
 
+extern const char * const NotifyEventEventDataTriggerStrings[];
+
+enum class NotifyEventEventDataTrigger : uint8_t {
+    ALERTING,
+    DELTA,
+    PERIODIC,
+    NONE
+};
+
+extern const char * const NotifyEventEventDataEventNotificationTypeStrings[];
+
+enum class NotifyEventEventDataEventNotificationType : uint8_t {
+    HARD_WIRED_NOTIFICATION,
+    HARD_WIRED_MONITOR,
+    PRECONFIGURED_MONITOR,
+    CUSTOM_MONITOR,
+    NONE
+};
+
 extern const char * const TransactionEventCostDetailsTotalCostTypeOfCostStrings[];
 
 enum class TransactionEventCostDetailsTotalCostTypeOfCost : uint8_t {
@@ -1107,6 +1126,11 @@ struct GetReportView {
 
         return Option<GetReportComponentCriteriaEntry>{(GetReportComponentCriteriaEntry)_obj["componentCriteria"][i].as<size_t>()};
     }
+
+};
+
+struct NotifyEventResponseView {
+    JsonObject _obj;
 
 };
 
@@ -4735,6 +4759,13 @@ struct TransactionEventCostDetailsTotalCostFixedTaxRates {
     void serializeInto(TFJsonSerializer &json);
 };
 
+struct NotifyEventEventDataComponentEvse {
+    int32_t id;
+    int32_t connectorId = OCPP_INTEGER_NOT_PASSED;
+
+    void serializeInto(TFJsonSerializer &json);
+};
+
 struct NotifyReportReportDataComponentEvse {
     int32_t id;
     int32_t connectorId = OCPP_INTEGER_NOT_PASSED;
@@ -4846,6 +4877,21 @@ struct SetVariablesResponseSetVariableResultComponentEvse {
 struct GetVariablesResponseGetVariableResultComponentEvse {
     int32_t id;
     int32_t connectorId = OCPP_INTEGER_NOT_PASSED;
+
+    void serializeInto(TFJsonSerializer &json);
+};
+
+struct NotifyEventEventDataVariable {
+    const char *name;
+    const char *instance = nullptr;
+
+    void serializeInto(TFJsonSerializer &json);
+};
+
+struct NotifyEventEventDataComponent {
+    NotifyEventEventDataComponentEvse *evse = nullptr;
+    const char *name;
+    const char *instance = nullptr;
 
     void serializeInto(TFJsonSerializer &json);
 };
@@ -5046,6 +5092,25 @@ struct BootNotificationChargingStationModem {
 struct GetReportResponseStatusInfo {
     const char *reasonCode;
     const char *additionalInfo = nullptr;
+
+    void serializeInto(TFJsonSerializer &json);
+};
+
+struct NotifyEventEventData {
+    int32_t eventId;
+    time_t timestamp;
+    NotifyEventEventDataTrigger trigger;
+    int32_t cause = OCPP_INTEGER_NOT_PASSED;
+    const char *actualValue;
+    const char *techCode = nullptr;
+    const char *techInfo = nullptr;
+    int8_t cleared = OCPP_BOOL_NOT_PASSED;
+    const char *transactionId = nullptr;
+    NotifyEventEventDataComponent *component;
+    int32_t variableMonitoringId = OCPP_INTEGER_NOT_PASSED;
+    NotifyEventEventDataEventNotificationType eventNotificationType;
+    NotifyEventEventDataVariable *variable;
+    int32_t severity = OCPP_INTEGER_NOT_PASSED;
 
     void serializeInto(TFJsonSerializer &json);
 };
@@ -5593,6 +5658,22 @@ struct NotifyReport final : public ICall {
     size_t serializeJson(char *buf, size_t buf_len) const override;
 };
 
+struct NotifyEvent final : public ICall {
+    time_t generatedAt;
+    int8_t tbc;
+    int32_t seqNo;
+    NotifyEventEventData *eventData; size_t eventData_length;
+
+    NotifyEvent(time_t generatedAt,
+        int32_t seqNo,
+        NotifyEventEventData *eventData, size_t eventData_length,
+        int8_t tbc = OCPP_BOOL_NOT_PASSED);
+    NotifyEvent(const NotifyEvent&) = delete;
+    NotifyEvent &operator=(const NotifyEvent&) = delete;
+
+    size_t serializeJson(char *buf, size_t buf_len) const override;
+};
+
 struct GetReportResponse final : public ICall {
     ReportResponseStatus status;
     GetReportResponseStatusInfo *statusInfo;
@@ -5669,6 +5750,8 @@ CallResponse parseGetInstalledCertificateIds(JsonObject obj);
 CallResponse parseSetNetworkProfile(JsonObject obj);
 
 CallResponse parseNotifyReportResponse(JsonObject obj);
+
+CallResponse parseNotifyEventResponse(JsonObject obj);
 
 CallResponse parseGetReport(JsonObject obj);
 
