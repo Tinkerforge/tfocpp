@@ -11,17 +11,17 @@
 
 namespace Ocpp21 {
 
-// Public charging PKI ecosystems require capacity for at least 30 V2G, 50 OEM and 40 MO root certificates.
-#define OCPP21_CERTSTORE_MAX_V2G_ROOT 30
-#define OCPP21_CERTSTORE_MAX_MO_ROOT 40
-#define OCPP21_CERTSTORE_MAX_OEM_ROOT 50
+// HUB20-411-005: every advertised slot can hold a root certificate. Roots and
+// chain credentials share this bound. V2G/OEM/MO roots have no separate quota.
+// This also accommodates the recommended simultaneous 30 V2G, 50 OEM, 40 MO.
+#define OCPP21_CERTSTORE_MAX_ENTRIES 132
+#define OCPP21_CERTSTORE_MAX_V2G_ROOT OCPP21_CERTSTORE_MAX_ENTRIES
+#define OCPP21_CERTSTORE_MAX_MO_ROOT OCPP21_CERTSTORE_MAX_ENTRIES
+#define OCPP21_CERTSTORE_MAX_OEM_ROOT OCPP21_CERTSTORE_MAX_ENTRIES
 #define OCPP21_CERTSTORE_MAX_CSMS_ROOT 4
 #define OCPP21_CERTSTORE_MAX_MFR_ROOT 4
 // SECC chains from different V2G roots in parallel, plus the CSMS client chain.
 #define OCPP21_CERTSTORE_MAX_CHAINS 4
-
-// CertificateEntries.maxLimit (HUB20-411-005).
-#define OCPP21_CERTSTORE_MAX_ENTRIES (OCPP21_CERTSTORE_MAX_V2G_ROOT + OCPP21_CERTSTORE_MAX_MO_ROOT + OCPP21_CERTSTORE_MAX_OEM_ROOT + OCPP21_CERTSTORE_MAX_CSMS_ROOT + OCPP21_CERTSTORE_MAX_MFR_ROOT + OCPP21_CERTSTORE_MAX_CHAINS)
 
 // CertificateSigned certificateChain is at most 10000 characters.
 #define OCPP21_CERT_PEM_MAX 10000

@@ -181,6 +181,16 @@ void CertStore::init(const char *charge_point_name)
                 continue;
             }
 
+            // A combined chain's second role does not consume another slot.
+            // Retain the temporary CSMS replacement until migration completes.
+            const bool p1 = (groupCount(CertGroup::CsmsClientChain) == 2) || ((f.group == CertGroup::CsmsClientChain) && (groupCount(CertGroup::CsmsClientChain) == 1));
+            const size_t entry_limit = OCPP21_CERTSTORE_MAX_ENTRIES + (p1 ? 1 : 0);
+            if (findById(f.id) == nullptr && count() >= entry_limit) {
+                log_warn("Certificate store: ignoring %s.%u above the total limit",
+                         group_prefixes[static_cast<size_t>(f.group)], static_cast<unsigned>(f.id));
+                continue;
+            }
+
             std::string path = pemPath(f.group, f.id);
             std::unique_ptr<char[]> buf;
             size_t len = 0;
@@ -318,7 +328,7 @@ size_t CertStore::groupLimit(CertGroup group) const
         case CertGroup::OEMRoot:  return OCPP21_CERTSTORE_MAX_OEM_ROOT;
         case CertGroup::CsmsRoot: return OCPP21_CERTSTORE_MAX_CSMS_ROOT;
         case CertGroup::MfrRoot:  return OCPP21_CERTSTORE_MAX_MFR_ROOT;
-        default:                    return OCPP21_CERTSTORE_MAX_CHAINS;
+        default:                  return OCPP21_CERTSTORE_MAX_CHAINS;
     }
 }
 
@@ -529,7 +539,7 @@ CertInstallResult CertStore::installRoot(CertGroup group, const char *pem, time_
     }
 
     // M05.FR.06: reject when the storage limit would be exceeded.
-    if (groupCount(group) >= groupLimit(group)) {
+    if ((count() >= OCPP21_CERTSTORE_MAX_ENTRIES) || (groupCount(group) >= groupLimit(group))) {
         return CertInstallResult::Rejected;
     }
 
@@ -626,7 +636,7 @@ ChainInstallResult CertStore::installChain(CertGroup group, uint32_t id, const c
             --resulting_credentials;
         }
     }
-    if (resulting_credentials > OCPP21_CERTSTORE_MAX_CHAINS) {
+    if ((resulting_credentials > OCPP21_CERTSTORE_MAX_CHAINS) || ((count() - chainCredentialCount() + resulting_credentials) > OCPP21_CERTSTORE_MAX_ENTRIES)) {
         return ChainInstallResult::Failed;
     }
     reserveId(id);

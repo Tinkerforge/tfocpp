@@ -236,6 +236,8 @@ int main()
     CertStore capacity;
     capacity.init("capacity");
     auto fill_roots = [&capacity](CertGroup group, const char *prefix, size_t limit) {
+        files.clear();
+        capacity.init("capacity");
         std::string first;
         for (size_t i = 0; i < limit; ++i) {
             const std::string root = std::string("ROOT-") + prefix + "-" + std::to_string(i);
@@ -254,9 +256,7 @@ int main()
     fill_roots(CertGroup::V2GRoot, "v2g", OCPP21_CERTSTORE_MAX_V2G_ROOT);
     fill_roots(CertGroup::OEMRoot, "oem", OCPP21_CERTSTORE_MAX_OEM_ROOT);
     fill_roots(CertGroup::MORoot, "mo", OCPP21_CERTSTORE_MAX_MO_ROOT);
-    assert(capacity.count() == OCPP21_CERTSTORE_MAX_V2G_ROOT
-                              + OCPP21_CERTSTORE_MAX_OEM_ROOT
-                              + OCPP21_CERTSTORE_MAX_MO_ROOT);
+    assert(capacity.count() == OCPP21_CERTSTORE_MAX_ENTRIES);
 
     return 0;
 }
