@@ -185,6 +185,68 @@ static X509_STORE *build_root_store(const char * const *roots_pem, size_t roots_
     return store;
 }
 
+bool platform_check_station_chain21(const char *chain_pem, const char *serial)
+{
+    const size_t count = platform_cert_count21(chain_pem);
+    if (count == 0 || serial == nullptr || serial[0] == '\0') {
+        return false;
+    }
+    for (size_t i = 0; i < count; ++i) {
+        auto cert = load_cert(chain_pem, i);
+        if (!cert) {
+            return false;
+        }
+        X509_NAME *name = X509_get_subject_name(cert.get());
+        auto field = [name](int nid) -> ASN1_STRING * {
+            int pos = X509_NAME_get_index_by_NID(name, nid, -1);
+            if (pos < 0 || X509_NAME_get_index_by_NID(name, nid, pos) >= 0) {
+                return nullptr;
+            }
+            return X509_NAME_ENTRY_get_data(X509_NAME_get_entry(name, pos));
+        };
+        ASN1_STRING *organization = field(NID_organizationName);
+        if (organization == nullptr || ASN1_STRING_length(organization) == 0 ||
+            memchr(ASN1_STRING_get0_data(organization), 0, ASN1_STRING_length(organization)) != nullptr) {
+            return false;
+        }
+        if (i == 0) {
+            ASN1_STRING *cn = field(NID_commonName);
+            if (cn == nullptr || static_cast<size_t>(ASN1_STRING_length(cn)) != strlen(serial) ||
+                memcmp(ASN1_STRING_get0_data(cn), serial, strlen(serial)) != 0 || X509_check_ca(cert.get()) != 0) {
+                return false;
+            }
+            const uint32_t usage = X509_get_key_usage(cert.get());
+            if (usage != UINT32_MAX && ((usage & KU_DIGITAL_SIGNATURE) == 0 ||
+                (usage & (KU_KEY_CERT_SIGN | KU_CRL_SIGN)) != 0)) {
+                return false;
+            }
+            const uint32_t eku = X509_get_extended_key_usage(cert.get());
+            if (eku != UINT32_MAX && (eku & (XKU_SSL_CLIENT | XKU_ANYEKU)) == 0) {
+                return false;
+            }
+        }
+        EVP_PKEY *key = X509_get0_pubkey(cert.get());
+        if (key == nullptr || !((EVP_PKEY_is_a(key, "RSA") && EVP_PKEY_get_bits(key) >= 2048) ||
+                               (EVP_PKEY_is_a(key, "EC") && EVP_PKEY_get_bits(key) >= 224))) {
+            return false;
+        }
+        int md = NID_undef, pk = NID_undef;
+        if (!X509_get_signature_info(cert.get(), &md, &pk, nullptr, nullptr) ||
+            (md != NID_sha256 && md != NID_sha384 && md != NID_sha512) ||
+            (pk != NID_rsaEncryption && pk != NID_rsassaPss && pk != NID_X9_62_id_ecPublicKey)) {
+            return false;
+        }
+        const ASN1_INTEGER *number = X509_get0_serialNumber(cert.get());
+        BIGNUM *bn = ASN1_INTEGER_to_BN(number, nullptr);
+        const bool valid_serial = bn != nullptr && !BN_is_negative(bn) && !BN_is_zero(bn) && BN_num_bits(bn) <= 159;
+        BN_free(bn);
+        if (!valid_serial) {
+            return false;
+        }
+    }
+    return true;
+}
+
 OcppChainVerifyResult21 platform_verify_chain21(const char *chain_pem, const char * const *roots_pem, size_t roots_len, time_t now, size_t *anchor_idx)
 {
     auto leaf = load_cert(chain_pem, 0);

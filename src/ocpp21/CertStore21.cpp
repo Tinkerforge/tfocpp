@@ -637,6 +637,7 @@ ChainInstallResult CertStore::installChain(CertGroup group, uint32_t id, const c
         }
     }
     if ((resulting_credentials > OCPP21_CERTSTORE_MAX_CHAINS) || ((count() - chainCredentialCount() + resulting_credentials) > OCPP21_CERTSTORE_MAX_ENTRIES)) {
+        log_warn("Certificate store capacity: %u chains, %u entries", static_cast<unsigned>(resulting_credentials), static_cast<unsigned>(count()));
         return ChainInstallResult::Failed;
     }
     reserveId(id);
@@ -659,11 +660,13 @@ ChainInstallResult CertStore::installChain(CertGroup group, uint32_t id, const c
 
     std::string path = pemPath(group, id);
     if (!platform_write_file(path.c_str(), (char *)pem, strlen(pem))) {
+        log_warn("Certificate store write failed: %s", path.c_str());
         return ChainInstallResult::Failed;
     }
 
     const bool require_anchor = !(combined && group == CertGroup::CsmsClientChain);
     if (!addEntry(group, id, pem, require_anchor, &anchor_root, retain_replaced)) {
+        log_warn("Certificate store entry validation failed: %s", path.c_str());
         platform_remove_file(path.c_str());
         return ChainInstallResult::Failed;
     }

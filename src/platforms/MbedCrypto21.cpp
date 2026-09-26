@@ -236,6 +236,60 @@ static void build_root_store(mbedtls_x509_crt *store, const char * const *roots_
     }
 }
 
+bool platform_check_station_chain21(const char *chain_pem, const char *serial)
+{
+    CertList chain(chain_pem);
+    if (!chain.ok || serial == nullptr || serial[0] == '\0') {
+        return false;
+    }
+    for (const mbedtls_x509_crt *c = &chain.crt; c != nullptr; c = c->next) {
+        const bool leaf = c == &chain.crt;
+        unsigned int organizations = 0, common_names = 0;
+        for (const mbedtls_x509_name *n = &c->subject; n != nullptr; n = n->next) {
+            if (MBEDTLS_OID_CMP(MBEDTLS_OID_AT_ORGANIZATION, &n->oid) == 0) {
+                if (++organizations != 1 || n->val.len == 0 || memchr(n->val.p, 0, n->val.len) != nullptr) {
+                    return false;
+                }
+            }
+            if (leaf && MBEDTLS_OID_CMP(MBEDTLS_OID_AT_CN, &n->oid) == 0) {
+                if (++common_names != 1 || n->val.len != strlen(serial) || memcmp(n->val.p, serial, n->val.len) != 0) {
+                    return false;
+                }
+            }
+        }
+        if (organizations != 1 || (leaf && (common_names != 1 || c->ca_istrue))) {
+            return false;
+        }
+        // OCPP Certificate Properties: >=112-bit strength and SHA-2
+        // signatures. Keep this policy local to CSO installation, not ISO PKI.
+        const auto type = mbedtls_pk_get_type(&c->pk);
+        const size_t bits = mbedtls_pk_get_bitlen(&c->pk);
+        if (!((type == MBEDTLS_PK_RSA && bits >= 2048) || ((type == MBEDTLS_PK_ECKEY || type == MBEDTLS_PK_ECDSA) && bits >= 224))) {
+            return false;
+        }
+        if (((c->sig_md != MBEDTLS_MD_SHA256) && (c->sig_md != MBEDTLS_MD_SHA384) && (c->sig_md != MBEDTLS_MD_SHA512)) ||
+            ((c->sig_pk != MBEDTLS_PK_RSA) && (c->sig_pk != MBEDTLS_PK_RSASSA_PSS) && (c->sig_pk != MBEDTLS_PK_ECDSA))) {
+            return false;
+        }
+        if (leaf && ((c->ext_types & MBEDTLS_X509_EXT_KEY_USAGE) != 0) &&
+            ((c->key_usage & MBEDTLS_X509_KU_DIGITAL_SIGNATURE) == 0 ||
+             (c->key_usage & (MBEDTLS_X509_KU_KEY_CERT_SIGN | MBEDTLS_X509_KU_CRL_SIGN)) != 0)) {
+            return false;
+        }
+        if (leaf && mbedtls_x509_crt_check_extended_key_usage(c, MBEDTLS_OID_CLIENT_AUTH, MBEDTLS_OID_SIZE(MBEDTLS_OID_CLIENT_AUTH)) != 0) {
+            return false;
+        }
+        bool nonzero_serial = false;
+        for (size_t i = 0; i < c->serial.len; ++i) {
+            nonzero_serial |= (c->serial.p[i] != 0);
+        }
+        if (!nonzero_serial || (c->serial.len > 20) || ((c->serial.p[0] & 0x80) != 0)) {
+            return false;
+        }
+    }
+    return true;
+}
+
 // mbedTLS verifies validity against the wall clock without a check
 // time parameter, so the time flags are masked here and validity is
 // checked explicitly against now.

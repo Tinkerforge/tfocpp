@@ -107,6 +107,12 @@ enum class OcppChainVerifyResult21 : uint8_t {
 // of the root that anchored the chain.
 OcppChainVerifyResult21 platform_verify_chain21(const char *chain_pem, const char * const *roots_pem, size_t roots_len, time_t now, size_t *anchor_idx);
 
+// A02.FR.06/A03.FR.06: properties of a CSO charging-station chain, in
+// addition to path/time/key validation. The leaf CN binds the device serial.
+// Organization is supplied by the CA and must be present on every delivered
+// certificate. Combined SECC identities need their separate ISO profile.
+bool platform_check_station_chain21(const char *chain_pem, const char *serial);
+
 struct OcppCsrParams21 {
     OcppCurve21 curve;
     const char *common_name;

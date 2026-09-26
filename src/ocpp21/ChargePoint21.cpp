@@ -1852,7 +1852,7 @@ void ChargePoint::startCsr(SignCertificateCertificateType type, bool renewal, co
     switch (type) {
         case SignCertificateCertificateType::CHARGING_STATION_CERTIFICATE:
             params.curve = OcppCurve21::Secp256r1;
-            params.common_name = charge_point_name.c_str();
+            params.common_name = platform_get_charge_point_serial_number();
             params.organization = device_model.organization_name[0] != '\0' ? device_model.organization_name : nullptr;
             params.country = nullptr;
             params.domain_component = nullptr;
@@ -2058,6 +2058,10 @@ CallResponse ChargePoint::handleCertificateSigned(const char *uid, CertificateSi
         reject_reason = "KeyMismatch";
     }
 
+    if (reject_reason == nullptr && !combined && needs_csms_roots && !platform_check_station_chain21(chain, platform_get_charge_point_serial_number())) {
+        reject_reason = "InvalidCertificateProperties";
+    }
+
     if (reject_reason == nullptr) {
         // HUB20-42-006: validate against the installed roots.
         if (needs_csms_roots) {
@@ -2071,7 +2075,7 @@ CallResponse ChargePoint::handleCertificateSigned(const char *uid, CertificateSi
         } else {
             time_t now = platform_get_system_time(connection.platform_ctx);
             auto result = platform_verify_chain21(chain, root_ptrs, roots, now, &anchor_idx);
-            if (result == OcppChainVerifyResult21::NotYetValid) {
+            if (result == OcppChainVerifyResult21::NotYetValid && needs_v2g_roots) {
                 // HUB20-42-001: accept a validity start up to 300 s in the future.
                 OcppCertInfo21 leaf;
                 if (platform_cert_info21(chain, 0, &leaf) && leaf.not_before <= now + 300) {
@@ -2179,6 +2183,13 @@ void ChargePoint::applyClientCertificate(uint32_t chain_id)
     platform_update_tls(connection.platform_ctx, &tls);
 
     log_info("Reconnecting with the new charging station certificate");
+    // A fast reconnect can complete between Connection::tick() polls. Force
+    // the next connected observation through onConnect so obsolete identities
+    // are retired and the pending replacement is completed exactly once.
+    if (connection.was_connected) {
+        onDisconnect();
+        connection.was_connected = false;
+    }
     client_certificate_reconnect_started = true;
     platform_reconnect(connection.platform_ctx);
 }
