@@ -18,6 +18,7 @@
 #include <openssl/x509v3.h>
 
 #include "ocpp21/Platform21.h"
+#include "ocpp21/SeccCertificateProfile.h"
 #include <common/Platform.h>
 
 struct X509Deleter { void operator()(X509 *x) { X509_free(x); } };
@@ -245,6 +246,38 @@ bool platform_check_station_chain21(const char *chain_pem, const char *serial)
         }
     }
     return true;
+}
+
+bool platform_check_secc_chain21(const char *chain_pem, const char *anchor_pem, const char *csr_pem, bool iso20)
+{
+    BIO *bio = BIO_new_mem_buf(csr_pem, -1);
+    if (bio == nullptr) return false;
+    X509_REQ *csr = PEM_read_bio_X509_REQ(bio, nullptr, nullptr, nullptr);
+    BIO_free(bio);
+    if (csr == nullptr) return false;
+    unsigned char *subject_der = nullptr;
+    const int subject_len = i2d_X509_NAME(X509_REQ_get_subject_name(csr), &subject_der);
+    X509_REQ_free(csr);
+    using SeccCertificateProfile::Der;
+    Der encoded{subject_der, subject_len > 0 ? static_cast<size_t>(subject_len) : 0}, subject;
+    bool ok = subject_len > 0 && encoded.take(0x30, subject) && encoded.n == 0;
+    const size_t count = platform_cert_count21(chain_pem);
+    ok = ok && count > 0;
+    for (size_t i = 0; ok && i < count; ++i) {
+        auto cert = load_cert(chain_pem, i);
+        auto issuer = i + 1 < count ? load_cert(chain_pem, i + 1) : load_cert(anchor_pem, 0);
+        unsigned char *cert_der = nullptr, *issuer_der = nullptr;
+        const int cert_len = cert ? i2d_X509(cert.get(), &cert_der) : 0;
+        const int issuer_len = issuer ? i2d_X509(issuer.get(), &issuer_der) : 0;
+        ok = cert_len > 0 && issuer_len > 0 && SeccCertificateProfile::check(
+            {cert_der, static_cast<size_t>(cert_len)}, {issuer_der, static_cast<size_t>(issuer_len)}, subject,
+            i == 0, i > 0 && i + 1 < count, iso20,
+            [](Der data, uint8_t *digest) { return SHA1(data.p, data.n, digest) != nullptr; });
+        OPENSSL_free(cert_der);
+        OPENSSL_free(issuer_der);
+    }
+    OPENSSL_free(subject_der);
+    return ok;
 }
 
 OcppChainVerifyResult21 platform_verify_chain21(const char *chain_pem, const char * const *roots_pem, size_t roots_len, time_t now, size_t *anchor_idx)

@@ -2088,6 +2088,12 @@ CallResponse ChargePoint::handleCertificateSigned(const char *uid, CertificateSi
         }
     }
 
+    if (reject_reason == nullptr && needs_v2g_roots && check_secc_chain) {
+        if(!platform_check_secc_chain21(chain, root_ptrs[anchor_idx], csr_buf, csr_type == SignCertificateCertificateType::V2_G20_CERTIFICATE)) {
+            reject_reason = "InvalidCertificateProperties";
+        }
+    }
+
     if (reject_reason != nullptr) {
         log_warn("CertificateSigned rejected: %s", reject_reason);
         CertificateSignedResponseStatusInfo info;

@@ -113,6 +113,10 @@ OcppChainVerifyResult21 platform_verify_chain21(const char *chain_pem, const cha
 // certificate. Combined SECC identities need their separate ISO profile.
 bool platform_check_station_chain21(const char *chain_pem, const char *serial);
 
+// SECC signed profile, ordered issuer bindings and leaf CN from the pending
+// CSR. The independently verified anchor is excluded from profile enforcement.
+bool platform_check_secc_chain21(const char *chain_pem, const char *anchor_pem, const char *csr_pem, bool iso20);
+
 struct OcppCsrParams21 {
     OcppCurve21 curve;
     const char *common_name;

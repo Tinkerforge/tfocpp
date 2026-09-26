@@ -24,11 +24,13 @@
 #include <mbedtls/md.h>
 #include <mbedtls/oid.h>
 #include <mbedtls/pk.h>
+#include <mbedtls/pem.h>
 #include <mbedtls/platform_util.h>
 #include <mbedtls/x509_crt.h>
 #include <mbedtls/x509_csr.h>
 
 #include "ocpp21/Platform21.h"
+#include "ocpp21/SeccCertificateProfile.h"
 #include <common/Platform.h>
 
 extern "C" time_t timegm(struct tm *tm);
@@ -288,6 +290,40 @@ bool platform_check_station_chain21(const char *chain_pem, const char *serial)
         }
     }
     return true;
+}
+
+bool platform_check_secc_chain21(const char *chain_pem, const char *anchor_pem, const char *csr_pem, bool iso20)
+{
+    CertList chain(chain_pem), anchor(anchor_pem);
+    mbedtls_pem_context csr;
+    mbedtls_pem_init(&csr);
+
+    size_t used = 0;
+    bool ok = chain.ok && anchor.ok && mbedtls_pem_read_buffer(&csr,
+        "-----BEGIN CERTIFICATE REQUEST-----", "-----END CERTIFICATE REQUEST-----",
+        reinterpret_cast<const uint8_t *>(csr_pem), nullptr, 0, &used) == 0;
+
+    using SeccCertificateProfile::Der;
+
+    Der encoded{csr.buf, csr.buflen}, outer, info, version, subject;
+
+    ok = ok && encoded.take(0x30, outer) && !encoded.n && outer.take(0x30, info) && info.take(2, version) && version.is("\0", 1) && info.take(0x30, subject);
+
+    for (auto *c = chain.at(0); ok && (c != nullptr); c = c->next) {
+        const auto *issuer = (c->next != nullptr) ? c->next : &anchor.crt;
+        ok = SeccCertificateProfile::check(
+            {c->raw.p, c->raw.len},
+            {issuer->raw.p, issuer->raw.len},
+            subject,
+            c == &chain.crt,
+            (c != &chain.crt) && (c->next != nullptr),
+            iso20,
+            [](Der data, uint8_t *digest) { return md_hash(MBEDTLS_MD_SHA1, data.p, data.n, digest, nullptr); }
+        );
+    }
+
+    mbedtls_pem_free(&csr);
+    return ok;
 }
 
 // mbedTLS verifies validity against the wall clock without a check
