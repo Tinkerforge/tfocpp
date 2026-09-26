@@ -101,7 +101,7 @@ static const VariableDesc variable_descs[VAR_COUNT] = {
     {"ISO15118Ctrlr",    "Enabled",                                nullptr,            VariableDataType::Boolean,      VariableMutability::ReadWrite, true,  false, -1,                                 nullptr,                                           nullptr},
     {"ISO15118Ctrlr",    "V2GCertificateInstallationEnabled",      nullptr,            VariableDataType::Boolean,      VariableMutability::ReadWrite, true,  false, -1,                                 nullptr,                                           nullptr},
     {"ISO15118Ctrlr",    "ContractCertificateInstallationEnabled", nullptr,            VariableDataType::Boolean,      VariableMutability::ReadWrite, true,  false, -1,                                 nullptr,                                           nullptr},
-    {"ISO15118Ctrlr",    "ISO15118EvseId",                         nullptr,            VariableDataType::String,       VariableMutability::ReadWrite, true,  false, OCPP21_ISO15118_EVSE_ID_MAX_LEN,    nullptr,                                           nullptr, -1, -1, OCPP21_ISO15118_EVSE_ID_MIN_LEN},
+    {"ISO15118Ctrlr",    "ISO15118EvseId",                         nullptr,            VariableDataType::String,       VariableMutability::ReadWrite, true,  false, OCPP21_ISO15118_EVSE_ID_MAX_LEN,    nullptr,                                           nullptr, 1, -1, OCPP21_ISO15118_EVSE_ID_MIN_LEN},
     {"ISO15118Ctrlr",    "EnforceTlsEnabled",                      nullptr,            VariableDataType::Boolean,      VariableMutability::ReadWrite, true,  false, -1,                                 nullptr,                                           nullptr},
     {"ISO15118Ctrlr",    "PrivateEnvironmentEnabled",              nullptr,            VariableDataType::Boolean,      VariableMutability::ReadWrite, true,  false, -1,                                 nullptr,                                           nullptr},
     {"ISO15118Ctrlr",    "PWMChargingFallbackTimeout",             nullptr,            VariableDataType::Integer,      VariableMutability::ReadWrite, true,  false, -1,                                 nullptr,                                           "s"},
@@ -155,6 +155,12 @@ static bool instance_matches(const VariableDesc &desc, const char *instance)
 
 static VariableResult find_variable(const char *component, const char *variable, const char *instance, size_t *idx_out, int32_t evse_id, int32_t connector_id)
 {
+    // HUB 3.2.6 permits an omitted EVSE address. Keep the existing
+    // single-EVSE station-level address as an alias of the reported EVSE 1.
+    if ((evse_id == -1) && (connector_id == -1) && (strcasecmp(component, "ISO15118Ctrlr") == 0) && (strcasecmp(variable, "ISO15118EvseId") == 0)) {
+        evse_id = 1;
+    }
+
     bool component_known = false;
     for (size_t i = 0; i < VAR_COUNT; ++i) {
         const auto &desc = variable_descs[i];
